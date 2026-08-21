@@ -1,0 +1,106 @@
+---
+title: "dythanh22"
+subtitle: "Học tập · Ghi chú · Nghiên cứu"
+page-layout: full
+toc: false
+---
+
+::: {.home-hero}
+# Xin chào, mình là Thanh 👋
+
+::: {.lead}
+Đây là không gian cá nhân để lưu trữ **bài học**, **dự án thực hành** và **ghi chú nghiên cứu** — viết bằng Quarto, đọc mọi lúc trên GitHub Pages.
+:::
+
+::: {.home-stats}
+::: {.home-stat}
+::: {.number}
+3
+:::
+::: {.label}
+Khu vực nội dung
+:::
+:::
+::: {.home-stat}
+::: {.number}
+0
+:::
+::: {.label}
+Bài viết (sắp có)
+:::
+:::
+::: {.home-stat}
+::: {.number}
+∞
+:::
+::: {.label}
+Sẵn sàng mở rộng
+:::
+:::
+:::
+:::
+
+## Bắt đầu từ đâu?
+
+::: {.area-cards}
+::: {.area-card}
+### 📚 Bài học
+
+Ghi chú theo chủ đề và chuỗi bài có thứ tự — Python, thống kê, và nhiều hơn nữa.
+
+[Vào khu Bài học →](bai-hoc/index.qmd){.stretched-link}
+:::
+
+::: {.area-card}
+### 🛠 Dự án
+
+Các dự án thực hành end-to-end: từ setup đến triển khai, có thể kèm repo GitHub riêng.
+
+[Xem dự án →](du-an/index.qmd){.stretched-link}
+:::
+
+::: {.area-card}
+### 🔬 Nghiên cứu
+
+Tóm tắt paper, survey chủ đề, và ghi chú đọc hiểu tài liệu học thuật.
+
+[Khám phá nghiên cứu →](nghien-cuu/index.qmd){.stretched-link}
+:::
+:::
+
+## Chuỗi bài đang học
+
+::: {.empty-state}
+::: {.empty-icon}
+📭
+:::
+**Chưa có chuỗi bài nào.** Các series sẽ xuất hiện ở đây khi mình bắt đầu đăng nội dung.
+:::
+
+## Bài viết mới nhất
+
+::: {.empty-state}
+::: {.empty-icon}
+✏️
+:::
+**Chưa có bài viết nào.** Trang này sẽ liệt kê bài mới nhất sau khi mình publish bài đầu tiên.
+:::
+
+## Về website này
+
+Site được xây bằng **Quarto** và host trên **GitHub Pages**. Mục tiêu là gom mọi ghi chú học tập vào một nơi — dễ đọc, dễ tìm, dễ theo dõi tiến độ.
+
+| Tính năng | Mô tả |
+|-----------|-------|
+| 🔍 Tìm kiếm | Tra cứu nhanh toàn bộ nội dung trên navbar |
+| 🌓 Dark/Light | Chuyển giao diện sáng/tối bằng biểu tượng trên menu |
+| 📂 Sidebar tự động | Thêm file `.qmd` mới là xuất hiện — không cần sửa cấu hình |
+| 🚀 Deploy tự động | Push lên GitHub → site cập nhật trong vài phút |
+
+---
+
+::: {.callout-tip}
+## Sắp tới
+
+Mình sẽ bắt đầu đăng các chuỗi bài học và ghi chú nghiên cứu tại đây. Theo dõi khu **Bài học**, **Dự án** và **Nghiên cứu** trên menu phía trên.
+:::

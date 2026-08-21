@@ -1,0 +1,11 @@
+---
+title: "Bài học"
+description: "Ghi chú học tập theo chủ đề và chuỗi bài có thứ tự"
+---
+
+::: {.empty-state}
+::: {.empty-icon}
+📚
+:::
+**Chưa có bài học nào.** Nội dung sẽ được đăng tại đây khi sẵn sàng.
+:::

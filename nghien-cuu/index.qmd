@@ -1,0 +1,11 @@
+---
+title: "Nghiên cứu"
+description: "Ghi chú paper, survey và tổng hợp chủ đề học thuật"
+---
+
+::: {.empty-state}
+::: {.empty-icon}
+🔬
+:::
+**Chưa có ghi chú nghiên cứu nào.** Paper notes và survey sẽ được đăng tại đây khi sẵn sàng.
+:::

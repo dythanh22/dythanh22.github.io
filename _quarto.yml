@@ -1,0 +1,138 @@
+project:
+  type: website
+  output-dir: _site
+  preview:
+    port: 4321
+    browser: true
+  resources:
+    - legacy/**/*
+
+website:
+  title: "dythanh22"
+  description: "Ghi chú học tập, dự án thực hành và tổng hợp nghiên cứu"
+  site-url: https://dythanh22.github.io
+  repo-url: https://github.com/dythanh22/dythanh22.github.io
+  repo-actions: [edit, issue]
+  reader-mode: true
+
+  navbar:
+    background: primary
+    search: true
+    pinned: true
+    tools:
+      - icon: github
+        href: https://github.com/dythanh22
+        text: GitHub
+    left:
+      - href: index.qmd
+        text: Trang chủ
+      - href: bai-hoc/index.qmd
+        text: Bài học
+      - href: du-an/index.qmd
+        text: Dự án
+      - href: nghien-cuu/index.qmd
+        text: Nghiên cứu
+      - href: about.qmd
+        text: Giới thiệu
+
+  sidebar:
+    - id: bai-hoc
+      title: "Bài học"
+      style: docked
+      search: true
+      collapse-level: 2
+      contents:
+        - auto: bai-hoc/**/*
+
+    - id: du-an
+      title: "Dự án"
+      style: docked
+      search: true
+      collapse-level: 2
+      contents:
+        - auto: du-an/**/*
+
+    - id: nghien-cuu
+      title: "Nghiên cứu"
+      style: docked
+      search: true
+      collapse-level: 2
+      contents:
+        - auto: nghien-cuu/**/*
+
+  page-footer:
+    left: "© 2026 dythanh22 · Học tập & ghi chú"
+    center:
+      - href: bai-hoc/index.qmd
+        text: Bài học
+      - href: du-an/index.qmd
+        text: Dự án
+      - href: nghien-cuu/index.qmd
+        text: Nghiên cứu
+    right:
+      - icon: github
+        href: https://github.com/dythanh22/dythanh22.github.io
+
+format:
+  html:
+    theme:
+      light: [cosmo, assets/css/custom.scss]
+      dark: [darkly, assets/css/custom.scss]
+    css: assets/css/custom.scss
+    toc: true
+    toc-depth: 3
+    toc-title: "Mục lục"
+    number-sections: false
+    code-copy: true
+    code-overflow: wrap
+    highlight-style:
+      light: github
+      dark: github-dark
+    fig-cap-location: bottom
+    link-external-newwindow: true
+    include-in-header:
+      - text: |
+          <meta property="og:site_name" content="dythanh22">
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+language:
+  title-block-author-single: "Tác giả"
+  title-block-published: "Ngày đăng"
+  title-block-modified: "Cập nhật"
+  section-title-abstract: "Tóm tắt"
+  section-title-footnotes: "Chú thích"
+  section-title-references: "Tài liệu tham khảo"
+  toc-title-document: "Mục lục"
+  toc-title-website: "Mục lục"
+  code-copy-button: "Sao chép"
+  code-copy-button-tooltip: "Sao chép mã vào clipboard"
+  code-tools-menu-caption: "Mã"
+  code-tools-show-all-code: "Hiện toàn bộ mã"
+  code-tools-hide-all-code: "Ẩn toàn bộ mã"
+  search:
+    no-results-text: "Không tìm thấy kết quả"
+    placeholder: "Tìm kiếm bài viết..."
+    search-text: "Tìm"
+    search-document-title: "Tìm kiếm"
+  crossref-fig-title: "Hình"
+  crossref-tbl-title: "Bảng"
+  crossref-eq-title: "Công thức"
+  crossref-thm-title: "Định lý"
+  crossref-lem-title: "Bổ đề"
+  crossref-def-title: "Định nghĩa"
+  crossref-cor-title: "Hệ quả"
+  crossref-prp-title: "Mệnh đề"
+  crossref-ch-prefix: "Chương"
+  crossref-apx-prefix: "Phụ lục"
+  crossref-sec-prefix: "Mục"
+  crossref-eq-prefix: "Công thức"
+  crossref-lof-title: "Danh sách hình"
+  crossref-lot-title: "Danh sách bảng"
+  crossref-lol-title: "Danh sách mã"
+  callout-tip-title: "Mẹo"
+  callout-note-title: "Ghi chú"
+  callout-important-title: "Quan trọng"
+  callout-caution-title: "Cẩn thận"
+  callout-warning-title: "Cảnh báo"

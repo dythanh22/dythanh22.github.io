@@ -1,0 +1,11 @@
+---
+title: "Dự án"
+description: "Các dự án thực hành end-to-end"
+---
+
+::: {.empty-state}
+::: {.empty-icon}
+🛠
+:::
+**Chưa có dự án nào.** Các project thực hành sẽ được đăng tại đây khi sẵn sàng.
+:::

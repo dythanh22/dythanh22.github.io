@@ -1,0 +1,11 @@
+/.quarto/
+/_site/
+**/.DS_Store
+*.knit.md
+**/*_files/
+# Cho phép HTML legacy
+!legacy/**/*.html
+!legacy/**/*.css
+!legacy/**/*.js
+
+**/*.quarto_ipynb

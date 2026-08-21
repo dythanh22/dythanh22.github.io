@@ -1,0 +1,32 @@
+---
+title: "Giới thiệu"
+description: "Về tác giả và mục đích của website"
+---
+
+## Về website này
+
+Đây là trang cá nhân của **dythanh22** — nơi tập hợp:
+
+- **Bài học** (`bai-hoc/`): ghi chú học tập, chuỗi bài theo chủ đề
+- **Dự án** (`du-an/`): các project thực hành có hướng dẫn từng bước
+- **Nghiên cứu** (`nghien-cuu/`): tóm tắt paper và survey chủ đề
+
+Toàn bộ nội dung được viết bằng **Quarto** (`.qmd` / `.md`), render sang HTML và deploy tự động qua **GitHub Actions** lên [dythanh22.github.io](https://dythanh22.github.io).
+
+## Công nghệ
+
+| Thành phần | Công cụ |
+|------------|---------|
+| Viết nội dung | Quarto, Markdown |
+| Hosting | GitHub Pages |
+| CI/CD | GitHub Actions |
+| Theme | Bootstrap (cosmo / darkly) + custom SCSS |
+
+## Liên hệ
+
+- GitHub: [dythanh22](https://github.com/dythanh22)
+- Repo site: [dythanh22.github.io](https://github.com/dythanh22/dythanh22.github.io)
+
+## Đóng góp
+
+Site này chủ yếu phục vụ học tập cá nhân. Nếu bạn phát hiện lỗi hoặc muốn góp ý, hãy mở issue trên GitHub repo.
