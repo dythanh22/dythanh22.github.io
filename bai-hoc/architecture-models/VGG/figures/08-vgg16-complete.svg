@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="280" viewBox="0 0 780 280" role="img" aria-labelledby="vgg-08-title">
+<title id="vgg-08-title">Complete VGG-16</title>
+<rect class="fig-bg" width="780" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">VGG-16 hoàn chỉnh: features(config) → flatten → classifier</text>
+<rect x="40.0" y="55.0" width="420.0" height="140.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2" data-allow-overlap="1"/>
+<text x="250.0" y="78.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Giai đoạn 1 — Feature extractor</text>
+<rect x="34.0" y="100.0" width="64.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="66.0" y="122.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">B1·64</text>
+<text x="66.0" y="140.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">+M</text>
+<rect x="126.0" y="100.0" width="64.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="158.0" y="122.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">B2·128</text>
+<text x="158.0" y="140.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">+M</text>
+<line x1="104.0" y1="127.5" x2="112.0" y2="127.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="112.0,122.5 120.0,127.5 112.0,132.5" fill="#5C6570"/>
+<rect x="218.0" y="100.0" width="64.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="250.0" y="122.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">B3·256</text>
+<text x="250.0" y="140.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">+M</text>
+<line x1="196.0" y1="127.5" x2="204.0" y2="127.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="204.0,122.5 212.0,127.5 204.0,132.5" fill="#5C6570"/>
+<rect x="310.0" y="100.0" width="64.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="342.0" y="122.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">B4·512</text>
+<text x="342.0" y="140.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">+M</text>
+<line x1="288.0" y1="127.5" x2="296.0" y2="127.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="296.0,122.5 304.0,127.5 296.0,132.5" fill="#5C6570"/>
+<rect x="402.0" y="100.0" width="64.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="434.0" y="122.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">B5·512</text>
+<text x="434.0" y="140.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">+M</text>
+<line x1="380.0" y1="127.5" x2="388.0" y2="127.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="388.0,122.5 396.0,127.5 388.0,132.5" fill="#5C6570"/>
+<text x="250.0" y="211.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#5C6570" text-anchor="middle">13 conv + 5 pool  →  7×7×512</text>
+<rect x="520.0" y="80.0" width="220.0" height="90.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="630.0" y="111.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Giai đoạn 2 — FC</text>
+<text x="630.0" y="128.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">25088→4096→4096→K</text>
+<text x="630.0" y="146.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#C45C0A" text-anchor="middle">logits (không softmax)</text>
+<line x1="472.0" y1="125.0" x2="500.0" y2="125.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="500.0,120.0 508.0,125.0 500.0,130.0" fill="#5C6570"/>
+<text x="490.0" y="115.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">flatten</text>
+<text x="390.0" y="250.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">logits = classifier(flatten(features(x, config_D)))  ·  ~138M params</text>
+</svg>

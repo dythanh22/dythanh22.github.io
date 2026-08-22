@@ -1,0 +1,1908 @@
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Ghi chú</span>Mục tiêu bài học
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hiểu <strong>TensorRT</strong> như <strong>inference compiler + runtime</strong> cho NVIDIA GPU — không chỉ “convert ONNX sang <code>.plan</code>”. Sau bài, bạn nắm <code>engine</code>, <code>builder</code>, <code>optimization profile</code>, <code>tactic</code>, FP16/INT8, <code>calibration</code>, Q/DQ, <code>execution context</code>, và vì sao chúng ảnh hưởng latency, throughput, memory, accuracy. Bài <strong>không</strong> dạy Triton serving sâu (Lesson 6) hay quantization lý thuyết đầy đủ (Lesson 5).</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Ghi chú</span>Lộ trình bài học
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 15%">
+<col style="width: 44%">
+<col style="width: 31%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">#</th>
+<th style="text-align: left;">Phần</th>
+<th style="text-align: left;">Trả lời câu hỏi</th>
+<th style="text-align: left;">Thời lượng</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">TensorRT là / không phải gì</td>
+<td style="text-align: left;">Khác ONNX, ORT, Triton thế nào?</td>
+<td style="text-align: left;">10 phút</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">Objects + build vs runtime</td>
+<td style="text-align: left;">Engine build chậm, inference nhanh vì sao?</td>
+<td style="text-align: left;">15 phút</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">Build pipeline + tactics</td>
+<td style="text-align: left;">Fusion, precision, tactic, workspace, timing cache?</td>
+<td style="text-align: left;">25 phút</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">Optimization profiles</td>
+<td style="text-align: left;"><code>min</code>/<code>opt</code>/<code>max</code>; profile rộng có hại?</td>
+<td style="text-align: left;">15 phút</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">FP16 · INT8</td>
+<td style="text-align: left;">Khi nào FP16 đủ; INT8 cần calibration/QDQ thế nào?</td>
+<td style="text-align: left;">25 phút</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;"><code>trtexec</code> · Python · accuracy · debug</td>
+<td style="text-align: left;">Đo đúng, build API, Polygraphy, xử lý lỗi</td>
+<td style="text-align: left;">45–60 phút</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">Mini-lab</td>
+<td style="text-align: left;">Build, profile, so số liệu</td>
+<td style="text-align: left;">45–60 phút</td>
+</tr>
+</tbody>
+</table>
+<p>Đọc tối thiểu: phần 1–5 + Lab 1–2. Mở tip <em>Đào sâu</em> khi cần làm việc thật; Lab Python/INT8 optional nếu chưa có GPU.</p>
+</div>
+</div>
+<div class="reading-modes">
+<p><strong>Đọc nhanh:</strong> callout <em>Ý chính</em> + bảng + sơ đồ xương sống.<br>
+<strong>Đọc đủ:</strong> mở mọi tip đào sâu / checklist, làm Mini-lab và Checkpoint.</p>
+</div>
+<section id="bối-cảnh" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="bối-cảnh">Bối cảnh</h2>
+<p>Lesson 1: kiến trúc inference. Lesson 2: ONNX là IR. Lesson 3: ORT chạy graph đa backend. Lesson 4: <strong>compiler NVIDIA</strong> — chuyên biệt hóa sâu cho GPU, shape và precision.</p>
+<div class="cell" data-fig-width="7" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-l4-spine" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-l4-spine-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-l4-spine">flowchart LR
+  O([ONNX]) --&gt;|"parse"| N([NetworkDefinition])
+  N --&gt;|"build"| B([Builder + Config])
+  B --&gt;|"serialize"| E([Engine / plan])
+  E --&gt;|"deserialize"| C([ExecutionContext])
+  C --&gt;|"enqueue"| G([GPU kernels])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class O,N soft
+  class B,E hot
+  class C,G ok
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l4-spine-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;4.1: Sơ đồ xương sống Lesson 4: ONNX → NetworkDefinition → Builder → Engine → ExecutionContext → GPU.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Tư duy cốt lõi:</p>
+<pre class="text"><code>ONNX Runtime thường chạy graph.
+TensorRT build một engine đã tối ưu cho GPU, precision, shape range, memory và kernel tactics.</code></pre>
+</section>
+<section id="learning-outcomes" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="learning-outcomes">Learning outcomes</h2>
+<ol type="1">
+<li>TensorRT khác ONNX, ORT, PyTorch, Triton thế nào<br>
+</li>
+<li>Vì sao TensorRT được xem như inference compiler<br>
+</li>
+<li>Engine / plan file; Builder, NetworkDefinition, BuilderConfig, Runtime, ExecutionContext<br>
+</li>
+<li>Build engine: parse, fusion, layout, precision, tactic, memory plan, serialize<br>
+</li>
+<li>Tactic, workspace, timing cache<br>
+</li>
+<li>Dynamic shape vs optimization profile (<code>min</code> / <code>opt</code> / <code>max</code>)<br>
+</li>
+<li>FP16 vs FP32/TF32; INT8 với calibration / QAT / Q/DQ<br>
+</li>
+<li>Build &amp; đọc benchmark bằng <code>trtexec</code>; Python API căn bản<br>
+</li>
+<li>Debug: unsupported op, profile mismatch, FP16 NaN, INT8 drop, portability, app chậm hơn <code>trtexec</code></li>
+</ol>
+</section>
+<section id="prerequisites" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Shape (ví dụ NCHW), ONNX graph/opset (Lesson 2), EP và benchmark mindset (Lesson 3)<br>
+</li>
+<li>Python; PyTorch đủ để export ONNX<br>
+</li>
+<li>CUDA stream, host/device memory (Lesson 1)<br>
+</li>
+<li>Lab cần <strong>NVIDIA GPU + TensorRT</strong>; không GPU vẫn học lý thuyết + log mẫu</li>
+</ul>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Cài đặt gợi ý
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span> trtexec</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-c</span> <span class="st">"import tensorrt as trt; print(trt.__version__)"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Cài TensorRT + CUDA theo guide NVIDIA cho driver/GPU của bạn. Không có GPU: đọc body + tip; chạy labs trên cloud GPU sau.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-trt-what" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="sec-trt-what"><span class="header-section-number">4.1</span> TensorRT là gì — và không phải gì?</h2>
+<blockquote class="blockquote">
+<p>TensorRT chỉ là “tool convert ONNX”, hay là compiler thật sự?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>TensorRT</strong> = model optimizer + GPU kernel/tactic selector + precision optimizer + runtime executor trên <strong>NVIDIA GPU</strong>. Nó <strong>compile</strong> graph thành engine chuyên biệt cho hardware và shape — không chỉ đọc ONNX rồi execute từng op như interpreter đơn giản.</p>
+</div>
+</div>
+<p>Pipeline deployment điển hình: train → export ONNX → build TensorRT engine → serve production.</p>
+<div class="cell" data-fig-width="6.5" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-l4-train-deploy" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-l4-train-deploy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-l4-train-deploy">flowchart LR
+  T([Train]) --&gt; M([Trained model])
+  M --&gt;|"export"| X([ONNX])
+  X --&gt;|"build"| E([TRT engine])
+  E --&gt;|"serve"| P([Production])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#E8F5E9,stroke:#43A047,stroke-width:1.5px,color:#1B5E20
+  class T,M soft
+  class X,E hot
+  class P ok
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l4-train-deploy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;4.2: Training → ONNX → TensorRT engine → production. Build có thể chậm; runtime phải nhanh.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 60%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Không phải</th>
+<th style="text-align: left;">Hệ quả</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ONNX</td>
+<td style="text-align: left;">ONNX = interchange format (graph + weights); TRT = optimizer + runtime NVIDIA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ONNX Runtime</td>
+<td style="text-align: left;">ORT đa EP; TRT native = API / <code>trtexec</code>; cũng có TensorRT EP trong ORT</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Triton</td>
+<td style="text-align: left;">Triton = serving (HTTP/gRPC, batching, repo, metrics); TRT = engine Triton có thể serve</td>
+</tr>
+</tbody>
+</table>
+<p>Ba cách dùng phổ biến:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Cách</th>
+<th style="text-align: left;">Luồng</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">ONNX → <code>trtexec</code> → <code>.plan</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">ONNX → TensorRT Python/C++ API → <code>.plan</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">ONNX Runtime + TensorRT EP (dùng TRT gián tiếp)</td>
+</tr>
+</tbody>
+</table>
+<p>Cách 1–2 dùng TensorRT trực tiếp. Cách 3 dùng qua ORT.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Đào sâu: bức tranh 14 bước từ model đến inference
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Train trong PyTorch / TensorFlow<br>
+</li>
+<li>Export ONNX<br>
+</li>
+<li>Validate ONNX bằng ORT<br>
+</li>
+<li>Simplify / fix ONNX nếu cần<br>
+</li>
+<li>Parse ONNX bằng TensorRT<br>
+</li>
+<li>Chọn precision (FP32 / TF32 / FP16 / INT8 / …)<br>
+</li>
+<li>Chọn shapes hoặc optimization profiles<br>
+</li>
+<li>Build engine<br>
+</li>
+<li>Serialize plan file<br>
+</li>
+<li>Load engine trong runtime<br>
+</li>
+<li>Allocate input/output buffers<br>
+</li>
+<li>Set input shape nếu dynamic<br>
+</li>
+<li>Enqueue lên CUDA stream<br>
+</li>
+<li>Copy output hoặc giữ trên GPU</li>
+</ol>
+<p>Trong production thường build trước: <code>model.onnx → model_fp16.plan</code>, rồi deserialize lúc startup — không build lại mỗi request. Build lớn + nhiều profile có thể mất <strong>vài phút đến hàng chục phút</strong>; deserialize thường <strong>giây</strong>.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-objects" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="sec-objects"><span class="header-section-number">4.2</span> Objects cốt lõi trong TensorRT</h2>
+<blockquote class="blockquote">
+<p>Builder, Engine, ExecutionContext — cái nào “compile”, cái nào “chạy”?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Nhớ chuỗi: <strong>Builder</strong> (+ NetworkDefinition + BuilderConfig) tạo <strong>engine</strong> (compiled model) → <strong>Runtime</strong> deserialize plan → <strong>ExecutionContext</strong> giữ state runtime và <strong>enqueue</strong> lên CUDA stream. Một engine có thể tạo nhiều context (concurrent streams/workers).</p>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 41%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Object</th>
+<th style="text-align: left;">Mental model</th>
+<th style="text-align: left;">Việc chính</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>Builder</code></td>
+<td style="text-align: left;">Compiler driver</td>
+<td style="text-align: left;">Nhận network + config (precision, workspace, profiles, timing cache) → serialized engine</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>NetworkDefinition</code></td>
+<td style="text-align: left;">Graph nội bộ TRT</td>
+<td style="text-align: left;">Từ ONNX Parser hoặc tự <code>network.add_convolution_nd(...)</code> / <code>mark_output</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>BuilderConfig</code></td>
+<td style="text-align: left;">Compiler flags</td>
+<td style="text-align: left;">Precision, memory pool/workspace, profiles, timing cache, profiling, compatibility, DLA…</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>ICudaEngine</code></td>
+<td style="text-align: left;">Compiled model</td>
+<td style="text-align: left;">Biết I/O, profiles, tactics, memory needs, layer plan, precision/layout; serialize <code>.plan</code>/<code>.engine</code>/<code>.trt</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>Runtime</code></td>
+<td style="text-align: left;">Loader</td>
+<td style="text-align: left;"><code>plan file → ICudaEngine</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>ExecutionContext</code></td>
+<td style="text-align: left;">Per-execution state</td>
+<td style="text-align: left;">Profile đang chọn, runtime shape, tensor addresses, activation memory state</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CUDA stream</td>
+<td style="text-align: left;">Async queue</td>
+<td style="text-align: left;">CPU enqueue → GPU chạy; đo latency phải synchronize đúng</td>
+</tr>
+</tbody>
+</table>
+<p>Con đường phổ biến từ PyTorch: <code>PyTorch → ONNX → TensorRT ONNX Parser → NetworkDefinition</code>.</p>
+<p>Tên đuôi file (<code>.plan</code> / <code>.engine</code> / <code>.trt</code>) không bắt buộc — quan trọng là nội dung serialized engine.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Đào sâu: ExecutionContext và stream
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Execution thường <strong>asynchronous</strong>. Sai: đo wall-clock mà không sync stream → số ảo. Đúng: enqueue rồi <code>cudaStreamSynchronize</code> (hoặc CUDA event) khi cần latency E2E. Context giữ state dynamic shape — đổi shape liên tục có overhead cập nhật nội bộ (xem <a href="#sec-profiles" class="quarto-xref"><span>Mục 4.6</span></a>).</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-build-runtime" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="sec-build-runtime"><span class="header-section-number">4.3</span> Build phase vs runtime phase</h2>
+<blockquote class="blockquote">
+<p>Vì sao build engine chậm nhưng inference phải nhanh — và sai ở đâu nếu gộp hai pha?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Build</strong> = compiler (parse, fuse, chọn tactic, plan memory, serialize) — có thể chậm. <strong>Runtime</strong> = load engine + context + buffers + enqueue — phải phục vụ request nhanh. Production: <strong>không</strong> build trong request path.</p>
+</div>
+</div>
+<div class="cell" data-fig-width="7" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-l4-build-runtime" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-l4-build-runtime-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-l4-build-runtime">flowchart LR
+  O([ONNX]) --&gt; N([Network])
+  N --&gt; B([Builder])
+  B --&gt; E([Engine/plan])
+  E --&gt; R([Runtime])
+  R --&gt; C([Context])
+  C --&gt; G([GPU])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class O,R,C,G soft
+  class N,B,E hot
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l4-build-runtime-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;4.3: Build phase (tô sáng) vs runtime: ONNX → Builder → plan; rồi Runtime → Context → GPU.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 66%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Pha</th>
+<th style="text-align: left;">Việc làm</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Build</td>
+<td style="text-align: left;">Parse ONNX, validate, infer shapes, fold constants, fuse, chọn format/precision, benchmark tactics, memory plan, serialize</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Runtime</td>
+<td style="text-align: left;">Deserialize, tạo context, allocate buffers, set shape, set addresses, enqueue, sync/copy khi cần</td>
+</tr>
+</tbody>
+</table>
+<p>Sai:</p>
+<pre class="text"><code>request → parse ONNX → build engine → run inference → response</code></pre>
+<p>Đúng:</p>
+<pre class="text"><code>service startup → load engine
+request → enqueue inference → response</code></pre>
+<div class="callout callout-style-default callout-warning no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Cảnh báo</span>Bẫy thường gặp
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Cùng một ONNX, build trên GPU khác hoặc TensorRT version khác có thể ra engine/tactic khác. Coi <code>.plan</code> là artifact <strong>gắn hardware + version</strong>, không phải “ONNX thứ hai” portable tuyệt đối (xem <a href="#sec-debug-prod" class="quarto-xref"><span>Mục 4.12</span></a>).</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Pseudo-flow hai pha
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Build: <code>ONNX → parse → NetworkDefinition → optimize → choose kernels/tactics → memory plan → serialized engine</code>.<br>
+Runtime: <code>serialized engine → deserialize → execution context → set shapes/buffers → enqueue → outputs</code>.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-build" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="sec-build"><span class="header-section-number">4.4</span> Build pipeline: TensorRT compile như thế nào?</h2>
+<blockquote class="blockquote">
+<p>Từ <code>.onnx</code> đến <code>.plan</code>, từng bước compiler ảnh hưởng latency thế nào?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Build = chuỗi: <strong>parse → shape analysis → constant folding / DCE → layer fusion → layout → precision → tactic selection → memory planning → serialize</strong>. Nhiều ONNX nodes có thể thành ít engine layers. Unsupported op làm parse/build fail — ORT chạy được không đảm bảo TRT build được.</p>
+</div>
+</div>
+<section id="parse-onnx" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="parse-onnx">Parse ONNX</h3>
+<p>Parser đọc <code>.onnx</code> → <code>NetworkDefinition</code> (nodes → layers, tensors, weights).</p>
+<p>Lỗi thường gặp trong log:</p>
+<pre class="text"><code>Unsupported operator: GridSample
+Unsupported ONNX data type
+No importer registered for op: SomeCustomOp</code></pre>
+<p>Thứ tự xử lý: (1) opset phù hợp, (2) <code>onnxsim</code>, (3) rewrite model, (4) ONNX GraphSurgeon, (5) TensorRT plugin, (6) chạy op ngoài TRT.</p>
+</section>
+<section id="shape-analysis" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="shape-analysis">Shape analysis</h3>
+<p>Static <code>[1,3,224,224]</code> → tối ưu hẹp cho shape đó. Dynamic <code>[-1,3,-1,-1]</code> → cần optimization profile (<code>min</code>/<code>opt</code>/<code>max</code>) — xem <a href="#sec-profiles" class="quarto-xref"><span>Mục 4.6</span></a>.</p>
+</section>
+<section id="constant-folding-và-dce" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="constant-folding-và-dce">Constant folding và DCE</h3>
+<p>Constant chỉ phụ thuộc constant → tính trước lúc build. Nhánh không ảnh hưởng output → loại bỏ (dead computation elimination).</p>
+</section>
+<section id="layer-fusion" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="layer-fusion">Layer fusion</h3>
+<p>Ví dụ <code>Conv → BatchNorm → ReLU</code> có thể thành fused Conv+Scale+ReLU: ít kernel launch, ít read/write intermediate, giảm bandwidth, tăng locality, dùng kernel chuyên biệt.</p>
+<pre class="text"><code>Không phải càng nhiều ONNX nodes thì runtime càng nhiều GPU kernels.</code></pre>
+</section>
+<section id="layout-data-format" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="layout-data-format">Layout / data format</h3>
+<p>ONNX có thể NCHW; TRT có thể chọn format nội bộ vectorized/channel-packed. Quan tâm boundary input/output, plugin format, và <strong>reformat layers</strong> (đổi layout nhiều lần → chậm).</p>
+</section>
+<section id="precision-tactic-memory-serialize" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="precision-tactic-memory-serialize">Precision, tactic, memory, serialize</h3>
+<p>Precision (FP32/TF32/FP16/INT8…) theo config + hardware — chi tiết <a href="#sec-fp16" class="quarto-xref"><span>Mục 4.7</span></a> và <a href="#sec-int8" class="quarto-xref"><span>Mục 4.8</span></a>. Tactic selection — <a href="#sec-tactics" class="quarto-xref"><span>Mục 4.5</span></a>. Memory planning reuse activation buffers → peak VRAM, max batch, nhiều context. Serialize: <code>ICudaEngine → model.plan</code>.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Đào sâu: fusion, reformat và dump
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Nếu <code>--dumpLayerInfo</code> / <code>--dumpProfile</code> thấy nhiều <strong>reformat</strong>, bottleneck có thể là layout chứ không phải Conv. Một engine layer có thể tương ứng nhiều ONNX nodes sau fusion. Nếu một layer chiếm ~60% latency, tối ưu “toàn graph” kém hiệu quả hơn hiểu đúng layer đó (Lab 4).</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-tactics" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="sec-tactics"><span class="header-section-number">4.5</span> Tactic selection, workspace và timing cache</h2>
+<blockquote class="blockquote">
+<p>Vì sao build lâu — và workspace nhỏ có thể làm engine chậm hơn?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Tactic</strong> = implementation/kernel strategy cụ thể cho layer (hoặc fused layer). Builder liệt kê candidate, lọc (unsupported / vượt workspace), benchmark hoặc ước lượng, chọn winner. Workspace quá nhỏ → loại tactic nhanh cần nhiều temp memory. <strong>Timing cache</strong> tái dùng kết quả timing để rebuild/CI nhanh hơn. Sau đổi precision/rebuild: luôn validate accuracy.</p>
+</div>
+</div>
+<p>Một Conv/MatMul có thể có nhiều tactic (implicit GEMM, Winograd, FFT-like, Tensor Core tiling/layout khác nhau…).</p>
+<p>Tactic phụ thuộc: GPU architecture, input shape, batch, precision, tensor layout, workspace limit, libraries/kernels, optimization profile, builder optimization level, timing cache, môi trường.</p>
+<div class="cell" data-fig-width="6" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-l4-tactic" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-l4-tactic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-l4-tactic">flowchart TB
+  L([Layer / fused]) --&gt; C([Candidate tactics])
+  C --&gt;|"filter"| F([Workspace OK?])
+  F --&gt;|"time / estimate"| W([Winner tactic])
+  W --&gt; E([Engine plan])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class L,C soft
+  class F,W hot
+  class E ok
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l4-tactic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;4.4: Tactic selection: candidate → lọc workspace → timing/estimate → winner vào engine.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Mental model (đủ để debug):</p>
+<pre class="text"><code>for each layer or fused subgraph:
+    list candidate tactics
+    filter unsupported tactics
+    filter tactics exceeding workspace limit
+    benchmark / estimate candidate tactics
+    choose best tactic</code></pre>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 47%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Cơ chế</th>
+<th style="text-align: left;">Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Workspace / memory pool</td>
+<td style="text-align: left;">Cho phép (hoặc loại) tactic cần buffer tạm lớn</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Timing cache</td>
+<td style="text-align: left;">First build: time nhiều tactic → lưu; lần sau reuse → nhanh hơn</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Accuracy</td>
+<td style="text-align: left;">Chủ yếu perf; FP16 overflow, INT8 quant error vẫn cần metric</td>
+</tr>
+</tbody>
+</table>
+<p>Timing cache hữu ích khi: build nhiều model tương tự, rebuild thường xuyên, CI nhiều variants/profiles/precision.</p>
+<div class="callout callout-style-default callout-warning no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Cảnh báo</span>Bẫy thường gặp
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Đặt workspace “cực thấp cho chắc” có thể ép builder chọn tactic chậm hơn (<code>workspace too small → fast tactic unavailable</code>). Cùng Conv: <code>batch=1, 224²</code> vs <code>batch=32</code> vs sequence dài → winner khác — đó là lý do <code>opt</code> shape và GPU target quyết định mạnh.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Đào sâu: tactic và numeric behavior
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-15" class="callout-15-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Tactic selection chủ yếu performance, nhưng precision thấp thì choice có thể ảnh hưởng số học: FP16 overflow/underflow intermediate; INT8 quantization/clamping; reduction/normalization nhạy precision. Production rule: sau đổi precision hoặc rebuild engine, luôn validate accuracy metric — không chỉ nhìn latency.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-profiles" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="sec-profiles"><span class="header-section-number">4.6</span> Dynamic shapes và optimization profiles</h2>
+<blockquote class="blockquote">
+<p>Dynamic axes trong ONNX đã đủ — hay TensorRT còn cần <code>min</code>/<code>opt</code>/<code>max</code>?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>ONNX có thể khai báo <code>-1</code> (dynamic). TensorRT <strong>không tối ưu miền vô hạn</strong>: mỗi dynamic input cần <strong>optimization profile</strong> với <code>min</code>, <code>opt</code>, <code>max</code>. Builder ưu tiên tối ưu quanh <strong><code>opt</code></strong>, nhưng tactic phải hợp lệ trên cả <code>[min, max]</code>. Profile quá rộng → tactic “an toàn” → chậm ở traffic thật. Nhiều profile hẹp thường tốt hơn một profile khổng lồ. Runtime shape ngoài range → fail.</p>
+</div>
+</div>
+<p>Ví dụ:</p>
+<pre class="text"><code>input name: images
+min: [1, 3, 224, 224]
+opt: [8, 3, 224, 224]
+max: [32, 3, 224, 224]</code></pre>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Trường</th>
+<th style="text-align: left;">Ý nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>min</code></td>
+<td style="text-align: left;">Shape nhỏ nhất engine cho phép</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>opt</code></td>
+<td style="text-align: left;">Shape builder ưu tiên tối ưu performance</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>max</code></td>
+<td style="text-align: left;">Shape lớn nhất engine cho phép</td>
+</tr>
+</tbody>
+</table>
+<p>Runtime: <code>min ≤ runtime_shape ≤ max</code>.</p>
+<div class="cell" data-fig-width="5.5" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-l4-profile" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-l4-profile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-l4-profile">flowchart LR
+  Min([min]) --&gt;|"range"| Max([max])
+  Opt([opt]) -.-&gt;|"ưu tiên tactic"| Min
+  Opt -.-&gt; Max
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:2px,color:#5C3B10
+  class Min,Max soft
+  class Opt hot
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l4-profile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;4.5: Optimization profile: range hợp lệ [min, max]; builder tối ưu mạnh quanh opt.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Batch cũng là shape dimension (explicit batch). Muốn batch động → profile cho <code>N</code> trong <code>[N,3,224,224]</code>.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 63%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Tình huống</th>
+<th style="text-align: left;">Gợi ý</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Traffic chủ yếu batch 1</td>
+<td style="text-align: left;"><code>opt</code> gần batch 1; đừng <code>opt=32</code> chỉ vì <code>max=32</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Real-time batch 1–4 + job 16–64</td>
+<td style="text-align: left;">Hai profiles, không một range 1–64</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ảnh 224 và 512</td>
+<td style="text-align: left;">Profiles tách theo độ phân giải</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Đổi shape liên tục trong một context</td>
+<td style="text-align: left;">Overhead cập nhật state — thiết kế batching/routing</td>
+</tr>
+</tbody>
+</table>
+<p>Runtime flow:</p>
+<pre class="text"><code>1. Deserialize engine
+2. Create execution context
+3. Select optimization profile
+4. Set input shape
+5. Set tensor addresses
+6. Enqueue inference</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>context.set_optimization_profile_async(profile_index, stream_handle)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>context.set_input_shape(<span class="st">"images"</span>, (<span class="dv">8</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>))</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>context.set_tensor_address(<span class="st">"images"</span>, input_device_ptr)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>context.set_tensor_address(<span class="st">"logits"</span>, output_device_ptr)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>context.execute_async_v3(stream_handle<span class="op">=</span>stream_handle)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>(Tên hàm có thể khác nhẹ theo version TensorRT; flow tư duy giữ nguyên.)</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-17-contents" aria-controls="callout-17" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Case: profile quá rộng làm batch 1 chậm
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-17" class="callout-17-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Profile “linh hoạt”: <code>min=[1,3,128,128]</code>, <code>opt=[16,3,1024,1024]</code>, <code>max=[64,3,4096,4096]</code> trong khi production chủ yếu <code>[1,3,224,224]</code> → latency batch 1 kém vì tối ưu quanh <code>opt</code> xa traffic và range quá rộng. Sửa: Profile 0 realtime <code>min=opt=max</code> quanh 224 batch 1–4; Profile 1 high-res riêng nếu cần. Rule: <strong>profile phản ánh traffic thật</strong> — không tạo profile siêu rộng “cho chắc”.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-fp16" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="sec-fp16"><span class="header-section-number">4.7</span> FP32, TF32 và FP16 trong TensorRT</h2>
+<blockquote class="blockquote">
+<p>Bật <code>--fp16</code> có nghĩa mọi layer chạy FP16 không — và khi nào dễ mất accuracy?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>FP16</strong> thường là bước tối ưu đầu tiên trên Tensor Cores (giảm bandwidth/footprint, tăng throughput). <code>--fp16</code> = <strong>cho phép</strong> FP16 tactics — không nhất thiết ép toàn graph FP16; một số layer có thể giữ FP32. Sau FP16: so TensorRT FP32 vs FP16 và vs ORT; kiểm NaN/Inf.</p>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 35%">
+<col style="width: 32%">
+<col style="width: 32%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Precision</th>
+<th style="text-align: left;">Đặc điểm</th>
+<th style="text-align: left;">Khi dùng</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">FP32</td>
+<td style="text-align: left;">Baseline accuracy; tốn bandwidth hơn</td>
+<td style="text-align: left;">Reference khi validate</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TF32</td>
+<td style="text-align: left;">Ampere+; range gần FP32, mantissa thấp hơn; thường mặc định một số matmul</td>
+<td style="text-align: left;">Cần reproducibility chặt → kiểm config</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FP16</td>
+<td style="text-align: left;">16-bit float; Tensor Cores; range nhỏ hơn → overflow/underflow</td>
+<td style="text-align: left;">Optimization đầu tiên nên thử</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">INT8</td>
+<td style="text-align: left;">Cần scale/calibration/QDQ — <a href="#sec-int8" class="quarto-xref"><span>Mục 4.8</span></a></td>
+<td style="text-align: left;">Throughput/memory tight</td>
+</tr>
+</tbody>
+</table>
+<p>Bật FP16 bằng <code>trtexec</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--onnx</span><span class="op">=</span>model.onnx <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--saveEngine</span><span class="op">=</span>model_fp16.plan <span class="dt">\</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--shapes</span><span class="op">=</span>images:8x3x224x224 <span class="dt">\</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--fp16</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Flag</th>
+<th style="text-align: left;">Ý nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>--onnx</code></td>
+<td style="text-align: left;">Input ONNX</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>--saveEngine</code></td>
+<td style="text-align: left;">Output serialized engine</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>--shapes</code></td>
+<td style="text-align: left;">Shape build/benchmark</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>--fp16</code></td>
+<td style="text-align: left;">Cho phép FP16 tactics</td>
+</tr>
+</tbody>
+</table>
+<p>FP16 dễ lỗi accuracy khi: activation magnitude lớn; reduction trên chiều lớn; normalization nhạy; softmax/log/exp range rộng; model chưa từng kiểm mixed precision; metric rất nhạy sai số nhỏ.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-19-contents" aria-controls="callout-19" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Checklist debug FP16 (NaN/Inf hoặc accuracy ↓)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-19" class="callout-19-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Compare TensorRT FP32 vs TensorRT FP16<br>
+</li>
+<li>Compare TensorRT FP16 vs ONNX Runtime FP32<br>
+</li>
+<li>Check NaN/Inf<br>
+</li>
+<li>Dump intermediate bằng Polygraphy nếu cần<br>
+</li>
+<li>Force layer nhạy về FP32 nếu API/workflow cho phép<br>
+</li>
+<li>Kiểm preprocessing / input range<br>
+</li>
+<li>Validate preprocessing; scale/clip input nếu hợp lý; fine-tune mixed precision nếu cần</li>
+</ol>
+<p>Khi validate, thường so: PyTorch FP32 · ORT FP32 · TensorRT FP32/FP16/INT8.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-int8" class="level2" data-number="4.8">
+<h2 data-number="4.8" class="anchored" data-anchor-id="sec-int8"><span class="header-section-number">4.8</span> INT8 execution: calibration, PTQ, QAT và Q/DQ</h2>
+<blockquote class="blockquote">
+<p>Vì sao INT8 không chỉ thêm <code>--int8</code> — và Q/DQ khác calibration implicit thế nào?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>INT8 map float → int8 qua <strong>scale</strong> (round + clamp). Accuracy loss đến từ <strong>rounding error</strong> và <strong>clamping error</strong>. Cần <strong>PTQ + calibration data đại diện</strong>, hoặc <strong>QAT</strong>, hoặc graph <strong>explicit Q/DQ</strong>. Hướng hiện đại ưu tiên explicit Q/DQ + strongly typed. Calibration data phải đúng preprocessing và shape/profile traffic thật.</p>
+</div>
+</div>
+<p>Mental model symmetric INT8:</p>
+<pre class="text"><code>float_value → divide by scale → round → clamp to int8 range
+int8_value → multiply by scale → approximate float_value</code></pre>
+<p>Ví dụ đúng range:</p>
+<pre class="text"><code>x_float = 0.73
+scale = 0.01
+x_int8 = round(0.73 / 0.01) = 73
+x_dequant = 73 * 0.01 = 0.73</code></pre>
+<p>Clamping error khi vượt range:</p>
+<pre class="text"><code>x_float = 2.0
+scale = 0.01
+x_int8 = round(200) → clamp to 127
+x_dequant = 1.27</code></pre>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Scale</th>
+<th style="text-align: left;">Hệ quả</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Quá nhỏ</td>
+<td style="text-align: left;">Ít rounding cho value nhỏ; dễ clamp value lớn</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Quá lớn</td>
+<td style="text-align: left;">Ít clamp value lớn; rounding thô hơn cho value nhỏ</td>
+</tr>
+</tbody>
+</table>
+<p>Calibration / QAT tìm scale khớp distribution thật.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 41%">
+<col style="width: 19%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Phương pháp</th>
+<th style="text-align: left;">Flow</th>
+<th style="text-align: left;">Ưu / nhược</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PTQ</td>
+<td style="text-align: left;">FP32 → calibration set → ước range/scale → INT8</td>
+<td style="text-align: left;">Nhanh, không retrain; accuracy có thể giảm nếu data kém</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">QAT</td>
+<td style="text-align: left;">Train với fake-quant → export QDQ ONNX → TRT INT8</td>
+<td style="text-align: left;">Thường giữ accuracy tốt hơn; cần data + pipeline train</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Explicit Q/DQ</td>
+<td style="text-align: left;"><code>QuantizeLinear</code>/<code>DequantizeLinear</code> trong graph</td>
+<td style="text-align: left;">Semantics rõ, dễ debug, TRT ít “đoán”</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Implicit calibration</td>
+<td style="text-align: left;">Bật INT8 + calibrator trong builder</td>
+<td style="text-align: left;">Còn hỗ trợ; hiện đại ưu tiên explicit khi được</td>
+</tr>
+</tbody>
+</table>
+<p>INT8 + dynamic shapes: calibration cần calibration optimization profile — thường dùng <strong><code>opt</code></strong> của profile. Shape calibration phải khớp; calibration chỉ batch/shape không đại diện → accuracy kém ở runtime shapes khác.</p>
+<p>Workflow Q/DQ thực tế:</p>
+<pre class="text"><code>FP32 ONNX
+  → quantization tool inserts Q/DQ nodes
+  → quantized ONNX
+  → TensorRT strongly typed build
+  → INT8 engine</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> modelopt.onnx.quantization <span class="dt">\</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--onnx_path</span> model.onnx <span class="dt">\</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--quantize_mode</span> int8 <span class="dt">\</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output_path</span> model_int8_qdq.onnx</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="dt">\</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--onnx</span><span class="op">=</span>model_int8_qdq.onnx <span class="dt">\</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--shapes</span><span class="op">=</span>images:8x3x224x224 <span class="dt">\</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--stronglyTyped</span> <span class="dt">\</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--saveEngine</span><span class="op">=</span>model_int8.plan</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>--stronglyTyped</code>: tôn trọng data types trong graph. Q/DQ nói rõ chỗ quantize/dequantize và scale.</p>
+<div class="callout callout-style-default callout-warning no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Cảnh báo</span>Bẫy thường gặp
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Calibration bằng <strong>random data</strong> chỉ demo performance — <strong>không</strong> đủ đánh giá accuracy production. Preprocessing calibration khác production (thiếu normalize…) → scale sai → INT8 nhanh nhưng metric giảm mạnh. Chi tiết quantization sâu hơn ở Lesson 5.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-22-contents" aria-controls="callout-22" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Case: INT8 nhanh +50% nhưng accuracy giảm mạnh
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-22" class="callout-22-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Nguyên nhân thường: calibration vài ảnh random hoặc preprocessing khác production (<code>resize→crop→normalize</code> vs <code>resize</code> không normalize). Cách sửa: calibration set đại diện; đúng preprocessing; per-layer divergence; exclude sensitive layers; QAT nếu PTQ không đủ; đánh giá <strong>task metric</strong>, không chỉ tensor diff.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-trtexec" class="level2" data-number="4.9">
+<h2 data-number="4.9" class="anchored" data-anchor-id="sec-trtexec"><span class="header-section-number">4.9</span> <code>trtexec</code> và đọc benchmark</h2>
+<blockquote class="blockquote">
+<p><code>trtexec</code> nhanh nghĩa là service chắc nhanh — và các dòng summary nghĩa là gì?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong><code>trtexec</code></strong> là tool học/build/benchmark đầu tiên: tách vấn đề model/build khỏi bug app. Nếu <code>trtexec</code> fail → thường model/op/shape/config. Nếu <code>trtexec</code> nhanh mà app chậm → copy, alloc, sync, preprocess, batching. Đọc <strong>GPU Compute Time</strong>, H2D/D2H, enqueue, throughput; median ≠ p99.</p>
+</div>
+</div>
+<p><code>trtexec</code> làm được: parse ONNX, build/save/load engine, benchmark latency/throughput, dump layer info / per-layer profile, kiểm shape/precision flags.</p>
+<p>Output mẫu:</p>
+<pre class="text"><code>=== Performance summary ===
+Throughput: 507.399 qps
+Latency: min = 1.963 ms, max = 1.975 ms, mean = 1.969 ms, median = 1.969 ms, percentile(99%) = 1.974 ms
+Enqueue Time: mean = 0.004 ms
+H2D Latency: mean = 0.000 ms
+GPU Compute Time: mean = 1.969 ms
+D2H Latency: mean = 0.000 ms</code></pre>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 44%">
+<col style="width: 55%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: left;">Cách đọc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Throughput</td>
+<td style="text-align: left;">Inferences/s; batch=8 → phân biệt batch/s vs item/s (<code>100 batch/s × 8 = 800 images/s</code>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Latency</td>
+<td style="text-align: left;">E2E theo config <code>trtexec</code>; production quan tâm p95/p99</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">GPU Compute Time</td>
+<td style="text-align: left;">Kernels thuần; Latency ≫ compute → copy/CPU/sync/alloc/queue/pre-post</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Enqueue Time</td>
+<td style="text-align: left;">CPU submit; cao → CPU-bound / launch-bound; CUDA Graphs có thể giúp</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">H2D / D2H</td>
+<td style="text-align: left;">Host↔︎Device; compute nhanh nhưng copy lớn → bottleneck không ở model</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>--noDataTransfers</code></td>
+<td style="text-align: left;">Đo compute sạch; E2E production vẫn có thể có transfer</td>
+</tr>
+</tbody>
+</table>
+<p>Benchmark ổn định hơn (Lab 1): <code>--useCudaGraph</code> (giảm enqueue overhead một số workload), <code>--useSpinWait</code> (timing ổn hơn, tốn CPU), <code>--duration=60</code>.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-24-contents" aria-controls="callout-24" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Đào sâu: khi app chậm hơn trtexec
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-24" class="callout-24-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Nguyên nhân app thường gặp: alloc mỗi request; copy CPU↔︎GPU thừa; preprocess/postprocess CPU; sync quá nhiều; không pinned memory; batch kém; tạo context mỗi request; Python/GIL; logging; queue server. Debug: đo riêng preprocess / H2D / enqueue+compute / D2H / postprocess; CUDA events; Nsight Systems; so <code>trtexec --noDataTransfers</code>.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-python-api" class="level2" data-number="4.10">
+<h2 data-number="4.10" class="anchored" data-anchor-id="sec-python-api"><span class="header-section-number">4.10</span> Python API: build, runtime và memory</h2>
+<blockquote class="blockquote">
+<p>Ngoài <code>trtexec</code>, build/run bằng Python cần quản lý gì về shape, addresses và buffers?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Python API (TensorRT 10.x style dưới đây — kiểm tra docs version của bạn): parse ONNX → BuilderConfig (workspace, FP16, profile) → <code>build_serialized_network</code>. Runtime: deserialize → context → <strong>tự</strong> quản lý device pointers + stream — TensorRT không tự map NumPy. Production: allocate/reuse buffers và context; tránh deserialize/alloc/free mỗi request; tránh D2H nếu postprocess vẫn trên GPU.</p>
+</div>
+</div>
+<p>Build FP16 + dynamic profile (<code>build_engine.py</code>):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorrt <span class="im">as</span> trt</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> build_engine(</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    onnx_path: <span class="bu">str</span>,</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    engine_path: <span class="bu">str</span>,</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    input_name: <span class="bu">str</span> <span class="op">=</span> <span class="st">"images"</span>,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    min_shape<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>),</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    opt_shape<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>),</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    max_shape<span class="op">=</span>(<span class="dv">32</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>),</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    fp16: <span class="bu">bool</span> <span class="op">=</span> <span class="va">True</span>,</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    workspace_gib: <span class="bu">int</span> <span class="op">=</span> <span class="dv">4</span>,</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>):</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    logger <span class="op">=</span> trt.Logger(trt.Logger.INFO)</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    builder <span class="op">=</span> trt.Builder(logger)</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># TensorRT 10.x: explicit batch là mô hình bình thường</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>    network <span class="op">=</span> builder.create_network(<span class="dv">0</span>)</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    parser <span class="op">=</span> trt.OnnxParser(network, logger)</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> parser.parse(Path(onnx_path).read_bytes()):</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(parser.num_errors):</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(parser.get_error(i))</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="st">"ONNX parsing failed"</span>)</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>    config <span class="op">=</span> builder.create_builder_config()</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    config.set_memory_pool_limit(</span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>        trt.MemoryPoolType.WORKSPACE, workspace_gib <span class="op">*</span> (<span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">30</span>)</span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> fp16:</span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> builder.platform_has_fast_fp16:</span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>            config.set_flag(trt.BuilderFlag.FP16)</span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">"Warning: platform may not have fast native FP16"</span>)</span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>    profile <span class="op">=</span> builder.create_optimization_profile()</span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>    profile.set_shape(input_name, min_shape, opt_shape, max_shape)</span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>    config.add_optimization_profile(profile)</span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>    serialized <span class="op">=</span> builder.build_serialized_network(network, config)</span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> serialized <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="st">"Engine build failed"</span>)</span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>    Path(engine_path).write_bytes(<span class="bu">bytes</span>(serialized))</span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Saved TensorRT engine to: </span><span class="sc">{</span>engine_path<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">"__main__"</span>:</span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(sys.argv) <span class="op">&lt;</span> <span class="dv">3</span>:</span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"Usage: python build_engine.py model.onnx model.plan"</span>)</span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">SystemExit</span>(<span class="dv">1</span>)</span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a>    build_engine(sys.argv[<span class="dv">1</span>], sys.argv[<span class="dv">2</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> build_engine.py model.onnx model_fp16.plan</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Parse fail — nguyên nhân thường: unsupported op, dynamic shape chưa rõ, dtype không hỗ trợ, opset, custom op, export sai tên I/O.</p>
+<p>Runtime flow:</p>
+<pre class="text"><code>1. Read serialized engine bytes
+2. Deserialize engine
+3. Create execution context
+4. Allocate device buffers
+5. Copy input to GPU
+6. Set runtime shape if dynamic
+7. Bind tensor addresses
+8. Execute asynchronously on CUDA stream
+9. Copy output back or pass GPU pointer downstream
+10. Synchronize only when needed</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorrt <span class="im">as</span> trt</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>logger <span class="op">=</span> trt.Logger(trt.Logger.INFO)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>runtime <span class="op">=</span> trt.Runtime(logger)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">"model_fp16.plan"</span>, <span class="st">"rb"</span>) <span class="im">as</span> f:</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    engine <span class="op">=</span> runtime.deserialize_cuda_engine(f.read())</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>context <span class="op">=</span> engine.create_execution_context()</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Allocate GPU buffers: cuda-python / PyCUDA / CuPy / PyTorch tensors</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="co"># input_device_ptr = ...; output_device_ptr = ...; stream_handle = ...</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>context.set_input_shape(<span class="st">"images"</span>, (<span class="dv">8</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>))</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>context.set_tensor_address(<span class="st">"images"</span>, <span class="bu">int</span>(input_device_ptr))</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>context.set_tensor_address(<span class="st">"logits"</span>, <span class="bu">int</span>(output_device_ptr))</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>context.execute_async_v3(stream_handle<span class="op">=</span>stream_handle)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Memory</th>
+<th style="text-align: left;">Ý nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Host</td>
+<td style="text-align: left;">CPU RAM</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Device</td>
+<td style="text-align: left;">GPU VRAM — kernels TRT chạy ở đây</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">H2D / D2H</td>
+<td style="text-align: left;"><code>CPU → GPU</code> trước infer; <code>GPU → CPU</code> nếu cần trả về host</td>
+</tr>
+</tbody>
+</table>
+<p>Sai: mỗi request <code>cudaMalloc → copy → execute → cudaFree</code>. Đúng: startup allocate pool; request borrow → copy/execute → return. Pipeline GPU end-to-end (<code>preprocess GPU → TRT → postprocess GPU</code>) tốt hơn copy qua CPU hai đầu khi throughput cao.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-26-contents" aria-controls="callout-26" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Nhiều optimization profiles (Python)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-26" class="callout-26-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Realtime batch 1–4 vs batch job 8–64:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>profile0 <span class="op">=</span> builder.create_optimization_profile()</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>profile0.set_shape(<span class="st">"images"</span>, (<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>), (<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>), (<span class="dv">4</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>))</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>config.add_optimization_profile(profile0)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>profile1 <span class="op">=</span> builder.create_optimization_profile()</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>profile1.set_shape(<span class="st">"images"</span>, (<span class="dv">8</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>), (<span class="dv">32</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>), (<span class="dv">64</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>))</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>config.add_optimization_profile(profile1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Runtime chọn <code>profile_index</code> theo shape request.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-accuracy" class="level2" data-number="4.11">
+<h2 data-number="4.11" class="anchored" data-anchor-id="sec-accuracy"><span class="header-section-number">4.11</span> Validate accuracy và Polygraphy</h2>
+<blockquote class="blockquote">
+<p>Chỉ nhìn latency sau khi build engine — thiếu gì?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Luôn so <code>accuracy_metric(TensorRT)</code> với reference (PyTorch FP32 / ORT FP32 / TRT FP32). Tolerance float <strong>không</strong> one-size-fits-all; với INT8 tensor có thể lệch nhiều nhưng <strong>task metric</strong> vẫn ổn. <strong>Polygraphy</strong> giúp inspect, so ORT vs TRT, debug precision nhanh hơn đọc raw log.</p>
+</div>
+</div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Task</th>
+<th style="text-align: left;">Gợi ý so sánh</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Classification</td>
+<td style="text-align: left;">top-1/top-k, max/mean abs error, cosine logits</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Detection</td>
+<td style="text-align: left;">mAP, box IoU, confidence distribution, NMS diff</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Segmentation</td>
+<td style="text-align: left;">mIoU, pixel accuracy, boundary</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Embeddings</td>
+<td style="text-align: left;">cosine similarity, recall@k, downstream metric</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>np.testing.assert_allclose(trt_output, ort_output, rtol<span class="op">=</span><span class="fl">1e-3</span>, atol<span class="op">=</span><span class="fl">1e-3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Có thể hợp lý cho FP16 một số model — không phải rule chung. Production: <strong>so task metric, không chỉ từng float</strong>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">polygraphy</span> inspect model model.onnx</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="ex">polygraphy</span> run model.onnx <span class="dt">\</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--onnxrt</span> <span class="dt">\</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--trt</span> <span class="dt">\</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--atol</span> 1e-3 <span class="dt">\</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--rtol</span> 1e-3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Polygraphy còn: compare outputs, reduce failing model, inspect layer outputs, debug precision.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-28-contents" aria-controls="callout-28" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Workflow chuẩn 10 bước (đủ lệnh)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-28" class="callout-28-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Export ONNX · 2. Validate ORT · 3. <code>polygraphy inspect</code> / Netron · 4. <code>trtexec</code> FP32 baseline · 5. Build FP16 · 6. <code>polygraphy run --onnxrt --trt</code> (+ metric validation set) · 7. Dynamic profile nếu cần · 8. <code>--dumpLayerInfo --dumpProfile</code> · 9. Deploy <code>.plan</code> (Triton / custom) · 10. Monitor p50/p95/p99, throughput, GPU util, memory, queue, error, accuracy drift.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-debug-prod" class="level2" data-number="4.12">
+<h2 data-number="4.12" class="anchored" data-anchor-id="sec-debug-prod"><span class="header-section-number">4.12</span> Debug, portability, Triton và best practices</h2>
+<blockquote class="blockquote">
+<p>ORT chạy được nhưng TRT fail; engine có mang máy khác được không; bắt đầu debug từ đâu?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hầu hết sự cố thuộc vài nhóm: unsupported op, profile/shape mismatch, build chậm, FP16 NaN, INT8 accuracy drop, app ≪ <code>trtexec</code>, engine không portable. <strong>ONNX valid ≠ TensorRT compatible</strong>. Engine artifact phải kèm metadata (TRT version, GPU arch, precision, profiles). Triton phục vụ <code>.plan</code> — TRT vẫn là compute backend.</p>
+</div>
+</div>
+<section id="debug-playbook" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="debug-playbook">Debug playbook</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 34%">
+<col style="width: 65%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Triệu chứng</th>
+<th style="text-align: left;">Nguyên nhân / xử lý đầu</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>No importer registered for op: X</code></td>
+<td style="text-align: left;">Opset, simplify, rewrite, GraphSurgeon, plugin, split/ORT TRT EP fallback</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Shape outside profile / <code>set_input_shape</code> fail</td>
+<td style="text-align: left;">Shape trong <code>[min,max]</code>; đúng profile index &amp; input name; set shape trước execute</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Build rất chậm</td>
+<td style="text-align: left;">Timing cache; thu hẹp/bớt profiles; build offline CI; không build trên request path</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FP16 NaN / accuracy ↓</td>
+<td style="text-align: left;">So FP32 vs FP16; Polygraphy; giữ layer nhạy FP32; preprocessing</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">INT8 accuracy ↓</td>
+<td style="text-align: left;">Calibration đại diện + đúng preprocess; exclude layer; QAT; task metric</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">App chậm hơn <code>trtexec</code></td>
+<td style="text-align: left;">Xem tip <a href="#sec-trtexec" class="quarto-xref"><span>Mục 4.9</span></a> — thường app I/O/memory/sync</td>
+</tr>
+</tbody>
+</table>
+<p>Checklist profile mismatch:</p>
+<pre class="text"><code>[ ] input name đúng chưa?
+[ ] profile index đúng chưa?
+[ ] shape nằm trong min/max chưa?
+[ ] opt shape có phản ánh traffic thật chưa?
+[ ] output shape đã infer sau khi set input shape chưa?</code></pre>
+<p>Unsupported op — thứ tự: ONNX checker → ORT xác nhận model → Netron → <code>onnxsim</code> → đổi opset → rewrite → GraphSurgeon → plugin → hybrid pipeline.</p>
+</section>
+<section id="engine-portability" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="engine-portability">Engine portability</h3>
+<p>Quản lý artifact theo: model version, TensorRT version, CUDA/cuDNN, GPU architecture, precision, profiles, build flags.</p>
+<pre class="text"><code>resnet50_trt10.16_sm80_fp16_b1-32_224x224.plan
+resnet50_trt10.16_sm90_fp16_b1-32_224x224.plan</code></pre>
+<p>Metadata cạnh engine (ví dụ):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"model_name"</span><span class="fu">:</span> <span class="st">"resnet50"</span><span class="fu">,</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"model_version"</span><span class="fu">:</span> <span class="st">"2026-05-14"</span><span class="fu">,</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"tensorrt_version"</span><span class="fu">:</span> <span class="st">"10.16.1"</span><span class="fu">,</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"cuda_version"</span><span class="fu">:</span> <span class="st">"12.x"</span><span class="fu">,</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"gpu_arch"</span><span class="fu">:</span> <span class="st">"sm80"</span><span class="fu">,</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"precision"</span><span class="fu">:</span> <span class="st">"fp16"</span><span class="fu">,</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"profiles"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"input"</span><span class="fu">:</span> <span class="st">"images"</span><span class="fu">,</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"min"</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">1</span><span class="ot">,</span> <span class="dv">3</span><span class="ot">,</span> <span class="dv">224</span><span class="ot">,</span> <span class="dv">224</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"opt"</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">8</span><span class="ot">,</span> <span class="dv">3</span><span class="ot">,</span> <span class="dv">224</span><span class="ot">,</span> <span class="dv">224</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"max"</span><span class="fu">:</span> <span class="ot">[</span><span class="dv">32</span><span class="ot">,</span> <span class="dv">3</span><span class="ot">,</span> <span class="dv">224</span><span class="ot">,</span> <span class="dv">224</span><span class="ot">]</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="tensorrt-trong-triton" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="tensorrt-trong-triton">TensorRT trong Triton</h3>
+<pre class="text"><code>model_repository/
+  resnet50/
+    config.pbtxt
+    1/
+      model.plan</code></pre>
+<p>Triton thêm: scheduling, dynamic batching, concurrent execution, versioning, metrics, health, ensemble. Engine vẫn là backend compute — chi tiết serving ở Lesson 6.</p>
+</section>
+<section id="best-practices-và-misconceptions" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="best-practices-và-misconceptions">Best practices và misconceptions</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 35%">
+<col style="width: 64%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Nhóm</th>
+<th style="text-align: left;">Thực hành</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Build</td>
+<td style="text-align: left;">Offline; lưu engine + metadata; timing cache; profile theo traffic; workspace đủ; validate sớm bằng <code>trtexec</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Precision</td>
+<td style="text-align: left;">FP32 baseline → FP16 trước INT8; validate sau mỗi đổi; INT8: data đại diện hoặc QAT; ưu tiên Q/DQ</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Runtime</td>
+<td style="text-align: left;">Deserialize một lần; reuse context/buffers; tránh alloc/copy thừa; stream + sync đúng</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Profiling</td>
+<td style="text-align: left;"><code>trtexec</code> trước app; dump layer/profile; Nsight; tách compute vs H2D/D2H; p50/p95/p99</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 55%">
+<col style="width: 45%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Hiểu nhầm</th>
+<th style="text-align: left;">Thực tế</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">TRT luôn nhanh hơn mọi runtime</td>
+<td style="text-align: left;">Phụ thuộc model, shape, precision, HW, transfer, app</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Bật FP16 = mọi layer FP16</td>
+<td style="text-align: left;">Có thể chọn theo layer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">INT8 chỉ cần <code>--int8</code></td>
+<td style="text-align: left;">Cần scale / calibration / QDQ + validate</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Dynamic càng rộng càng tốt</td>
+<td style="text-align: left;">Thường hại tactic quanh traffic thật</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Engine dùng mọi GPU</td>
+<td style="text-align: left;">Rebuild trên target (trừ compatibility mode phù hợp)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>trtexec</code> nhanh → service nhanh</td>
+<td style="text-align: left;">Còn preprocess, queue, network, postprocess…</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-30-contents" aria-controls="callout-30" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Case: ORT CUDA chạy được nhưng <code>trtexec</code> fail
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-30" class="callout-30-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>ORT CUDA EP có thể chạy op bằng kernel riêng hoặc <strong>fallback CPU</strong>. TensorRT cần importer/layer/plugin — thiếu thì build fail. Cách nghĩ: <code>ONNX valid ≠ TensorRT compatible</code>. Xử lý: inspect node lỗi → support matrix → simplify → export lại → plugin → split graph.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="mini-lab" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="mini-lab">Mini-lab</h2>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Ghi chú</span>Thực hành — TensorRT với <code>trtexec</code> (và optional Python)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Giả sử <code>model.onnx</code>, input <code>images</code>, shape <code>[N,3,224,224]</code>. Ghi bảng median/p99 latency, throughput, GPU compute. Cần NVIDIA GPU + <code>trtexec</code>.</p>
+</div>
+</div>
+<section id="lab-1-build-benchmark-fp32fp16" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="lab-1-build-benchmark-fp32fp16">Lab 1: Build &amp; benchmark FP32/FP16</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--onnx</span><span class="op">=</span>model.onnx <span class="at">--saveEngine</span><span class="op">=</span>model_fp32.plan <span class="dt">\</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--shapes</span><span class="op">=</span>images:1x3x224x224</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--onnx</span><span class="op">=</span>model.onnx <span class="at">--saveEngine</span><span class="op">=</span>model_fp16.plan <span class="dt">\</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--shapes</span><span class="op">=</span>images:1x3x224x224 <span class="at">--fp16</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>model_fp16.plan <span class="at">--shapes</span><span class="op">=</span>images:1x3x224x224</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>model_fp16.plan <span class="at">--shapes</span><span class="op">=</span>images:1x3x224x224 <span class="at">--noDataTransfers</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>model_fp16.plan <span class="at">--shapes</span><span class="op">=</span>images:1x3x224x224 <span class="dt">\</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--noDataTransfers</span> <span class="at">--useCudaGraph</span> <span class="at">--useSpinWait</span> <span class="at">--duration</span><span class="op">=</span>60</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="lab-2-dynamic-profile-minoptmax" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="lab-2-dynamic-profile-minoptmax">Lab 2: Dynamic profile min/opt/max</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--onnx</span><span class="op">=</span>model.onnx <span class="at">--saveEngine</span><span class="op">=</span>model_dynamic_fp16.plan <span class="dt">\</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--minShapes</span><span class="op">=</span>images:1x3x224x224 <span class="dt">\</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--optShapes</span><span class="op">=</span>images:8x3x224x224 <span class="dt">\</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--maxShapes</span><span class="op">=</span>images:32x3x224x224 <span class="dt">\</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--fp16</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>model_dynamic_fp16.plan <span class="at">--shapes</span><span class="op">=</span>images:1x3x224x224</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>model_dynamic_fp16.plan <span class="at">--shapes</span><span class="op">=</span>images:8x3x224x224</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>model_dynamic_fp16.plan <span class="at">--shapes</span><span class="op">=</span>images:32x3x224x224</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Hỏi: batch nào latency thấp / throughput cao? Gần <code>optShapes</code> nhất? Batch 1 bất thường? Batch 32 memory pressure? Traffic thật có khớp <code>opt</code> không?</p>
+</section>
+<section id="lab-3-nhiều-optimization-profiles" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="lab-3-nhiều-optimization-profiles">Lab 3: Nhiều optimization profiles</h3>
+<p>Realtime batch 1–4 vs batch 8–64 — dùng Python API như tip <a href="#sec-python-api" class="quarto-xref"><span>Mục 4.10</span></a>; runtime chọn profile theo shape.</p>
+</section>
+<section id="lab-4-dump-layer-info" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="lab-4-dump-layer-info">Lab 4: Dump layer info</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--onnx</span><span class="op">=</span>model.onnx <span class="at">--shapes</span><span class="op">=</span>images:8x3x224x224 <span class="at">--fp16</span> <span class="dt">\</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--profilingVerbosity</span><span class="op">=</span>detailed <span class="dt">\</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dumpLayerInfo</span> <span class="at">--dumpProfile</span> <span class="at">--separateProfileRun</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Tìm: layer % latency cao nhất; layer vẫn FP32; reformat; tên tactic; bottleneck Conv/MatMul/norm/resize/plugin.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-32-contents" aria-controls="callout-32" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Mini project — image classification end-to-end
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-32" class="callout-32-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Deliverables: <code>model.onnx</code>, <code>model_fp32.plan</code>, <code>model_fp16.plan</code>, <code>model_dynamic_fp16.plan</code>, <code>benchmark_results.md</code>, <code>accuracy_report.md</code> (INT8 optional).</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 9%">
+<col style="width: 15%">
+<col style="width: 11%">
+<col style="width: 7%">
+<col style="width: 16%">
+<col style="width: 18%">
+<col style="width: 9%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Engine</th>
+<th style="text-align: left;">Shape</th>
+<th style="text-align: left;">Precision</th>
+<th style="text-align: right;">Median</th>
+<th style="text-align: right;">P99</th>
+<th style="text-align: right;">Throughput</th>
+<th style="text-align: right;">GPU compute</th>
+<th style="text-align: left;">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ORT CUDA</td>
+<td style="text-align: left;">1×3×224×224</td>
+<td style="text-align: left;">FP32</td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TRT</td>
+<td style="text-align: left;">1×3×224×224</td>
+<td style="text-align: left;">FP32</td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TRT</td>
+<td style="text-align: left;">1×3×224×224</td>
+<td style="text-align: left;">FP16</td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TRT dynamic</td>
+<td style="text-align: left;">1×3×224×224</td>
+<td style="text-align: left;">FP16</td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TRT dynamic</td>
+<td style="text-align: left;">8×3×224×224</td>
+<td style="text-align: left;">FP16</td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TRT Q/DQ</td>
+<td style="text-align: left;">8×3×224×224</td>
+<td style="text-align: left;">INT8</td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: left;">optional</td>
+</tr>
+</tbody>
+</table>
+<p>Câu hỏi: chọn engine nào cho production? Vì sao? Accuracy có chấp nhận được không?</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="checkpoint-questions" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="checkpoint-questions">Checkpoint questions</h2>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-33-contents" aria-controls="callout-33" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Tự kiểm
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-33" class="callout-33-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>TensorRT engine / plan là gì? Compiled model đã chọn tactics, memory, precision.<br>
+</li>
+<li>Vì sao build chậm, runtime nhanh? Autotune tactics lúc build; runtime chỉ enqueue.<br>
+</li>
+<li>Builder vs Runtime? Compile vs load serialized engine.<br>
+</li>
+<li>ExecutionContext? State: profile, shape, addresses.<br>
+</li>
+<li>Tactic? Kernel/strategy cụ thể cho layer.<br>
+</li>
+<li>Workspace nhỏ ảnh hưởng gì? Loại tactic cần nhiều temp → có thể chậm hơn.<br>
+</li>
+<li>Timing cache? Reuse kết quả timing giữa các lần build.<br>
+</li>
+<li>ONNX dynamic vs TRT profile? <code>-1</code> chưa đủ; cần min/opt/max.<br>
+</li>
+<li><code>opt</code>? Shape ưu tiên tối ưu — khớp traffic thật.<br>
+</li>
+<li>Nhiều profiles khi nào? Cụm traffic khác nhau.<br>
+</li>
+<li>FP16 rủi ro? Overflow/NaN; không phải mọi layer FP16.<br>
+</li>
+<li>INT8 cần gì? Scale + calibration/QAT/QDQ + validate.<br>
+</li>
+<li>Rounding vs clamping error? Lưới int8 vs clip ngoài range.<br>
+</li>
+<li>Q/DQ? Explicit quantize/dequantize trong graph.<br>
+</li>
+<li>ORT ok, TRT fail? Fallback ORT vs thiếu importer TRT.<br>
+</li>
+<li>App chậm hơn trtexec? Copy/alloc/sync/preprocess.<br>
+</li>
+<li>Engine không portable? GPU arch + TRT version — metadata + rebuild.<br>
+</li>
+<li>Unsupported op — thứ tự xử lý? Checker → ORT → Netron → simplify → opset → rewrite → plugin.<br>
+</li>
+<li>INT8 accuracy ↓ — bắt đầu đâu? Calibration/preprocess → per-layer → QAT.<br>
+</li>
+<li>p99 cao — tách bottleneck thế nào? Preprocess / H2D / compute / D2H / post / queue.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="glossary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="glossary">Glossary</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 39%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Thuật ngữ</th>
+<th style="text-align: left;">Giải thích ngắn</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">TensorRT</td>
+<td style="text-align: left;">SDK NVIDIA optimize + chạy inference trên GPU NVIDIA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Engine / plan file</td>
+<td style="text-align: left;">Compiled model serialize (<code>.plan</code> / <code>.engine</code> / <code>.trt</code>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Builder</td>
+<td style="text-align: left;">Compiler driver tạo engine</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">NetworkDefinition</td>
+<td style="text-align: left;">Graph nội bộ TensorRT</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">BuilderConfig</td>
+<td style="text-align: left;">Flags build: precision, workspace, profiles, cache</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Runtime</td>
+<td style="text-align: left;">Deserialize plan → engine</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ExecutionContext</td>
+<td style="text-align: left;">State để execute (shape, profile, addresses)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Tactic</td>
+<td style="text-align: left;">Implementation/kernel cụ thể cho layer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Timing cache</td>
+<td style="text-align: left;">Cache timing giảm thời gian rebuild</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Optimization profile</td>
+<td style="text-align: left;"><code>min</code> / <code>opt</code> / <code>max</code> cho dynamic inputs</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FP16 / TF32 / INT8</td>
+<td style="text-align: left;">Half float / TensorFloat-32 / 8-bit quantized</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Q/DQ</td>
+<td style="text-align: left;">Quantize / Dequantize nodes (explicit quantization)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Calibration</td>
+<td style="text-align: left;">Ước scale từ representative data (PTQ)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PTQ / QAT</td>
+<td style="text-align: left;">Post-training quant / quantization-aware training</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Polygraphy</td>
+<td style="text-align: left;">Tool debug/so sánh accuracy conversion</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>trtexec</code></td>
+<td style="text-align: left;">CLI build, benchmark, profile TensorRT</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Reformat layer</td>
+<td style="text-align: left;">Layer đổi layout/format nội bộ (có thể tốn thêm)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="summary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
+<ol type="1">
+<li>TensorRT = inference <strong>compiler</strong> + runtime NVIDIA — performance từ <strong>build-time specialization</strong>.<br>
+</li>
+<li>Engine = compiled model; Builder tạo; Runtime load; Context chạy trên stream.<br>
+</li>
+<li>Tactic + workspace + timing cache giải thích build lâu và engine khác nhau theo GPU/shape.<br>
+</li>
+<li>Profile <code>opt</code> phải phản ánh traffic; range quá rộng thường hại.<br>
+</li>
+<li>FP16 trước; INT8 cần quantization nghiêm túc (ví dụ số scale/clamp) + validate task metric.<br>
+</li>
+<li>Đo bằng <code>trtexec</code> nhưng quyết định production bằng E2E app + accuracy + metadata engine.</li>
+</ol>
+</section>
+<section id="preview-bài-tiếp-theo" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="preview-bài-tiếp-theo">Preview bài tiếp theo</h2>
+<p>Lesson 5: <strong>Quantization Deep Dive — PTQ, QAT, Calibration, Q/DQ, INT8/FP8 and Accuracy Recovery</strong></p>
+<p>Lesson 4 đã đặt FP16/INT8 trong pipeline TensorRT. Lesson 5 đi sâu quantization: scale, calibration, QAT, phục hồi accuracy khi INT8 làm metric giảm.</p>
+</section>
+<section id="references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
+<ol type="1">
+<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/">NVIDIA TensorRT Documentation</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/getting-started/quick-start-guide.html">TensorRT Quick Start Guide</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/architecture/capabilities.html">TensorRT Capabilities</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/work-dynamic-shapes.html">Working with Dynamic Shapes</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/_static/python-api/infer/Core/OptimizationProfile.html">Optimization Profiles API</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/work-quantized-types.html">Working with Quantized Types</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/accuracy-considerations.html">Accuracy Considerations</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/best-practices.html">Best Practices</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/benchmarking.html">Benchmarking with trtexec</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/reference/troubleshooting.html">Troubleshooting</a></li>
+</ol>
+
+
+</section>

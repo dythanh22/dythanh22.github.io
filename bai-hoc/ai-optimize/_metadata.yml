@@ -1,0 +1,15 @@
+sidebar: ai-optimize
+series: ai-optimize
+categories: [ai-optimize, inference]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    mermaid:
+      theme: default
+    include-after-body:
+      - text: |
+          <script type="module">
+            import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/+esm";
+            mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+          </script>

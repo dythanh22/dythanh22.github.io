@@ -1,11 +1,54 @@
 ---
 title: "Bài học"
-description: "Ghi chú học tập theo chủ đề và chuỗi bài có thứ tự"
+description: "Chọn chuỗi, đọc theo thứ tự — lọc theo chủ đề hoặc chuỗi khi danh sách dài"
+page-layout: full
+toc: false
+sidebar: false
+listing:
+  - id: danh-sach-chuoi
+    contents:
+      - "*/index.qmd"
+    sort: "title"
+    type: grid
+    grid-columns: 2
+    fields: [title, description]
+    sort-ui: false
+    filter-ui: false
+    max-description-length: 160
+
+  - id: danh-sach-bai
+    contents:
+      - "**/*.qmd"
+      - "!index.qmd"
+      - "!**/index.qmd"
+    sort:
+      - "series"
+      - "order"
+    type: table
+    categories: true
+    sort-ui: true
+    filter-ui: true
+    fields: [order, title, date, description, categories]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      date: "Ngày"
+      description: "Mô tả"
+      categories: "Chủ đề"
+    page-size: 25
+    max-description-length: 120
 ---
 
-::: {.empty-state}
-::: {.empty-icon}
-📚
+Chọn **chuỗi** bên dưới, rồi đọc từng chương theo thứ tự. Sidebar và nút trước/sau giữ đúng lộ trình trong chuỗi đang mở.
+
+## Chuỗi bài
+
+::: {#danh-sach-chuoi}
 :::
-**Chưa có bài học nào.** Nội dung sẽ được đăng tại đây khi sẵn sàng.
+
+## Tất cả chương
+
+Lọc theo chủ đề / chuỗi (`architecture-models`, `ai-optimize`, `alexnet`, …) hoặc tìm theo tên. Sắp xếp theo `#` (`order`) hoặc ngày.
+
+::: {#danh-sach-bai}
 :::

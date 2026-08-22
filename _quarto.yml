@@ -4,16 +4,25 @@ project:
   preview:
     port: 4321
     browser: true
+  render:
+    - index.qmd
+    - about.qmd
+    - bai-hoc/**
+    - "!du-an/**"
+    - "!nghien-cuu/**"
   resources:
     - legacy/**/*
 
 website:
   title: "dythanh22"
-  description: "Ghi chú học tập, dự án thực hành và tổng hợp nghiên cứu"
+  description: "Ghi chú học tập — kiến trúc mô hình và tối ưu inference"
   site-url: https://dythanh22.github.io
   repo-url: https://github.com/dythanh22/dythanh22.github.io
   repo-actions: [edit, issue]
   reader-mode: true
+  page-navigation: true
+  bread-crumbs: true
+  back-to-top-navigation: true
 
   navbar:
     background: primary
@@ -26,55 +35,50 @@ website:
     left:
       - href: index.qmd
         text: Trang chủ
-      - href: bai-hoc/index.qmd
-        text: Bài học
-      - href: du-an/index.qmd
-        text: Dự án
-      - href: nghien-cuu/index.qmd
-        text: Nghiên cứu
+      - text: Bài học
+        menu:
+          - href: bai-hoc/index.qmd
+            text: Tất cả chuỗi
+          - href: bai-hoc/architecture-models/index.qmd
+            text: Architecture Models
+          - href: bai-hoc/ai-optimize/index.qmd
+            text: AI Optimization
       - href: about.qmd
         text: Giới thiệu
 
+  # Sidebar riêng từng chuỗi (id khớp sidebar: trong _metadata.yml).
+  # Thêm bài/nhóm mới: chỉ cần file .qmd (+ thư mục nhóm) với order — auto tự nhận.
   sidebar:
-    - id: bai-hoc
-      title: "Bài học"
+    - id: architecture-models
+      title: "Architecture Models"
       style: docked
       search: true
       collapse-level: 2
       contents:
-        - auto: bai-hoc/**/*
+        - auto: "bai-hoc/architecture-models"
 
-    - id: du-an
-      title: "Dự án"
+    - id: ai-optimize
+      title: "AI Optimization"
       style: docked
       search: true
       collapse-level: 2
       contents:
-        - auto: du-an/**/*
-
-    - id: nghien-cuu
-      title: "Nghiên cứu"
-      style: docked
-      search: true
-      collapse-level: 2
-      contents:
-        - auto: nghien-cuu/**/*
+        - auto: "bai-hoc/ai-optimize"
 
   page-footer:
     left: "© 2026 dythanh22 · Học tập & ghi chú"
     center:
       - href: bai-hoc/index.qmd
         text: Bài học
-      - href: du-an/index.qmd
-        text: Dự án
-      - href: nghien-cuu/index.qmd
-        text: Nghiên cứu
+      - href: about.qmd
+        text: Giới thiệu
     right:
       - icon: github
         href: https://github.com/dythanh22/dythanh22.github.io
 
 format:
   html:
+    lang: vi
     theme:
       light: [cosmo, assets/css/custom.scss]
       dark: [darkly, assets/css/custom.scss]
@@ -89,6 +93,8 @@ format:
       light: github
       dark: github-dark
     fig-cap-location: bottom
+    fig-align: center
+    smooth-scroll: true
     link-external-newwindow: true
     include-in-header:
       - text: |
@@ -96,6 +102,8 @@ format:
           <link rel="preconnect" href="https://fonts.googleapis.com">
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    include-after-body:
+      - file: assets/js/lesson-progress.html
 
 language:
   title-block-author-single: "Tác giả"
@@ -113,7 +121,7 @@ language:
   code-tools-hide-all-code: "Ẩn toàn bộ mã"
   search:
     no-results-text: "Không tìm thấy kết quả"
-    placeholder: "Tìm kiếm bài viết..."
+    placeholder: "Tìm kiếm bài học..."
     search-text: "Tìm"
     search-document-title: "Tìm kiếm"
   crossref-fig-title: "Hình"
@@ -136,3 +144,26 @@ language:
   callout-important-title: "Quan trọng"
   callout-caution-title: "Cẩn thận"
   callout-warning-title: "Cảnh báo"
+  listing-page-order-by: "Sắp xếp"
+  listing-page-filter: "Lọc"
+  listing-page-no-matches: "Không có bài phù hợp"
+  listing-page-order-by-default: "Mặc định"
+  listing-page-order-by-title-asc: "Tiêu đề"
+  listing-page-order-by-date-asc: "Cũ nhất"
+  listing-page-order-by-date-desc: "Mới nhất"
+  listing-page-categories: "Chủ đề"
+  listing-page-field-title: "Tiêu đề"
+  listing-page-field-date: "Ngày"
+  listing-page-field-description: "Mô tả"
+  listing-page-field-categories: "Chủ đề"
+  search-no-results-text: "Không tìm thấy kết quả"
+  search-matching-documents-text: "tài liệu khớp"
+  search-copy-link-title: "Sao chép liên kết tìm kiếm"
+  search-hide-matches-text: "Ẩn kết quả thêm"
+  search-more-match-text: "khớp khác trong tài liệu này"
+  search-more-matches-text: "khớp khác trong tài liệu này"
+  search-clear-button-title: "Xóa"
+  search-text-placeholder: "Tìm kiếm bài học..."
+  search-detached-cancel-button-title: "Hủy"
+  search-submit-button-title: "Tìm"
+  search-label: "Tìm kiếm"

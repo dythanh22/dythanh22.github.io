@@ -1,0 +1,84 @@
+---
+short-title: "Tổng quan chuỗi"
+title: "Architecture Models"
+subtitle: "Đọc kiến trúc CNN từ baseline — AlexNet rồi VGG"
+date: 2026-08-22
+order: 0
+categories: [architecture-models, architecture, cnn]
+series: architecture-models
+role: "Tổng quan chuỗi Architecture Models"
+description: "Chuỗi phân rã kiến trúc mạng: AlexNet, VGG, rồi ResNet."
+toc: true
+listing:
+  - id: roadmap-alexnet
+    contents:
+      - "AlexNet/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
+  - id: roadmap-vgg
+    contents:
+      - "VGG/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+---
+
+Chuỗi này đọc **kiến trúc** như một hệ thống — không chỉ tên lớp, mà còn shape, thông lượng, bộ nhớ, và lựa chọn nào vẫn còn dùng.
+
+:::: {.series-grid}
+::: {.series-card}
+<p class="eyebrow">2012 · Baseline</p>
+### [AlexNet](AlexNet/index.qmd)
+
+Pipeline: Input → Conv1–5 (ReLU / LRN / Pool) → Flatten → FC (+ dropout) → 1000 logits.
+
+[Bắt đầu AlexNet →](AlexNet/index.qmd)
+:::
+
+::: {.series-card}
+<p class="eyebrow">2014 · Độ sâu đều</p>
+### [VGG](VGG/index.qmd)
+
+Conv $3\times3$ xếp chồng, max pool $2\times2$, config A–E, VGG-16 đầu-cuối.
+
+[Bắt đầu VGG →](VGG/index.qmd)
+:::
+::::
+
+## Lộ trình AlexNet
+
+::: {#roadmap-alexnet}
+:::
+
+Đọc tối thiểu: tổng quan → tích chập → ReLU.
+
+## Lộ trình VGG
+
+::: {#roadmap-vgg}
+:::
+
+Đọc tối thiểu: tổng quan → conv block → config → VGG-16.
+
+::: {.callout-note}
+## Tiếp theo trong chuỗi
+
+ResNet sẽ được thêm cùng cấu trúc (thư mục nhóm → các bài thành phần). Sidebar dùng `auto` nên nhận nhóm mới khi bạn tạo thư mục.
+:::

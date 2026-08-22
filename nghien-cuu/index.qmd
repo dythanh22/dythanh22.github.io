@@ -1,6 +1,7 @@
 ---
 title: "Nghiên cứu"
 description: "Ghi chú paper, survey và tổng hợp chủ đề học thuật"
+draft: true
 ---
 
 ::: {.empty-state}

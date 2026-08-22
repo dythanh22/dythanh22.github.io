@@ -1,0 +1,7 @@
+group: VGG
+categories: [architecture-models, architecture, cnn, vgg]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

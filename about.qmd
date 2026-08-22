@@ -5,19 +5,20 @@ description: "Về tác giả và mục đích của website"
 
 ## Về website này
 
-Đây là trang cá nhân của **dythanh22** — nơi tập hợp:
+Trang cá nhân của **dythanh22** — đăng **chuỗi bài học** để đọc lại theo thứ tự.
 
-- **Bài học** (`bai-hoc/`): ghi chú học tập, chuỗi bài theo chủ đề
-- **Dự án** (`du-an/`): các project thực hành có hướng dẫn từng bước
-- **Nghiên cứu** (`nghien-cuu/`): tóm tắt paper và survey chủ đề
+Hiện có hai chuỗi:
 
-Toàn bộ nội dung được viết bằng **Quarto** (`.qmd` / `.md`), render sang HTML và deploy tự động qua **GitHub Actions** lên [dythanh22.github.io](https://dythanh22.github.io).
+- [Architecture Models](bai-hoc/architecture-models/index.qmd) — bắt đầu với AlexNet
+- [AI Optimization for Inference Systems](bai-hoc/ai-optimize/index.qmd) — 10 bài từ artifact đến production serving
+
+Viết bằng **Quarto** (`.qmd` / `.md`) hoặc HTML đã xuất, deploy qua GitHub Actions lên [dythanh22.github.io](https://dythanh22.github.io).
 
 ## Công nghệ
 
 | Thành phần | Công cụ |
 |------------|---------|
-| Viết nội dung | Quarto, Markdown |
+| Viết nội dung | Quarto, Markdown, HTML |
 | Hosting | GitHub Pages |
 | CI/CD | GitHub Actions |
 | Theme | Bootstrap (cosmo / darkly) + custom SCSS |
@@ -26,7 +27,3 @@ Toàn bộ nội dung được viết bằng **Quarto** (`.qmd` / `.md`), render
 
 - GitHub: [dythanh22](https://github.com/dythanh22)
 - Repo site: [dythanh22.github.io](https://github.com/dythanh22/dythanh22.github.io)
-
-## Đóng góp
-
-Site này chủ yếu phục vụ học tập cá nhân. Nếu bạn phát hiện lỗi hoặc muốn góp ý, hãy mở issue trên GitHub repo.

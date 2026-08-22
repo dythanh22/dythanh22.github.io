@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="280" viewBox="0 0 720 280" role="img" aria-labelledby="vgg-03-title">
+<title id="vgg-03-title">Receptive field and parameters</title>
+<rect class="fig-bg" width="720" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="360.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Ba lớp 3×3 ≈ RF 7×7, ít tham số hơn, nhiều ReLU hơn</text>
+<text x="360.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">RF = 2L + 1  ·  params ∝ k² C² (cùng C_in=C_out=C)</text>
+<rect x="50.0" y="70.0" width="280.0" height="130.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="190.0" y="121.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">1 × Conv 7×7</text>
+<text x="190.0" y="139.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#5C6570" text-anchor="middle">RF = 7   ·   1 ReLU</text>
+<text x="190.0" y="157.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#C45C0A" text-anchor="middle">params = 49 C²</text>
+<rect x="390.0" y="70.0" width="280.0" height="130.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="530.0" y="121.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">3 × Conv 3×3</text>
+<text x="530.0" y="139.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#5C6570" text-anchor="middle">RF = 7   ·   3 ReLU</text>
+<text x="530.0" y="157.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#2F6FED" text-anchor="middle">params = 27 C²  (−45%)</text>
+<line x1="338.0" y1="135.0" x2="374.0" y2="135.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="374.0,130.0 382.0,135.0 374.0,140.0" fill="#5C6570"/>
+<text x="360.0" y="123.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#5C6570" text-anchor="middle">cùng RF</text>
+<text x="360.0" y="230.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#5C6570" text-anchor="middle">Hai lớp 3×3: RF=5, params=18C² vs 5×5 = 25C² (−28%)</text>
+<text x="360.0" y="252.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Khớp luận điểm paper: more non-linearities and fewer parameters</text>
+</svg>

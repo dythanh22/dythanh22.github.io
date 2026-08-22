@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="240" viewBox="0 0 780 240" role="img" aria-labelledby="vgg-05-title">
+<title id="vgg-05-title">VGG classifier head</title>
+<rect class="fig-bg" width="780" height="240" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Classifier head: Flatten → FC4096 → FC4096 → FC K (logits)</text>
+<rect x="48.0" y="60.0" width="120.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="108.0" y="85.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">7×7×512</text>
+<text x="108.0" y="102.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">feature vol.</text>
+<rect x="194.0" y="60.0" width="110.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="249.0" y="85.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Flatten</text>
+<text x="249.0" y="102.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">25,088</text>
+<line x1="174.0" y1="90.0" x2="180.0" y2="90.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="180.0,85.0 188.0,90.0 180.0,95.0" fill="#5C6570"/>
+<rect x="330.0" y="60.0" width="120.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="390.0" y="85.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">FC1+ReLU</text>
+<text x="390.0" y="102.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#C45C0A" text-anchor="middle">≈102.8M</text>
+<line x1="310.0" y1="90.0" x2="316.0" y2="90.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="316.0,85.0 324.0,90.0 316.0,95.0" fill="#5C6570"/>
+<rect x="476.0" y="60.0" width="110.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="531.0" y="85.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">FC2+ReLU</text>
+<text x="531.0" y="102.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">≈16.8M</text>
+<line x1="456.0" y1="90.0" x2="462.0" y2="90.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="462.0,85.0 470.0,90.0 462.0,95.0" fill="#5C6570"/>
+<rect x="612.0" y="60.0" width="120.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="672.0" y="85.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">FC3 logits</text>
+<text x="672.0" y="102.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">K=1000</text>
+<line x1="592.0" y1="90.0" x2="598.0" y2="90.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="598.0,85.0 606.0,90.0 598.0,95.0" fill="#5C6570"/>
+<rect x="120.0" y="160.0" width="480.6" height="28.0" fill="#D6E4FF" stroke="#2F6FED" stroke-width="2" data-allow-overlap="1"/>
+<rect x="600.6" y="160.0" width="59.4" height="28.0" fill="#F0E6E0" stroke="#C45C0A" stroke-width="2" data-allow-overlap="1"/>
+<text x="360.3" y="179.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">FC ≈ 89% params (~123.6M)</text>
+<text x="390.0" y="220.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">FC1 chiếm ~74% toàn mạng — động lực cho GAP ở kiến trúc sau</text>
+</svg>

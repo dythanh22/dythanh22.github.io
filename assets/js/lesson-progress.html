@@ -1,0 +1,57 @@
+<script>
+(() => {
+  const inject = () => {
+    const active = document.querySelector(
+      "#quarto-sidebar a.sidebar-item-text.sidebar-link.active, " +
+        ".sidebar-navigation a.sidebar-item-text.sidebar-link.active"
+    );
+    if (!active) return;
+
+    const titleBlock = document.getElementById("title-block-header");
+    if (!titleBlock) return;
+
+    const label = (active.textContent || "").trim();
+    if (/tổng quan chuỗi/i.test(label)) return;
+
+    const li = active.closest("li.sidebar-item");
+    // Section header (nhóm/model): không đếm như một "chương" trong list con
+    if (li && li.classList.contains("sidebar-item-section")) {
+      const nested = li.querySelectorAll(":scope > ul a.sidebar-link");
+      if (nested.length > 0) {
+        const badge = document.createElement("p");
+        badge.className = "lesson-progress";
+        badge.textContent = `${label} · Tổng quan · ${nested.length} chương`;
+        titleBlock.insertAdjacentElement("afterend", badge);
+      }
+      return;
+    }
+
+    const list = active.closest("ul");
+    if (!list) return;
+
+    const links = [...list.querySelectorAll(":scope > li > .sidebar-item-container > a.sidebar-link")];
+    if (links.length < 1) return;
+
+    const idx = links.indexOf(active);
+    if (idx < 0) return;
+
+    const sectionTitle =
+      list
+        .closest(".sidebar-item-section")
+        ?.querySelector(":scope > .sidebar-item-container .sidebar-item-text, :scope > .sidebar-item-container a")
+        ?.textContent?.trim() || "";
+
+    const badge = document.createElement("p");
+    badge.className = "lesson-progress";
+    const chapter = `Chương ${idx + 1}/${links.length}`;
+    badge.textContent = sectionTitle ? `${sectionTitle} · ${chapter}` : chapter;
+    titleBlock.insertAdjacentElement("afterend", badge);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", inject);
+  } else {
+    inject();
+  }
+})();
+</script>

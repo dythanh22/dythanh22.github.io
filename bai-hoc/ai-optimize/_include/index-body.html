@@ -1,0 +1,454 @@
+<section id="ai-optimization-for-inference-systems" class="level1 unnumbered">
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Ghi chú</span>Mục tiêu chuỗi bài
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Không chỉ học API ONNX / TensorRT / Triton / vLLM. Mục tiêu là hiểu cách các thành phần ghép thành một <strong>inference system</strong> có thể tối ưu, benchmark, deploy, vận hành và debug trong thực tế — từ model artifact đến production service.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Ghi chú</span>Lộ trình nhanh
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Part</th>
+<th style="text-align: left;">Lesson</th>
+<th style="text-align: left;">Thời lượng gợi ý</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">I — Foundations</td>
+<td style="text-align: left;">1–3</td>
+<td style="text-align: left;">~1 tuần</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">II — Compiler &amp; precision</td>
+<td style="text-align: left;">4–5</td>
+<td style="text-align: left;">~1 tuần</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">III — Serving &amp; ops</td>
+<td style="text-align: left;">6–8</td>
+<td style="text-align: left;">~1–2 tuần</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">IV — LLM &amp; capstone</td>
+<td style="text-align: left;">9–10</td>
+<td style="text-align: left;">~1–2 tuần</td>
+</tr>
+</tbody>
+</table>
+<p>Đọc tối thiểu để có mental model: Lesson 1 → 2 → 4 → 6. Các bài còn lại đào sâu theo nhu cầu.</p>
+</div>
+</div>
+<div class="reading-modes">
+<p><strong>Đọc nhanh (index):</strong> mục tiêu + lộ trình 10 lesson + 6 nguyên tắc.<br>
+<strong>Đọc đủ:</strong> toàn bộ trang này trước khi vào Lesson 1.</p>
+</div>
+<section id="lời-mở-đầu" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="lời-mở-đầu">Lời mở đầu</h2>
+<blockquote class="blockquote">
+<p>Vì sao một model đã train xong vẫn chưa phải là production service?</p>
+</blockquote>
+<p>Một model đã được train xong chưa phải là một production service.</p>
+<p>Trong môi trường nghiên cứu, ta thường quan tâm nhiều đến accuracy, loss curve, training throughput, checkpoint tốt nhất, hoặc cách cải thiện architecture. Nhưng khi model bước vào production, câu hỏi thay đổi hoàn toàn:</p>
+<ul>
+<li>Model có trả lời đủ nhanh không?</li>
+<li>p95 và p99 latency có ổn định không?</li>
+<li>GPU có được sử dụng hiệu quả không?</li>
+<li>Có thể phục vụ nhiều request đồng thời không?</li>
+<li>Có thể rollout model mới mà không làm hỏng hệ thống không?</li>
+<li>Khi chất lượng giảm, latency tăng, GPU OOM, hoặc traffic spike thì debug thế nào?</li>
+<li>Chi phí phục vụ mỗi request hoặc mỗi token là bao nhiêu?</li>
+</ul>
+<p>Chuỗi bài học này được xây dựng để trả lời các câu hỏi đó một cách có hệ thống.</p>
+<p>Hành trình xuyên suốt 10 lesson:</p>
+<pre class="text"><code>trained model artifact
+  -&gt; portable graph representation
+  -&gt; optimized runtime execution
+  -&gt; hardware-aware compilation
+  -&gt; quantized model execution
+  -&gt; inference serving platform
+  -&gt; benchmarking and profiling
+  -&gt; safe rollout and operations
+  -&gt; LLM/generative serving
+  -&gt; end-to-end production capstone</code></pre>
+<p>Nói ngắn gọn, đây là chuỗi bài về <strong>AI Optimization cho inference systems</strong>: tối ưu model, runtime, GPU execution, serving layer, observability, rollout strategy và chi phí vận hành.</p>
+</section>
+<section id="ai-optimization-nghĩa-là-gì" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="ai-optimization-nghĩa-là-gì">AI Optimization nghĩa là gì?</h2>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>“Optimization” không chỉ là làm model chạy nhanh hơn. Trong chuỗi bài này, nó gồm model, runtime, hardware, serving, hệ thống (p99/cost) và vận hành (rollout/monitoring).</p>
+</div>
+</div>
+<p>Trong nhiều tài liệu, “optimization” thường bị hiểu hẹp là làm model chạy nhanh hơn. Ở đây khái niệm đó được mở rộng thành nhiều tầng:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 37%">
+<col style="width: 62%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Tầng</th>
+<th style="text-align: left;">Nội dung</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Model-level</td>
+<td style="text-align: left;">Graph, operator, tensor shape, precision, quantization, memory footprint</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Runtime-level</td>
+<td style="text-align: left;">Execution backend, overhead, data movement, CUDA / TensorRT / ONNX Runtime</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Hardware-level</td>
+<td style="text-align: left;">GPU execution, Tensor Cores, memory bandwidth, batching, streams, kernel</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Serving-level</td>
+<td style="text-align: left;">Dynamic batching, concurrent execution, model instances, scheduler</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">System-level</td>
+<td style="text-align: left;">Latency–throughput trade-off, p99, autoscaling, capacity, cost/request</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Operational</td>
+<td style="text-align: left;">Rollout an toàn, monitoring, alerting, rollback, incident response</td>
+</tr>
+</tbody>
+</table>
+<p>Trọng tâm không phải một thư viện riêng lẻ, mà là <strong>tư duy hệ thống khi đưa AI model vào production</strong>.</p>
+</section>
+<section id="tư-duy-xuyên-suốt" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="tư-duy-xuyên-suốt">Tư duy xuyên suốt</h2>
+<p>Một trained model thường chỉ là một artifact: file <code>.pt</code>, <code>.onnx</code>, <code>.engine</code>, checkpoint, hoặc model directory. Production inference system là một đường đi đầy đủ:</p>
+<pre class="text"><code>client request
+  -&gt; preprocessing
+  -&gt; request queue
+  -&gt; batching scheduler
+  -&gt; runtime execution
+  -&gt; GPU kernels
+  -&gt; postprocessing
+  -&gt; response
+  -&gt; metrics / logs / traces</code></pre>
+<p>Mỗi bước đều có thể trở thành bottleneck.</p>
+<p>Một model nhanh trên notebook không chắc nhanh trong service. Một engine nhanh trong <code>trtexec</code> không chắc nhanh sau HTTP gateway. Average latency thấp vẫn có thể fail production nếu p99 quá cao. Deployment “thành công” vẫn thất bại nếu quality regression không được phát hiện sớm.</p>
+<div class="callout callout-style-default callout-warning no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Cảnh báo</span>Nguyên tắc xuyên suốt
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Không tối ưu bằng cảm giác. Hãy đo, phân tích, tối ưu, benchmark lại, rồi mới productionize.</p>
+</div>
+</div>
+</section>
+<section id="bạn-sẽ-học-được-gì" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="bạn-sẽ-học-được-gì">Bạn sẽ học được gì?</h2>
+<p>Sau khi hoàn thành 10 lesson, bạn nên có khả năng:</p>
+<ul>
+<li>Giải thích vai trò của ONNX như intermediate representation cho model graph</li>
+<li>Export, inspect, validate và debug ONNX model</li>
+<li>Chạy model bằng ONNX Runtime với nhiều Execution Providers</li>
+<li>Hiểu TensorRT build engine, tactics, optimization profiles, FP16/INT8</li>
+<li>Hiểu quantization như workflow (scale, calibration, Q/DQ, accuracy recovery) — không chỉ “bật INT8”</li>
+<li>Deploy bằng NVIDIA Triton Inference Server</li>
+<li>Cấu hình dynamic batching, model instances, versioning và metrics</li>
+<li>Benchmark bằng <code>trtexec</code>, Perf Analyzer, Model Analyzer và Nsight Systems</li>
+<li>Phân tích p50/p95/p99, throughput, GPU utilization, queue time và bottleneck</li>
+<li>Thiết kế canary, A/B, shadow traffic, rollback và incident response</li>
+<li>Hiểu khác biệt classic inference vs LLM inference (KV cache, continuous batching, PagedAttention, vLLM, TensorRT-LLM, token metrics)</li>
+<li>Xây capstone end-to-end: PyTorch → ONNX → TensorRT → Triton → benchmark → monitoring → production readiness</li>
+</ul>
+</section>
+<section id="dành-cho-ai" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="dành-cho-ai">Dành cho ai?</h2>
+<p>Phù hợp với:</p>
+<ul>
+<li>Machine Learning Engineer muốn đi sâu model deployment</li>
+<li>MLOps Engineer muốn hiểu inference optimization, không chỉ deploy container</li>
+<li>Backend Engineer xây AI service và cần hiểu GPU/runtime/serving</li>
+<li>Data Scientist chuyển từ notebook sang production-grade inference</li>
+<li>AI Infrastructure Engineer cần roadmap có hệ thống về ONNX, TensorRT, Triton và LLM serving</li>
+</ul>
+<p>Không yêu cầu chuyên gia CUDA từ đầu. Nên quen Python, PyTorch, command line và khái niệm deep learning cơ bản.</p>
+</section>
+<section id="prerequisites" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="prerequisites">Prerequisites</h2>
+<p>Bạn không cần hoàn hảo mọi thứ trước khi bắt đầu. Các mục dưới đây giúp học nhanh hơn.</p>
+<section id="kiến-thức-nên-có" class="level3">
+<h3 class="anchored" data-anchor-id="kiến-thức-nên-có">Kiến thức nên có</h3>
+<ul>
+<li>Python cơ bản</li>
+<li>PyTorch hoặc framework deep learning tương đương</li>
+<li>Tensor, batch size, model input/output shape</li>
+<li>Khái niệm inference vs training</li>
+<li>Linux command line cơ bản</li>
+<li>Docker cơ bản</li>
+</ul>
+</section>
+<section id="có-thể-học-dần-trong-quá-trình" class="level3">
+<h3 class="anchored" data-anchor-id="có-thể-học-dần-trong-quá-trình">Có thể học dần trong quá trình</h3>
+<ul>
+<li>CUDA execution model, GPU memory hierarchy, Tensor Cores</li>
+<li>Kubernetes, Prometheus/Grafana</li>
+<li>SRE concepts: SLI, SLO, error budget</li>
+</ul>
+</section>
+<section id="hardware-khuyến-nghị" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-khuyến-nghị">Hardware khuyến nghị</h3>
+<p>Lộ trình đầy đủ lý tưởng khi có: máy Linux hoặc cloud instance, NVIDIA GPU, CUDA driver, Docker + NVIDIA Container Toolkit, Python env (PyTorch/ONNX/ORT), TensorRT và Triton container cho lab liên quan.</p>
+<p>Nếu chưa có GPU, vẫn học được phần lớn concepts, làm ONNX/ORT CPU labs, đọc TensorRT/Triton configs, và chạy GPU labs sau trên cloud.</p>
+</section>
+</section>
+<section id="cấu-trúc-10-lesson" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="cấu-trúc-10-lesson">Cấu trúc 10 lesson</h2>
+<section id="part-i-foundations-of-inference-optimization" class="level3">
+<h3 class="anchored" data-anchor-id="part-i-foundations-of-inference-optimization">Part I — Foundations of Inference Optimization</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Lesson</th>
+<th style="text-align: left;">Chủ đề</th>
+<th style="text-align: left;">Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="lesson-01-modern-gpu-inference-architecture.qmd">Lesson 1: Modern GPU Inference Architecture</a></td>
+<td style="text-align: left;">GPU inference, latency, throughput, batching, bottlenecks</td>
+<td style="text-align: left;">Mental model: inference system ≠ training system</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="lesson-02-onnx-fundamentals.qmd">Lesson 2: ONNX Fundamentals</a></td>
+<td style="text-align: left;">ONNX graph, operators, opset, export</td>
+<td style="text-align: left;">Model graph như IR, chuẩn bị cho runtime/compiler</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="lesson-03-onnx-runtime-deep-dive.qmd">Lesson 3: ONNX Runtime Deep Dive</a></td>
+<td style="text-align: left;">Execution Providers, graph opt, I/O Binding</td>
+<td style="text-align: left;">Runtime thực thi graph trên nhiều backend</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="part-ii-compiler-precision-and-hardware-aware-optimization" class="level3">
+<h3 class="anchored" data-anchor-id="part-ii-compiler-precision-and-hardware-aware-optimization">Part II — Compiler, Precision and Hardware-Aware Optimization</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Lesson</th>
+<th style="text-align: left;">Chủ đề</th>
+<th style="text-align: left;">Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="lesson-04-tensorrt-internals.qmd">Lesson 4: TensorRT Internals</a></td>
+<td style="text-align: left;">Engine, tactics, profiles, FP16/INT8</td>
+<td style="text-align: left;">TensorRT như inference compiler NVIDIA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="lesson-05-quantization-deep-dive.qmd">Lesson 5: Quantization Deep Dive</a></td>
+<td style="text-align: left;">PTQ, QAT, calibration, Q/DQ, INT8/FP8</td>
+<td style="text-align: left;">Giảm memory/compute, kiểm soát accuracy</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="part-iii-serving-benchmarking-and-production-operations" class="level3">
+<h3 class="anchored" data-anchor-id="part-iii-serving-benchmarking-and-production-operations">Part III — Serving, Benchmarking and Production Operations</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Lesson</th>
+<th style="text-align: left;">Chủ đề</th>
+<th style="text-align: left;">Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="lesson-06-nvidia-triton-inference-server.qmd">Lesson 6: NVIDIA Triton Inference Server</a></td>
+<td style="text-align: left;">Repository, backends, dynamic batching</td>
+<td style="text-align: left;">Từ optimized model → multi-request service</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="lesson-07-profiling-and-benchmarking.qmd">Lesson 7: Profiling and Benchmarking</a></td>
+<td style="text-align: left;"><code>trtexec</code>, Perf Analyzer, Nsight, p99</td>
+<td style="text-align: left;">Đo đúng, tìm bottleneck bằng số liệu</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><a href="lesson-08-safe-model-rollouts.qmd">Lesson 8: Safe Rollouts &amp; Operations</a></td>
+<td style="text-align: left;">Canary, A/B, shadow, monitoring, autoscale</td>
+<td style="text-align: left;">Production an toàn và vận hành ổn định</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="part-iv-advanced-generative-inference-and-capstone" class="level3">
+<h3 class="anchored" data-anchor-id="part-iv-advanced-generative-inference-and-capstone">Part IV — Advanced Generative Inference and Capstone</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Lesson</th>
+<th style="text-align: left;">Chủ đề</th>
+<th style="text-align: left;">Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><a href="lesson-09-llm-inference-systems.qmd">Lesson 9: LLM &amp; Generative Inference</a></td>
+<td style="text-align: left;">KV cache, continuous batching, vLLM, TRT-LLM</td>
+<td style="text-align: left;">Mở rộng sang LLM/generative serving</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><a href="lesson-10-end-to-end-capstone.qmd">Lesson 10: End-to-End Capstone</a></td>
+<td style="text-align: left;">Build → optimize → benchmark → operate</td>
+<td style="text-align: left;">Tổng hợp thành project end-to-end</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="cách-học-được-khuyến-nghị" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="cách-học-được-khuyến-nghị">Cách học được khuyến nghị</h2>
+<p>Không đọc như tập notes lý thuyết. Chu kỳ hiệu quả:</p>
+<pre class="text"><code>read concept
+  -&gt; run small lab
+  -&gt; inspect output
+  -&gt; benchmark
+  -&gt; write observation
+  -&gt; debug one failure case
+  -&gt; summarize lesson learned</code></pre>
+<p>Với mỗi lesson, trả lời 4 câu hỏi:</p>
+<ol type="1">
+<li>Thành phần này giải quyết vấn đề gì?</li>
+<li>Nó nằm ở đâu trong inference stack?</li>
+<li>Nó cải thiện latency, throughput, memory, reliability hay cost thế nào?</li>
+<li>Khi fail, debug từ đâu?</li>
+</ol>
+<p>Trả lời được 4 câu này là bắt đầu có tư duy inference systems engineer.</p>
+</section>
+<section id="lộ-trình-theo-giai-đoạn" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="lộ-trình-theo-giai-đoạn">Lộ trình theo giai đoạn</h2>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Đào sâu: mục tiêu từng giai đoạn
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Giai đoạn 1 — Lesson 1–3:</strong> hiểu inference từ góc nhìn system (tensor, graph, runtime, backend, data movement). Kỳ vọng: export PyTorch→ONNX, inspect graph, ORT baseline, hiểu CPU / CUDA EP / TensorRT EP khác nhau thế nào.</p>
+<p><strong>Giai đoạn 2 — Lesson 4–5:</strong> vì sao TensorRT nhanh hơn runtime thông thường; quantization giảm memory/compute nhưng có thể giảm accuracy. Kỳ vọng: build engine từ ONNX, <code>trtexec</code>, optimization profiles, FP16 vs INT8, hướng xử lý khi INT8 làm accuracy giảm.</p>
+<p><strong>Giai đoạn 3 — Lesson 6–8:</strong> từ artifact thành service có metrics, batching, versioning, rollout. Kỳ vọng: Triton repository, serve ONNX/TRT, Perf Analyzer, latency breakdown, canary + rollback, checklist production readiness.</p>
+<p><strong>Giai đoạn 4 — Lesson 9–10:</strong> LLM serving khác classic inference; tổng hợp thành project. Kỳ vọng: prefill vs decode, KV cache memory, continuous batching / PagedAttention, TTFT / ITL / tokens/s / goodput, capstone end-to-end.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sản-phẩm-cuối-khóa" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="sản-phẩm-cuối-khóa">Sản phẩm cuối khóa</h2>
+<p>Portfolio tối thiểu:</p>
+<pre class="text"><code>Model: ResNet-50 or similar vision model
+Export: PyTorch -&gt; ONNX
+Validation: PyTorch vs ONNX Runtime numerical comparison
+Optimization: ONNX -&gt; TensorRT FP16 engine
+Serving: Triton Inference Server
+Benchmark: trtexec + Perf Analyzer
+Monitoring: Prometheus metrics
+Operations: canary rollout + rollback plan + incident runbook
+Report: latency, throughput, GPU utilization, trade-offs, production readiness</code></pre>
+<p>Mở rộng LLM (tuỳ chọn):</p>
+<pre class="text"><code>Model: small open-source LLM
+Serving: vLLM or TensorRT-LLM
+Metrics: TTFT, TPOT, tokens/s, request concurrency
+Optimization: prefix caching, quantization, batching strategy
+Report: cost per 1M tokens and capacity planning</code></pre>
+</section>
+<section id="sáu-nguyên-tắc-thực-chiến" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="sáu-nguyên-tắc-thực-chiến">Sáu nguyên tắc thực chiến</h2>
+<ol type="1">
+<li><strong>Baseline trước, tối ưu sau</strong> — không bật TensorRT/FP16/INT8/batching/cache trước khi có baseline.</li>
+<li><strong>Đo cả latency và throughput</strong> — throughput cao nhưng p99 xấu có thể không hợp real-time; ngược lại latency thấp nhưng throughput thấp có thể quá đắt.</li>
+<li><strong>Tách model latency khỏi end-to-end</strong> — gateway, preprocess, serialize, queue, copy, postprocess đều tính.</li>
+<li><strong>Dynamic shape là quyết định thiết kế</strong> — linh hoạt hơn nhưng optimization khó hơn; TensorRT cần optimization profiles.</li>
+<li><strong>Quantization là thay đổi numerical</strong> — cần accuracy validation, calibration data và rollback plan.</li>
+<li><strong>Production rollout là một phần của optimization</strong> — model nhanh hơn nhưng không rollout an toàn thì chưa phải improvement.</li>
+</ol>
+</section>
+<section id="gợi-ý-ghi-chú-khi-học" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="gợi-ý-ghi-chú-khi-học">Gợi ý ghi chú khi học</h2>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Template ghi chú cuối mỗi lesson
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">## My Notes</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">### Điều tôi hiểu rõ hơn sau bài này</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">### Điều tôi chưa hiểu</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">### Lỗi tôi gặp khi chạy lab</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">### Benchmark result</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">### Câu hỏi cần đào sâu thêm</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Lưu benchmark, lỗi và cách debug giúp tài liệu trở thành notebook học tập cá nhân.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="kết-luận" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="kết-luận">Kết luận</h2>
+<p>AI Optimization không chỉ nằm ở model. Nó nằm ở toàn bộ đường đi từ model artifact đến production inference service.</p>
+<p>ONNX chuẩn hóa graph. ONNX Runtime thực thi trên nhiều backend. TensorRT compile/tối ưu cho NVIDIA GPU. Quantization giảm compute và memory. Triton serve ở production scale. Profiling đo đúng bottleneck. Rollout/monitoring vận hành an toàn. vLLM và TensorRT-LLM mở rộng sang LLM serving.</p>
+<p>Nếu nắm được chuỗi này, bạn không chỉ “deploy model”, mà có thể thiết kế, tối ưu, benchmark và vận hành một AI inference system thực tế.</p>
+<p><strong>Bắt đầu tại:</strong> <a href="lesson-01-modern-gpu-inference-architecture.qmd">Lesson 1 — Modern GPU Inference Architecture</a>.</p>
+
+
+</section>
+</section>

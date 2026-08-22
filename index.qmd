@@ -1,106 +1,49 @@
 ---
-title: "dythanh22"
-subtitle: "Học tập · Ghi chú · Nghiên cứu"
+pagetitle: "dythanh22 — Ghi chú học tập"
 page-layout: full
 toc: false
 ---
 
-::: {.home-hero}
-# Xin chào, mình là Thanh 👋
+:::: {.home-hero}
+::: {.home-hero-copy}
+<p class="eyebrow">Ghi chú học tập</p>
 
-::: {.lead}
-Đây là không gian cá nhân để lưu trữ **bài học**, **dự án thực hành** và **ghi chú nghiên cứu** — viết bằng Quarto, đọc mọi lúc trên GitHub Pages.
+# Xin chào, mình là Thanh
+
+Chuỗi bài học đọc theo thứ tự — kiến trúc mô hình và tối ưu inference. Chọn một chuỗi, đi hết pipeline, rồi quay lại khi cần ôn.
+
+[Xem bài học](bai-hoc/index.qmd){.btn .btn-primary .btn-lg role="button"}
+[Giới thiệu](about.qmd){.btn .btn-outline-secondary .btn-lg role="button"}
 :::
 
-::: {.home-stats}
-::: {.home-stat}
-::: {.number}
-3
+::: {.home-hero-panel}
+<p class="eyebrow">Cách đọc</p>
+### Một chuỗi = một lộ trình
+
+Homepage chỉ hiện **chuỗi**, không trộn từng chương. Vào chuỗi để có mục lục, sidebar và nút bài trước / bài sau.
+
+[Mở mục Bài học →](bai-hoc/index.qmd)
 :::
-::: {.label}
-Khu vực nội dung
-:::
-:::
-::: {.home-stat}
-::: {.number}
-0
-:::
-::: {.label}
-Bài viết (sắp có)
-:::
-:::
-::: {.home-stat}
-::: {.number}
-∞
-:::
-::: {.label}
-Sẵn sàng mở rộng
-:::
-:::
-:::
+::::
+
+## Chuỗi bài
+
+:::: {.series-grid}
+::: {.series-card}
+<p class="eyebrow">Thị giác · CNN</p>
+### [Architecture Models](bai-hoc/architecture-models/index.qmd)
+
+AlexNet và VGG từ input đến logits — conv, pooling, classifier, config.
+
+[Mở Architecture Models →](bai-hoc/architecture-models/index.qmd)
 :::
 
-## Bắt đầu từ đâu?
+::: {.series-card}
+<p class="eyebrow">Serving · GPU</p>
+### [AI Optimization](bai-hoc/ai-optimize/index.qmd)
 
-::: {.area-cards}
-::: {.area-card}
-### 📚 Bài học
+10 bài: ONNX, TensorRT, Triton, LLM serving và vận hành production.
 
-Ghi chú theo chủ đề và chuỗi bài có thứ tự — Python, thống kê, và nhiều hơn nữa.
-
-[Vào khu Bài học →](bai-hoc/index.qmd){.stretched-link}
+[Bắt đầu Lesson 1 →](bai-hoc/ai-optimize/lesson-01-modern-gpu-inference-architecture.qmd)
 :::
-
-::: {.area-card}
-### 🛠 Dự án
-
-Các dự án thực hành end-to-end: từ setup đến triển khai, có thể kèm repo GitHub riêng.
-
-[Xem dự án →](du-an/index.qmd){.stretched-link}
-:::
-
-::: {.area-card}
-### 🔬 Nghiên cứu
-
-Tóm tắt paper, survey chủ đề, và ghi chú đọc hiểu tài liệu học thuật.
-
-[Khám phá nghiên cứu →](nghien-cuu/index.qmd){.stretched-link}
-:::
-:::
-
-## Chuỗi bài đang học
-
-::: {.empty-state}
-::: {.empty-icon}
-📭
-:::
-**Chưa có chuỗi bài nào.** Các series sẽ xuất hiện ở đây khi mình bắt đầu đăng nội dung.
-:::
-
-## Bài viết mới nhất
-
-::: {.empty-state}
-::: {.empty-icon}
-✏️
-:::
-**Chưa có bài viết nào.** Trang này sẽ liệt kê bài mới nhất sau khi mình publish bài đầu tiên.
-:::
-
-## Về website này
-
-Site được xây bằng **Quarto** và host trên **GitHub Pages**. Mục tiêu là gom mọi ghi chú học tập vào một nơi — dễ đọc, dễ tìm, dễ theo dõi tiến độ.
-
-| Tính năng | Mô tả |
-|-----------|-------|
-| 🔍 Tìm kiếm | Tra cứu nhanh toàn bộ nội dung trên navbar |
-| 🌓 Dark/Light | Chuyển giao diện sáng/tối bằng biểu tượng trên menu |
-| 📂 Sidebar tự động | Thêm file `.qmd` mới là xuất hiện — không cần sửa cấu hình |
-| 🚀 Deploy tự động | Push lên GitHub → site cập nhật trong vài phút |
-
----
-
-::: {.callout-tip}
-## Sắp tới
-
-Mình sẽ bắt đầu đăng các chuỗi bài học và ghi chú nghiên cứu tại đây. Theo dõi khu **Bài học**, **Dự án** và **Nghiên cứu** trên menu phía trên.
-:::
+::::

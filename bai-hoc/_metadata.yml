@@ -1,4 +1,5 @@
-sidebar: bai-hoc
+# Mặc định chung cho mọi trang trong bai-hoc/
 format:
   html:
     toc: true
+    toc-depth: 3

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="200" viewBox="0 0 720 200" role="img" aria-labelledby="alexnet-01-title">
+<title id="alexnet-01-title">AlexNet pipeline overview</title>
+<rect class="fig-bg" width="720" height="200" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="360.0" y="26.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">AlexNet — pipeline end-to-end</text>
+<text x="360.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Thứ tự khối khớp chương: tích chập → ReLU → LRN → Pool → FC (+ dropout)</text>
+<rect x="44.0" y="70.0" width="100.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="94.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Input</text>
+<text x="94.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">224×224×3</text>
+<rect x="172.0" y="70.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="227.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Conv1–5</text>
+<text x="227.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">ReLU·LRN·Pool</text>
+<line x1="150.0" y1="98.0" x2="158.0" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="158.0,93.0 166.0,98.0 158.0,103.0" fill="#5C6570"/>
+<rect x="310.0" y="70.0" width="100.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="360.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Flatten</text>
+<text x="360.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">6×6×256</text>
+<line x1="288.0" y1="98.0" x2="296.0" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="296.0,93.0 304.0,98.0 296.0,103.0" fill="#5C6570"/>
+<rect x="438.0" y="70.0" width="100.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="488.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">FC6–7</text>
+<text x="488.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">Dropout</text>
+<line x1="416.0" y1="98.0" x2="424.0" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="424.0,93.0 432.0,98.0 424.0,103.0" fill="#5C6570"/>
+<rect x="566.0" y="70.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="621.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">FC8</text>
+<text x="621.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">1000 logits</text>
+<line x1="544.0" y1="98.0" x2="552.0" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="552.0,93.0 560.0,98.0 552.0,103.0" fill="#5C6570"/>
+<text x="360.0" y="170.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Ch.1 Conv  ·  Ch.2 ReLU  ·  Ch.3 Dropout (FC)  ·  Ch.4 LRN  ·  Ch.5 Pool  ·  Ch.6 Augment</text>
+</svg>

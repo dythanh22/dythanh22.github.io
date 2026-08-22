@@ -1,0 +1,1481 @@
+---
+title: "NVIDIA Triton Inference Server"
+subtitle: "AI Optimization — Bài 6"
+date: 2026-05-19
+categories: [ai-optimize, inference]
+series: ai-optimize
+order: 6
+description: "Model repository, backends, dynamic batching và production serving."
+role: "Model repository, backends, dynamic batching và production serving"
+---
+
+```{=html}
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Ghi chú</span>Mục tiêu bài học
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hiểu <strong>NVIDIA Triton</strong> như inference <strong>serving system</strong> thật — không chỉ Docker chạy model. Sau bài: đóng gói model repository, viết <code>config.pbtxt</code>, chọn backend, dynamic batching, <code>instance_group</code>, Perf Analyzer, metrics/health, model control modes, và checklist production. Bài <strong>không</strong> thay Lesson 4 (build engine) hay Lesson 7 (profiling sâu).</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Ghi chú</span>Lộ trình bài học
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 15%">
+<col style="width: 44%">
+<col style="width: 31%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">#</th>
+<th style="text-align: left;">Phần</th>
+<th style="text-align: left;">Trả lời câu hỏi</th>
+<th style="text-align: left;">Thời lượng</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">Vì sao Triton / mental model</td>
+<td style="text-align: left;">Khác TRT, ORT, FastAPI thế nào?</td>
+<td style="text-align: left;">15 phút</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">Repository + <code>config.pbtxt</code></td>
+<td style="text-align: left;">Layout, <code>max_batch_size</code>, I/O dims?</td>
+<td style="text-align: left;">20 phút</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">Backends + protocols</td>
+<td style="text-align: left;">TRT vs ONNX vs Python; HTTP/gRPC?</td>
+<td style="text-align: left;">15 phút</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">Scheduler + dynamic batching</td>
+<td style="text-align: left;">Throughput↑ nhưng p99↓ khi nào?</td>
+<td style="text-align: left;">25 phút</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">Instances, ensemble, rollout</td>
+<td style="text-align: left;"><code>instance_group</code>, poll vs explicit?</td>
+<td style="text-align: left;">20 phút</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">Metrics + Perf Analyzer + labs</td>
+<td style="text-align: left;">Đo đúng, debug, deploy checklist</td>
+<td style="text-align: left;">60–90 phút</td>
+</tr>
+</tbody>
+</table>
+<p>Đọc tối thiểu: phần 1–4. Lab GPU/Docker optional nếu chưa có GPU — vẫn học config và methodology.</p>
+</div>
+</div>
+<div class="reading-modes">
+<p><strong>Đọc nhanh:</strong> callout <em>Ý chính</em> + bảng + sơ đồ xương sống.<br>
+<strong>Đọc đủ:</strong> tip đào sâu, labs, checkpoint, checklist production.</p>
+</div>
+<section id="bối-cảnh" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="bối-cảnh">Bối cảnh</h2>
+<p>Lesson 1–5: kiến trúc → ONNX → ORT → TensorRT → quantization. Lesson 6 đặt artifact vào <strong>serving</strong>:</p>
+<pre class="text"><code>optimized model → model repository + config.pbtxt → Triton
+  → HTTP/gRPC + metrics/health → production endpoint</code></pre>
+<div class="cell" data-fig-width="7" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-l6-spine" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-l6-spine-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-l6-spine">flowchart LR
+  C([Client]) --&gt;|"HTTP/gRPC"| F([Frontend])
+  F --&gt; S([Per-model scheduler])
+  S --&gt;|"batch / queue"| B([Backend])
+  B --&gt; I([Model instances])
+  I --&gt; R([Response])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class C,R soft
+  class F,S hot
+  class B,I ok
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l6-spine-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;6.1: Sơ đồ xương sống Lesson 6: Client → Frontend → Scheduler → Backend → Model instances.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Tư duy cốt lõi:</p>
+<pre class="text"><code>TensorRT tối ưu một lần execute model.
+Triton tối ưu cách phục vụ nhiều request, model, version, queue và backend cùng lúc.</code></pre>
+<p>Engine nhanh với <code>trtexec</code> chưa đảm bảo p99 tốt với 200 concurrent clients.</p>
+</section>
+<section id="learning-outcomes" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="learning-outcomes">Learning outcomes</h2>
+<ol type="1">
+<li>Triton giải quyết gì; khác TRT / ORT / FastAPI / K8s<br>
+</li>
+<li>Model repository layout và <code>config.pbtxt</code><br>
+</li>
+<li><code>backend</code>/<code>platform</code>, <code>max_batch_size</code>, input/output dims<br>
+</li>
+<li>Backends: TensorRT, ONNX Runtime, PyTorch, Python, LLM-related<br>
+</li>
+<li>Dynamic batching: delay, preferred batch, shape, p99 trade-off<br>
+</li>
+<li><code>instance_group</code> vs batch vs client concurrency<br>
+</li>
+<li>Ensemble, model control modes, versioning<br>
+</li>
+<li>Health/metrics, Perf Analyzer, Model Analyzer<br>
+</li>
+<li>Debug load/shape/batching/throughput/memory; production checklist</li>
+</ol>
+</section>
+<section id="prerequisites" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Shape, ONNX I/O names, ORT, TensorRT plan, quantization cơ bản (Lesson 2–5)<br>
+</li>
+<li>Docker + Python/NumPy; GPU labs cần NVIDIA Container Toolkit</li>
+</ul>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Hai nhóm lab
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Generic:</strong> repository, config, client, methodology — học được không GPU.<br>
+<strong>GPU-serving:</strong> Docker Triton, dynamic batch, Perf Analyzer, TensorRT plan — chạy khi có GPU.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-why-triton" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="sec-why-triton"><span class="header-section-number">6.1</span> Vì sao cần Triton — và không phải gì?</h2>
+<blockquote class="blockquote">
+<p>FastAPI + <code>session.run()</code> đã đủ production chưa — Triton thêm gì?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Triton biến nhiều artifact (<code>onnx</code>/<code>plan</code>/<code>pt</code>/<code>py</code>…) thành service có <strong>HTTP/gRPC, validation, batching, concurrency, multi-model, versioning, health, metrics</strong>. Nó <strong>không thay</strong> TensorRT hay ORT — nó <strong>serve</strong> chúng. <code>frontend ≠ scheduler ≠ backend ≠ model instance</code>.</p>
+</div>
+</div>
+<p>Production cần thêm ngoài “chạy model”: endpoint, request validation, batching, concurrency, multi-model, versioning, health, metrics, rollout, GPU tuning.</p>
+<p>Tự viết FastAPI thường phải tự lo parse → preprocess → H2D → runtime → batch thủ công → concurrent → versions → metrics → readiness → rollback.</p>
+<p>Triton flow:</p>
+<pre class="text"><code>client → HTTP/gRPC → frontend → per-model scheduler
+  → backend runtime → model instance → response</code></pre>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Công cụ</th>
+<th style="text-align: left;">Vai trò</th>
+<th style="text-align: left;">Liên quan Triton</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ONNX</td>
+<td style="text-align: left;">IR / interchange</td>
+<td style="text-align: left;">Serve qua ORT backend</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ONNX Runtime</td>
+<td style="text-align: left;">Chạy ONNX</td>
+<td style="text-align: left;">Có ORT backend</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TensorRT</td>
+<td style="text-align: left;">Compiler/runtime NVIDIA</td>
+<td style="text-align: left;">Serve <code>.plan</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Triton</td>
+<td style="text-align: left;">Inference serving server</td>
+<td style="text-align: left;">Queue, batch, versions, metrics</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Kubernetes</td>
+<td style="text-align: left;">Orchestration</td>
+<td style="text-align: left;">Deploy Triton pod</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FastAPI</td>
+<td style="text-align: left;">Web generic</td>
+<td style="text-align: left;">Thiếu inference scheduler/batching chuyên dụng</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">vLLM / TRT-LLM</td>
+<td style="text-align: left;">LLM serving</td>
+<td style="text-align: left;">Có thể gắn như backend</td>
+</tr>
+</tbody>
+</table>
+<pre class="text"><code>ONNX/TensorRT: how to execute efficiently.
+Triton: how to serve that execution to many clients.</code></pre>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Mental model 5 khối + multi-model
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Client → Frontend → <strong>Model repository</strong> (<code>model</code> + <code>config.pbtxt</code>) → <strong>Per-model scheduler</strong> (batch/queue) → <strong>Backend</strong> → <strong>Model instances</strong> (GPU/CPU).</p>
+<p>Mỗi model có scheduler/config/backend/instances <strong>riêng</strong>. Một server có thể đồng thời: <code>image_classifier_trt</code> (GPU0 + dynamic batch), <code>text_embedding_onnx</code> (GPU1), <code>preprocess_python</code> (CPU), <code>llm_vllm</code> (GPU2/3).</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-architecture" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="sec-architecture"><span class="header-section-number">6.2</span> Architecture và request path</h2>
+<blockquote class="blockquote">
+<p>Request đi qua những lớp nào trước khi chạm GPU?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Path: client → frontend (parse/validate) → <strong>scheduler</strong> (default / dynamic / sequence / ensemble) → gán <strong>model instance</strong> → <strong>backend</strong> execute → validate output → metrics → response. Nhầm lẫn lớp sẽ debug sai chỗ (protocol vs queue vs kernel).</p>
+</div>
+</div>
+<div class="cell" data-fig-width="6.5" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-l6-request" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-l6-request-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-l6-request">flowchart TB
+  C([Client HTTP/gRPC]) --&gt; F([Frontend validate])
+  F --&gt; S([Scheduler])
+  S --&gt; I([Instance])
+  I --&gt; B([Backend execute])
+  B --&gt; O([Response + metrics])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class C,S,I,O soft
+  class F hot
+  class B ok
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l6-request-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;6.2: Request path: Frontend (tô sáng) validate protocol trước khi vào scheduler.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Lớp</th>
+<th style="text-align: left;">Việc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Frontend</td>
+<td style="text-align: left;">Protocol, model name/version, tensor metadata</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Scheduler</td>
+<td style="text-align: left;">Khi nào chạy; có batch với request khác không</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Backend</td>
+<td style="text-align: left;">Gọi TRT / ORT / PyTorch / Python / custom</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Instance</td>
+<td style="text-align: left;">Execution slot thật trên CPU/GPU</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Scheduler types (tóm tắt đủ dùng)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Default:</strong> một request → một execution (không gom batch).<br>
+<strong>Dynamic batching:</strong> gom nhiều request thành batch server-side (<a href="#sec-dynbatch" class="quarto-xref"><span>Mục 6.6</span></a>).<br>
+<strong>Sequence batching:</strong> stateful / sequence (ASR, một số RNN).<br>
+<strong>Ensemble:</strong> pipeline nhiều model steps — ensemble <strong>không</strong> có compute instance riêng; child models mới có.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-repository" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="sec-repository"><span class="header-section-number">6.3</span> Model repository</h2>
+<blockquote class="blockquote">
+<p>Vì sao repository là deployment interface quan trọng nhất của Triton?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Model repository</strong> = filesystem chứa artifact + <code>config.pbtxt</code> + version dirs. Layout sai → model không load. Tên thư mục = model name (trừ khi config set <code>name</code>). Production: package repository từ CI → container/artifact → deploy.</p>
+</div>
+</div>
+<p>Layout chuẩn:</p>
+<pre class="text"><code>&lt;model-repository-path&gt;/
+  &lt;model-name&gt;/
+    config.pbtxt
+    &lt;version&gt;/          # số nguyên: 1, 2, 3…
+      &lt;model-definition-file&gt;</code></pre>
+<p>Ví dụ:</p>
+<pre class="text"><code>model_repository/
+  tiny_classifier_onnx/
+    config.pbtxt
+    1/model.onnx
+  tiny_classifier_trt/
+    config.pbtxt
+    1/model.plan
+  normalize_python/
+    config.pbtxt
+    1/model.py</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tritonserver</span> <span class="at">--model-repository</span><span class="op">=</span>/models</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">RELEASE</span><span class="op">=</span>26.04   <span class="co"># chỉnh theo NGC tag bạn dùng</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--gpus</span> all <span class="at">--rm</span> <span class="at">-it</span> <span class="at">--net</span> host <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-v</span> <span class="va">$PWD</span>/model_repository:/models <span class="dt">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  nvcr.io/nvidia/tritonserver:<span class="va">${RELEASE}</span>-py3 <span class="dt">\</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  tritonserver <span class="at">--model-repository</span><span class="op">=</span>/models</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Version directories:</strong> số nguyên tăng dần. <code>version_policy</code> quyết định version nào serve (ví dụ latest / specific). Client có thể request version cụ thể.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>CI/CD package flow
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><code>train/export → validate → benchmark → package repository → push artifact/container → deploy Triton</code>. Không sửa file “live” lung tung trên production filesystem (đặc biệt với poll mode — <a href="#sec-rollout" class="quarto-xref"><span>Mục 6.9</span></a>).</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-config" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="sec-config"><span class="header-section-number">6.4</span> <code>config.pbtxt</code>: trái tim deployment</h2>
+<blockquote class="blockquote">
+<p><code>max_batch_size &gt; 0</code> thì <code>dims</code> có gồm batch dimension không?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>config.pbtxt</code> mô tả cách Triton load/serve model. Khi <strong><code>max_batch_size &gt; 0</code></strong>, <code>dims</code> <strong>không</strong> gồm batch — request shape = <code>[B] + dims</code>. Khi <strong><code>max_batch_size: 0</code></strong>, <code>dims</code> = full shape (không batch ẩn). Tên I/O phải khớp artifact.</p>
+</div>
+</div>
+<p>Config tối thiểu (ONNX):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode protobuf code-with-copy"><code class="sourceCode protobuf"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>name<span class="op">:</span> <span class="st">"tiny_classifier_onnx"</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>backend<span class="op">:</span> <span class="st">"onnxruntime"</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>max_batch_size<span class="op">:</span> <span class="dv">8</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>input [</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  {</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    name<span class="op">:</span> <span class="st">"input"</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    data_type<span class="op">:</span> TYPE_FP32</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    dims<span class="op">:</span> [ <span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span> ]</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>output [</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  {</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    name<span class="op">:</span> <span class="st">"logits"</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    data_type<span class="op">:</span> TYPE_FP32</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    dims<span class="op">:</span> [ <span class="dv">10</span> ]</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 43%">
+<col style="width: 56%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Field</th>
+<th style="text-align: left;">Ý nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>name</code></td>
+<td style="text-align: left;">Nên trùng tên thư mục; set rõ cho đọc được</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>backend</code> / <code>platform</code></td>
+<td style="text-align: left;">Loại runtime; hiện đại đọc docs backend</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>max_batch_size</code></td>
+<td style="text-align: left;">Batch tối đa Triton được tạo; <code>0</code> = không batching</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>input</code>/<code>output</code></td>
+<td style="text-align: left;"><code>name</code>, <code>data_type</code>, <code>dims</code> khớp model</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Artifact</th>
+<th style="text-align: left;">Khai báo thường gặp</th>
+<th style="text-align: left;">File</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ONNX</td>
+<td style="text-align: left;"><code>backend: "onnxruntime"</code></td>
+<td style="text-align: left;"><code>model.onnx</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TensorRT</td>
+<td style="text-align: left;"><code>platform: "tensorrt_plan"</code></td>
+<td style="text-align: left;"><code>model.plan</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Python</td>
+<td style="text-align: left;"><code>backend: "python"</code></td>
+<td style="text-align: left;"><code>model.py</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TorchScript</td>
+<td style="text-align: left;"><code>backend: "pytorch"</code></td>
+<td style="text-align: left;"><code>model.pt</code></td>
+</tr>
+</tbody>
+</table>
+<pre class="text"><code>max_batch_size &gt; 0:  request shape = [B] + config dims
+max_batch_size = 0:  request shape = config dims</code></pre>
+<p>Ví dụ không batch:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode protobuf code-with-copy"><code class="sourceCode protobuf"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>max_batch_size<span class="op">:</span> <span class="dv">0</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>input [{ name<span class="op">:</span> <span class="st">"input"</span> data_type<span class="op">:</span> TYPE_FP32 dims<span class="op">:</span> [ <span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span> ] }]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Cảnh báo</span>Bẫy thường gặp
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Export ONNX không đặt <code>input_names</code>/<code>output_names</code> → tên kiểu <code>input.1</code>, <code>onnx::Gemm_23</code> → config dễ sai. Export nên đặt tên rõ + <code>dynamic_axes</code> cho batch.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Export ONNX thân thiện Triton
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>torch.onnx.export(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    model, example_input, <span class="st">"model.onnx"</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    input_names<span class="op">=</span>[<span class="st">"input"</span>], output_names<span class="op">=</span>[<span class="st">"logits"</span>],</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    dynamic_axes<span class="op">=</span>{<span class="st">"input"</span>: {<span class="dv">0</span>: <span class="st">"batch"</span>}, <span class="st">"logits"</span>: {<span class="dv">0</span>: <span class="st">"batch"</span>}},</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    opset_version<span class="op">=</span><span class="dv">17</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-backends" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="sec-backends"><span class="header-section-number">6.5</span> Backends: TensorRT, ONNX, Python và khác</h2>
+<blockquote class="blockquote">
+<p>Khi nào serve <code>.plan</code>, khi nào serve <code>.onnx</code>, khi nào Python backend?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Backend</strong> = lớp biết execute artifact. TRT: perf cao, phụ thuộc GPU/version/profile. ORT: dễ/portable hơn. Python: preprocess/postprocess linh hoạt nhưng dễ bottleneck. LLM: vLLM / TensorRT-LLM như backend riêng (Lesson 9).</p>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 33%">
+<col style="width: 13%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Backend</th>
+<th style="text-align: left;">Artifact</th>
+<th style="text-align: left;">Ưu</th>
+<th style="text-align: left;">Nhược</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">TensorRT</td>
+<td style="text-align: left;"><code>model.plan</code></td>
+<td style="text-align: left;">Latency/throughput tốt; fusion/tactics/precision</td>
+<td style="text-align: left;">Portability; profiles; build phức tạp</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ONNX Runtime</td>
+<td style="text-align: left;"><code>model.onnx</code></td>
+<td style="text-align: left;">Dễ deploy; CPU/GPU</td>
+<td style="text-align: left;">Có thể chậm hơn TRT; fallback EP</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PyTorch</td>
+<td style="text-align: left;"><code>model.pt</code></td>
+<td style="text-align: left;">Gần training stack</td>
+<td style="text-align: left;">Thường không tối ưu bằng TRT</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Python</td>
+<td style="text-align: left;"><code>model.py</code></td>
+<td style="text-align: left;">Pre/post, glue logic</td>
+<td style="text-align: left;">GIL/CPU; dễ thành bottleneck pipeline</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DALI / FIL / vLLM / TRT-LLM</td>
+<td style="text-align: left;">theo docs</td>
+<td style="text-align: left;">Pipeline data / tabular / LLM</td>
+<td style="text-align: left;">Cần hiểu workload riêng</td>
+</tr>
+</tbody>
+</table>
+<p>TensorRT config tối thiểu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode protobuf code-with-copy"><code class="sourceCode protobuf"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>name<span class="op">:</span> <span class="st">"resnet50_trt"</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>platform<span class="op">:</span> <span class="st">"tensorrt_plan"</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>max_batch_size<span class="op">:</span> <span class="dv">32</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>input [{ name<span class="op">:</span> <span class="st">"input"</span> data_type<span class="op">:</span> TYPE_FP32 dims<span class="op">:</span> [ <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span> ] }]</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>output [{ name<span class="op">:</span> <span class="st">"logits"</span> data_type<span class="op">:</span> TYPE_FP32 dims<span class="op">:</span> [ <span class="dv">1000</span> ] }]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Plan compatibility:</strong> build trên đúng GPU arch + TensorRT/CUDA của môi trường deploy (Lesson 4). Dynamic batching phải khớp <strong>optimization profiles</strong> — <code>max_batch_size</code> Triton không được vượt <code>max</code> profile.</p>
+<p><strong>Python backend khi nào:</strong> preprocess/postprocess, feature engineering nhẹ, glue không có backend native. Tránh logic nặng trên critical path nếu GPU model đã nhanh.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Protocols và client
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-14" class="callout-14-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Triton expose HTTP (thường <code>:8000</code>), gRPC (<code>:8001</code>), metrics (<code>:8002</code>). Client: <code>tritonclient</code> Python (HTTP/gRPC), Perf Analyzer. gRPC thường tốt hơn cho binary tensor throughput cao; HTTP tiện debug. KServe/V2 inference protocol là chuẩn API.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-dynbatch" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="sec-dynbatch"><span class="header-section-number">6.6</span> Dynamic batching deep dive</h2>
+<blockquote class="blockquote">
+<p>Vì sao throughput tăng nhưng p99 có thể xấu — và <code>preferred_batch_size</code> khi nào dùng?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Dynamic batching gom nhiều request (thường batch-1) thành batch lớn hơn server-side. Có ích khi traffic dày, model batchable, GPU chưa saturate ở batch 1, SLO cho phép queue delay. Tune theo <strong>SLO (p99)</strong>, không chỉ throughput. Bắt đầu <code>dynamic_batching { }</code> — <strong>không</strong> set <code>preferred_batch_size</code> mặc định nếu chưa có bằng chứng benchmark.</p>
+</div>
+</div>
+<p>Ví dụ số:</p>
+<pre class="text"><code>Batch 1 latency: 3 ms  →  8 request riêng: 8×3 = 24 ms GPU time
+Batch 8 latency: 8 ms  →  1 batch: 8 ms GPU time</code></pre>
+<p>Throughput tăng; mỗi request có thể thêm queue delay.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Có ích khi</th>
+<th style="text-align: left;">Ít ích khi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Nhiều request batch-1</td>
+<td style="text-align: left;">Traffic thấp</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GPU chưa saturate</td>
+<td style="text-align: left;">Model không batch / shape lệch nhiều</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SLO cho phép delay nhỏ</td>
+<td style="text-align: left;">Pre/post là bottleneck; p99 quá chặt</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Compute giảm tương đối khi batch↑</td>
+<td style="text-align: left;">Client đã gửi batch lớn; LLM cần continuous batching</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode protobuf code-with-copy"><code class="sourceCode protobuf"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>max_batch_size<span class="op">:</span> <span class="dv">32</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>dynamic_batching { }</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a># hoặc có delay<span class="op">:</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>dynamic_batching {</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  max_queue_delay_microseconds<span class="op">:</span> <span class="dv">100</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a># chỉ khi benchmark chứng minh batch <span class="dv">4</span>/<span class="dv">8</span>/<span class="dv">16</span> đặc biệt tốt<span class="op">:</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>dynamic_batching {</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  preferred_batch_size<span class="op">:</span> [ <span class="dv">4</span>, <span class="dv">8</span>, <span class="dv">16</span> ]</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Tham số</th>
+<th style="text-align: left;">Ý nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>max_batch_size</code></td>
+<td style="text-align: left;">Batch tối đa; quá lớn → latency/memory/profile spike</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>max_queue_delay_microseconds</code></td>
+<td style="text-align: left;">Giữ request chờ thêm peer; dài hơn → batch lớn hơn, p99 rủi ro hơn</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>preferred_batch_size</code></td>
+<td style="text-align: left;">Ưu tiên các batch “ngon”; không đặt mặc định</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Shape compatibility:</strong> <code>[1,3,224,224]</code>×N có thể batch; <code>224</code> vs <code>256</code> vs <code>384</code> khó — cần resize/pad, bucket, tách endpoint, hoặc kiểm soát dynamic shape.</p>
+<p>Trade-off p99 (ví dụ):</p>
+<pre class="text"><code>Without batching:  p50=8ms  p99=20ms   thr=300 rps
+With dyn batch:    p50=12ms p99=80ms   thr=1100 rps</code></pre>
+<p>SLO <code>p99 &lt; 100ms</code> → có thể OK. SLO <code>p99 &lt; 30ms</code> → thất bại dù thr cao.</p>
+<div class="cell" data-fig-width="5.5" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-l6-batch" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-l6-batch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-l6-batch">flowchart LR
+  Q([Queue]) --&gt;|"delay"| B([Bigger batch])
+  B --&gt;|"throughput ↑"| T([Throughput])
+  B --&gt;|"p99 risk ↑"| P([Latency tail])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#E8F5E9,stroke:#43A047,stroke-width:1.5px,color:#1B5E20
+  class Q soft
+  class B,P hot
+  class T ok
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l6-batch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;6.3: Dynamic batching: queue delay đổi throughput ↔︎ p99.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-16-contents" aria-controls="callout-16" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Bốn khái niệm dễ nhầm
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-16" class="callout-16-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><strong>Client concurrency</strong> — số client đồng thời<br>
+</li>
+<li><strong>Client batch size</strong> — batch mỗi request client gửi<br>
+</li>
+<li><strong>Dynamic batch size</strong> — batch Triton gom server-side<br>
+</li>
+<li><strong>Instance count</strong> — số execution slot song song</li>
+</ol>
+<p>Đừng nhầm “client gửi batch=8” với “dynamic batching đang hoạt động”.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-instances" class="level2" data-number="6.7">
+<h2 data-number="6.7" class="anchored" data-anchor-id="sec-instances"><span class="header-section-number">6.7</span> <code>instance_group</code> và concurrent execution</h2>
+<blockquote class="blockquote">
+<p>Tăng <code>count</code> khi nào giúp — khi nào hại?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Model instance</strong> = execution slot. Dynamic batching gom request; <strong>nhiều instances</strong> chạy song song. Tăng <code>count</code> hữu ích khi một instance chưa saturate GPU / nhiều concurrent / model nhỏ. Hại khi model lớn (VRAM), GPU đã full, hoặc contention.</p>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode protobuf code-with-copy"><code class="sourceCode protobuf"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>instance_group [</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  { count<span class="op">:</span> <span class="dv">2</span> kind<span class="op">:</span> KIND_GPU }</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a># chỉ định GPU<span class="op">:</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>instance_group [</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  { count<span class="op">:</span> <span class="dv">1</span> kind<span class="op">:</span> KIND_GPU gpus<span class="op">:</span> [ <span class="dv">0</span> ] },</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  { count<span class="op">:</span> <span class="dv">2</span> kind<span class="op">:</span> KIND_GPU gpus<span class="op">:</span> [ <span class="dv">1</span> ] }</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>instance_group [</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  { count<span class="op">:</span> <span class="dv">2</span> kind<span class="op">:</span> KIND_CPU }</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>model: resnet50_trt
+  instance 0 → GPU 0
+  instance 1 → GPU 0
+  instance 2 → GPU 1</code></pre>
+<p>Tune cùng dynamic batching: benchmark matrix (batch delay × instance count × concurrency) — không chỉnh một nút theo cảm tính.</p>
+<section id="python-backend-preprocess" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="python-backend-preprocess">Python backend (preprocess)</h3>
+<pre class="text"><code>model_repository/normalize_python/config.pbtxt + 1/model.py</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode protobuf code-with-copy"><code class="sourceCode protobuf"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>name<span class="op">:</span> <span class="st">"normalize_python"</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>backend<span class="op">:</span> <span class="st">"python"</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>max_batch_size<span class="op">:</span> <span class="dv">8</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>input [{ name<span class="op">:</span> <span class="st">"INPUT"</span> data_type<span class="op">:</span> TYPE_UINT8 dims<span class="op">:</span> [ <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span> ] }]</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>output [{ name<span class="op">:</span> <span class="st">"OUTPUT"</span> data_type<span class="op">:</span> TYPE_FP32 dims<span class="op">:</span> [ <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span> ] }]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> triton_python_backend_utils <span class="im">as</span> pb_utils</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TritonPythonModel:</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> initialize(<span class="va">self</span>, args):</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.mean <span class="op">=</span> np.array([<span class="fl">0.485</span>, <span class="fl">0.456</span>, <span class="fl">0.406</span>], np.float32).reshape(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.std <span class="op">=</span> np.array([<span class="fl">0.229</span>, <span class="fl">0.224</span>, <span class="fl">0.225</span>], np.float32).reshape(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> execute(<span class="va">self</span>, requests):</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>        responses <span class="op">=</span> []</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> request <span class="kw">in</span> requests:</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> pb_utils.get_input_tensor_by_name(request, <span class="st">"INPUT"</span>).as_numpy()</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> x.astype(np.float32) <span class="op">/</span> <span class="fl">255.0</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>            y <span class="op">=</span> (x <span class="op">-</span> <span class="va">self</span>.mean) <span class="op">/</span> <span class="va">self</span>.std</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>            responses.append(</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>                pb_utils.InferenceResponse(</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>                    output_tensors<span class="op">=</span>[pb_utils.Tensor(<span class="st">"OUTPUT"</span>, y.astype(np.float32))]</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> responses</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Python dễ bottleneck nếu: loop thay NumPy, copy nhiều, decode image nặng trên critical path. Cân nhắc DALI, client-side preprocess, hoặc fuse vào graph. Dùng khi logic nhẹ / prototype; tránh khi p99 cực thấp hoặc thr rất cao.</p>
+</section>
+<section id="ensemble-pipeline" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="ensemble-pipeline">Ensemble pipeline</h3>
+<pre class="text"><code>RAW_IMAGE → preprocess_python → classifier_trt → postprocess_python → LABEL</code></pre>
+<p>Ensemble <strong>không</strong> có compute instance — child models mới có. Cẩn shape/name mapping và Python bottleneck.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-18-contents" aria-controls="callout-18" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Ensemble <code>config.pbtxt</code> đầy đủ (concept)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-18" class="callout-18-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode protobuf code-with-copy"><code class="sourceCode protobuf"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>name<span class="op">:</span> <span class="st">"image_classifier_pipeline"</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>platform<span class="op">:</span> <span class="st">"ensemble"</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>max_batch_size<span class="op">:</span> <span class="dv">8</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>input [{ name<span class="op">:</span> <span class="st">"RAW_IMAGE"</span> data_type<span class="op">:</span> TYPE_UINT8 dims<span class="op">:</span> [ <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span> ] }]</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>output [{ name<span class="op">:</span> <span class="st">"LABEL"</span> data_type<span class="op">:</span> TYPE_STRING dims<span class="op">:</span> [ <span class="dv">1</span> ] }]</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>ensemble_scheduling {</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  step [</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>      model_name<span class="op">:</span> <span class="st">"preprocess_python"</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>      model_version<span class="op">:</span> -<span class="dv">1</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>      input_map { key<span class="op">:</span> <span class="st">"INPUT"</span> value<span class="op">:</span> <span class="st">"RAW_IMAGE"</span> }</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>      output_map { key<span class="op">:</span> <span class="st">"OUTPUT"</span> value<span class="op">:</span> <span class="st">"PREPROCESSED"</span> }</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>      model_name<span class="op">:</span> <span class="st">"classifier_trt"</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>      model_version<span class="op">:</span> -<span class="dv">1</span></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>      input_map { key<span class="op">:</span> <span class="st">"input"</span> value<span class="op">:</span> <span class="st">"PREPROCESSED"</span> }</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>      output_map { key<span class="op">:</span> <span class="st">"logits"</span> value<span class="op">:</span> <span class="st">"LOGITS"</span> }</span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>      model_name<span class="op">:</span> <span class="st">"postprocess_python"</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>      model_version<span class="op">:</span> -<span class="dv">1</span></span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>      input_map { key<span class="op">:</span> <span class="st">"LOGITS"</span> value<span class="op">:</span> <span class="st">"LOGITS"</span> }</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>      output_map { key<span class="op">:</span> <span class="st">"LABEL"</span> value<span class="op">:</span> <span class="st">"LABEL"</span> }</span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>  ]</span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Repo cần đủ 4 model dirs; ensemble version dir có thể có file placeholder.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-serve-artifacts" class="level2" data-number="6.8">
+<h2 data-number="6.8" class="anchored" data-anchor-id="sec-serve-artifacts"><span class="header-section-number">6.8</span> Serving ONNX vs TensorRT trong Triton</h2>
+<blockquote class="blockquote">
+<p>Bắt đầu ORT hay TRT — và plan phải khớp profile thế nào?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Bắt đầu ORT</strong> cho correctness/portability; <strong>chuyển TRT</strong> khi profiling chứng minh ORT không đủ. Plan phải build trên target GPU/TRT/CUDA. <code>max_batch_size</code> Triton ≤ <code>max</code> của optimization profile. Engine không portable tuyệt đối (Lesson 4).</p>
+</div>
+</div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Chọn ORT khi</th>
+<th style="text-align: left;">Chọn TRT khi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Deploy nhanh, đang experiment</td>
+<td style="text-align: left;">Latency/throughput GPU critical</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ONNX đã validate</td>
+<td style="text-align: left;">Architecture hỗ trợ TRT tốt</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Perf đã đủ SLO</td>
+<td style="text-align: left;">Benchmark thấy lợi rõ + CI build engine</td>
+</tr>
+</tbody>
+</table>
+<pre class="text"><code>Start with ONNX Runtime → Move to TensorRT when profiling proves need.</code></pre>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-20-contents" aria-controls="callout-20" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>TRT + dynamic batching
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-20" class="callout-20-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Build: <code>trtexec --onnx=... --fp16 --minShapes=... --optShapes=... --maxShapes=... --saveEngine=model.plan</code>. Đặt Triton <code>max_batch_size</code> trong range profile. Sai profile → runtime shape error dù <code>trtexec</code> local OK trên máy khác.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-rollout" class="level2" data-number="6.9">
+<h2 data-number="6.9" class="anchored" data-anchor-id="sec-rollout"><span class="header-section-number">6.9</span> Model management, observability và rollout</h2>
+<blockquote class="blockquote">
+<p><code>poll</code> mode có nên là mặc định production không?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Control modes: <strong><code>none</code></strong> (load hết lúc start, immutable — thường tốt production đơn giản), <strong><code>explicit</code></strong> (load có chọn + API), <strong><code>poll</code></strong> (theo dõi filesystem — rủi ro partial update). Health: <code>/v2/health/live</code> vs <code>/ready</code>. Metrics <code>:8002/metrics</code> — tách <strong>queue duration</strong> vs <strong>compute infer duration</strong>. Prefer immutable deploy hoặc explicit; tránh poll mặc định.</p>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 36%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Mode</th>
+<th style="text-align: left;">Hành vi</th>
+<th style="text-align: left;">Khi dùng</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>none</code></td>
+<td style="text-align: left;">Load all lúc start; ignore FS changes</td>
+<td style="text-align: left;">Prod đơn giản, immutable repo/pod</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>explicit</code></td>
+<td style="text-align: left;">Load theo <code>--load-model</code> + API</td>
+<td style="text-align: left;">Nhiều model, on-demand, controlled reload</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>poll</code></td>
+<td style="text-align: left;">Poll repo định kỳ</td>
+<td style="text-align: left;">Chỉ khi atomic update được kiểm soát chặt</td>
+</tr>
+</tbody>
+</table>
+<p>Safer rollout: build → validate schema → correctness → load test → perf baseline → package immutable → deploy pod → readiness → shift traffic dần → monitor p99/error/GPU/queue → rollback nếu SLO vỡ.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> localhost:8000/v2/health/live</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> localhost:8000/v2/health/ready</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> localhost:8002/metrics</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric group</th>
+<th style="text-align: left;">Đọc gì</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Request success/fail</td>
+<td style="text-align: left;">Error rate</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Queue duration</td>
+<td style="text-align: left;">Serving/scheduler bottleneck</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Compute infer duration</td>
+<td style="text-align: left;">Model/backend time</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GPU util / memory</td>
+<td style="text-align: left;">Saturation vs OOM risk</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Batch size (nếu có)</td>
+<td style="text-align: left;">Dynamic batch có gom không</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-22-contents" aria-controls="callout-22" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>K8s probes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-22" class="callout-22-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">livenessProbe</span><span class="kw">:</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">httpGet</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /v2/health/live</span><span class="kw">,</span><span class="at"> </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">8000</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">readinessProbe</span><span class="kw">:</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">httpGet</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">path</span><span class="kw">:</span><span class="at"> /v2/health/ready</span><span class="kw">,</span><span class="at"> </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">8000</span><span class="at"> </span><span class="kw">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Prometheus scrape <code>:8002/metrics</code>. Tracing (OpenTelemetry) khi cần timeline request qua ensemble.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-perf-debug" class="level2" data-number="6.10">
+<h2 data-number="6.10" class="anchored" data-anchor-id="sec-perf-debug"><span class="header-section-number">6.10</span> Perf Analyzer, Model Analyzer và debug</h2>
+<blockquote class="blockquote">
+<p>Perf Analyzer khác Model Analyzer — và debug batching “không chạy” bắt đầu từ đâu?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Perf Analyzer</strong> = load có kiểm soát để đo thr/latency/p99. <strong>Model Analyzer</strong> = explore config (instance, batch…) tự động hơn. Benchmark matrix: concurrency × batch × config. Đừng tối ưu thr mà bỏ p99/queue/GPU mem. Hầu hết lỗi thuộc: load fail, shape mismatch, batching off, p99 xấu sau batch, util thấp, VRAM cao, plan không tương thích.</p>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ví dụ — chỉnh model/shape theo lab</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> tiny_classifier_onnx <span class="at">-u</span> localhost:8000 <span class="dt">\</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--concurrency-range</span> 1:16 <span class="at">--shape</span> input:1,1,28,28</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> tiny_classifier_onnx <span class="dt">\</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--concurrency-range</span> 1:32 <span class="at">--measurement-interval</span> 10000</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Đừng nhầm <strong>client batch</strong> với <strong>dynamic batch</strong>. Matrix gợi ý: concurrency <code>{1,4,16,64}</code> × configs <code>{no batch, dyn default, delay 100µs, instances 1/2}</code>.</p>
+<p>Vẽ throughput curve vs concurrency; tìm điểm GPU saturate / p99 vượt SLO.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 48%">
+<col style="width: 51%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Triệu chứng</th>
+<th style="text-align: left;">Kiểm tra đầu</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Model không load</td>
+<td style="text-align: left;">Log Triton; path file; <code>config.pbtxt</code>; backend; I/O names; plan/CUDA version</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Shape mismatch</td>
+<td style="text-align: left;"><code>max_batch_size</code> vs dims; client gửi <code>[B]+dims</code> đúng chưa</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Dyn batch “không chạy”</td>
+<td style="text-align: left;"><code>max_batch_size&gt;0</code>? có <code>dynamic_batching</code>? shapes compatible? traffic đủ?</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">p99 xấu sau batch</td>
+<td style="text-align: left;">Giảm delay / max batch; tăng instances; so SLO</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Thr thấp + GPU util thấp</td>
+<td style="text-align: left;">Pre/post CPU? copy? concurrency thấp? Python bottleneck?</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GPU memory cao</td>
+<td style="text-align: left;">Giảm instances / max batch; engine profile</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Plan fail trong Triton nhưng <code>trtexec</code> OK</td>
+<td style="text-align: left;">GPU/TRT version khác; filename <code>model.plan</code>; input names</td>
+</tr>
+</tbody>
+</table>
+<section id="debug-checklists-đầy-đủ" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="debug-checklists-đầy-đủ">Debug checklists đầy đủ</h3>
+<p><strong>Model không load:</strong> layout → version là số nguyên → filename convention → <code>config.pbtxt</code> syntax → backend/platform → I/O names/dtypes/dims → TRT compatibility → plugins.</p>
+<p><strong>Shape mismatch</strong> (hay nhất): quên rằng khi <code>max_batch_size &gt; 0</code>, dims <strong>không</strong> gồm batch. Đúng: <code>max_batch_size:32</code> + <code>dims:[3,224,224]</code>. Sai: <code>dims:[1,3,224,224]</code> cùng <code>max_batch_size:32</code>.</p>
+<p><strong>Dyn batch không chạy:</strong> <code>max_batch_size&gt;0</code>? có block <code>dynamic_batching</code>? concurrency đủ? shapes compatible? model batchable? client đã gửi batch lớn + concurrency thấp? traffic thấp? quá nhiều instances “nuốt” request trước khi batch lớn? <code>preferred_batch_size</code> quá hẹp? delay quá nhỏ?</p>
+<p><strong>p99 xấu sau batch:</strong> queue duration↑? delay/max batch cao? preferred gây chờ? → hạ delay/max batch, bỏ preferred, thêm instance, hoặc tắt dyn batch cho endpoint latency-critical.</p>
+<p><strong>Thr thấp + GPU util thấp:</strong> concurrency thấp, network/JSON overhead, pre/post CPU, Python backend, H2D/D2H, gRPC vs HTTP.</p>
+<p><strong>VRAM cao:</strong> giảm instances / max batch; kiểm profile engine.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-24-contents" aria-controls="callout-24" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Design patterns và anti-patterns
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-24" class="callout-24-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Patterns:</strong> (1) Single-model: ONNX→TRT plan→dyn batch→metrics. (2) Multi-model: gán GPU/instance theo SLO + memory plan. (3) Pipeline ensemble: Python→TRT→Python. (4) Low-latency: delay≈0, max batch nhỏ, TRT FP16/INT8, protocol nhanh. (5) High-throughput: max batch lớn, delay cao hơn, nhiều instance nếu VRAM cho phép.</p>
+<p><strong>Anti-patterns:</strong> copy config internet mù; <code>preferred_batch_size</code> không benchmark; tăng instance đến đầy VRAM; Python backend cho mọi thứ; chỉ đo mean latency; bỏ qua queue duration; poll mode + sửa file không atomic; giả định plan portable mọi GPU.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-25-contents" aria-controls="callout-25" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Production checklist đầy đủ
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-25" class="callout-25-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Artifact:</strong> baseline accuracy+latency; I/O schema; TRT/ORT/CUDA/driver/GPU recorded.<br>
+<strong>Repository:</strong> layout; config khớp names/dims; version policy; warmup.<br>
+<strong>Runtime:</strong> live/ready; metrics (queue vs compute); batch+instances vs <strong>p99 SLO</strong>.<br>
+<strong>Deploy:</strong> immutable image/repo; canary; rollback; monitor error + GPU mem + thr.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="mini-lab" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="mini-lab">Mini-lab</h2>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Ghi chú</span>Thực hành — Triton end-to-end (ONNX → serve → batch → optional TRT)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Cần Docker + (GPU labs) NVIDIA runtime. <code>RELEASE</code> chỉnh theo NGC tag có sẵn.</p>
+</div>
+</div>
+<section id="lab-12-export-tinycnn-repository" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="lab-12-export-tinycnn-repository">Lab 1–2: Export TinyCNN + repository</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> triton_lesson_6 <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> triton_lesson_6</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch, torch.nn <span class="im">as</span> nn</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TinyCNN(nn.Module):</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.net <span class="op">=</span> nn.Sequential(</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>            nn.Conv2d(<span class="dv">1</span>, <span class="dv">8</span>, <span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>), nn.ReLU(),</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>            nn.AdaptiveAvgPool2d((<span class="dv">1</span>, <span class="dv">1</span>)), nn.Flatten(), nn.Linear(<span class="dv">8</span>, <span class="dv">10</span>),</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.net(x)</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> TinyCNN().<span class="bu">eval</span>()</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>torch.onnx.export(</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>    model, torch.randn(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span>), <span class="st">"model.onnx"</span>,</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>    input_names<span class="op">=</span>[<span class="st">"input"</span>], output_names<span class="op">=</span>[<span class="st">"logits"</span>],</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>    dynamic_axes<span class="op">=</span>{<span class="st">"input"</span>: {<span class="dv">0</span>: <span class="st">"batch"</span>}, <span class="st">"logits"</span>: {<span class="dv">0</span>: <span class="st">"batch"</span>}},</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>    opset_version<span class="op">=</span><span class="dv">17</span>,</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> model_repository/tiny_classifier_onnx/1</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> model.onnx model_repository/tiny_classifier_onnx/1/model.onnx</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>config.pbtxt</code> — nhớ ONNX <code>[B,1,28,28]</code> → Triton <code>dims: [1,28,28]</code>, <code>max_batch_size: 8</code> (như <a href="#sec-config" class="quarto-xref"><span>Mục 6.4</span></a>).</p>
+</section>
+<section id="lab-34-start-triton-python-client" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="lab-34-start-triton-python-client">Lab 3–4: Start Triton + Python client</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">RELEASE</span><span class="op">=</span>26.04</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--gpus</span> all <span class="at">--rm</span> <span class="at">-it</span> <span class="at">--net</span> host <span class="dt">\</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-v</span> <span class="va">$PWD</span>/model_repository:/models <span class="dt">\</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  nvcr.io/nvidia/tritonserver:<span class="va">${RELEASE}</span>-py3 <span class="dt">\</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  tritonserver <span class="at">--model-repository</span><span class="op">=</span>/models</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tritonclient.http <span class="im">as</span> httpclient</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> httpclient.InferenceServerClient(url<span class="op">=</span><span class="st">"localhost:8000"</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.random.randn(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span>).astype(np.float32)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>inp <span class="op">=</span> httpclient.InferInput(<span class="st">"input"</span>, x.shape, <span class="st">"FP32"</span>)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>inp.set_data_from_numpy(x)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>out <span class="op">=</span> httpclient.InferRequestedOutput(<span class="st">"logits"</span>)</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> client.infer(<span class="st">"tiny_classifier_onnx"</span>, inputs<span class="op">=</span>[inp], outputs<span class="op">=</span>[out])</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(result.as_numpy(<span class="st">"logits"</span>).shape)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="lab-56-dynamic-batching-instance_group" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="lab-56-dynamic-batching-instance_group">Lab 5–6: Dynamic batching + instance_group</h3>
+<p>Baseline config (Lab 2) chưa có batcher. Thêm:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode protobuf code-with-copy"><code class="sourceCode protobuf"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>name<span class="op">:</span> <span class="st">"tiny_classifier_onnx"</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>backend<span class="op">:</span> <span class="st">"onnxruntime"</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>max_batch_size<span class="op">:</span> <span class="dv">8</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>input [{ name<span class="op">:</span> <span class="st">"input"</span> data_type<span class="op">:</span> TYPE_FP32 dims<span class="op">:</span> [ <span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span> ] }]</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>output [{ name<span class="op">:</span> <span class="st">"logits"</span> data_type<span class="op">:</span> TYPE_FP32 dims<span class="op">:</span> [ <span class="dv">10</span> ] }]</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>dynamic_batching {</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  max_queue_delay_microseconds<span class="op">:</span> <span class="dv">100</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>instance_group [{ count<span class="op">:</span> <span class="dv">2</span> kind<span class="op">:</span> KIND_GPU }]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Restart Triton. So Perf Analyzer concurrency <code>{1,4,16}</code> trước/sau. Ghi thr, p50, p99. Thử bỏ <code>preferred_batch_size</code> (đừng thêm nếu chưa đo). Hỏi: thr↑ bao nhiêu? p99 có vượt SLO giả định (ví dụ 30ms) không?</p>
+</section>
+<section id="lab-79-tensorrt-plan-python-preprocess-ensemble" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="lab-79-tensorrt-plan-python-preprocess-ensemble">Lab 7–9: TensorRT plan, Python preprocess, ensemble</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--onnx</span><span class="op">=</span>model.onnx <span class="at">--saveEngine</span><span class="op">=</span>model.plan <span class="at">--fp16</span> <span class="dt">\</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--minShapes</span><span class="op">=</span>input:1x1x28x28 <span class="at">--optShapes</span><span class="op">=</span>input:4x1x28x28 <span class="at">--maxShapes</span><span class="op">=</span>input:8x1x28x28</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> model_repository/tiny_classifier_trt/1</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> model.plan model_repository/tiny_classifier_trt/1/model.plan</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Config TRT: <code>platform: "tensorrt_plan"</code>, <code>max_batch_size: 8</code>, dims <code>[1,28,28]</code>, optional <code>dynamic_batching {}</code>.<br>
+Python preprocess: copy skeleton <a href="#sec-instances" class="quarto-xref"><span>Mục 6.7</span></a>. Ensemble optional: map preprocess → classifier (@ tip ensemble).</p>
+</section>
+<section id="lab-10-metrics" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="lab-10-metrics">Lab 10: Metrics</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> localhost:8002/metrics <span class="kw">|</span> <span class="fu">head</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> tiny_classifier_onnx <span class="at">-u</span> localhost:8000 <span class="dt">\</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--concurrency-range</span> 1:16</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Quan sát queue vs compute; GPU util khi concurrency tăng.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-27-contents" aria-controls="callout-27" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Mini project report
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-27" class="callout-27-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>ONNX + TRT FP16 → dyn batch → instance tune → Perf Analyzer → <code>/metrics</code> → chọn production candidate. Bảng: Config | Backend | Dyn batch | Instances | Max batch | Delay || thr | p50 | p95 | p99 | GPU util | mem. Ghi bottleneck, rủi ro, rollback.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="checkpoint-questions" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="checkpoint-questions">Checkpoint questions</h2>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-28-contents" aria-controls="callout-28" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Tự kiểm
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-28" class="callout-28-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Triton vs TensorRT? Serving vs compile/execute engine.<br>
+</li>
+<li>Triton vs ORT? Server đa model/batch/metrics vs runtime.<br>
+</li>
+<li>Repo layout? <code>name/config.pbtxt/version/file</code>.<br>
+</li>
+<li>Config tối thiểu? name/backend, max_batch_size, input/output.<br>
+</li>
+<li><code>max_batch_size&gt;0</code> → dims <strong>không</strong> gồm batch.<br>
+</li>
+<li><code>max_batch_size:0</code> khi không batch / full dims.<br>
+</li>
+<li>Dyn batch? Gom request server-side thành batch lớn hơn.<br>
+</li>
+<li>Thr↑ p99↓? Queue delay + batch lớn hơn.<br>
+</li>
+<li><code>max_queue_delay</code>? Chờ thêm peer → batch↑, latency risk↑.<br>
+</li>
+<li><code>preferred_batch_size</code>? Chỉ khi benchmark chứng minh.<br>
+</li>
+<li>Instance count ≠ batch size.<br>
+</li>
+<li>Tăng instance khi chưa saturate / nhiều concurrent.<br>
+</li>
+<li>Giảm khi VRAM/contention.<br>
+</li>
+<li>ORT dễ/portable; TRT nhanh hơn, kém portable.<br>
+</li>
+<li>Plan phụ thuộc GPU/TRT version.<br>
+</li>
+<li>Python: pre/post/glue — cẩn bottleneck.<br>
+</li>
+<li>Ensemble không tự compute.<br>
+</li>
+<li>none / explicit / poll.<br>
+</li>
+<li>Poll: partial FS update.<br>
+</li>
+<li>Queue vs compute metrics.<br>
+</li>
+<li>Perf Analyzer = load test; Model Analyzer = explore configs.<br>
+</li>
+<li>thr + p50/p95/p99 + GPU util/mem + queue.<br>
+</li>
+<li>Batching off: max_batch, config block, shapes, traffic.<br>
+</li>
+<li>Util thấp + latency cao: CPU pre/post, copy, queue, concurrency.<br>
+</li>
+<li>p99 sau batch: giảm delay/max batch; thêm instance; đối chiếu SLO.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="glossary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="glossary">Glossary</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 39%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Thuật ngữ</th>
+<th style="text-align: left;">Giải thích ngắn</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Triton Inference Server</td>
+<td style="text-align: left;">Server serve inference đa backend/model</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Model repository</td>
+<td style="text-align: left;">FS layout: artifact + config + versions</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>config.pbtxt</code></td>
+<td style="text-align: left;">Cấu hình model Triton</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Backend / platform</td>
+<td style="text-align: left;">Cách execute artifact / khai báo loại model</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Model instance / <code>instance_group</code></td>
+<td style="text-align: left;">Execution slot; config số lượng + device</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Dynamic / sequence batching</td>
+<td style="text-align: left;">Gom request / batch stateful sequences</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ensemble</td>
+<td style="text-align: left;">Pipeline nhiều model steps</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Perf Analyzer / Model Analyzer</td>
+<td style="text-align: left;">Load benchmark / explore config</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Queue / compute duration</td>
+<td style="text-align: left;">Chờ scheduler / thời gian infer thật</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Model control mode</td>
+<td style="text-align: left;">none / explicit / poll</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Version policy</td>
+<td style="text-align: left;">Version nào được serve</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">p99 latency</td>
+<td style="text-align: left;">99% request dưới ngưỡng này</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="summary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
+<ol type="1">
+<li>Triton = serving layer quanh artifact đã tối ưu.<br>
+</li>
+<li>Repository + <code>config.pbtxt</code> là hợp đồng deploy.<br>
+</li>
+<li><code>max_batch_size</code> đổi nghĩa <code>dims</code> — đừng nhầm shape.<br>
+</li>
+<li>Dynamic batching và instances tune theo <strong>SLO</strong>, không chỉ thr.<br>
+</li>
+<li>Observable: health + metrics (queue vs compute) + Perf Analyzer.<br>
+</li>
+<li>Rollout immutable/explicit; tránh poll mặc định.</li>
+</ol>
+</section>
+<section id="preview-bài-tiếp-theo" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="preview-bài-tiếp-theo">Preview bài tiếp theo</h2>
+<p>Lesson 7: <strong>Profiling and Benchmarking Inference Systems</strong> — <code>trtexec</code>, Perf Analyzer sâu hơn, Nsight, percentile methodology, tìm bottleneck bằng số liệu.</p>
+</section>
+<section id="references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
+<ol type="1">
+<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/index.html">NVIDIA Triton Inference Server docs</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_repository.html">Model repository</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_configuration.html">Model configuration</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/architecture.html#models-and-schedulers">Dynamic batching</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/perf_analyzer.html">Perf Analyzer</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/metrics.html">Metrics</a><br>
+</li>
+<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_management.html">Model management</a></li>
+</ol>
+
+
+</section>
+```

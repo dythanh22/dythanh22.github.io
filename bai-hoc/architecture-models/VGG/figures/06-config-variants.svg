@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="300" viewBox="0 0 880 300" role="img" aria-labelledby="vgg-06-title">
+<title id="vgg-06-title">VGG configuration variants</title>
+<rect class="fig-bg" width="880" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="440.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Cấu hình A/B/D/E: chỉ khác số conv / block (kernel luôn 3×3)</text>
+<text x="440.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Số = lớp conv trong block · M = max pool 2×2 s=2</text>
+<text x="55.0" y="92.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="start">VGG11 · A</text>
+<text x="55.0" y="108.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="500" fill="#5C6570" text-anchor="start">8 conv</text>
+<rect x="175.0" y="76.0" width="56.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="203.0" y="99.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">1×64</text>
+<rect x="239.0" y="82.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="250.0" y="98.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="269.0" y="76.0" width="56.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="297.0" y="99.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">1×128</text>
+<rect x="333.0" y="82.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="344.0" y="98.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="363.0" y="76.0" width="72.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="399.0" y="99.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">2×256</text>
+<rect x="443.0" y="82.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="454.0" y="98.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="473.0" y="76.0" width="72.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="509.0" y="99.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">2×512</text>
+<rect x="553.0" y="82.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="564.0" y="98.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="583.0" y="76.0" width="72.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="619.0" y="99.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">2×512</text>
+<text x="55.0" y="142.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="start">VGG13 · B</text>
+<text x="55.0" y="158.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="500" fill="#5C6570" text-anchor="start">10 conv</text>
+<rect x="175.0" y="126.0" width="72.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="211.0" y="149.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">2×64</text>
+<rect x="255.0" y="132.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="266.0" y="148.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="285.0" y="126.0" width="72.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="321.0" y="149.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">2×128</text>
+<rect x="365.0" y="132.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="376.0" y="148.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="395.0" y="126.0" width="72.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="431.0" y="149.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">2×256</text>
+<rect x="475.0" y="132.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="486.0" y="148.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="505.0" y="126.0" width="72.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="541.0" y="149.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">2×512</text>
+<rect x="585.0" y="132.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="596.0" y="148.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="615.0" y="126.0" width="72.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="651.0" y="149.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">2×512</text>
+<text x="55.0" y="192.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="start">VGG16 · D</text>
+<text x="55.0" y="208.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="500" fill="#5C6570" text-anchor="start">13 conv</text>
+<rect x="175.0" y="176.0" width="72.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="211.0" y="199.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">2×64</text>
+<rect x="255.0" y="182.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="266.0" y="198.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="285.0" y="176.0" width="72.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="321.0" y="199.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">2×128</text>
+<rect x="365.0" y="182.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="376.0" y="198.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="395.0" y="176.0" width="88.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="439.0" y="199.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">3×256</text>
+<rect x="491.0" y="182.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="502.0" y="198.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="521.0" y="176.0" width="88.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="565.0" y="199.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">3×512</text>
+<rect x="617.0" y="182.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="628.0" y="198.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="647.0" y="176.0" width="88.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="691.0" y="199.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">3×512</text>
+<text x="55.0" y="242.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="start">VGG19 · E</text>
+<text x="55.0" y="258.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="500" fill="#5C6570" text-anchor="start">16 conv</text>
+<rect x="175.0" y="226.0" width="72.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="211.0" y="249.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">2×64</text>
+<rect x="255.0" y="232.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="266.0" y="248.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="285.0" y="226.0" width="72.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="321.0" y="249.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">2×128</text>
+<rect x="365.0" y="232.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="376.0" y="248.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="395.0" y="226.0" width="104.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="447.0" y="249.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">4×256</text>
+<rect x="507.0" y="232.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="518.0" y="248.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="537.0" y="226.0" width="104.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="589.0" y="249.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">4×512</text>
+<rect x="649.0" y="232.0" width="22.0" height="24.0" rx="2" fill="#F0E6E0" stroke="#5C6570" stroke-width="2"/>
+<text x="660.0" y="248.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="700" fill="#5C6570" text-anchor="middle">M</text>
+<rect x="679.0" y="226.0" width="104.0" height="36.0" rx="3" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="731.0" y="249.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">4×512</text>
+<text x="440.0" y="280.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">VGG16 = config D (toàn 3×3); config C dùng 1×1 — hiếm dùng</text>
+</svg>

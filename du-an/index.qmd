@@ -1,6 +1,7 @@
 ---
 title: "Dự án"
 description: "Các dự án thực hành end-to-end"
+draft: true
 ---
 
 ::: {.empty-state}

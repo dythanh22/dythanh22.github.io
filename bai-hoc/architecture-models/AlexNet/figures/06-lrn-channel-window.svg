@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="260" viewBox="0 0 700 260" role="img" aria-labelledby="alexnet-06-title">
+<title id="alexnet-06-title">LRN across channels</title>
+<rect class="fig-bg" width="700" height="260" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="350.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">LRN: chuẩn hóa theo cửa sổ channel (không gian cố định)</text>
+<text x="350.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">bᵢ = aᵢ / (k + α Σⱼ∈window (aⱼ)²)^β   ·  n=5 (AlexNet)</text>
+<rect x="94.0" y="90.0" width="48.0" height="72.0" rx="3" fill="#EEF1F5" stroke="#5C6570" stroke-width="2"/>
+<text x="118.0" y="131.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">c0</text>
+<rect x="152.0" y="90.0" width="48.0" height="72.0" rx="3" fill="#EEF1F5" stroke="#5C6570" stroke-width="2"/>
+<text x="176.0" y="131.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">c1</text>
+<rect x="210.0" y="90.0" width="48.0" height="72.0" rx="3" fill="#D6E4FF" stroke="#2F6FED" stroke-width="2"/>
+<text x="234.0" y="131.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">c2</text>
+<rect x="268.0" y="90.0" width="48.0" height="72.0" rx="3" fill="#D6E4FF" stroke="#2F6FED" stroke-width="2"/>
+<text x="292.0" y="131.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">c3</text>
+<rect x="326.0" y="90.0" width="48.0" height="72.0" rx="3" fill="#D6E4FF" stroke="#C45C0A" stroke-width="3"/>
+<text x="350.0" y="131.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">c4</text>
+<rect x="384.0" y="90.0" width="48.0" height="72.0" rx="3" fill="#D6E4FF" stroke="#2F6FED" stroke-width="2"/>
+<text x="408.0" y="131.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">c5</text>
+<rect x="442.0" y="90.0" width="48.0" height="72.0" rx="3" fill="#D6E4FF" stroke="#2F6FED" stroke-width="2"/>
+<text x="466.0" y="131.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">c6</text>
+<rect x="500.0" y="90.0" width="48.0" height="72.0" rx="3" fill="#EEF1F5" stroke="#5C6570" stroke-width="2"/>
+<text x="524.0" y="131.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">c7</text>
+<rect x="558.0" y="90.0" width="48.0" height="72.0" rx="3" fill="#EEF1F5" stroke="#5C6570" stroke-width="2"/>
+<text x="582.0" y="131.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">c8</text>
+<rect x="206.0" y="82.0" width="288.0" height="88.0" fill="none" stroke="#C45C0A" stroke-width="2" stroke-dasharray="5 3" data-allow-overlap="1"/>
+<text x="350.0" y="210.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#C45C0A" text-anchor="middle">Cửa sổ n=5 quanh channel đang chuẩn hóa (viền cam = tâm)</text>
+<text x="350.0" y="232.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Khớp loop start:end trên trục C trong local_response_normalization()</text>
+</svg>

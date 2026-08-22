@@ -1,0 +1,1759 @@
+---
+title: "Modern GPU Inference Architecture"
+subtitle: "AI Optimization — Bài 1"
+date: 2026-05-14
+categories: [ai-optimize, inference]
+series: ai-optimize
+order: 1
+description: "Mental model: GPU inference, latency, throughput, batching và bottleneck."
+role: "Mental model: GPU inference, latency, throughput, batching và bottleneck"
+---
+
+```{=html}
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Ghi chú</span>Mục tiêu bài học
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Bài này không dạy API TensorRT hay ONNX ngay. Mục tiêu là xây <strong>mental model</strong> đúng về inference system: request đi qua đâu, GPU thực thi thế nào, vì sao batching quan trọng, vì sao model đã train xong vẫn chưa phải production service, và vì sao ONNX, ONNX Runtime, TensorRT, Triton tồn tại.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Ghi chú</span>Lộ trình bài học
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 15%">
+<col style="width: 44%">
+<col style="width: 31%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">#</th>
+<th style="text-align: left;">Phần</th>
+<th style="text-align: left;">Trả lời câu hỏi</th>
+<th style="text-align: left;">Thời lượng</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">Artifact vs service</td>
+<td style="text-align: left;">Vì sao train xong chưa phải xong?</td>
+<td style="text-align: left;">10 phút</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">Vòng đời một request</td>
+<td style="text-align: left;">Thời gian thực sự đi đâu?</td>
+<td style="text-align: left;">15 phút</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">GPU mental model</td>
+<td style="text-align: left;">GPU chạy model thế nào?</td>
+<td style="text-align: left;">20 phút</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">ONNX / TensorRT / Triton</td>
+<td style="text-align: left;">Mỗi công cụ giải quyết việc gì?</td>
+<td style="text-align: left;">15 phút</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">Latency vs throughput</td>
+<td style="text-align: left;">Vì sao batching là con dao hai lưỡi?</td>
+<td style="text-align: left;">15 phút</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">Bottleneck &amp; worked examples</td>
+<td style="text-align: left;">Tự chẩn đoán trước khi tối ưu</td>
+<td style="text-align: left;">30 phút</td>
+</tr>
+</tbody>
+</table>
+<p>Đọc tối thiểu: phần 1, 2, 4. Phần 3 có thể quay lại sau.</p>
+</div>
+</div>
+<div class="reading-modes">
+<p><strong>Đọc nhanh (~15–20 phút):</strong> chỉ các callout <em>Ý chính</em> + bảng + sơ đồ xương sống.<br>
+<strong>Đọc đủ:</strong> mở các tip “Con số cụ thể / Đào sâu”, làm Mini-lab và Checkpoint.</p>
+</div>
+<section id="bối-cảnh" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="bối-cảnh">Bối cảnh</h2>
+<p>Bạn đang học ONNX và TensorRT. Hai công nghệ này thường được giới thiệu bằng những câu như:</p>
+<ul>
+<li>Export model từ PyTorch sang ONNX</li>
+<li>Build TensorRT engine</li>
+<li>Chạy inference nhanh hơn</li>
+<li>Deploy bằng Triton</li>
+</ul>
+<p>Cách học đó có thể giúp bạn chạy được demo, nhưng thường không giúp bạn debug khi gặp lỗi thực tế như:</p>
+<ul>
+<li>ONNX export sai shape</li>
+<li>TensorRT không hỗ trợ một operator</li>
+<li>Dynamic shape làm engine build fail</li>
+<li>INT8 <strong>quantization</strong> (giảm precision) làm accuracy giảm</li>
+<li>GPU utilization cao nhưng latency p99 vẫn tệ</li>
+<li>Triton <strong>dynamic batching</strong> tăng throughput nhưng làm <strong>tail latency</strong> vượt SLO</li>
+</ul>
+<p>Vì vậy, bài đầu tiên tập trung vào kiến trúc inference hiện đại. Sau bài này, ONNX và TensorRT không còn là các tool rời rạc, mà trở thành các mảnh ghép rõ ràng trong một pipeline production.</p>
+</section>
+<section id="learning-outcomes" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="learning-outcomes">Learning outcomes</h2>
+<p>Sau bài này, bạn cần giải thích được:</p>
+<ol type="1">
+<li>Vì sao một trained <strong>model artifact</strong> chưa phải là production <strong>inference</strong> service</li>
+<li>Một request inference đi qua những thành phần nào từ client tới GPU rồi trả kết quả</li>
+<li>Sự khác nhau giữa <strong>latency</strong>, <strong>throughput</strong>, p50, p95, <strong>p99</strong>, GPU utilization và concurrency</li>
+<li>Vì sao GPU phù hợp với deep learning inference</li>
+<li>Các khái niệm nền tảng: host, device, CUDA <strong>kernel</strong>, stream, <strong>SM</strong>, <strong>warp</strong>, memory hierarchy, <strong>Tensor Cores</strong></li>
+<li>Vai trò của ONNX, ONNX Runtime, TensorRT và Triton trong inference stack</li>
+<li>Vì sao batching có thể tăng throughput nhưng cũng có thể làm latency xấu đi</li>
+<li>Cách nhận diện bottleneck ở mức hệ thống trước khi tối ưu model</li>
+</ol>
+</section>
+<section id="prerequisites" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="prerequisites">Prerequisites</h2>
+<p>Bạn không cần biết CUDA programming trước khi học bài này. Bạn nên đã quen với:</p>
+<ul>
+<li>Python cơ bản</li>
+<li>PyTorch hoặc TensorFlow ở mức biết load model và chạy inference</li>
+<li>Khái niệm tensor, batch size, forward pass</li>
+<li>Một chút kiến thức về API service như HTTP/gRPC là lợi thế</li>
+</ul>
+<p>Nếu chưa có GPU, bạn vẫn học được bài này. Phần thực hành chủ yếu là worksheet và tư duy hệ thống. Ở các bài sau, GPU NVIDIA sẽ hữu ích hơn.</p>
+</section>
+<section id="sec-big-picture" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="sec-big-picture"><span class="header-section-number">1.1</span> Big picture: từ training tới serving</h2>
+<blockquote class="blockquote">
+<p>Vì sao một model đã đạt accuracy tốt trên tập test vẫn có thể làm service chậm khi lên production?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Training tối ưu cho <strong>tổng thời gian xử lý toàn bộ dataset</strong>. Inference production tối ưu cho <strong>thời gian phản hồi của từng request</strong>. Hai mục tiêu này dẫn tới hai thiết kế hệ thống khác nhau.</p>
+</div>
+</div>
+<p>Một pipeline machine learning production thường có hai thế giới:</p>
+<div class="cell" data-fig-width="5.5" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-train-infer" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-train-infer-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-train-infer">flowchart TB
+  subgraph T["TRAINING WORLD"]
+    direction TB
+    T1([Raw data]) --&gt; T2([Feature processing])
+    T2 --&gt; T3([Training loop])
+    T3 --&gt; T4([Model artifact])
+    T4 --&gt; T5([Validation])
+  end
+  subgraph I["INFERENCE WORLD"]
+    direction TB
+    I1([Model artifact]) --&gt; I2([Export / conversion])
+    I2 --&gt; I3([Runtime optimization])
+    I3 --&gt; I4([Serving])
+    I4 --&gt; I5([Monitoring / scaling])
+  end
+  T4 -. Deploy .-&gt; I1
+  classDef train fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef trainKey fill:#DCEEFF,stroke:#2F6FBE,stroke-width:2px,color:#1F3A5F
+  classDef infer fill:#EAF8F0,stroke:#45A878,stroke-width:1.5px,color:#24543A
+  classDef inferKey fill:#D5F0E2,stroke:#2E8B5A,stroke-width:2px,color:#24543A
+  class T1,T2,T3,T5 train
+  class T4 trainKey
+  class I2,I3,I4,I5 infer
+  class I1 inferKey
+  style T fill:#F5FAFF,stroke:#4A90E2,stroke-width:2px,color:#1F3A5F
+  style I fill:#F4FCF7,stroke:#45A878,stroke-width:2px,color:#24543A
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-train-infer-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;1.1: Training world tối ưu throughput dài hạn; Inference world tối ưu request-level behavior.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Training thường tối ưu cho throughput dài hạn: nhiều data, nhiều epoch, nhiều GPU, nhiều giờ hoặc ngày.</p>
+<p>Inference production tối ưu cho request-level behavior. Mỗi request phải được phản hồi trong khoảng thời gian chấp nhận được. Service thường đặt <strong>SLO</strong> (Service Level Objective) như:</p>
+<ul>
+<li>p99 latency &lt; 100 ms</li>
+<li>availability ≥ 99.9%</li>
+<li>throughput ≥ 1000 requests/second</li>
+</ul>
+<p>Một model train tốt chưa chắc phục vụ tốt. Production inference cần thêm tối ưu, scheduling, batching, memory management, monitoring và rollout.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Con số cụ thể
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Một service phân loại ảnh có GPU execution chỉ 8 ms, nhưng end-to-end là 51 ms. Model chiếm khoảng 15% thời gian người dùng thực sự chờ. Chi tiết ở <a href="#sec-worked" class="quarto-xref"><span>Mục 1.8</span></a>.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-artifact-vs-service" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="sec-artifact-vs-service"><span class="header-section-number">1.2</span> Model artifact khác gì inference service?</h2>
+<blockquote class="blockquote">
+<p>Model file sau training trả lời câu hỏi gì — và inference service trả lời câu hỏi gì khác?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Model artifact</strong> lưu graph/weights đã học. <strong>Inference service</strong> nhận request, xử lý ổn định, đạt latency/throughput mục tiêu, quan sát lỗi và rollout an toàn. Artifact chưa phải service.</p>
+</div>
+</div>
+<section id="model-artifact" class="level3" data-number="1.2.1">
+<h3 data-number="1.2.1" class="anchored" data-anchor-id="model-artifact"><span class="header-section-number">1.2.1</span> Model artifact</h3>
+<p>Model artifact là sản phẩm của quá trình training. Nó có thể là file weight, checkpoint, serialized model, TorchScript module, ONNX model, hoặc TensorRT engine.</p>
+<p>Artifact trả lời: <em>Model đã học được gì, và computation graph hoặc weights được lưu ở đâu?</em></p>
+</section>
+<section id="inference-service" class="level3" data-number="1.2.2">
+<h3 data-number="1.2.2" class="anchored" data-anchor-id="inference-service"><span class="header-section-number">1.2.2</span> Inference service</h3>
+<p>Inference service trả lời: <em>Làm sao nhận request từ user, xử lý input, chạy model ổn định, trả output đúng format, đạt latency/throughput mục tiêu, quan sát được lỗi, và rollout an toàn?</em></p>
+<p>Một inference service thường bao gồm:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 57%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Thành phần</th>
+<th style="text-align: left;">Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">API layer</td>
+<td style="text-align: left;">Nhận request qua HTTP/gRPC/message queue</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Input validation</td>
+<td style="text-align: left;">Kiểm tra schema, size, dtype, range, authentication</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Preprocessing</td>
+<td style="text-align: left;">Decode ảnh, tokenize text, resize, normalize, pad/truncate</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Scheduler</td>
+<td style="text-align: left;">Queue request, gom batch, điều phối worker/GPU</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Runtime</td>
+<td style="text-align: left;">ONNX Runtime, TensorRT, PyTorch eager, TensorFlow Serving, vLLM, v.v.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GPU execution</td>
+<td style="text-align: left;">Kernel launch, memory transfer, compute, synchronization</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Postprocessing</td>
+<td style="text-align: left;">Softmax, NMS, decode token, map label, format result</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Observability</td>
+<td style="text-align: left;">Metrics, logs, traces, profiling, alerting</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Deployment control</td>
+<td style="text-align: left;">Versioning, rollback, canary, A/B testing</td>
+</tr>
+</tbody>
+</table>
+<p>Sai lầm phổ biến là chỉ nhìn <code>Input → Model → Output</code>. Trong production, dòng đúng hơn là request đi qua queue, preprocess, transfer, execute, postprocess rồi mới response. Nếu chỉ tối ưu bước <code>execute</code> mà bottleneck thật nằm ở <code>queue</code> hoặc <code>preprocess</code>, service vẫn chậm.</p>
+<div class="callout callout-style-default callout-warning no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Cảnh báo</span>Bẫy thường gặp
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Chỉ tối ưu bước <code>execute</code> — thực tế bottleneck có thể nằm ở <code>queue</code> hoặc <code>preprocess</code>. Service vẫn chậm dù model đã nhanh.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Đào sâu: chi phí ẩn quanh model
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Ngoài thời gian chạy model, end-to-end còn gồm: queue latency (request chờ đến lượt), CPU↔︎GPU transfer (H2D/D2H), batching delay (chờ gom đủ batch), serialization (đóng gói kết quả) và postprocessing logic (softmax, NMS, decode). User cảm nhận tổng của tất cả các phần này — không chỉ phần GPU.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-request-anatomy" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="sec-request-anatomy"><span class="header-section-number">1.3</span> Anatomy of one inference request</h2>
+<blockquote class="blockquote">
+<p>Khi user gửi một request, thời gian thực sự đi vào những đoạn nào trước khi có response?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Trong demo bạn thường đo <code>L_gpu_execute</code>. Trong production, user cảm nhận <code>L_total</code>. Nếu preprocess chiếm phần lớn budget, tăng tốc model gần như không cứu được SLO.</p>
+</div>
+</div>
+<p>Sơ đồ xương sống của bài này — pipeline một request:</p>
+<div class="cell" data-fig-width="7" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-request-pipeline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-request-pipeline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-request-pipeline">flowchart LR
+  R([Request]) --&gt; V([Validate])
+  V --&gt; P([Preprocess])
+  P --&gt; B([Batch])
+  B --&gt; H([H2D])
+  H --&gt; G([GPU])
+  G --&gt; D([D2H])
+  D --&gt; O([Post + Response])
+  classDef stage fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef compute fill:#EAF3FF,stroke:#4A90E2,stroke-width:2px,color:#1F3A5F
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class R,V,P,B,O stage
+  class G compute
+  class H,D io
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-request-pipeline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;1.2: Pipeline end-to-end của một inference request. Các section sau sẽ tô sáng từng giai đoạn.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Latency</strong> (thời gian xử lý một request) end-to-end là tổng các giai đoạn: network, queue, preprocess, <strong>H2D</strong> (host-to-device), GPU execute, <strong>D2H</strong> (device-to-host), postprocess, serialize.</p>
+<section id="latency-budget" class="level3" data-number="1.3.1">
+<h3 data-number="1.3.1" class="anchored" data-anchor-id="latency-budget"><span class="header-section-number">1.3.1</span> Latency budget</h3>
+<p>Giả sử SLO là p99 latency &lt; 100 ms. Một budget ban đầu:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Thành phần</th>
+<th style="text-align: right;">Budget</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Network + API parsing</td>
+<td style="text-align: right;">5 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Queueing</td>
+<td style="text-align: right;">10 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Preprocessing</td>
+<td style="text-align: right;">15 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">H2D transfer</td>
+<td style="text-align: right;">5 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">GPU execution</td>
+<td style="text-align: right;">40 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D2H transfer</td>
+<td style="text-align: right;">5 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Postprocessing + serialization</td>
+<td style="text-align: right;">10 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Safety margin</td>
+<td style="text-align: right;">10 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Total</td>
+<td style="text-align: right;">100 ms</td>
+</tr>
+</tbody>
+</table>
+<p>Nếu preprocessing thực tế là 45 ms, TensorRT giảm GPU execution từ 40 ms xuống 20 ms thì tổng vẫn có thể vượt SLO. Inference optimization cần nhìn cả hệ thống, không chỉ nhìn model.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Con số cụ thể: model nhanh 2.67× nhưng service chỉ cải thiện 9.8%
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Service image classification có breakdown latency đo được:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Thành phần</th>
+<th style="text-align: right;">Trước TensorRT</th>
+<th style="text-align: right;">Sau TensorRT</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">API parse</td>
+<td style="text-align: right;">2 ms</td>
+<td style="text-align: right;">2 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Image decode + resize</td>
+<td style="text-align: right;">35 ms</td>
+<td style="text-align: right;">35 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">H2D copy</td>
+<td style="text-align: right;">3 ms</td>
+<td style="text-align: right;">3 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GPU execution</td>
+<td style="text-align: right;">8 ms</td>
+<td style="text-align: right;"><strong>3 ms</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D2H copy</td>
+<td style="text-align: right;">1 ms</td>
+<td style="text-align: right;">1 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Postprocessing</td>
+<td style="text-align: right;">2 ms</td>
+<td style="text-align: right;">2 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Total</strong></td>
+<td style="text-align: right;"><strong>51 ms</strong></td>
+<td style="text-align: right;"><strong>46 ms</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Tính cụ thể: <code>2 + 35 + 3 + 3 + 1 + 2 = 46 ms</code>. TensorRT đã tăng tốc GPU execution <strong>2.67×</strong> (từ 8 ms xuống 3 ms), nhưng end-to-end chỉ cải thiện <strong>9.8%</strong> (từ 51 ms xuống 46 ms).</p>
+<p>Kết luận: bottleneck thật là image decode + resize (35 ms), không phải GPU execution. Tiếp tục tối ưu model sẽ không mang lại nhiều. Cần song song hoá preprocessing, dùng thư viện decode nhanh hơn (libjpeg-turbo, DALI), hoặc đẩy preprocessing lên GPU.</p>
+<div class="cell" data-fig-width="7" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-preprocess-hot" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-preprocess-hot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-preprocess-hot">flowchart LR
+  R([Request]) --&gt; V([Validate])
+  V --&gt; P([Preprocess])
+  P --&gt; B([Batch])
+  B --&gt; H([H2D])
+  H --&gt; G([GPU])
+  G --&gt; D([D2H])
+  D --&gt; O([Post + Response])
+  classDef stage fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef compute fill:#EAF3FF,stroke:#4A90E2,stroke-width:2px,color:#1F3A5F
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
+  class R,V,B,O stage
+  class G compute
+  class H,D io
+  class P hot
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-preprocess-hot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;1.3: Cùng pipeline xương sống, tô sáng Preprocess — nơi chiếm phần lớn thời gian trong ví dụ trên.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-gpu-mental-model" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="sec-gpu-mental-model"><span class="header-section-number">1.4</span> GPU mental model</h2>
+<blockquote class="blockquote">
+<p>GPU có phải là CPU nhanh hơn — và inference trên GPU thực chất là chuỗi thao tác gì?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>GPU là <strong>throughput machine</strong>: rất nhiều worker đơn giản chạy song song. Deep learning inference là chuỗi <strong>kernel</strong> launches và memory operations trên device, không phải một phép tính kỳ diệu duy nhất.</p>
+</div>
+</div>
+<section id="gpu-không-phải-cpu-nhanh-hơn" class="level3" data-number="1.4.1">
+<h3 data-number="1.4.1" class="anchored" data-anchor-id="gpu-không-phải-cpu-nhanh-hơn"><span class="header-section-number">1.4.1</span> GPU không phải CPU nhanh hơn</h3>
+<p>CPU và GPU được thiết kế cho hai kiểu workload khác nhau:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 38%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">CPU</th>
+<th style="text-align: left;">GPU</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Thiết kế cho</td>
+<td style="text-align: left;">Ít worker linh hoạt, logic phức tạp</td>
+<td style="text-align: left;">Rất nhiều worker, công việc chia đều</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Mạnh ở</td>
+<td style="text-align: left;">Branching, control flow, task nhỏ latency thấp</td>
+<td style="text-align: left;">Data parallelism, matmul, tensor ops, bandwidth lớn</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Phù hợp</td>
+<td style="text-align: left;">OS, networking, orchestration</td>
+<td style="text-align: left;">Convolution, attention, elementwise song song</td>
+</tr>
+</tbody>
+</table>
+<p>Deep learning inference chủ yếu là phép toán tensor — convolution, matrix multiplication, attention, normalization, elementwise — có tính song song rất cao, nên phù hợp GPU.</p>
+<p>Một mental model đơn giản: CPU là ít worker rất linh hoạt và mạnh với logic phức tạp; GPU là rất nhiều worker đơn giản hơn, nhưng tổng throughput rất lớn nếu công việc được chia đều.</p>
+</section>
+<section id="host-device-và-transfer" class="level3" data-number="1.4.2">
+<h3 data-number="1.4.2" class="anchored" data-anchor-id="host-device-và-transfer"><span class="header-section-number">1.4.2</span> Host, device và transfer</h3>
+<p>Trong CUDA-style programming:</p>
+<ul>
+<li><strong>Host</strong> = CPU + system RAM</li>
+<li><strong>Device</strong> = GPU + GPU memory / VRAM</li>
+</ul>
+<p>Request thường được nhận và preprocess trên host. Tensor input cần nằm ở device memory để GPU tính. Output có thể được copy về host để postprocess. Nguồn latency hay bị bỏ qua là transfer <code>CPU RAM ↔︎ GPU VRAM</code>: tensor nhỏ thì overhead transfer và kernel launch chiếm tỷ lệ lớn; tensor lớn thì bandwidth host–device có thể trở thành bottleneck.</p>
+</section>
+<section id="kernel-sm-warp" class="level3" data-number="1.4.3">
+<h3 data-number="1.4.3" class="anchored" data-anchor-id="kernel-sm-warp"><span class="header-section-number">1.4.3</span> Kernel, SM, warp</h3>
+<p><strong>CUDA kernel</strong> là function chạy song song trên GPU. Khi runtime chạy convolution, matmul hoặc activation, nó thường gọi một hoặc nhiều kernel đã tối ưu từ thư viện cuDNN, cuBLAS hoặc kernel custom.</p>
+<div class="cell" data-fig-width="5.5" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-kernel-stack" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-kernel-stack-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-kernel-stack">flowchart TB
+  FRAMEWORK(["PyTorch / ORT / TensorRT"]) --&gt;|"dispatch"| CUDA(["cuDNN / cuBLAS / kernels"])
+  CUDA --&gt;|"launch"| KERNEL(["Kernel launch"])
+  KERNEL --&gt;|"tạo grid"| GRID(["Grid of thread blocks"])
+  GRID --&gt;|"scheduler phân phối"| SCHED(["Blocks trên SM"])
+  SCHED --&gt;|"SIMT · 32 thread/warp"| WARPS(["Warps thực thi"])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef mid fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hard fill:#E8F5E9,stroke:#43A047,stroke-width:2px,color:#1B5E20
+  class FRAMEWORK,CUDA soft
+  class KERNEL,GRID mid
+  class SCHED,WARPS hard
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kernel-stack-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;1.4: Từ framework xuống phần cứng: kernel được schedule thành blocks trên SM và thực thi theo warp.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Một GPU NVIDIA gồm nhiều <strong>SM</strong> (Streaming Multiprocessor) — đơn vị thực thi chính. CUDA chia công việc thành thread; thread được nhóm thành <strong>block</strong>; GPU schedule các block lên SM. Ở mức thực thi phần cứng, thread chạy theo nhóm gọi là <strong>warp</strong> — thường là 32 thread cùng lúc theo mô hình SIMT (Single Instruction, Multiple Threads).</p>
+<p>Bạn chưa cần viết CUDA kernel. Nhưng bạn cần hiểu: một model inference thực chất là chuỗi kernel launches và memory operations. Hiểu mô hình này giúp đọc các khái niệm <strong>occupancy</strong>, memory bandwidth, <strong>kernel fusion</strong> và launch overhead.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Đào sâu: SM, warp và occupancy
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-11" class="callout-11-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Mỗi SM có một số lượng hữu hạn register, shared memory và warp slot. <strong>Occupancy</strong> là tỷ lệ warp đang active trên SM so với tối đa có thể. Occupancy cao không luôn đồng nghĩa performance tốt — đôi khi một kernel tận dụng tốt shared memory và compute ngay cả khi occupancy thấp.</p>
+<p>Với deep learning inference dùng TensorRT hoặc ONNX Runtime, runtime và thư viện kernel sẽ điều phối thread/block. Bạn không trực tiếp viết scheduling. Tuy nhiên, hiểu mô hình này giúp đọc profiler (như Nsight Systems/Compute) khi cần chẩn đoán tại sao một kernel chạy chậm hơn kỳ vọng.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="memory-hierarchy" class="level3" data-number="1.4.4">
+<h3 data-number="1.4.4" class="anchored" data-anchor-id="memory-hierarchy"><span class="header-section-number">1.4.4</span> Memory hierarchy</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 37%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Bộ nhớ</th>
+<th style="text-align: left;">Đặc điểm</th>
+<th style="text-align: left;">Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Registers</td>
+<td style="text-align: left;">Rất nhanh, rất nhỏ</td>
+<td style="text-align: left;">Riêng cho thread</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Shared memory</td>
+<td style="text-align: left;">Nhanh, nhỏ</td>
+<td style="text-align: left;">Chia sẻ trong một block</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">L1/L2 cache</td>
+<td style="text-align: left;">Trung gian</td>
+<td style="text-align: left;">Giảm global memory access</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Global memory / VRAM</td>
+<td style="text-align: left;">Lớn, chậm hơn register/shared</td>
+<td style="text-align: left;">Tensors, weights, activations</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Host memory</td>
+<td style="text-align: left;">RAM phía CPU</td>
+<td style="text-align: left;">Cần transfer nếu GPU cần dữ liệu</td>
+</tr>
+</tbody>
+</table>
+<p>Nhiều model không bị giới hạn bởi số phép tính mà bởi tốc độ đọc/ghi bộ nhớ — gọi là <strong>memory-bound</strong>. Ngược lại, model bị giới hạn bởi số phép tính gọi là <strong>compute-bound</strong>.</p>
+<p>Ví dụ thực tế:</p>
+<ul>
+<li>Large matrix multiplication thường có thể tận dụng compute tốt (compute-bound).</li>
+<li>Chuỗi elementwise operations nhỏ bị chi phối bởi memory bandwidth và kernel launch overhead (memory-bound).</li>
+<li>Attention decode trong LLM thường bị ảnh hưởng nặng bởi memory access tới KV cache (memory-bound).</li>
+</ul>
+</section>
+<section id="tensor-cores" class="level3" data-number="1.4.5">
+<h3 data-number="1.4.5" class="anchored" data-anchor-id="tensor-cores"><span class="header-section-number">1.4.5</span> Tensor Cores</h3>
+<p><strong>Tensor Cores</strong> là phần cứng chuyên dụng trong GPU NVIDIA để tăng tốc các phép matrix/tensor math ở một số precision nhất định. Tùy kiến trúc GPU: FP16, BF16, TF32, INT8, FP8.</p>
+<p>Vì deep learning dùng rất nhiều matmul và convolution, Tensor Cores là lý do các precision thấp như FP16, BF16, INT8 có thể tăng tốc mạnh. Nhưng đổi precision không chỉ là bật một flag. Cần kiểm tra:</p>
+<ul>
+<li>Hardware có hỗ trợ precision đó không</li>
+<li>Runtime có kernel tối ưu cho operator đó không</li>
+<li>Accuracy có bị giảm không</li>
+<li>Shape có phù hợp để kernel chạy hiệu quả không (ví dụ: alignment 8 hoặc 16 thường cần thiết)</li>
+</ul>
+</section>
+<section id="cuda-streams-và-concurrency" class="level3" data-number="1.4.6">
+<h3 data-number="1.4.6" class="anchored" data-anchor-id="cuda-streams-và-concurrency"><span class="header-section-number">1.4.6</span> CUDA streams và concurrency</h3>
+<p><strong>CUDA stream</strong> là hàng đợi công việc trên GPU. Operation trong cùng một stream thường giữ thứ tự. Các stream khác nhau có thể cho phép overlap một số công việc, tùy hardware, runtime và dependency.</p>
+<pre class="text"><code>Stream A: H2D copy req 1 → execute req 1 → D2H copy req 1
+Stream B: H2D copy req 2 → execute req 2 → D2H copy req 2</code></pre>
+<p>Nếu thiết kế tốt, service có thể overlap data transfer, compute và nhiều request. Tuy nhiên, concurrency không tự động tạo performance tốt. Quá nhiều concurrency có thể làm queue dài, tăng memory pressure và làm p99 xấu đi.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Đào sâu: GPU nằm đâu trên pipeline xương sống?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Trên sơ đồ ở <a href="#fig-request-pipeline" class="quarto-xref">Hình&nbsp;<span>1.2</span></a>, giai đoạn <strong>GPU</strong> là nơi kernel, SM, warp và Tensor Cores hoạt động. Giai đoạn <strong>H2D</strong> và <strong>D2H</strong> hai bên là transfer host↔︎device — thường bị bỏ quên khi chỉ đo model latency bằng cách đặt timer bao quanh <code>session.run()</code>. Để đo đúng H2D/D2H, cần profiler như Nsight Systems.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-inference-stack" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="sec-inference-stack"><span class="header-section-number">1.5</span> Inference stack: ONNX, Runtime, TensorRT, Triton</h2>
+<blockquote class="blockquote">
+<p>ONNX, ONNX Runtime, TensorRT và Triton khác nhau thế nào — và vì sao không thể thay thế lẫn nhau?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>ONNX là <strong>representation</strong>. ONNX Runtime là <strong>runtime</strong> đa backend. TensorRT là <strong>compiler + runtime</strong> tối ưu sâu cho GPU NVIDIA. Triton là <strong>serving server</strong>. Nhầm vai trò là nguyên nhân phổ biến của thiết kế stack sai.</p>
+</div>
+</div>
+<p>Một neural network là <strong>computation graph</strong>: mỗi node là operation, mỗi edge là tensor. Khi train bằng PyTorch bạn thường làm việc với Python objects và dynamic execution. Khi deploy, runtime muốn graph rõ ràng hơn để tối ưu — đây là nơi ONNX, ONNX Runtime và TensorRT xuất hiện.</p>
+<p>Ví dụ đồ thị khái niệm: <code>Input → Conv → BatchNorm → ReLU → MaxPool → Linear → Softmax → Output</code>. Mỗi node là operation, mỗi edge là tensor flow giữa các operation.</p>
+<section id="vai-trò-từng-lớp" class="level3" data-number="1.5.1">
+<h3 data-number="1.5.1" class="anchored" data-anchor-id="vai-trò-từng-lớp"><span class="header-section-number">1.5.1</span> Vai trò từng lớp</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 30%">
+<col style="width: 48%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Công nghệ</th>
+<th style="text-align: left;">Vai trò chính</th>
+<th style="text-align: left;">Không nên hiểu nhầm là</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ONNX</td>
+<td style="text-align: left;">Model representation / interchange format</td>
+<td style="text-align: left;">Một serving server</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ONNX Runtime</td>
+<td style="text-align: left;">Runtime chạy ONNX trên nhiều backend</td>
+<td style="text-align: left;">Chỉ dành cho CPU</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TensorRT</td>
+<td style="text-align: left;">NVIDIA inference compiler + runtime</td>
+<td style="text-align: left;">Chỉ là Python wrapper</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Triton</td>
+<td style="text-align: left;">Inference serving server</td>
+<td style="text-align: left;">Một model optimizer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CUDA</td>
+<td style="text-align: left;">Programming/runtime layer cho NVIDIA GPU</td>
+<td style="text-align: left;">Một deep learning framework</td>
+</tr>
+</tbody>
+</table>
+<p><strong>ONNX</strong> định nghĩa file format và tập operator chung để model đi qua nhiều framework, runtime và hardware backend. Nó trả lời: graph gồm những node, tensor, operator, shape, dtype nào — không phải GPU runtime.</p>
+<p><strong>ONNX Runtime</strong> chạy ONNX model, áp dụng graph optimizations và dùng Execution Providers (CPU, CUDA, TensorRT, OpenVINO, CoreML, DirectML, QNN, …).</p>
+<p><strong>TensorRT</strong> nhận model (thường qua ONNX) và tạo optimized engine cho GPU NVIDIA. Không chỉ là runtime — TensorRT có phần compiler/optimizer rất quan trọng.</p>
+<p><strong>Triton</strong> không thay thế ONNX hay TensorRT. Nó phụ trách model repository, multi-model serving, dynamic batching, concurrent execution, versioning, metrics, HTTP/gRPC và backend integration.</p>
+</section>
+<section id="putting-the-stack-together" class="level3" data-number="1.5.2">
+<h3 data-number="1.5.2" class="anchored" data-anchor-id="putting-the-stack-together"><span class="header-section-number">1.5.2</span> Putting the stack together</h3>
+<p>Không có stack duy nhất đúng. Tùy use case:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 66%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Stack</th>
+<th style="text-align: left;">Khi nào dùng</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PyTorch → ONNX → TensorRT → Triton</td>
+<td style="text-align: left;">Production NVIDIA GPU, cần throughput tối đa</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PyTorch → ONNX → ORT (CUDA EP) → FastAPI</td>
+<td style="text-align: left;">Cần flexibility, không muốn TRT build time</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PyTorch → Torch-TensorRT → TensorRT → Triton</td>
+<td style="text-align: left;">Tránh ONNX export, tích hợp trực tiếp TRT vào PyTorch</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PyTorch eager → Triton Python backend</td>
+<td style="text-align: left;">Prototype nhanh, chưa cần tối ưu sâu</td>
+</tr>
+</tbody>
+</table>
+<div class="cell" data-fig-width="6.5" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-inference-stack" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-inference-stack-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-inference-stack">flowchart LR
+  TRAIN(["PyTorch"]) --&gt;|"export"| ONNX(["ONNX"])
+  ONNX --&gt;|"compile"| TRT(["TensorRT"])
+  TRT --&gt;|"load"| TRITON(["Triton"])
+  TRITON --&gt;|"HTTP/gRPC"| CLIENT(["Clients"])
+  classDef train fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef format fill:#FFF8E1,stroke:#F9A825,stroke-width:1.5px,color:#5C3B10
+  classDef engine fill:#E8F5E9,stroke:#43A047,stroke-width:2px,color:#1B5E20
+  classDef serve fill:#E0F7FA,stroke:#00838F,stroke-width:1.5px,color:#004D40
+  classDef client fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  class TRAIN train
+  class ONNX format
+  class TRT engine
+  class TRITON serve
+  class CLIENT client
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-inference-stack-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;1.5: Stack phổ biến nhất: training → interchange → compile/optimize → serve.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Điều quan trọng là hiểu vai trò từng lớp, không bắt buộc một stack cố định. Ví dụ, ONNX Runtime với CUDA Execution Provider đủ dùng cho nhiều service không cần tối ưu cực đại của TensorRT.</p>
+</section>
+<section id="vì-sao-tensorrt-tồn-tại" class="level3" data-number="1.5.3">
+<h3 data-number="1.5.3" class="anchored" data-anchor-id="vì-sao-tensorrt-tồn-tại"><span class="header-section-number">1.5.3</span> Vì sao TensorRT tồn tại?</h3>
+<p>Framework training như PyTorch rất linh hoạt, nhưng linh hoạt không luôn tối ưu nhất cho inference production. TensorRT biến model đã train thành execution plan tối ưu hơn cho GPU NVIDIA qua các bước:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 37%">
+<col style="width: 62%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Khả năng</th>
+<th style="text-align: left;">Ý nghĩa thực tế</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Graph cleanup</td>
+<td style="text-align: left;">Bỏ node dư thừa; đơn giản hóa pattern</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Layer fusion</td>
+<td style="text-align: left;">Gộp nhiều layer để giảm memory access và kernel launch</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Precision optimization</td>
+<td style="text-align: left;">FP16/BF16/INT8/FP8: giảm bandwidth, tăng tốc Tensor Cores</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Tactic selection</td>
+<td style="text-align: left;">Chọn kernel/thuật toán tốt nhất theo GPU, shape, precision</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Memory planning</td>
+<td style="text-align: left;">Lập kế hoạch buffer intermediate, tái sử dụng memory</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Dynamic shape profiles</td>
+<td style="text-align: left;">Tối ưu cho range shape thay vì một shape cố định</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Engine serialization</td>
+<td style="text-align: left;">Lưu engine để tái sử dụng, tránh build lại</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Đào sâu: từng loại tối ưu của TensorRT
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-14" class="callout-14-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Graph cleanup và constant folding</strong></p>
+<p>Một graph có thể có node dư thừa từ quá trình export:</p>
+<pre class="text"><code>Trước: x → Identity → y
+Sau:   x → y</code></pre>
+<p>Hoặc một số phép tính chỉ dùng constant có thể được tính trước (constant folding), giảm compute lúc inference.</p>
+<p><strong>Layer fusion</strong></p>
+<p>Nhiều layer liên tiếp được fuse để giảm số kernel launches và số lần đọc/ghi global memory. Ví dụ:</p>
+<pre class="text"><code>Conv → BatchNorm → ReLU</code></pre>
+<p>Có thể được thực thi hiệu quả hơn dưới dạng một fused operation. Tương tự:</p>
+<pre class="text"><code>MatMul → Add (bias) → Activation</code></pre>
+<p>Thay vì ba kernel riêng, TensorRT có thể map sang một kernel/tactic tối ưu hơn.</p>
+<p><strong>Precision optimization</strong></p>
+<p>Thay vì FP32 mọi nơi, inference có thể dùng precision thấp hơn. Lợi ích: giảm memory bandwidth, giảm footprint, tăng tốc Tensor Cores. Rủi ro: accuracy giảm, operator không hỗ trợ, calibration không tốt.</p>
+<p><strong>Tactic selection</strong></p>
+<p>Với cùng operation như convolution hay matmul, có nhiều thuật toán/kernel. TensorRT có thể benchmark hoặc chọn tactic phù hợp với GPU architecture, tensor shape, precision, workspace memory limit và dynamic shape profile. Đây là lý do engine có thể phụ thuộc vào hardware, shape range và config build.</p>
+<p><strong>Memory planning</strong></p>
+<p>TensorRT lập kế hoạch memory cho intermediate tensors: giảm allocation runtime, tái sử dụng buffer hiệu quả. Quan trọng khi GPU memory hữu hạn, multi-model serving cần chia sẻ GPU, hoặc batch size lớn làm activation memory tăng.</p>
+<p>Engine tối ưu trên GPU này chưa chắc tối ưu trên GPU khác — đây là lý do thường phải build engine trên cùng hardware sẽ chạy inference.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-metrics" class="level2" data-number="1.6">
+<h2 data-number="1.6" class="anchored" data-anchor-id="sec-metrics"><span class="header-section-number">1.6</span> Latency, throughput và trade-off batching</h2>
+<blockquote class="blockquote">
+<p>Vì sao tăng throughput bằng batching lại có thể làm p99 latency xấu đi?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Production quan tâm <strong>p99</strong> hơn average. Batching tăng <strong>throughput</strong> nhưng thêm queue delay — luôn tune theo SLO, không theo “GPU bận hơn”.</p>
+</div>
+</div>
+<section id="latency-throughput-utilization-concurrency" class="level3" data-number="1.6.1">
+<h3 data-number="1.6.1" class="anchored" data-anchor-id="latency-throughput-utilization-concurrency"><span class="header-section-number">1.6.1</span> Latency, throughput, utilization, concurrency</h3>
+<p>Latency là thời gian từ request sent tới response received.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: left;">Ý nghĩa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Average latency</td>
+<td style="text-align: left;">Trung bình, dễ bị che bởi outlier</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Median / p50</td>
+<td style="text-align: left;">50% request nhanh hơn giá trị này</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">p95</td>
+<td style="text-align: left;">95% request nhanh hơn giá trị này</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">p99</td>
+<td style="text-align: left;">99% request nhanh hơn giá trị này</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Max</td>
+<td style="text-align: left;">Request chậm nhất quan sát được</td>
+</tr>
+</tbody>
+</table>
+<p>Production thường quan tâm p95 hoặc p99 vì một phần nhỏ request chậm có thể phá trải nghiệm hoặc làm downstream system timeout.</p>
+<p><strong>Throughput</strong> là số request xử lý được mỗi đơn vị thời gian:</p>
+<p><span class="math display">\[\text{throughput} = \frac{\text{completed requests}}{\text{second}}\]</span></p>
+<p>Đơn vị thường gặp: RPS, QPS, images/sec, tokens/sec (LLM).</p>
+<p>GPU utilization cao không luôn nghĩa service tốt: GPU có thể bận vì queue dài, p99 xấu, kernel kém hiệu quả, hoặc memory-bound. Utilization thấp cũng không luôn là lỗi: batch size = 1 với SLO latency rất chặt, traffic thưa, hoặc bottleneck nằm ở CPU/network.</p>
+<p><strong>Concurrency</strong> là số request đang trong hệ thống cùng lúc. Rule-of-thumb từ queueing theory:</p>
+<p><span class="math display">\[\text{concurrency} \approx \text{throughput} \times \text{latency}\]</span></p>
+<p>Ví dụ: 500 RPS × 100 ms = khoảng 50 request đồng thời. Đây chỉ là trực giác ban đầu; với p99, burst traffic, batching và queueing, behavior phức tạp hơn nhiều.</p>
+</section>
+<section id="latencythroughput-trade-off" class="level3" data-number="1.6.2">
+<h3 data-number="1.6.2" class="anchored" data-anchor-id="latencythroughput-trade-off"><span class="header-section-number">1.6.2</span> Latency–throughput trade-off</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 45%">
+<col style="width: 45%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Batch size = 1</th>
+<th style="text-align: left;">Batch size lớn</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Ưu</td>
+<td style="text-align: left;">Không chờ gom batch; latency đơn request thường thấp; dễ reasoning</td>
+<td style="text-align: left;">Tăng arithmetic intensity; tận dụng GPU tốt; throughput cao</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nhược</td>
+<td style="text-align: left;">GPU có thể under-utilized; launch overhead lớn; matmul nhỏ kém hiệu quả</td>
+<td style="text-align: left;">Phải chờ batch/timeout; memory tăng; p99 có thể xấu</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dynamic batching</strong> là kỹ thuật server chờ một khoảng rất ngắn để gom nhiều request độc lập thành một batch:</p>
+<pre class="text"><code>0.0 ms: request A arrives
+0.7 ms: request B arrives
+1.2 ms: request C arrives
+1.5 ms: dispatch batch [A, B, C]</code></pre>
+<p>Nếu batch size 3 hiệu quả hơn nhiều so với ba lần batch size 1, throughput tăng. Nếu chờ quá lâu, latency tăng. Cấu hình thường gồm: max batch size, max queue delay, preferred batch sizes, number of instances, SLO target. Chi tiết khi tới Triton.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-16-contents" aria-controls="callout-16" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Con số cụ thể: batching tăng throughput 2.6× nhưng p99 vượt SLO
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-16" class="callout-16-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Example 2 — batch throughput vs p99 SLO</strong></p>
+<p>Service object detection có traffic không đều. Bạn bật dynamic batching với max queue delay = 20 ms.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">Trước batching</th>
+<th style="text-align: right;">Sau batching</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Throughput</td>
+<td style="text-align: right;">200 RPS</td>
+<td style="text-align: right;">520 RPS</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Average latency</td>
+<td style="text-align: right;">30 ms</td>
+<td style="text-align: right;">42 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">p99 latency</td>
+<td style="text-align: right;">70 ms</td>
+<td style="text-align: right;">145 ms</td>
+</tr>
+</tbody>
+</table>
+<p>Throughput tăng <strong>2.6×</strong> — nhưng nếu SLO là p99 &lt; 100 ms, cấu hình này không đạt dù throughput tăng mạnh. Lý do: với max queue delay = 20 ms, một request có thể chờ gần 20 ms chỉ để vào batch, chưa tính model execution và các giai đoạn khác. Tail latency tăng vọt.</p>
+<p>Hướng xử lý:</p>
+<ul>
+<li>Giảm max queue delay (ví dụ xuống 5 ms) để giảm queueing tail</li>
+<li>Chọn preferred batch size nhỏ hơn (ví dụ 4 thay vì 8)</li>
+<li>Tăng number of instances để xử lý song song nhiều batch hơn</li>
+<li>Tách traffic theo priority: request latency-sensitive xử lý riêng</li>
+<li>Autoscale nhiều replicas hơn khi traffic tăng</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-17-contents" aria-controls="callout-17" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Con số cụ thể: GPU utilization thấp không nhất thiết là xấu
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-17" class="callout-17-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Example 3 — low GPU utilization với SLO rất chặt</strong></p>
+<p>Một real-time fraud detection service yêu cầu p99 &lt; 20 ms. Model nhỏ, batch size = 1. GPU utilization chỉ 25%.</p>
+<p>Đây có thể chấp nhận được nếu:</p>
+<ul>
+<li>Latency đạt SLO (p99 &lt; 20 ms đạt được)</li>
+<li>Cost chấp nhận được</li>
+<li>Traffic không đủ lớn để batch có lợi</li>
+<li>Business ưu tiên phản hồi nhanh hơn throughput</li>
+</ul>
+<p>Tối ưu utilization lên 90% bằng cách bật dynamic batching max delay = 50 ms sẽ làm p99 thành 80 ms — vượt SLO 4×. Đó là thất bại dù nhìn “hiệu quả hơn” trên dashboard.</p>
+<p>Bài học: GPU utilization là phương tiện, không phải mục tiêu. Mục tiêu là đạt SLO với cost hợp lý.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-bottlenecks" class="level2" data-number="1.7">
+<h2 data-number="1.7" class="anchored" data-anchor-id="sec-bottlenecks"><span class="header-section-number">1.7</span> Bottleneck và workflow tối ưu</h2>
+<blockquote class="blockquote">
+<p>Bước đầu tiên khi tối ưu inference là gì — dùng TensorRT, hay hỏi bottleneck nằm ở đâu?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Đừng bắt đầu bằng “làm sao dùng TensorRT?”. Hãy bắt đầu bằng “bottleneck hiện tại là gì?”. Đo baseline end-to-end trước, rồi mới chọn tool.</p>
+</div>
+</div>
+<section id="các-loại-bottleneck-phổ-biến" class="level3" data-number="1.7.1">
+<h3 data-number="1.7.1" class="anchored" data-anchor-id="các-loại-bottleneck-phổ-biến"><span class="header-section-number">1.7.1</span> Các loại bottleneck phổ biến</h3>
+<div class="cell" data-fig-width="7" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-bottleneck-pipeline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bottleneck-pipeline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-bottleneck-pipeline">flowchart LR
+  R([Request]) --&gt; V([Validate])
+  V --&gt; P([Preprocess])
+  P --&gt; B([Batch])
+  B --&gt; H([H2D])
+  H --&gt; G([GPU])
+  G --&gt; D([D2H])
+  D --&gt; O([Post + Response])
+  classDef stage fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef compute fill:#EAF3FF,stroke:#4A90E2,stroke-width:2px,color:#1F3A5F
+  classDef warn fill:#FFE082,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef hot fill:#FFCC80,stroke:#EF6C00,stroke-width:3px,color:#5C3B10
+  class R,V,O stage
+  class G compute
+  class P,H warn
+  class B hot
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bottleneck-pipeline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Hình&nbsp;1.6: Khi chẩn đoán, tô sáng từng giai đoạn pipeline thay vì chỉ nhìn GPU utilization.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 27%">
+<col style="width: 32%">
+<col style="width: 18%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Loại bottleneck</th>
+<th style="text-align: left;">Dấu hiệu nhận biết</th>
+<th style="text-align: left;">Cần đo gì</th>
+<th style="text-align: left;">Hướng xử lý</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Compute-bound</td>
+<td style="text-align: left;">GPU compute cao, Tensor Cores bận, tăng batch thì throughput tăng</td>
+<td style="text-align: left;">GPU SM active %, Tensor Core utilization</td>
+<td style="text-align: left;">FP16/BF16/INT8, TensorRT, kernel fusion, shape alignment, đổi architecture</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Memory-bound</td>
+<td style="text-align: left;">Bandwidth cao nhưng compute thấp; nhiều elementwise / attention decode</td>
+<td style="text-align: left;">GPU memory bandwidth util</td>
+<td style="text-align: left;">Kernel fusion, layout tối ưu, quantization, KV cache</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Transfer-bound</td>
+<td style="text-align: left;">H2D/D2H đáng kể; model nhanh nhưng e2e vẫn chậm</td>
+<td style="text-align: left;">H2D/D2H duration trong profiler</td>
+<td style="text-align: left;">Giảm số lần copy, pinned memory, overlap bằng stream, giữ postprocess trên GPU</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Preprocess-bound</td>
+<td style="text-align: left;">CPU cao, GPU idle; decode/tokenize tốn thời gian</td>
+<td style="text-align: left;">CPU utilization per core, preprocessing p99</td>
+<td style="text-align: left;">Song song hoá, đẩy lên GPU, cache, đổi thư viện, giảm serialization</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Queue-bound</td>
+<td style="text-align: left;">Latency tăng vọt khi traffic tăng; p99 xấu; queue dài</td>
+<td style="text-align: left;">Queue length, queueing latency p99</td>
+<td style="text-align: left;">Chỉnh batching delay, thêm instance, autoscale, admission control, backpressure</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="workflow-chuẩn" class="level3" data-number="1.7.2">
+<h3 data-number="1.7.2" class="anchored" data-anchor-id="workflow-chuẩn"><span class="header-section-number">1.7.2</span> Workflow chuẩn</h3>
+<ol type="1">
+<li><strong>Define target</strong> — p99 latency, throughput, cost/request, GPU type, accuracy constraint</li>
+<li><strong>Measure baseline</strong> — end-to-end, model-only, preprocess, queueing, GPU/CPU util, memory</li>
+<li><strong>Identify bottleneck</strong> — compute / memory / transfer / preprocess / queueing</li>
+<li><strong>Apply targeted optimization</strong> — TensorRT, quantization, batching, preprocess, replicas</li>
+<li><strong>Validate</strong> — accuracy, p50/p95/p99, throughput under load, stability, memory footprint</li>
+<li><strong>Roll out safely</strong> — canary, A/B, shadow traffic, rollback plan</li>
+</ol>
+<div class="callout callout-style-default callout-warning no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Cảnh báo</span>Bẫy thường gặp
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Bỏ qua baseline rồi tối ưu bằng cảm giác hoặc vì tool nghe mạnh — dễ tối ưu nhầm chỗ. TensorRT không giải quyết bottleneck ở tokenization, image decode, network hay queueing.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-worked" class="level2" data-number="1.8">
+<h2 data-number="1.8" class="anchored" data-anchor-id="sec-worked"><span class="header-section-number">1.8</span> Worked examples</h2>
+<blockquote class="blockquote">
+<p>Nhìn vào số đo, làm sao biết mình đang tối ưu đúng chỗ — trước khi mở terminal hay benchmark?</p>
+</blockquote>
+<div class="callout callout-style-default callout-important no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Quan trọng</span>Ý chính
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Ba ví dụ dưới đây minh hoạ ba bẫy phổ biến: tối ưu nhầm chỗ, bật batching không đúng cấu hình, và nhầm GPU utilization thấp là vấn đề. Tất cả đều có nguyên nhân là không đo đúng trước khi quyết định.</p>
+</div>
+</div>
+<section id="example-1-model-nhanh-nhưng-service-chậm" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="example-1-model-nhanh-nhưng-service-chậm">Example 1: model nhanh nhưng service chậm</h3>
+<p>Service image classification đo được:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Thành phần</th>
+<th style="text-align: right;">Latency</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">API parse</td>
+<td style="text-align: right;">2 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Image decode + resize</td>
+<td style="text-align: right;">35 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">H2D copy</td>
+<td style="text-align: right;">3 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GPU execution</td>
+<td style="text-align: right;">8 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">D2H copy</td>
+<td style="text-align: right;">1 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Postprocessing</td>
+<td style="text-align: right;">2 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Total</strong></td>
+<td style="text-align: right;"><strong>51 ms</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Bạn dùng TensorRT và giảm GPU execution từ 8 ms xuống 3 ms. Latency mới: <code>2 + 35 + 3 + 3 + 1 + 2 = 46 ms</code>.</p>
+<p>Bạn đã tăng tốc model <strong>2.67×</strong>, nhưng end-to-end latency chỉ cải thiện từ 51 ms xuống 46 ms — tức khoảng <strong>9.8%</strong>.</p>
+<p>Kết luận: bottleneck thật là image decode + resize (35 ms), không phải GPU execution. Tiếp tục tối ưu model sẽ không mang lại nhiều. Bước tiếp theo đúng là: profile preprocessing, thử libjpeg-turbo thay libjpeg chuẩn, hoặc đẩy resize lên GPU với DALI.</p>
+</section>
+<section id="example-2-batch-size-tăng-throughput-nhưng-làm-p99-xấu" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="example-2-batch-size-tăng-throughput-nhưng-làm-p99-xấu">Example 2: batch size tăng throughput nhưng làm p99 xấu</h3>
+<p>Service object detection có traffic không đều. Bạn bật dynamic batching với max queue delay = 20 ms.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">Trước batching</th>
+<th style="text-align: right;">Sau batching</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Throughput</td>
+<td style="text-align: right;">200 RPS</td>
+<td style="text-align: right;">520 RPS</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Average latency</td>
+<td style="text-align: right;">30 ms</td>
+<td style="text-align: right;">42 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">p99 latency</td>
+<td style="text-align: right;">70 ms</td>
+<td style="text-align: right;">145 ms</td>
+</tr>
+</tbody>
+</table>
+<p>Nếu SLO là p99 &lt; 100 ms, cấu hình batching này không đạt dù throughput tăng <strong>2.6×</strong>. Với max queue delay = 20 ms, request đến lúc queue vắng vẫn phải chờ gần 20 ms trước khi vào batch — chưa tính model execution và các giai đoạn khác. Tail latency vọt lên 145 ms.</p>
+<p>Điều chỉnh hợp lý: giảm max queue delay xuống 5 ms, thử preferred batch size 4 thay vì 8, thêm instance, hoặc tách traffic priority cao xử lý riêng với batch size = 1. Sau khi điều chỉnh, re-benchmark và kiểm tra p99 trước khi rollout.</p>
+</section>
+<section id="example-3-gpu-utilization-thấp-không-nhất-thiết-là-xấu" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="example-3-gpu-utilization-thấp-không-nhất-thiết-là-xấu">Example 3: GPU utilization thấp không nhất thiết là xấu</h3>
+<p>Real-time fraud detection yêu cầu p99 &lt; 20 ms. Model nhỏ, batch size = 1 vì mỗi transaction cần phản hồi ngay. GPU utilization chỉ 25%.</p>
+<p>Điều này hoàn toàn chấp nhận được nếu:</p>
+<ul>
+<li>p99 latency đạt SLO (&lt; 20 ms)</li>
+<li>Cost hợp lý với business</li>
+<li>Traffic không đủ lớn để batch có lợi</li>
+<li>Business ưu tiên phản hồi nhanh hơn throughput tối đa</li>
+</ul>
+<p>Nếu bạn tối ưu utilization lên 90% bằng cách bật batching với max delay = 50 ms, p99 có thể tăng lên 80 ms — vượt SLO <strong>4×</strong>. Đó là thất bại dù dashboard GPU trông “hiệu quả hơn”.</p>
+<p>Bài học: GPU utilization là phương tiện đo lường, không phải mục tiêu. Tối ưu theo SLO, không theo utilization.</p>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-21-contents" aria-controls="callout-21" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Tám nguyên tắc thiết kế cho inference engineer
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-21" class="callout-21-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>1. Measure end-to-end, then measure model-only</strong></p>
+<p>Luôn tách: end-to-end latency, model execution latency, queue latency, preprocess/postprocess latency, transfer latency. Nếu không tách, bạn không biết tối ưu ở đâu. Ba ví dụ trên đều có thể tránh được nếu đo đúng từ đầu.</p>
+<p><strong>2. p99 quan trọng hơn average trong production</strong></p>
+<p>Average latency có thể đẹp nhưng p99 xấu. User và downstream system thường bị ảnh hưởng bởi tail latency — một request retry từ downstream do timeout có thể gây cascade failure. Monitor p95 và p99, đặt SLO theo p99.</p>
+<p><strong>3. Batching là con dao hai lưỡi</strong></p>
+<p>Batching có thể tăng throughput, nhưng có thể làm latency tăng — đặc biệt là tail latency. Luôn tune batching theo SLO: thử nhiều max queue delay, đo p99 thực tế dưới load thực. Đừng chỉ đo average.</p>
+<p><strong>4. Precision thấp cần validation</strong></p>
+<p>FP16/BF16/INT8/FP8 có thể nhanh hơn nhưng cần kiểm tra accuracy và numerical stability. Một số operator có thể không hỗ trợ precision mong muốn, hoặc cần calibration cẩn thận cho INT8. Luôn chạy accuracy check trên representative dataset trước khi deploy precision thấp.</p>
+<p><strong>5. Runtime optimization không thay thế model design</strong></p>
+<p>Một model quá lớn, shape không phù hợp, hoặc architecture kém inference-friendly (ví dụ: nhiều dynamic control flow, operator không hỗ trợ) vẫn khó tối ưu dù dùng TensorRT. Model architecture phải được thiết kế với inference efficiency trong đầu từ đầu.</p>
+<p><strong>6. Optimize bottleneck, not the tool you like</strong></p>
+<p>TensorRT rất mạnh, nhưng nếu bottleneck nằm ở tokenization hoặc image decode, TensorRT không giải quyết gốc vấn đề. Chọn tool dựa trên kết quả đo, không dựa trên xu hướng hoặc quen thuộc.</p>
+<p><strong>7. Hardware matters</strong></p>
+<p>Engine, precision và tactic có thể phụ thuộc vào GPU architecture. TensorRT engine build trên A100 không nhất thiết tối ưu trên T4 hay H100. Luôn build và benchmark engine trên hardware mà service sẽ chạy thực tế.</p>
+<p><strong>8. Production inference cần rollout strategy</strong></p>
+<p>Mọi optimization đều có rủi ro: accuracy regression, memory spike, cold-start latency spike, behavior thay đổi khi load cao. Cần canary, rollback và monitoring trước khi đưa ra toàn bộ traffic.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="mini-lab" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="mini-lab">Mini-lab</h2>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Ghi chú</span>Thực hành — worksheet tư duy hệ thống
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Làm lần lượt Lab 1 → 3. Không cần GPU. Mục tiêu là luyện cách nhìn bottleneck trước khi chọn tool.</p>
+</div>
+</div>
+<section id="lab-1-vẽ-pipeline-latency" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="lab-1-vẽ-pipeline-latency">Lab 1: vẽ pipeline latency</h3>
+<p>Chọn một model quen thuộc (image classification, object detection, text embedding, speech-to-text). Vẽ theo pipeline xương sống ở <a href="#fig-request-pipeline" class="quarto-xref">Hình&nbsp;<span>1.2</span></a>, rồi điền latency giả định:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Stage</th>
+<th style="text-align: left;">Latency estimate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Validation</td>
+<td style="text-align: left;">?</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Preprocessing</td>
+<td style="text-align: left;">?</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Queueing/batching</td>
+<td style="text-align: left;">?</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">H2D</td>
+<td style="text-align: left;">?</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">GPU execution</td>
+<td style="text-align: left;">?</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D2H</td>
+<td style="text-align: left;">?</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Postprocessing</td>
+<td style="text-align: left;">?</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Total</td>
+<td style="text-align: left;">?</td>
+</tr>
+</tbody>
+</table>
+<p>Câu hỏi:</p>
+<ol type="1">
+<li>Stage nào có khả năng là bottleneck?</li>
+<li>Nếu TensorRT làm GPU execution nhanh hơn 2×, total latency giảm bao nhiêu?</li>
+<li>Nếu bật batching, stage nào tăng và stage nào giảm?</li>
+</ol>
+</section>
+<section id="lab-2-chọn-strategy-theo-slo" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="lab-2-chọn-strategy-theo-slo">Lab 2: chọn strategy theo SLO</h3>
+<p>Yêu cầu: p99 &lt; 80 ms, throughput ≥ 300 RPS.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: right;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Average latency</td>
+<td style="text-align: right;">45 ms</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">p99 latency</td>
+<td style="text-align: right;">120 ms</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Throughput max</td>
+<td style="text-align: right;">280 RPS</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GPU utilization</td>
+<td style="text-align: right;">55%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CPU utilization</td>
+<td style="text-align: right;">85%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Preprocessing latency p99</td>
+<td style="text-align: right;">60 ms</td>
+</tr>
+</tbody>
+</table>
+<p>Bạn ưu tiên gì?</p>
+<p><strong>A.</strong> Build TensorRT engine ngay<br>
+<strong>B.</strong> Tăng batch size thật lớn<br>
+<strong>C.</strong> Profile và tối ưu preprocessing/CPU path trước<br>
+<strong>D.</strong> Chỉ nhìn GPU utilization</p>
+<p>Đáp án hợp lý nhất: <strong>C.</strong> p99 preprocessing đã 60 ms, CPU utilization cao (85%), throughput chưa đạt, GPU utilization 55% chưa quá cao. Bottleneck ban đầu có vẻ nằm ở CPU/preprocessing và queueing — không phải model execution. Build TensorRT lúc này gần như không giải quyết được root cause.</p>
+</section>
+<section id="lab-3-batching-trade-off" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="lab-3-batching-trade-off">Lab 3: batching trade-off</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Batch size</th>
+<th style="text-align: right;">Model latency</th>
+<th style="text-align: right;">Images/sec</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: right;">5 ms</td>
+<td style="text-align: right;">200</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: right;">7 ms</td>
+<td style="text-align: right;">286</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">4</td>
+<td style="text-align: right;">11 ms</td>
+<td style="text-align: right;">364</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">8</td>
+<td style="text-align: right;">20 ms</td>
+<td style="text-align: right;">400</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">16</td>
+<td style="text-align: right;">42 ms</td>
+<td style="text-align: right;">381</td>
+</tr>
+</tbody>
+</table>
+<ol type="1">
+<li>Batch size nào có throughput tốt nhất?</li>
+<li>Batch size nào có latency model thấp nhất?</li>
+<li>Nếu SLO p99 rất nghiêm ngặt, bạn có chắc chọn batch size 8 không?</li>
+</ol>
+<p>Gợi ý đáp án:</p>
+<ol type="1">
+<li>Batch size 8 có images/sec cao nhất (400).</li>
+<li>Batch size 1 có model latency thấp nhất (5 ms).</li>
+<li>Không chắc. Số trong bảng là model latency, chưa gồm queueing delay (chờ gom batch), arrival pattern (traffic đến đều hay burst), và p99 end-to-end. Cần benchmark dưới load thực với dynamic batching bật.</li>
+</ol>
+</section>
+</section>
+<section id="checkpoint-questions" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="checkpoint-questions">Checkpoint questions</h2>
+<div class="callout callout-style-default callout-tip no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-23-contents" aria-controls="callout-23" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Mẹo</span>Tự kiểm (mở từng câu khi cần)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-23" class="callout-23-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><p><strong>Vì sao trained model artifact chưa phải production service?</strong><br>
+Vì artifact chỉ lưu graph/weights hoặc model representation. Production service còn cần API, validation, preprocessing, scheduling, batching, runtime execution, postprocessing, monitoring, scaling, versioning và rollout. Artifact trả lời “model đã học gì”, service trả lời “làm sao phục vụ ổn định”.</p></li>
+<li><p><strong>ONNX có phải là runtime không?</strong><br>
+Không. ONNX chủ yếu là format/representation cho model. Runtime như ONNX Runtime hoặc TensorRT mới là thứ thực thi model.</p></li>
+<li><p><strong>ONNX Runtime khác TensorRT thế nào?</strong><br>
+ONNX Runtime là runtime đa backend cho ONNX model, có thể chạy qua nhiều Execution Providers như CPU, CUDA, TensorRT, OpenVINO. TensorRT là NVIDIA inference compiler/runtime tối ưu sâu cho GPU NVIDIA, có phần compiler quan trọng riêng.</p></li>
+<li><p><strong>TensorRT engine là gì?</strong><br>
+Execution plan đã optimize/compile cho một model, một tập shape/profile, precision config và hardware target nhất định. Không phải “file model nhanh hơn một chút” — nó là kết quả của quá trình compile/tactic selection.</p></li>
+<li><p><strong>Vì sao batch size lớn có thể tăng throughput?</strong><br>
+Batch size lớn giúp GPU có nhiều công việc song song, matrix operations lớn hơn, giảm tỷ lệ kernel launch overhead trên mỗi sample. Nhưng memory và queueing latency có thể tăng, làm p99 xấu.</p></li>
+<li><p><strong>Vì sao p99 latency quan trọng?</strong><br>
+p99 phản ánh tail behavior. Average đẹp vẫn có thể gây timeout hoặc trải nghiệm xấu nếu 1% request chậm bất thường. Downstream service thường timeout dựa trên tail, không dựa trên average.</p></li>
+<li><p><strong>GPU utilization thấp có luôn là vấn đề không?</strong><br>
+Không. Nếu đạt latency SLO, traffic thấp, workload nhỏ hoặc business ưu tiên phản hồi nhanh, utilization thấp có thể chấp nhận được. Ví dụ fraud detection với batch size = 1 và p99 &lt; 20 ms.</p></li>
+<li><p><strong>Kernel fusion giúp gì?</strong><br>
+Giảm số kernel launches và giảm đọc/ghi intermediate tensors vào global memory. Điều này cải thiện latency và memory bandwidth efficiency, đặc biệt với chuỗi elementwise operations.</p></li>
+<li><p><strong>Khi nào TensorRT không giải quyết được bottleneck?</strong><br>
+Khi bottleneck nằm ngoài model execution: preprocessing, network latency, queueing, serialization, H2D/D2H transfer, hoặc CPU tokenization. TensorRT chỉ tối ưu giai đoạn GPU execution.</p></li>
+<li><p><strong>Bước đầu tiên khi tối ưu inference là gì?</strong><br>
+Xác định target (p99, throughput, accuracy constraint) và đo baseline end-to-end. Không nên tối ưu bằng cảm giác hoặc chỉ vì một tool nghe có vẻ mạnh.</p></li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="glossary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="glossary">Glossary</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 39%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Thuật ngữ</th>
+<th style="text-align: left;">Giải thích ngắn</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Inference</td>
+<td style="text-align: left;">Quá trình dùng model đã train để tạo prediction/output</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Model artifact</td>
+<td style="text-align: left;">File hoặc object chứa weights/graph/model sau training</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Runtime</td>
+<td style="text-align: left;">Thành phần thực thi model, ví dụ ONNX Runtime hoặc TensorRT runtime</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Compiler/optimizer</td>
+<td style="text-align: left;">Thành phần biến graph thành execution plan tối ưu hơn</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ONNX</td>
+<td style="text-align: left;">Open model format để biểu diễn ML model và operator graph</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ONNX Runtime</td>
+<td style="text-align: left;">Runtime để chạy ONNX model với nhiều Execution Providers</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TensorRT</td>
+<td style="text-align: left;">NVIDIA SDK để tối ưu và tăng tốc deep learning inference trên GPU NVIDIA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Triton</td>
+<td style="text-align: left;">Inference server để serve nhiều model/backend ở production</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CUDA</td>
+<td style="text-align: left;">Platform/programming model cho GPU NVIDIA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Kernel</td>
+<td style="text-align: left;">Function chạy song song trên GPU</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Stream</td>
+<td style="text-align: left;">Queue công việc trên GPU, dùng để quản lý thứ tự và concurrency</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SM</td>
+<td style="text-align: left;">Streaming Multiprocessor, đơn vị thực thi chính trong GPU NVIDIA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Warp</td>
+<td style="text-align: left;">Nhóm 32 thread được thực thi cùng nhau theo mô hình SIMT</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Tensor Cores</td>
+<td style="text-align: left;">Phần cứng chuyên dụng trên GPU NVIDIA tăng tốc matmul ở FP16/BF16/INT8/FP8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">H2D</td>
+<td style="text-align: left;">Host-to-device transfer, copy từ CPU RAM sang GPU memory</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D2H</td>
+<td style="text-align: left;">Device-to-host transfer, copy từ GPU memory về CPU RAM</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Latency</td>
+<td style="text-align: left;">Thời gian xử lý một request từ khi gửi đến khi nhận response</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Throughput</td>
+<td style="text-align: left;">Số request/sample xử lý mỗi giây</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">p99</td>
+<td style="text-align: left;">99th percentile latency — 99% request nhanh hơn giá trị này</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Dynamic batching</td>
+<td style="text-align: left;">Gom request đến gần nhau thành batch để tăng throughput</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Quantization</td>
+<td style="text-align: left;">Giảm precision của weight/activation để giảm memory/compute cost</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Kernel fusion</td>
+<td style="text-align: left;">Gộp nhiều operation thành ít kernel hơn để giảm memory access</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Memory-bound</td>
+<td style="text-align: left;">Bottleneck do băng thông bộ nhớ, không phải số phép tính</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Compute-bound</td>
+<td style="text-align: left;">Bottleneck do số phép tính, không phải băng thông bộ nhớ</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SLO</td>
+<td style="text-align: left;">Service Level Objective — mục tiêu chất lượng dịch vụ (latency, availability, …)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Tail latency</td>
+<td style="text-align: left;">Phần latency ở đuôi phân phối (thường p95/p99), phản ánh request chậm nhất</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Occupancy</td>
+<td style="text-align: left;">Tỷ lệ warp active trên SM so với tối đa có thể, dùng trong GPU profiling</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="summary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
+<ol type="1">
+<li>Inference production không chỉ là <code>model(input)</code>.</li>
+<li>Latency end-to-end gồm queueing, preprocessing, H2D transfer, GPU execution, D2H transfer, postprocessing — user cảm nhận tổng, không chỉ phần GPU.</li>
+<li>GPU là throughput machine, không phải CPU nhanh hơn. Phù hợp với data-parallel tensor ops, không phải branching phức tạp.</li>
+<li>Deep learning inference là chuỗi kernel launches và memory operations trên SM qua warp, tận dụng Tensor Cores khi dùng precision thấp.</li>
+<li>ONNX là representation; ONNX Runtime là runtime đa backend; TensorRT là NVIDIA compiler/runtime tối ưu sâu (graph cleanup, fusion, precision, tactic selection, memory planning); Triton là serving server.</li>
+<li>Batching tăng throughput nhưng có thể làm p99 xấu — luôn tune theo SLO.</li>
+<li>Tối ưu inference: đo baseline end-to-end → tìm bottleneck đúng loại → tối ưu đúng chỗ → validate accuracy + p99 → rollout an toàn.</li>
+</ol>
+<p>Nếu bạn nắm chắc bài này, các bài sau về ONNX graph, Execution Providers, TensorRT engine, quantization và Triton dynamic batching sẽ dễ hiểu hơn nhiều.</p>
+</section>
+<section id="preview-bài-tiếp-theo" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="preview-bài-tiếp-theo">Preview bài tiếp theo</h2>
+<p>Lesson 2: <strong>ONNX Fundamentals: Model Graph, Operators, Opset and Export Pipeline</strong></p>
+<ul>
+<li>ONNX là intermediate representation như thế nào</li>
+<li>Node, edge, tensor, initializer</li>
+<li>Opset version</li>
+<li>Static shape vs dynamic axes</li>
+<li>Export từ PyTorch sang ONNX</li>
+<li>Inspect graph bằng Netron</li>
+<li>Validate model bằng ONNX checker</li>
+<li>Chạy model bằng ONNX Runtime</li>
+<li>Các lỗi export phổ biến</li>
+</ul>
+</section>
+<section id="references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
+<p>Tài liệu dưới đây không bắt buộc phải đọc ngay, nhưng là nguồn chính thức để đối chiếu khi cần:</p>
+<ol type="1">
+<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/index.html">NVIDIA TensorRT Documentation</a></li>
+<li><a href="https://developer.nvidia.com/tensorrt">NVIDIA TensorRT Developer page</a></li>
+<li><a href="https://onnx.ai/">ONNX official website</a></li>
+<li><a href="https://onnxruntime.ai/docs/">ONNX Runtime documentation</a></li>
+<li><a href="https://onnxruntime.ai/docs/execution-providers/">ONNX Runtime Execution Providers</a></li>
+<li><a href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/contents.html">NVIDIA CUDA C++ Programming Guide</a></li>
+</ol>
+
+
+</section>
+```

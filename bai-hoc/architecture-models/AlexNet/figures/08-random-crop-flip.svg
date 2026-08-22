@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="340" viewBox="0 0 640 340" role="img" aria-labelledby="alexnet-08-title">
+<title id="alexnet-08-title">Random crop and flip</title>
+<rect class="fig-bg" width="640" height="340" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="320.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Augmentation AlexNet: random crop 224 từ ~256 + flip ngang p=0.5</text>
+<rect x="60.0" y="60.0" width="200.0" height="200.0" fill="#EEF1F5" stroke="#5C6570" stroke-width="2" data-allow-overlap="1"/>
+<text x="160.0" y="52.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#5C6570" text-anchor="middle">256×256</text>
+<rect x="90.0" y="90.0" width="140.0" height="140.0" fill="#D6E4FF" stroke="#2F6FED" stroke-width="2.5" fill-opacity="0.55" data-allow-overlap="1"/>
+<text x="160.0" y="280.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">random_crop(y, x) → 224×224</text>
+<text x="160.0" y="165.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#2F6FED" text-anchor="middle">224×224</text>
+<rect x="400.0" y="90.0" width="160.0" height="140.0" fill="#D6E4FF" stroke="#C45C0A" stroke-width="2.5"/>
+<text x="480.0" y="165.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#C45C0A" text-anchor="middle">flip?</text>
+<line x1="272.0" y1="160.0" x2="380.0" y2="160.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="380.0,155.0 388.0,160.0 380.0,165.0" fill="#5C6570"/>
+<text x="480.0" y="250.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">random_horizontal_flip(p=0.5)</text>
+<text x="320.0" y="310.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#5C6570" text-anchor="middle">Validation: center crop, không flip ngẫu nhiên</text>
+</svg>

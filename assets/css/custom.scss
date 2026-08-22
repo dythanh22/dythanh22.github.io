@@ -2,173 +2,329 @@
 $font-family-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 $font-family-monospace: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
 $headings-font-weight: 600;
-$body-bg: #f8f9fb;
-$link-color: #2563eb;
+$link-color: #1d4ed8;
 
 /*-- scss:rules --*/
 
-// Trang chủ
+#title-block-header:empty {
+  display: none;
+}
+
+// Empty listings
+#listing-bai-moi .list:not(:has(*)),
+#listing-danh-sach-bai .list:not(:has(*)) {
+  min-height: 8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--bs-border-color);
+  border-radius: 0.75rem;
+  color: var(--bs-secondary-color);
+  font-size: 0.95rem;
+}
+
+#listing-bai-moi .list:not(:has(*))::after {
+  content: "Chưa có bài học — bài đầu tiên sẽ hiện tại đây.";
+}
+
+#listing-danh-sach-bai .list:not(:has(*))::after {
+  content: "Chưa có bài học. Thêm file .qmd trong bai-hoc/ để bắt đầu.";
+}
+
+#quarto-document-content {
+  max-width: 52rem;
+}
+
+body.layout-full #quarto-document-content,
+.page-layout-full #quarto-document-content {
+  max-width: 64rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color);
+}
+
+// Homepage hero
 .home-hero {
-  padding: 3rem 0 2rem;
-  margin-bottom: 2rem;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.75rem;
+  align-items: stretch;
+  padding: 2.25rem 0 2rem;
+  margin-bottom: 2.5rem;
   border-bottom: 1px solid var(--bs-border-color);
 }
 
 .home-hero h1 {
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 0.85rem;
 }
 
-.home-hero .lead {
-  font-size: 1.15rem;
-  color: var(--bs-secondary-color);
-  max-width: 42rem;
-}
-
-.home-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  margin: 1.5rem 0 0;
-}
-
-.home-stat {
-  min-width: 120px;
-}
-
-.home-stat .number {
-  font-size: 1.75rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--bs-primary);
-}
-
-.home-stat .label {
-  font-size: 0.875rem;
-  color: var(--bs-secondary-color);
-}
-
-// Thẻ khu vực
-.area-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.25rem;
-  margin: 1.5rem 0 2.5rem;
-}
-
-.area-card {
-  border: 1px solid var(--bs-border-color);
-  border-radius: 0.75rem;
-  padding: 1.25rem 1.5rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  height: 100%;
-}
-
-.area-card:hover {
-  border-color: var(--bs-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-}
-
-.area-card h3 {
+.home-hero-copy p {
   font-size: 1.1rem;
+  color: var(--bs-secondary-color);
+  max-width: 38rem;
+  margin-bottom: 1.25rem;
+}
+
+.home-hero-copy .btn {
+  margin-right: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
-.area-card p {
-  font-size: 0.925rem;
-  color: var(--bs-secondary-color);
-  margin-bottom: 0.75rem;
+.home-hero-panel {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.9rem;
+  padding: 1.35rem 1.5rem;
+  background: var(--bs-body-bg);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.area-card a.stretched-link {
-  font-weight: 500;
+.home-hero-panel h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.home-hero-panel p {
+  color: var(--bs-secondary-color);
+  margin-bottom: 1rem;
+}
+
+.home-hero-panel a {
+  font-weight: 600;
   text-decoration: none;
 }
 
-// Danh sách bài mới
-.recent-list {
-  list-style: none;
-  padding-left: 0;
-}
-
-.recent-list li {
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--bs-border-color);
-}
-
-.recent-list li:last-child {
-  border-bottom: none;
-}
-
-.recent-list .meta {
-  display: block;
-  font-size: 0.8rem;
-  color: var(--bs-secondary-color);
-  margin-top: 0.15rem;
-}
-
-.recent-list a {
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.recent-list a:hover {
+.home-hero-panel a:hover {
   text-decoration: underline;
 }
 
-// Series tags
-.series-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0.75rem 0 1.5rem;
+// Secondary sections
+.home-more {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin: 2.5rem 0 1rem;
 }
 
-.series-tag {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
+.home-more-item {
+  padding: 1.1rem 0;
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.home-more-item h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.35rem;
+}
+
+.home-more-item p {
+  font-size: 0.925rem;
+  color: var(--bs-secondary-color);
+  margin-bottom: 0.5rem;
+}
+
+.home-more-item a {
   font-weight: 500;
-  background: var(--bs-tertiary-bg);
-  border: 1px solid var(--bs-border-color);
   text-decoration: none;
-  color: inherit;
 }
 
-.series-tag:hover {
+.home-more-item a:hover {
+  text-decoration: underline;
+}
+
+.series-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin: 1.25rem 0 2.25rem;
+}
+
+.series-card {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.9rem;
+  padding: 1.25rem 1.4rem;
+  height: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.series-card:hover {
   border-color: var(--bs-primary);
-  color: var(--bs-primary);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
-// Code blocks
+.series-card h3 {
+  font-size: 1.15rem;
+  margin: 0.15rem 0 0.5rem;
+}
+
+.series-card h3 a {
+  text-decoration: none;
+}
+
+.series-card h3 a:hover {
+  text-decoration: underline;
+}
+
+.series-card p {
+  color: var(--bs-secondary-color);
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.series-card > a {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.series-card > a:hover {
+  text-decoration: underline;
+}
+
+.series-highlight h3 {
+  font-size: 1.2rem;
+  margin: 0.2rem 0 0.5rem;
+}
+
+.series-highlight h3 a {
+  text-decoration: none;
+}
+
+.series-highlight h3 a:hover {
+  text-decoration: underline;
+}
+
+.reading-modes {
+  font-size: 0.925rem;
+  color: var(--bs-secondary-color);
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--bs-primary);
+  margin: 1rem 0 1.5rem;
+  background: var(--bs-tertiary-bg);
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.lessons-guide-item {
+  font-size: 0.9rem;
+  color: var(--bs-secondary-color);
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.7rem;
+}
+
+.lessons-guide-item strong {
+  display: block;
+  color: var(--bs-body-color);
+  margin-bottom: 0.2rem;
+}
+
+// Listings
+.quarto-listing-default .listing-title {
+  font-weight: 600;
+}
+
+.quarto-grid-item {
+  border-radius: 0.75rem !important;
+}
+
+#bai-moi.quarto-listing,
+#danh-sach-bai.quarto-listing {
+  margin-top: 0.75rem;
+}
+
+// Empty listing: keep layout from collapsing
+.quarto-listing:empty {
+  min-height: 6rem;
+  border: 1px dashed var(--bs-border-color);
+  border-radius: 0.75rem;
+  background-image: none;
+}
+
+// Code
 pre code {
   font-size: 0.875rem;
 }
 
-// Empty state
-.empty-state {
-  text-align: center;
-  padding: 2.5rem 1.5rem;
-  border: 1px dashed var(--bs-border-color);
-  border-radius: 0.75rem;
-  color: var(--bs-secondary-color);
-  margin: 1rem 0 2rem;
-}
-
-.empty-state .empty-icon {
-  font-size: 2rem;
-  margin-bottom: 0.75rem;
-  opacity: 0.7;
-}
-
-.empty-state strong {
-  display: block;
-  color: var(--bs-body-color);
-  margin-bottom: 0.35rem;
-}
-
-// Footer spacing
 nav.footer {
   margin-top: 3rem;
+}
+
+// Reading: figures, math, prev/next
+.quarto-figure,
+.figure {
+  margin: 1.5rem 0 1.75rem;
+}
+
+.quarto-figure img,
+.figure img,
+main img {
+  max-width: 100%;
+  height: auto;
+  background: #f7f8fa;
+  border-radius: 0.5rem;
+}
+
+.quarto-figure-caption,
+.figure-caption {
+  font-size: 0.875rem;
+  color: var(--bs-secondary-color);
+  margin-top: 0.5rem;
+}
+
+nav.page-navigation {
+  border-top: 1px solid var(--bs-border-color);
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+}
+
+.sidebar-navigation .sidebar-item-text {
+  font-size: 0.9rem;
+}
+
+.breadcrumb {
+  font-size: 0.85rem;
+}
+
+.lesson-progress {
+  margin: -0.35rem 0 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--bs-secondary-color);
+}
+
+#listing-danh-sach-bai.listing-table table {
+  font-size: 0.925rem;
+}
+
+#listing-danh-sach-bai .listing-order {
+  width: 3rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--bs-secondary-color);
+}
+
+#listing-roadmap-alexnet .listing-order,
+#listing-roadmap-ai-optimize .listing-order {
+  width: 3rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+  .home-hero,
+  .home-more,
+  .series-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-hero {
+    padding-top: 1.25rem;
+  }
 }

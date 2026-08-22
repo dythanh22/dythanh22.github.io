@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="200" viewBox="0 0 760 200" role="img" aria-labelledby="vgg-01-title">
+<title id="vgg-01-title">VGG pipeline overview</title>
+<rect class="fig-bg" width="760" height="200" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="380.0" y="26.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">VGG — pipeline end-to-end (VGG-16)</text>
+<text x="380.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Feature extractor (5 block + pool) → Flatten → Classifier FC → logits</text>
+<rect x="34.0" y="70.0" width="115.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="91.5" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Input</text>
+<text x="91.5" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">224×224×3</text>
+<rect x="177.0" y="70.0" width="130.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="242.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Features</text>
+<text x="242.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">5×(Conv³×³+Pool)</text>
+<line x1="155.0" y1="98.0" x2="163.0" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="163.0,93.0 171.0,98.0 163.0,103.0" fill="#5C6570"/>
+<rect x="335.0" y="70.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="390.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Flatten</text>
+<text x="390.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">7×7×512</text>
+<line x1="313.0" y1="98.0" x2="321.0" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="321.0,93.0 329.0,98.0 321.0,103.0" fill="#5C6570"/>
+<rect x="473.0" y="70.0" width="115.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="530.5" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">FC1–2</text>
+<text x="530.5" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">4096 + Dropout</text>
+<line x1="451.0" y1="98.0" x2="459.0" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="459.0,93.0 467.0,98.0 459.0,103.0" fill="#5C6570"/>
+<rect x="616.0" y="70.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="671.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">FC3</text>
+<text x="671.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">1000 logits</text>
+<line x1="594.0" y1="98.0" x2="602.0" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="602.0,93.0 610.0,98.0 602.0,103.0" fill="#5C6570"/>
+<text x="380.0" y="170.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Ch.1 Conv block  ·  Ch.2 Pool  ·  Ch.3 Classifier  ·  Ch.4 Config  ·  Ch.5 Features  ·  Ch.6 VGG-16</text>
+</svg>
