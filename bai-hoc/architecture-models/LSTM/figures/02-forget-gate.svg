@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="290" viewBox="0 0 780 290" role="img" aria-labelledby="lstm-02-title">
+<title id="lstm-02-title">Forget gate</title>
+<rect class="fig-bg" width="780" height="290" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Forget gate: fₜ = σ(W_f·[hₜ₋₁, xₜ] + b_f)</text>
+<text x="390.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Sigmoid → [0,1]: mỗi chiều quyết định giữ bao nhiêu Cₜ₋₁ trước khi ghi mới</text>
+<rect x="40.0" y="125.0" width="72.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="76.0" y="153.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">hₜ₋₁</text>
+<rect x="40.0" y="55.0" width="72.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="76.0" y="83.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">xₜ</text>
+<rect x="135.0" y="90.0" width="90.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="180.0" y="108.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">[hₜ₋₁, xₜ]</text>
+<text x="180.0" y="126.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">H + D</text>
+<line x1="118.0" y1="149.0" x2="127.0" y2="126.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="118.0" y1="79.0" x2="127.0" y2="102.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="127.0,114.0 133.0,109.0 133.0,119.0" fill="#5C6570"/>
+<rect x="260.0" y="90.0" width="95.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="307.5" y="108.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_f</text>
+<text x="307.5" y="126.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">+ b</text>
+<line x1="235.0" y1="114.0" x2="242.0" y2="114.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="242.0,109.0 250.0,114.0 242.0,119.0" fill="#5C6570"/>
+<rect x="390.0" y="90.0" width="68.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="424.0" y="118.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">σ</text>
+<line x1="365.0" y1="114.0" x2="372.0" y2="114.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="372.0,109.0 380.0,114.0 372.0,119.0" fill="#5C6570"/>
+<rect x="495.0" y="90.0" width="68.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="529.0" y="118.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">fₜ</text>
+<line x1="468.0" y1="114.0" x2="477.0" y2="114.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="477.0,109.0 485.0,114.0 477.0,119.0" fill="#5C6570"/>
+<rect x="580.0" y="55.0" width="90.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="625.0" y="74.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Cₜ₋₁</text>
+<text x="625.0" y="91.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ℝᴴ</text>
+<rect x="580.0" y="145.0" width="90.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="625.0" y="165.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#1A1A1A" text-anchor="middle">⊙</text>
+<text x="625.0" y="181.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">element-wise</text>
+<line x1="529.0" y1="142.0" x2="529.0" y2="137.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="529.0" y1="137.0" x2="574.0" y2="137.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="574.0" y1="137.0" x2="574.0" y2="169.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="574.0" y1="169.0" x2="578.0" y2="169.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="578.0,164.0 586.0,169.0 578.0,174.0" fill="#C45C0A"/>
+<line x1="625.0" y1="107.0" x2="625.0" y2="139.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="621.0,139.0 625.0,145.0 629.0,139.0" fill="#5C6570"/>
+<rect x="580.0" y="230.0" width="120.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="640.0" y="249.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">fₜ ⊙ Cₜ₋₁</text>
+<text x="640.0" y="266.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">số hạng giữ</text>
+<line x1="625.0" y1="197.0" x2="640.0" y2="224.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="635.0,224.0 640.0,230.0 645.0,224.0" fill="#C45C0A"/>
+<text x="390.0" y="275.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">fₜ[i]≈0 quên · fₜ[i]≈1 giữ · độc lập với input gate iₜ</text>
+</svg>

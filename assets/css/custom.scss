@@ -139,6 +139,15 @@ body.layout-full #quarto-document-content,
   text-decoration: underline;
 }
 
+.series-part {
+  margin: 1.75rem 0 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color);
+}
+
 .series-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

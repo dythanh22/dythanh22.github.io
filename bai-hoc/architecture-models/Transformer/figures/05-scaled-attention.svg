@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="300" viewBox="0 0 840 300" role="img" aria-labelledby="tf-05-title">
+<title id="tf-05-title">Scaled Dot-Product Attention</title>
+<rect class="fig-bg" width="840" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="420.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Attention(Q,K,V) = softmax(QKᵀ / √d_k) V</text>
+<text x="420.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Scale bắt buộc: Var(qᵀk)=d_k → chia √d_k đưa Var→1 · tránh softmax bão hòa</text>
+<rect x="30.0" y="80.0" width="70.0" height="45.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="65.0" y="107.4" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">Q</text>
+<rect x="30.0" y="150.0" width="70.0" height="45.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="65.0" y="177.4" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">K</text>
+<rect x="30.0" y="220.0" width="70.0" height="45.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="65.0" y="247.4" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">V</text>
+<rect x="150.0" y="110.0" width="90.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="195.0" y="130.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">QKᵀ</text>
+<text x="195.0" y="147.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">n×m</text>
+<line x1="106.0" y1="102.5" x2="142.0" y2="127.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="106.0" y1="172.5" x2="142.0" y2="143.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="142.0,135.0 148.0,130.0 148.0,140.0" fill="#5C6570"/>
+<rect x="280.0" y="110.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="330.0" y="130.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">÷ √d_k</text>
+<text x="330.0" y="147.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">d_k=64 → 8</text>
+<line x1="252.0" y1="135.0" x2="260.0" y2="135.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="260.0,130.0 268.0,135.0 260.0,140.0" fill="#5C6570"/>
+<rect x="420.0" y="110.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="470.0" y="130.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">softmax</text>
+<text x="470.0" y="147.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">theo hàng</text>
+<line x1="392.0" y1="135.0" x2="400.0" y2="135.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="400.0,130.0 408.0,135.0 400.0,140.0" fill="#5C6570"/>
+<rect x="560.0" y="130.0" width="90.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="605.0" y="150.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">W V</text>
+<text x="605.0" y="167.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">→ O</text>
+<line x1="532.0" y1="145.0" x2="540.0" y2="145.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="540.0,140.0 548.0,145.0 540.0,150.0" fill="#5C6570"/>
+<line x1="108.0" y1="242.5" x2="550.0" y2="242.5" stroke="#2F6FED" stroke-width="2"/>
+<line x1="550.0" y1="242.5" x2="550.0" y2="155.0" stroke="#2F6FED" stroke-width="2"/>
+<line x1="550.0" y1="155.0" x2="558.0" y2="155.0" stroke="#2F6FED" stroke-width="2"/>
+<polygon points="558.0,150.0 566.0,155.0 558.0,160.0" fill="#2F6FED"/>
+<rect x="680.0" y="90.0" width="140.0" height="110.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="750.0" y="121.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" fill="#C45C0A" text-anchor="middle">Không scale:</text>
+<text x="750.0" y="139.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="500" fill="#5C6570" text-anchor="middle">softmax → one-hot</text>
+<text x="750.0" y="157.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="500" fill="#5C6570" text-anchor="middle">∇ ≈ 0</text>
+<text x="750.0" y="175.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">Có √d_k: mượt</text>
+<text x="420.0" y="280.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">O ∈ ℝ^{n×d_v} · mỗi hàng W tổng = 1 (tổ hợp lồi của V)</text>
+</svg>

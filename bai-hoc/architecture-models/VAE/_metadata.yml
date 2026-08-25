@@ -1,0 +1,7 @@
+group: "VAE"
+categories: [architecture-models, architecture, vae, generative]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

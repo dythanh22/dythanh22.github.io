@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="230" viewBox="0 0 780 230" role="img" aria-labelledby="word2vec-05-title">
+<title id="word2vec-05-title">SGNS loss softplus</title>
+<rect class="fig-bg" width="780" height="230" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">SGNS: L = softplus(−v_cᵀu_o) + Σ softplus(v_cᵀu_nᵢ)</text>
+<text x="390.0" y="44.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Positive đẩy gần · negatives đẩy xa · không chuẩn hóa vocabulary</text>
+<rect x="133.0" y="80.0" width="90.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="178.0" y="103.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">v_c</text>
+<text x="178.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">W_in[c]</text>
+<rect x="251.0" y="80.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="306.0" y="103.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">+ u_o</text>
+<text x="306.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">label 1</text>
+<line x1="231.0" y1="108.0" x2="235.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="235.0,103.0 243.0,108.0 235.0,113.0" fill="#5C6570"/>
+<rect x="389.0" y="80.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="444.0" y="103.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">− u_n₁…ₖ</text>
+<text x="444.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">label 0</text>
+<line x1="369.0" y1="108.0" x2="373.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="373.0,103.0 381.0,108.0 373.0,113.0" fill="#5C6570"/>
+<rect x="527.0" y="80.0" width="120.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="587.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">L softplus</text>
+<text x="587.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">sum, không avg</text>
+<line x1="507.0" y1="108.0" x2="511.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="511.0,103.0 519.0,108.0 511.0,113.0" fill="#5C6570"/>
+<text x="390.0" y="180.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Stable: −log σ(x) = softplus(−x) · tránh log(sigmoid) underflow</text>
+<text x="390.0" y="205.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Chạm 1+k vector output / bước · k≈5–20 (nhỏ) hoặc 2–5 (lớn)</text>
+</svg>

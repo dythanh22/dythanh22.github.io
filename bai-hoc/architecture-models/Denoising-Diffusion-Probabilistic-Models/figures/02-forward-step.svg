@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="280" viewBox="0 0 820 280" role="img" aria-labelledby="ddpm-02-title">
+<title id="ddpm-02-title">Forward diffusion one step</title>
+<rect class="fig-bg" width="820" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="410.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Forward một bước: q(x_t | x_{t-1}) = 𝒩(√(1−β_t) x_{t-1}, β_t I)</text>
+<text x="410.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Cố định (không học) · Markov · x_t = √α_t x_{t-1} + √β_t ε_t</text>
+<rect x="40.0" y="110.0" width="100.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="90.0" y="133.1" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">x_{t-1}</text>
+<text x="90.0" y="150.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ít nhiễu hơn</text>
+<rect x="180.0" y="110.0" width="120.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="240.0" y="132.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">× √(1−β_t)</text>
+<text x="240.0" y="150.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">co tín hiệu</text>
+<line x1="152.0" y1="137.5" x2="160.0" y2="137.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="160.0,132.5 168.0,137.5 160.0,142.5" fill="#5C6570"/>
+<rect x="180.0" y="200.0" width="120.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="240.0" y="220.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">+ √β_t ε_t</text>
+<text x="240.0" y="237.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ε ~ 𝒩(0,I)</text>
+<rect x="360.0" y="130.0" width="100.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="410.0" y="153.4" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">x_t</text>
+<text x="410.0" y="170.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">nhiều nhiễu</text>
+<line x1="314.0" y1="147.5" x2="338.0" y2="147.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="338.0,142.5 346.0,147.5 338.0,152.5" fill="#5C6570"/>
+<line x1="308.0" y1="225.0" x2="350.0" y2="225.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="350.0" y1="225.0" x2="350.0" y2="157.5" stroke="#C45C0A" stroke-width="2"/>
+<line x1="350.0" y1="157.5" x2="358.0" y2="157.5" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="358.0,152.5 366.0,157.5 358.0,162.5" fill="#C45C0A"/>
+<rect x="520.0" y="100.0" width="260.0" height="90.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="650.0" y="131.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">α_t = 1 − β_t</text>
+<text x="650.0" y="149.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">ᾱ_t = ∏_{s=1}^t α_s</text>
+<text x="650.0" y="166.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ᾱ_t ↓ đơn điệu → 0</text>
+<text x="410.0" y="260.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">t=1…T · β_t cố định trước huấn luyện · tạo cặp (x_t, ε) cho denoiser</text>
+</svg>

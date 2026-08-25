@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="280" viewBox="0 0 760 280" role="img" aria-labelledby="resnet-06-title">
+<title id="resnet-06-title">Batch Normalization in ResNet</title>
+<rect class="fig-bg" width="760" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="380.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">ResNet: Conv → BN → ReLU  ·  train dùng μ_B; eval dùng running</text>
+<rect x="80.0" y="55.0" width="100.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="130.0" y="80.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="600" fill="#1A1A1A" text-anchor="middle">Conv</text>
+<text x="130.0" y="97.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">W ∗ x</text>
+<rect x="216.0" y="55.0" width="110.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="271.0" y="80.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="600" fill="#1A1A1A" text-anchor="middle">BN</text>
+<text x="271.0" y="97.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">γ x̂ + β</text>
+<line x1="190.0" y1="85.0" x2="198.0" y2="85.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="198.0,80.0 206.0,85.0 198.0,90.0" fill="#5C6570"/>
+<rect x="362.0" y="55.0" width="100.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="412.0" y="80.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="600" fill="#1A1A1A" text-anchor="middle">ReLU</text>
+<text x="412.0" y="97.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">max(0,·)</text>
+<line x1="336.0" y1="85.0" x2="344.0" y2="85.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="344.0,80.0 352.0,85.0 344.0,90.0" fill="#5C6570"/>
+<text x="520.0" y="70.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="start">Theo channel: μ,σ trên B×H×W</text>
+<text x="520.0" y="92.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="start">+2C params (γ, β)</text>
+<rect x="80.0" y="150.0" width="280.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="220.0" y="180.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Training</text>
+<text x="220.0" y="197.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">chuẩn hóa bằng μ_B, σ_B²  + cập nhật EMA</text>
+<rect x="400.0" y="150.0" width="300.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="550.0" y="180.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Inference</text>
+<text x="550.0" y="197.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">μ_running, σ_running  (có thể fuse vào Conv)</text>
+<text x="380.0" y="255.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">x̂ = (x − μ) / √(σ²+ε)  ·  y = γ x̂ + β</text>
+</svg>

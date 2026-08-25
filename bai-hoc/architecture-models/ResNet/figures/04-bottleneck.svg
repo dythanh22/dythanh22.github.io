@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="260" viewBox="0 0 780 260" role="img" aria-labelledby="resnet-04-title">
+<title id="resnet-04-title">Bottleneck residual block</title>
+<rect class="fig-bg" width="780" height="260" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Bottleneck: 1×1 reduce → 3×3 → 1×1 expand  (C→b→C, b=C/4)</text>
+<text x="390.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">ResNet-50/101/152 · 3×3 chạy trên b channel — rẻ hơn BasicBlock</text>
+<rect x="74.0" y="80.0" width="90.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="119.0" y="110.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">C_in</text>
+<text x="119.0" y="127.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">vd. 256</text>
+<rect x="192.0" y="80.0" width="110.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="247.0" y="110.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">1×1 reduce</text>
+<text x="247.0" y="127.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ b=64</text>
+<line x1="172.0" y1="115.0" x2="176.0" y2="115.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="176.0,110.0 184.0,115.0 176.0,120.0" fill="#5C6570"/>
+<rect x="330.0" y="80.0" width="110.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="385.0" y="110.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">3×3 process</text>
+<text x="385.0" y="127.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">b→b (+BN+ReLU)</text>
+<line x1="310.0" y1="115.0" x2="314.0" y2="115.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="314.0,110.0 322.0,115.0 314.0,120.0" fill="#5C6570"/>
+<rect x="468.0" y="80.0" width="110.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="523.0" y="110.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">1×1 expand</text>
+<text x="523.0" y="127.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ C_out (BN)</text>
+<line x1="448.0" y1="115.0" x2="452.0" y2="115.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="452.0,110.0 460.0,115.0 452.0,120.0" fill="#5C6570"/>
+<rect x="606.0" y="80.0" width="100.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="656.0" y="110.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">⊕ + ReLU</text>
+<text x="656.0" y="127.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">+ shortcut</text>
+<line x1="586.0" y1="115.0" x2="590.0" y2="115.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="590.0,110.0 598.0,115.0 590.0,120.0" fill="#5C6570"/>
+<text x="390.0" y="190.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#C45C0A" text-anchor="middle">shortcut: identity nếu C khớp; else Wₛ 1×1 (+BN, no ReLU)</text>
+<text x="390.0" y="220.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Ví dụ 256-ch: Basic ~1.18M params · Bottleneck b=64 ~70k (~17× ít hơn)</text>
+<text x="390.0" y="242.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Không ReLU sau expand — residual có thể âm trước phép cộng</text>
+</svg>

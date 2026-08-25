@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="200" viewBox="0 0 780 200" role="img" aria-labelledby="rnn-01-title">
+<title id="rnn-01-title">RNN pipeline overview</title>
+<rect class="fig-bg" width="780" height="200" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="26.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Vanilla RNN — pipeline học sequence</text>
+<text x="390.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Cell → unroll T bước → BPTT → cập nhật W (chia sẻ theo thời gian)</text>
+<rect x="63.0" y="70.0" width="100.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="113.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">RNN Cell</text>
+<text x="113.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">xₜ, hₜ₋₁ → hₜ</text>
+<rect x="189.0" y="70.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="244.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Forward</text>
+<text x="244.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">unroll t=1…T</text>
+<line x1="169.0" y1="98.0" x2="175.0" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="175.0,93.0 183.0,98.0 175.0,103.0" fill="#5C6570"/>
+<rect x="325.0" y="70.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="380.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">BPTT</text>
+<text x="380.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">∇ qua thời gian</text>
+<line x1="305.0" y1="98.0" x2="311.0" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="311.0,93.0 319.0,98.0 311.0,103.0" fill="#5C6570"/>
+<rect x="461.0" y="70.0" width="120.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="521.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Gradient</text>
+<text x="521.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">vanish / explode</text>
+<line x1="441.0" y1="98.0" x2="447.0" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="447.0,93.0 455.0,98.0 447.0,103.0" fill="#5C6570"/>
+<rect x="607.0" y="70.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="662.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Full RNN</text>
+<text x="662.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">+ Wₕᵧ → yₜ</text>
+<line x1="587.0" y1="98.0" x2="593.0" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="593.0,93.0 601.0,98.0 593.0,103.0" fill="#5C6570"/>
+<text x="390.0" y="170.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Ch.1 Cell  ·  Ch.2 h₀  ·  Ch.3 Forward  ·  Ch.4 BPTT  ·  Ch.5 Vanish  ·  Ch.6 Complete</text>
+</svg>

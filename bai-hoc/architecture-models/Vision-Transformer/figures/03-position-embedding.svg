@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="300" viewBox="0 0 820 300" role="img" aria-labelledby="vit-03-title">
+<title id="vit-03-title">Position embedding</title>
+<rect class="fig-bg" width="820" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="410.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Position: z₀ = x_patches + E_pos  (cộng, không concat)</text>
+<text x="410.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">E_pos học được 1D · shape (1,N,D) broadcast batch · N = #patch + 1 ([CLS])</text>
+<rect x="40.0" y="110.0" width="160.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="120.0" y="135.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">x_patches</text>
+<text x="120.0" y="152.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">(B, N, D)</text>
+<rect x="40.0" y="200.0" width="160.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="120.0" y="225.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">E_pos</text>
+<text x="120.0" y="242.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">(1, N, D) học</text>
+<rect x="260.0" y="155.0" width="80.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="300.0" y="179.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#1A1A1A" text-anchor="middle">⊕</text>
+<text x="300.0" y="195.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">cộng</text>
+<line x1="208.0" y1="140.0" x2="250.0" y2="140.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="250.0" y1="140.0" x2="250.0" y2="182.5" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="208.0" y1="230.0" x2="250.0" y2="230.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="250.0" y1="230.0" x2="250.0" y2="182.5" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="250.0" y1="182.5" x2="258.0" y2="182.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="258.0,177.5 266.0,182.5 258.0,187.5" fill="#5C6570"/>
+<rect x="390.0" y="155.0" width="100.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="440.0" y="178.4" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">z₀</text>
+<text x="440.0" y="195.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">→ encoder</text>
+<line x1="346.0" y1="182.5" x2="376.0" y2="182.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="376.0,177.5 384.0,182.5 376.0,187.5" fill="#5C6570"/>
+<rect x="540.0" y="90.0" width="240.0" height="90.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="660.0" y="121.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Phá permutation invariance</text>
+<text x="660.0" y="138.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">Attention(π(X))=π(Attention(X))</text>
+<text x="660.0" y="156.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">1D ≈ 2D (paper) · chọn 1D</text>
+<rect x="540.0" y="200.0" width="240.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="660.0" y="222.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">≠ sinusoidal mặc định</text>
+<text x="660.0" y="240.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">học được; không ngoại suy N</text>
+</svg>

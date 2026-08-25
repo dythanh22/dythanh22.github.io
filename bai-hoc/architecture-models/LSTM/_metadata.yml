@@ -1,0 +1,7 @@
+group: "LSTM"
+categories: [architecture-models, architecture, lstm, sequence]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="300" viewBox="0 0 800 300" role="img" aria-labelledby="lstm-03-title">
+<title id="lstm-03-title">Input gate and candidate</title>
+<rect class="fig-bg" width="800" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="400.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Input gate + candidate: iₜ = σ(·),  C̃ₜ = tanh(·)</text>
+<text x="400.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Cùng [hₜ₋₁, xₜ] · hai W riêng · tích iₜ ⊙ C̃ₜ = cập nhật ghi</text>
+<rect x="40.0" y="120.0" width="100.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="90.0" y="148.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">[hₜ₋₁, xₜ]</text>
+<rect x="180.0" y="55.0" width="115.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="237.5" y="73.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_i + b_i</text>
+<text x="237.5" y="91.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">→ σ → iₜ</text>
+<rect x="180.0" y="185.0" width="115.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="237.5" y="203.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_C + b_C</text>
+<text x="237.5" y="221.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">→ tanh → C̃ₜ</text>
+<line x1="150.0" y1="111.5" x2="162.0" y2="111.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="162.0,106.5 170.0,111.5 162.0,116.5" fill="#5C6570"/>
+<line x1="148.0" y1="144.0" x2="170.0" y2="209.0" stroke="#5C6570" stroke-width="2"/>
+<line x1="170.0" y1="209.0" x2="178.0" y2="209.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="178.0,204.0 186.0,209.0 178.0,214.0" fill="#5C6570"/>
+<rect x="340.0" y="55.0" width="65.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="372.5" y="74.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">iₜ</text>
+<text x="372.5" y="91.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">[0,1]</text>
+<rect x="340.0" y="185.0" width="65.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="372.5" y="204.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">C̃ₜ</text>
+<text x="372.5" y="221.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">[−1,1]</text>
+<line x1="305.0" y1="79.0" x2="322.0" y2="79.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="322.0,74.0 330.0,79.0 322.0,84.0" fill="#5C6570"/>
+<line x1="305.0" y1="209.0" x2="322.0" y2="209.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="322.0,204.0 330.0,209.0 322.0,214.0" fill="#5C6570"/>
+<rect x="460.0" y="120.0" width="80.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="500.0" y="149.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#1A1A1A" text-anchor="middle">⊙</text>
+<line x1="413.0" y1="79.0" x2="450.0" y2="79.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="450.0" y1="79.0" x2="450.0" y2="144.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="450.0" y1="144.0" x2="458.0" y2="144.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="458.0,139.0 466.0,144.0 458.0,149.0" fill="#C45C0A"/>
+<line x1="413.0" y1="209.0" x2="450.0" y2="209.0" stroke="#5C6570" stroke-width="2"/>
+<line x1="450.0" y1="209.0" x2="450.0" y2="144.0" stroke="#5C6570" stroke-width="2"/>
+<rect x="590.0" y="120.0" width="130.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="655.0" y="139.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">iₜ ⊙ C̃ₜ</text>
+<text x="655.0" y="156.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">số hạng ghi</text>
+<line x1="550.0" y1="144.0" x2="572.0" y2="144.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="572.0,139.0 580.0,144.0 572.0,149.0" fill="#5C6570"/>
+<text x="400.0" y="275.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Gate = bao nhiêu (sigmoid) · Candidate = gì (tanh, zero-centered)</text>
+</svg>

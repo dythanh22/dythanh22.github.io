@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="290" viewBox="0 0 900 290" role="img" aria-labelledby="resnet-08-title">
+<title id="resnet-08-title">Complete ResNet-18</title>
+<rect class="fig-bg" width="900" height="290" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="450.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">ResNet-18 hoàn chỉnh: 8 BasicBlock / 4 stage + stem + GAP + FC</text>
+<rect x="40.0" y="90.0" width="95.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="87.5" y="120.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Stem</text>
+<text x="87.5" y="137.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">Conv7+Pool</text>
+<rect x="165.0" y="90.0" width="115.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="222.5" y="120.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">S1 · 64</text>
+<text x="222.5" y="137.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">2× Id</text>
+<line x1="143.0" y1="125.0" x2="149.0" y2="125.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="149.0,120.0 157.0,125.0 149.0,130.0" fill="#5C6570"/>
+<rect x="308.0" y="90.0" width="115.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="365.5" y="120.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">S2 · 128</text>
+<text x="365.5" y="137.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">1 Proj+1 Id</text>
+<line x1="288.0" y1="125.0" x2="292.0" y2="125.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="292.0,120.0 300.0,125.0 292.0,130.0" fill="#5C6570"/>
+<rect x="451.0" y="90.0" width="115.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="508.5" y="120.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">S3 · 256</text>
+<text x="508.5" y="137.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">1 Proj+1 Id</text>
+<line x1="431.0" y1="125.0" x2="435.0" y2="125.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="435.0,120.0 443.0,125.0 435.0,130.0" fill="#5C6570"/>
+<rect x="594.0" y="90.0" width="115.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="651.5" y="120.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">S4 · 512</text>
+<text x="651.5" y="137.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">1 Proj+1 Id</text>
+<line x1="574.0" y1="125.0" x2="578.0" y2="125.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="578.0,120.0 586.0,125.0 578.0,130.0" fill="#5C6570"/>
+<rect x="737.0" y="90.0" width="105.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="789.5" y="120.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">GAP+FC</text>
+<text x="789.5" y="137.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ K logits</text>
+<line x1="717.0" y1="125.0" x2="721.0" y2="125.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="721.0,120.0 729.0,125.0 721.0,130.0" fill="#5C6570"/>
+<text x="450.0" y="200.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">y = ReLU(F(x)+x) trong stage  ·  y = ReLU(F(x)+Wₛx) tại chuyển stage</text>
+<text x="450.0" y="228.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">18 lớp có trọng số · ~11.7M params (≪ VGG-16 ~138M nhờ GAP)</text>
+<text x="450.0" y="255.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Cam = stage có projection downsample; xanh = identity-only</text>
+</svg>

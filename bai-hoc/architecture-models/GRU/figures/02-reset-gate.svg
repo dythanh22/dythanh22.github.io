@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="280" viewBox="0 0 800 280" role="img" aria-labelledby="gru-02-title">
+<title id="gru-02-title">Reset gate</title>
+<rect class="fig-bg" width="800" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="400.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Reset gate: rₜ = σ(W_r · [hₜ₋₁, xₜ] + b_r)</text>
+<text x="400.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">rₜ ∈ (0,1)ᴴ scale hₜ₋₁ trước khi tính candidate — không ghi hₜ trực tiếp</text>
+<rect x="40.0" y="140.0" width="80.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="80.0" y="169.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">hₜ₋₁</text>
+<rect x="40.0" y="70.0" width="80.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="80.0" y="99.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">xₜ</text>
+<rect x="160.0" y="100.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="210.0" y="119.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">[hₜ₋₁, xₜ]</text>
+<text x="210.0" y="137.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">H + D</text>
+<line x1="126.0" y1="95.0" x2="152.0" y2="115.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="126.0" y1="165.0" x2="152.0" y2="135.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="152.0,125.0 158.0,120.0 158.0,130.0" fill="#5C6570"/>
+<rect x="300.0" y="100.0" width="95.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="347.5" y="119.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_r + b_r</text>
+<text x="347.5" y="137.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">→ σ</text>
+<line x1="270.0" y1="125.0" x2="282.0" y2="125.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="282.0,120.0 290.0,125.0 282.0,130.0" fill="#5C6570"/>
+<rect x="440.0" y="100.0" width="70.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="475.0" y="120.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">rₜ</text>
+<text x="475.0" y="137.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">(0,1)</text>
+<line x1="405.0" y1="125.0" x2="422.0" y2="125.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="422.0,120.0 430.0,125.0 422.0,130.0" fill="#5C6570"/>
+<rect x="560.0" y="140.0" width="90.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="605.0" y="161.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#1A1A1A" text-anchor="middle">⊙</text>
+<text x="605.0" y="177.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">element-wise</text>
+<line x1="475.0" y1="154.0" x2="475.0" y2="165.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="475.0" y1="165.0" x2="558.0" y2="165.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="558.0,160.0 566.0,165.0 558.0,170.0" fill="#C45C0A"/>
+<line x1="128.0" y1="165.0" x2="550.0" y2="165.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="550.0" y1="165.0" x2="550.0" y2="165.0" stroke="#5C6570" stroke-width="1.5"/>
+<rect x="690.0" y="140.0" width="90.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="735.0" y="159.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" fill="#1A1A1A" text-anchor="middle">rₜ ⊙ hₜ₋₁</text>
+<text x="735.0" y="177.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">→ candidate</text>
+<line x1="660.0" y1="165.0" x2="672.0" y2="165.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="672.0,160.0 680.0,165.0 672.0,170.0" fill="#5C6570"/>
+<text x="400.0" y="255.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">r≈0: quên chiều quá khứ trong candidate  ·  r≈1: dùng đủ lịch sử</text>
+</svg>

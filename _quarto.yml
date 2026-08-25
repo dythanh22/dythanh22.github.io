@@ -46,8 +46,8 @@ website:
       - href: about.qmd
         text: Giới thiệu
 
-  # Sidebar riêng từng chuỗi (id khớp sidebar: trong _metadata.yml).
-  # Thêm bài/nhóm mới: chỉ cần file .qmd (+ thư mục nhóm) với order — auto tự nhận.
+  # Sidebar: thứ tự lộ trình (CNN → sequence → generative → embeddings → attention → U-Net).
+  # Trong mỗi model, `auto` + frontmatter `order` giữ thứ tự chương.
   sidebar:
     - id: architecture-models
       title: "Architecture Models"
@@ -55,7 +55,33 @@ website:
       search: true
       collapse-level: 2
       contents:
-        - auto: "bai-hoc/architecture-models"
+        - bai-hoc/architecture-models/index.qmd
+        - section: "1. CNN"
+          contents:
+            - auto: bai-hoc/architecture-models/AlexNet
+            - auto: bai-hoc/architecture-models/VGG
+            - auto: bai-hoc/architecture-models/ResNet
+            - auto: bai-hoc/architecture-models/DenseNet
+        - section: "2. Sequence"
+          contents:
+            - auto: bai-hoc/architecture-models/RNN
+            - auto: bai-hoc/architecture-models/LSTM
+            - auto: bai-hoc/architecture-models/GRU
+        - section: "3. Generative"
+          contents:
+            - auto: bai-hoc/architecture-models/VAE
+            - auto: bai-hoc/architecture-models/GAN
+        - section: "4. Embeddings"
+          contents:
+            - auto: bai-hoc/architecture-models/Word2Vec
+        - section: "5. Attention"
+          contents:
+            - auto: bai-hoc/architecture-models/Transformer
+            - auto: bai-hoc/architecture-models/BERT
+            - auto: bai-hoc/architecture-models/Vision-Transformer
+        - section: "6. Dense prediction"
+          contents:
+            - auto: bai-hoc/architecture-models/UNet
 
     - id: ai-optimize
       title: "AI Optimization"

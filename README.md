@@ -7,7 +7,12 @@ Ghi chú học tập: kiến trúc mô hình và tối ưu inference. Hosted on 
 ```text
 bai-hoc/
   architecture-models/     → chuỗi có nhóm (mỗi model = 1 thư mục)
-    AlexNet/               → các bài thành phần (.qmd + order)
+    AlexNet/ VGG/ ResNet/ DenseNet/
+    RNN/ LSTM/ GRU/
+    VAE/ GAN/
+    Word2Vec/
+    Transformer/ BERT/ Vision-Transformer/
+    UNet/
   ai-optimize/             → chuỗi phẳng (mỗi file = 1 bài)
 assets/                    → CSS / JS
 .github/workflows/         → Deploy Pages
@@ -19,10 +24,13 @@ assets/                    → CSS / JS
 quarto preview          # http://localhost:4321
 ```
 
-## Thêm bài (không sửa `_quarto.yml`)
+## Thêm bài
 
-1. Tạo file `.qmd` trong đúng thư mục chuỗi (hoặc thư mục nhóm, ví dụ `AlexNet/`).
-2. Frontmatter tối thiểu:
+Trong **một model đã có**: thêm file `.qmd` với `order` — `auto` trong sidebar tự nhận.
+
+**Model mới**: thêm thư mục nhóm, rồi một dòng `auto:` đúng phần trong `_quarto.yml` (CNN / Sequence / …).
+
+Frontmatter tối thiểu:
 
 ```yaml
 title: "Tên bài"
@@ -32,8 +40,6 @@ description: "Một câu mô tả"
 role: "Vai trò ngắn trên bảng lộ trình"
 # categories / series / group kế thừa từ _metadata.yml
 ```
-
-3. Sidebar, breadcrumb, listing và bảng lộ trình tự cập nhật theo `order`.
 
 ## GitHub Pages
 

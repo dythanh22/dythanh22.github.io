@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="210" viewBox="0 0 860 210" role="img" aria-labelledby="densenet-01-title">
+<title id="densenet-01-title">DenseNet pipeline overview</title>
+<rect class="fig-bg" width="860" height="210" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="430.0" y="26.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">DenseNet — pipeline end-to-end (DenseNet-BC)</text>
+<text x="430.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Stem → DenseBlock → Transition (θ, AvgPool) → … → GAP → logits</text>
+<rect x="47.5" y="75.0" width="88.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="91.5" y="98.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Stem</text>
+<text x="91.5" y="115.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">C₀=64</text>
+<rect x="163.5" y="75.0" width="118.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="222.5" y="98.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">DenseBlock</text>
+<text x="222.5" y="115.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">+ n·k concat</text>
+<line x1="143.5" y1="103.0" x2="147.5" y2="103.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="147.5,98.0 155.5,103.0 147.5,108.0" fill="#5C6570"/>
+<rect x="309.5" y="75.0" width="118.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="368.5" y="98.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Transition</text>
+<text x="368.5" y="115.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">⌊θ m⌋ + pool</text>
+<line x1="289.5" y1="103.0" x2="293.5" y2="103.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="293.5,98.0 301.5,103.0 293.5,108.0" fill="#5C6570"/>
+<rect x="455.5" y="75.0" width="118.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="514.5" y="98.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">DenseBlock</text>
+<text x="514.5" y="115.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">… cuối</text>
+<line x1="435.5" y1="103.0" x2="439.5" y2="103.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="439.5,98.0 447.5,103.0 439.5,108.0" fill="#5C6570"/>
+<rect x="601.5" y="75.0" width="88.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="645.5" y="98.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">GAP</text>
+<text x="645.5" y="115.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ C</text>
+<line x1="581.5" y1="103.0" x2="585.5" y2="103.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="585.5,98.0 593.5,103.0 585.5,108.0" fill="#5C6570"/>
+<rect x="717.5" y="75.0" width="95.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="765.0" y="98.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">FC</text>
+<text x="765.0" y="115.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">K logits</text>
+<line x1="697.5" y1="103.0" x2="701.5" y2="103.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="701.5,98.0 709.5,103.0 701.5,108.0" fill="#5C6570"/>
+<text x="430.0" y="170.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">x_ℓ = H_ℓ([x₀,…,x_{ℓ−1}])  ·  B−1 transition  ·  không transition sau block cuối</text>
+<text x="430.0" y="192.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Ch.1 Channel  ·  Ch.2 Composite  ·  Ch.3 Bottleneck  ·  Ch.4 Block  ·  Ch.5 Transition  ·  Ch.6 Full</text>
+</svg>

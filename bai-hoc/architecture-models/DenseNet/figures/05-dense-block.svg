@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="280" viewBox="0 0 780 280" role="img" aria-labelledby="densenet-05-title">
+<title id="densenet-05-title">Dense block concatenative connectivity</title>
+<rect class="fig-bg" width="780" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Dense block: x_ℓ = H_ℓ([x₀, x₁, …, x_{ℓ−1}]) → out = [x₀,…,x_L]</text>
+<text x="390.0" y="44.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">L=3 minh họa · mỗi H_ℓ thêm k channel · cuối C + L·k</text>
+<rect x="40.0" y="80.0" width="90.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="85.0" y="103.4" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">x₀</text>
+<text x="85.0" y="120.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">C ch</text>
+<rect x="180.0" y="70.0" width="100.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="230.0" y="93.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">H₁</text>
+<text x="230.0" y="110.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ x₁ (+k)</text>
+<rect x="340.0" y="70.0" width="100.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="390.0" y="93.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">H₂</text>
+<text x="390.0" y="110.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ x₂ (+k)</text>
+<rect x="500.0" y="70.0" width="100.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="550.0" y="93.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">H₃</text>
+<text x="550.0" y="110.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ x₃ (+k)</text>
+<rect x="650.0" y="80.0" width="100.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="700.0" y="103.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">out</text>
+<text x="700.0" y="120.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">C+3k</text>
+<line x1="138.0" y1="102.5" x2="164.0" y2="102.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="164.0,97.5 172.0,102.5 164.0,107.5" fill="#5C6570"/>
+<text x="155.0" y="92.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">[x₀]</text>
+<line x1="288.0" y1="97.5" x2="324.0" y2="97.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="324.0,92.5 332.0,97.5 324.0,102.5" fill="#5C6570"/>
+<line x1="448.0" y1="97.5" x2="484.0" y2="97.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="484.0,92.5 492.0,97.5 484.0,102.5" fill="#5C6570"/>
+<line x1="608.0" y1="102.5" x2="634.0" y2="102.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="634.0,97.5 642.0,102.5 634.0,107.5" fill="#5C6570"/>
+<line x1="85.0" y1="143.0" x2="85.0" y2="200.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="230.0" y1="133.0" x2="230.0" y2="200.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="390.0" y1="133.0" x2="390.0" y2="200.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="550.0" y1="133.0" x2="550.0" y2="200.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="85.0" y1="200.0" x2="700.0" y2="200.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="700.0" y1="200.0" x2="700.0" y2="143.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="695.0,149.0 700.0,141.0 705.0,149.0" fill="#C45C0A"/>
+<text x="392.5" y="188.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#C45C0A" text-anchor="middle">concat bus: [x₀, x₁, x₂, x₃]  — không cộng như ResNet</text>
+<text x="390.0" y="255.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">H₂ nhận [x₀,x₁] · H₃ nhận [x₀,x₁,x₂] · bỏ x₀ khỏi out = lỗi phổ biến</text>
+</svg>

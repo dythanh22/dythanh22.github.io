@@ -1,0 +1,7 @@
+group: ResNet
+categories: [architecture-models, architecture, cnn, resnet]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

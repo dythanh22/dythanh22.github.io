@@ -1,0 +1,7 @@
+group: "GRU"
+categories: [architecture-models, architecture, gru, sequence]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

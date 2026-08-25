@@ -1,0 +1,7 @@
+group: "U-Net"
+categories: [architecture-models, architecture, unet, vision, segmentation]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

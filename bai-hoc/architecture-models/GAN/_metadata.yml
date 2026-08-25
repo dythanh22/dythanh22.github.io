@@ -1,0 +1,7 @@
+group: "GAN"
+categories: [architecture-models, architecture, gan, generative]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

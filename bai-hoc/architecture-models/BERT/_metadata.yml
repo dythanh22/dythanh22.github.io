@@ -1,0 +1,7 @@
+group: "BERT"
+categories: [architecture-models, architecture, bert, nlp, attention]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

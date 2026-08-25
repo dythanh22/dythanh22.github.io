@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="300" viewBox="0 0 820 300" role="img" aria-labelledby="ddpm-08-title">
+<title id="ddpm-08-title">Train vs sample modes</title>
+<rect class="fig-bg" width="820" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="410.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Huấn luyện vs Sampling: hai hướng của cùng Markov chain</text>
+<text x="410.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Train: nhảy x₀→x_t (dạng kín) · Sample: lặp x_T→x₀ (ε_θ)</text>
+<rect x="40.0" y="70.0" width="340.0" height="120.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="210.0" y="107.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Huấn luyện</text>
+<text x="210.0" y="124.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">x₀, t, ε → x_t (closed form)</text>
+<text x="210.0" y="142.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#C45C0A" text-anchor="middle">L = ‖ε − ε_θ(x_t,t)‖²</text>
+<text x="210.0" y="160.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">forward cố định · học ε_θ</text>
+<rect x="440.0" y="70.0" width="340.0" height="120.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="610.0" y="107.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Sampling (generation)</text>
+<text x="610.0" y="124.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">x_T ~ 𝒩 → reverse T…1</text>
+<text x="610.0" y="142.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">dùng ε_θ đã học · không x₀</text>
+<text x="610.0" y="160.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">không cần encoder / critic</text>
+<rect x="194.0" y="220.0" width="70.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="229.0" y="245.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">x₀</text>
+<rect x="292.0" y="220.0" width="55.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="319.5" y="245.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">→</text>
+<line x1="270.0" y1="241.0" x2="278.0" y2="241.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="278.0,236.0 286.0,241.0 278.0,246.0" fill="#5C6570"/>
+<rect x="375.0" y="220.0" width="70.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="410.0" y="245.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">x_t</text>
+<line x1="353.0" y1="241.0" x2="361.0" y2="241.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="361.0,236.0 369.0,241.0 361.0,246.0" fill="#5C6570"/>
+<rect x="473.0" y="220.0" width="55.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="500.5" y="245.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">→</text>
+<line x1="451.0" y1="241.0" x2="459.0" y2="241.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="459.0,236.0 467.0,241.0 459.0,246.0" fill="#5C6570"/>
+<rect x="556.0" y="220.0" width="70.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="591.0" y="245.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">x_T</text>
+<line x1="534.0" y1="241.0" x2="542.0" y2="241.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="542.0,236.0 550.0,241.0 542.0,246.0" fill="#5C6570"/>
+<text x="410.0" y="285.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Cùng schedule ᾱ_t · train học denoiser · sample chạy reverse Markov</text>
+</svg>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="230" viewBox="0 0 820 230" role="img" aria-labelledby="densenet-07-title">
+<title id="densenet-07-title">Full DenseNet forward</title>
+<rect class="fig-bg" width="820" height="230" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="410.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Full forward: Stem → (Block → Transition)×(B−1) → Block → BN+ReLU → GAP → FC</text>
+<text x="410.0" y="44.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Ví dụ nhỏ: C_in=2, C₀=4, k=2, 2×2 lớp → logits K=3</text>
+<rect x="62.5" y="80.0" width="85.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="105.0" y="104.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Stem</text>
+<text x="105.0" y="121.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ 4×8×8</text>
+<rect x="175.5" y="80.0" width="95.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="223.0" y="104.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Block 1</text>
+<text x="223.0" y="121.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ 8×8×8</text>
+<line x1="155.5" y1="109.0" x2="159.5" y2="109.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="159.5,104.0 167.5,109.0 159.5,114.0" fill="#5C6570"/>
+<rect x="298.5" y="80.0" width="95.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="346.0" y="104.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Trans.</text>
+<text x="346.0" y="121.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ 4×4×4</text>
+<line x1="278.5" y1="109.0" x2="282.5" y2="109.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="282.5,104.0 290.5,109.0 282.5,114.0" fill="#5C6570"/>
+<rect x="421.5" y="80.0" width="95.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="469.0" y="104.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Block 2</text>
+<text x="469.0" y="121.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ 8×4×4</text>
+<line x1="401.5" y1="109.0" x2="405.5" y2="109.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="405.5,104.0 413.5,109.0 405.5,114.0" fill="#5C6570"/>
+<rect x="544.5" y="80.0" width="95.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="592.0" y="104.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">BN+ReLU</text>
+<text x="592.0" y="121.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">+ GAP</text>
+<line x1="524.5" y1="109.0" x2="528.5" y2="109.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="528.5,104.0 536.5,109.0 528.5,114.0" fill="#5C6570"/>
+<rect x="667.5" y="80.0" width="90.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="712.5" y="104.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">FC</text>
+<text x="712.5" y="121.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ 3 logits</text>
+<line x1="647.5" y1="109.0" x2="651.5" y2="109.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="651.5,104.0 659.5,109.0 651.5,114.0" fill="#5C6570"/>
+<text x="410.0" y="180.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Shape ghi (C,H,W) · channel +k mỗi lớp · transition reset width + /2 không gian</text>
+<text x="410.0" y="205.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Không flatten · GAP mean(H,W) · z = p W_fcᵀ + b_fc</text>
+</svg>

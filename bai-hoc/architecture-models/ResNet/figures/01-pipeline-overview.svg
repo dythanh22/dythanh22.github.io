@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200" role="img" aria-labelledby="resnet-01-title">
+<title id="resnet-01-title">ResNet pipeline overview</title>
+<rect class="fig-bg" width="800" height="200" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="400.0" y="26.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">ResNet — pipeline end-to-end (ResNet-18)</text>
+<text x="400.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Conv1 → MaxPool → 4 stage residual → GAP → FC logits</text>
+<rect x="76.5" y="70.0" width="100.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="126.5" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Input</text>
+<text x="126.5" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">224×224×3</text>
+<rect x="204.5" y="70.0" width="105.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="257.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Conv1+Pool</text>
+<text x="257.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">7×7 s2 → 56</text>
+<line x1="182.5" y1="98.0" x2="190.5" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="190.5,93.0 198.5,98.0 190.5,103.0" fill="#5C6570"/>
+<rect x="337.5" y="70.0" width="130.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="402.5" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Stage 1–4</text>
+<text x="402.5" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">BasicBlock + skip</text>
+<line x1="315.5" y1="98.0" x2="323.5" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="323.5,93.0 331.5,98.0 323.5,103.0" fill="#5C6570"/>
+<rect x="495.5" y="70.0" width="95.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="543.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">GAP</text>
+<text x="543.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ 512</text>
+<line x1="473.5" y1="98.0" x2="481.5" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="481.5,93.0 489.5,98.0 481.5,103.0" fill="#5C6570"/>
+<rect x="618.5" y="70.0" width="105.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="671.0" y="93.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">FC</text>
+<text x="671.0" y="110.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">1000 logits</text>
+<line x1="596.5" y1="98.0" x2="604.5" y2="98.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="604.5,93.0 612.5,98.0 604.5,103.0" fill="#5C6570"/>
+<text x="400.0" y="170.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Ch.1 Identity  ·  Ch.2 Projection  ·  Ch.3 Bottleneck  ·  Ch.4 Skip  ·  Ch.5 BN  ·  Ch.6 Full</text>
+</svg>

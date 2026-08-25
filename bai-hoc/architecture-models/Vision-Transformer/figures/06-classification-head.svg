@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="300" viewBox="0 0 840 300" role="img" aria-labelledby="vit-06-title">
+<title id="vit-06-title">Classification head</title>
+<rect class="fig-bg" width="840" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="420.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Head (fine-tune): h_cls = z_L[:,0,:] → LN → logits = ĥ W_head</text>
+<text x="420.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Không bias · không softmax trong head · pretrain: MLP+GELU; fine-tune: linear</text>
+<rect x="94.0" y="80.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="149.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">z_L</text>
+<text x="149.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">(B,N+1,D)</text>
+<rect x="232.0" y="80.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="287.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">h_cls</text>
+<text x="287.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">index 0</text>
+<line x1="210.0" y1="108.0" x2="218.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="218.0,103.0 226.0,108.0 218.0,113.0" fill="#5C6570"/>
+<rect x="370.0" y="80.0" width="100.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="420.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">LN</text>
+<text x="420.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">per-sample</text>
+<line x1="348.0" y1="108.0" x2="356.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="356.0,103.0 364.0,108.0 356.0,113.0" fill="#5C6570"/>
+<rect x="498.0" y="80.0" width="120.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="558.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_head</text>
+<text x="558.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">D×C</text>
+<line x1="476.0" y1="108.0" x2="484.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="484.0,103.0 492.0,108.0 484.0,113.0" fill="#5C6570"/>
+<rect x="646.0" y="80.0" width="100.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="696.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">logits</text>
+<text x="696.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">(B, C)</text>
+<line x1="624.0" y1="108.0" x2="632.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="632.0,103.0 640.0,108.0 632.0,113.0" fill="#5C6570"/>
+<rect x="80.0" y="180.0" width="320.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="240.0" y="201.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Pre-training head</text>
+<text x="240.0" y="218.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">MLP: W₂ · GELU(W₁ ĥ)</text>
+<text x="240.0" y="236.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">JFT / ImageNet-21k · nhiều lớp</text>
+<rect x="440.0" y="180.0" width="320.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="600.0" y="201.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Fine-tuning head</text>
+<text x="600.0" y="218.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">linear: ĥ · W_head  (không bias)</text>
+<text x="600.0" y="236.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ImageNet-1k · thay head mới</text>
+<text x="420.0" y="280.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Softmax nằm trong CE loss · head chỉ xuất logits thô</text>
+</svg>

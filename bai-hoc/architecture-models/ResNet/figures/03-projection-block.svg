@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="740" height="300" viewBox="0 0 740 300" role="img" aria-labelledby="resnet-03-title">
+<title id="resnet-03-title">Projection residual block</title>
+<rect class="fig-bg" width="740" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="370.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Projection block: y = F(x) + Wₛ x khi chiều đổi</text>
+<text x="370.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Option B — 1×1 / tuyến tính trên shortcut; không ReLU trên skip</text>
+<rect x="40.0" y="110.0" width="80.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="80.0" y="133.4" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">x</text>
+<text x="80.0" y="150.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">d_in</text>
+<rect x="180.0" y="70.0" width="160.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="260.0" y="100.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Main: W₁→ReLU→W₂</text>
+<text x="260.0" y="117.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">d_in → d_out</text>
+<line x1="130.0" y1="121.2" x2="162.0" y2="121.2" stroke="#5C6570" stroke-width="2"/>
+<polygon points="162.0,116.2 170.0,121.2 162.0,126.2" fill="#5C6570"/>
+<rect x="400.0" y="110.0" width="90.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="445.0" y="134.1" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#1A1A1A" text-anchor="middle">⊕</text>
+<text x="445.0" y="150.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">F + s</text>
+<line x1="352.0" y1="121.2" x2="380.0" y2="121.2" stroke="#5C6570" stroke-width="2"/>
+<polygon points="380.0,116.2 388.0,121.2 380.0,126.2" fill="#5C6570"/>
+<text x="370.0" y="111.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">F(x)</text>
+<rect x="550.0" y="110.0" width="120.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="610.0" y="132.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">y ∈ ℝᵈ_out</text>
+<text x="610.0" y="150.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">(+ ReLU)</text>
+<line x1="500.0" y1="137.5" x2="532.0" y2="137.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="532.0,132.5 540.0,137.5 532.0,142.5" fill="#5C6570"/>
+<rect x="180.0" y="200.0" width="160.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="260.0" y="222.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#C45C0A" text-anchor="middle">Wₛ (projection)</text>
+<text x="260.0" y="240.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">d_in → d_out, no σ</text>
+<line x1="80.0" y1="171.0" x2="80.0" y2="227.5" stroke="#C45C0A" stroke-width="2"/>
+<line x1="80.0" y1="227.5" x2="172.0" y2="227.5" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="172.0,222.5 180.0,227.5 172.0,232.5" fill="#C45C0A"/>
+<line x1="348.0" y1="227.5" x2="445.0" y2="227.5" stroke="#C45C0A" stroke-width="2"/>
+<line x1="445.0" y1="227.5" x2="445.0" y2="173.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="440.0,179.0 445.0,171.0 450.0,179.0" fill="#C45C0A"/>
+<text x="370.0" y="280.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Dùng tại ranh giới stage (64→128, …); identity ở mọi block còn lại</text>
+</svg>

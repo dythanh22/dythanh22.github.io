@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="240" viewBox="0 0 780 240" role="img" aria-labelledby="word2vec-07-title">
+<title id="word2vec-07-title">SGNS SGD step</title>
+<rect class="fig-bg" width="780" height="240" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">SGD: snapshot → gradients (σ−t) → rồi mới cập nhật W_in &amp; W_out</text>
+<text x="390.0" y="44.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">∂L/∂v_c = (σ(s_o)−1)u_o + Σ σ(s_i)u_nᵢ  ·  sparse O((k+1)D)</text>
+<rect x="128.0" y="80.0" width="100.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="178.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Snapshot</text>
+<text x="178.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">v_c, u_*</text>
+<rect x="256.0" y="80.0" width="120.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="316.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Grads (σ−t)</text>
+<text x="316.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">pos + negs</text>
+<line x1="236.0" y1="108.0" x2="240.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="240.0,103.0 248.0,108.0 240.0,113.0" fill="#5C6570"/>
+<rect x="404.0" y="80.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="459.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">W ← W−ηg</text>
+<text x="459.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">cả hai bảng</text>
+<line x1="384.0" y1="108.0" x2="388.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="388.0,103.0 396.0,108.0 388.0,113.0" fill="#5C6570"/>
+<rect x="542.0" y="80.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="597.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Export</text>
+<text x="597.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">thường W_in</text>
+<line x1="522.0" y1="108.0" x2="526.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="526.0,103.0 534.0,108.0 526.0,113.0" fill="#5C6570"/>
+<text x="390.0" y="180.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Không mutate center trước khi tính grad output · SGD trừ (không cộng)</text>
+<text x="390.0" y="205.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Neg id trùng → cộng dồn trên cùng hàng W_out</text>
+</svg>

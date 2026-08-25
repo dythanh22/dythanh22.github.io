@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="310" viewBox="0 0 860 310" role="img" aria-labelledby="vit-02-title">
+<title id="vit-02-title">Patch embedding</title>
+<rect class="fig-bg" width="860" height="310" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="430.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Patch embed: lưới không chồng → flatten P²·C → W_proj → (B,N,D)</text>
+<text x="430.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">N=(H/P)·(W/P) · ≡ Conv2d(k=P,s=P) · ViT-B/16: 224→14×14=196</text>
+<rect x="30.0" y="90.0" width="110.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="85.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Ảnh</text>
+<text x="85.0" y="137.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">H×W×C</text>
+<rect x="180.0" y="90.0" width="130.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="245.0" y="111.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Patch P×P</text>
+<text x="245.0" y="128.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">không chồng</text>
+<text x="245.0" y="146.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">raster order</text>
+<line x1="146.0" y1="125.0" x2="166.0" y2="125.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="166.0,120.0 174.0,125.0 166.0,130.0" fill="#5C6570"/>
+<rect x="350.0" y="90.0" width="140.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="420.0" y="111.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Flatten</text>
+<text x="420.0" y="128.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#C45C0A" text-anchor="middle">P²·C</text>
+<text x="420.0" y="146.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">vd. 16²×3=768</text>
+<line x1="316.0" y1="125.0" x2="336.0" y2="125.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="336.0,120.0 344.0,125.0 336.0,130.0" fill="#5C6570"/>
+<rect x="530.0" y="90.0" width="130.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="595.0" y="111.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">W_proj + b</text>
+<text x="595.0" y="128.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">(P²C)×D</text>
+<text x="595.0" y="146.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">z_p = x_p W</text>
+<line x1="496.0" y1="125.0" x2="516.0" y2="125.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="516.0,120.0 524.0,125.0 516.0,130.0" fill="#5C6570"/>
+<rect x="700.0" y="90.0" width="120.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="760.0" y="111.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Tokens</text>
+<text x="760.0" y="128.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">(B, N, D)</text>
+<text x="760.0" y="146.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">N=HW/P²</text>
+<line x1="666.0" y1="125.0" x2="686.0" y2="125.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="686.0,120.0 694.0,125.0 686.0,130.0" fill="#5C6570"/>
+<rect x="80.0" y="200.0" width="320.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="240.0" y="222.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">Pixel token? N=50176 → O(N²) không khả thi</text>
+<text x="240.0" y="240.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">P=16 giảm N×256 · attention ~P⁴ tiết kiệm</text>
+<rect x="440.0" y="200.0" width="340.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="610.0" y="222.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">≡ Conv2d(C→D, kernel=P, stride=P)</text>
+<text x="610.0" y="240.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">không phải xấp xỉ — trùng reshape-flatten-project</text>
+<text x="430.0" y="285.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">H,W chia hết cho P · mỗi pixel thuộc đúng 1 patch</text>
+</svg>

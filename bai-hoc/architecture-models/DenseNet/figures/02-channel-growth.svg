@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="240" viewBox="0 0 820 240" role="img" aria-labelledby="densenet-02-title">
+<title id="densenet-02-title">DenseNet-121 channel schedule</title>
+<rect class="fig-bg" width="820" height="240" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="410.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">DenseNet-121: lịch channel (k=32, θ=0.5, blocks [6,12,24,16])</text>
+<text x="410.0" y="44.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Block thêm n·k · Transition ⌊θ m⌋ · không transition sau block 4</text>
+<rect x="31.0" y="70.0" width="72.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="67.0" y="94.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Stem</text>
+<text x="67.0" y="112.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">64</text>
+<rect x="129.0" y="70.0" width="72.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="165.0" y="94.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">B1</text>
+<text x="165.0" y="112.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">256</text>
+<line x1="109.0" y1="99.0" x2="115.0" y2="99.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="115.0,94.0 123.0,99.0 115.0,104.0" fill="#5C6570"/>
+<rect x="227.0" y="70.0" width="72.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="263.0" y="94.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">T1</text>
+<text x="263.0" y="112.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#C45C0A" text-anchor="middle">128</text>
+<line x1="207.0" y1="99.0" x2="213.0" y2="99.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="213.0,94.0 221.0,99.0 213.0,104.0" fill="#5C6570"/>
+<rect x="325.0" y="70.0" width="72.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="361.0" y="94.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">B2</text>
+<text x="361.0" y="112.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">512</text>
+<line x1="305.0" y1="99.0" x2="311.0" y2="99.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="311.0,94.0 319.0,99.0 311.0,104.0" fill="#5C6570"/>
+<rect x="423.0" y="70.0" width="72.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="459.0" y="94.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">T2</text>
+<text x="459.0" y="112.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#C45C0A" text-anchor="middle">256</text>
+<line x1="403.0" y1="99.0" x2="409.0" y2="99.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="409.0,94.0 417.0,99.0 409.0,104.0" fill="#5C6570"/>
+<rect x="521.0" y="70.0" width="72.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="557.0" y="94.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">B3</text>
+<text x="557.0" y="112.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">1024</text>
+<line x1="501.0" y1="99.0" x2="507.0" y2="99.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="507.0,94.0 515.0,99.0 507.0,104.0" fill="#5C6570"/>
+<rect x="619.0" y="70.0" width="72.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="655.0" y="94.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">T3</text>
+<text x="655.0" y="112.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#C45C0A" text-anchor="middle">512</text>
+<line x1="599.0" y1="99.0" x2="605.0" y2="99.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="605.0,94.0 613.0,99.0 605.0,104.0" fill="#5C6570"/>
+<rect x="717.0" y="70.0" width="72.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="753.0" y="94.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">B4</text>
+<text x="753.0" y="112.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">1024</text>
+<line x1="697.0" y1="99.0" x2="703.0" y2="99.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="703.0,94.0 711.0,99.0 703.0,104.0" fill="#5C6570"/>
+<text x="410.0" y="170.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#5C6570" text-anchor="middle">64 → +6×32=256 → ⌊0.5×256⌋=128 → +12×32=512 → … → 1024 (nuôi classifier)</text>
+<text x="410.0" y="200.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Highlight amber = transition (compression). B−1 = 3 transition cho 4 block.</text>
+</svg>

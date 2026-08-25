@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="310" viewBox="0 0 820 310" role="img" aria-labelledby="vae-07-title">
+<title id="vae-07-title">Complete VAE</title>
+<rect class="fig-bg" width="820" height="310" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="410.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">VAE hoàn chỉnh: x → (μ, log σ²) → z → x̂ + KL</text>
+<text x="410.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">6 ma trận/bias: W_μ, b_μ, W_logvar, b_logvar, W_dec, b_dec</text>
+<rect x="30.0" y="130.0" width="70.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="65.0" y="158.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">x</text>
+<rect x="130.0" y="110.0" width="120.0" height="88.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="190.0" y="140.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Encoder</text>
+<text x="190.0" y="157.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">μ = xW_μ+b_μ</text>
+<text x="190.0" y="175.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">logσ² = xW+b</text>
+<line x1="110.0" y1="154.0" x2="112.0" y2="154.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="112.0,149.0 120.0,154.0 112.0,159.0" fill="#5C6570"/>
+<rect x="290.0" y="130.0" width="110.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="345.0" y="149.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Reparam</text>
+<text x="345.0" y="166.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">z=μ+σ⊙ε</text>
+<line x1="260.0" y1="154.0" x2="272.0" y2="154.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="272.0,149.0 280.0,154.0 272.0,159.0" fill="#5C6570"/>
+<rect x="440.0" y="130.0" width="110.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="495.0" y="149.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Decoder</text>
+<text x="495.0" y="166.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">x̂=zW_dec+b</text>
+<line x1="410.0" y1="154.0" x2="422.0" y2="154.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="422.0,149.0 430.0,154.0 422.0,159.0" fill="#5C6570"/>
+<rect x="590.0" y="130.0" width="70.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="625.0" y="158.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">x̂</text>
+<line x1="560.0" y1="154.0" x2="572.0" y2="154.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="572.0,149.0 580.0,154.0 572.0,159.0" fill="#5C6570"/>
+<rect x="290.0" y="220.0" width="130.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="355.0" y="239.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">D_KL(q‖p)</text>
+<text x="355.0" y="256.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">μ, logσ²</text>
+<line x1="190.0" y1="202.0" x2="190.0" y2="200.0" stroke="#2F6FED" stroke-width="1.5"/>
+<line x1="190.0" y1="200.0" x2="355.0" y2="200.0" stroke="#2F6FED" stroke-width="1.5"/>
+<line x1="355.0" y1="200.0" x2="355.0" y2="216.0" stroke="#2F6FED" stroke-width="1.5"/>
+<polygon points="351.0,216.0 355.0,222.0 359.0,216.0" fill="#2F6FED"/>
+<rect x="590.0" y="220.0" width="100.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="640.0" y="239.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">L_total</text>
+<text x="640.0" y="256.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">recon+KL</text>
+<line x1="625.0" y1="182.0" x2="625.0" y2="260.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="625.0" y1="260.0" x2="580.0" y2="260.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="428.0" y1="244.0" x2="580.0" y2="244.0" stroke="#2F6FED" stroke-width="2"/>
+<line x1="580.0" y1="244.0" x2="580.0" y2="244.0" stroke="#2F6FED" stroke-width="2"/>
+<line x1="580.0" y1="244.0" x2="588.0" y2="244.0" stroke="#2F6FED" stroke-width="2"/>
+<polygon points="588.0,239.0 596.0,244.0 588.0,249.0" fill="#2F6FED"/>
+<text x="410.0" y="290.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Gradient: loss → decoder → z → (μ, σ) encoder · ε không nhận grad</text>
+</svg>

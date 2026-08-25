@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="260" viewBox="0 0 760 260" role="img" aria-labelledby="word2vec-08-title">
+<title id="word2vec-08-title">Skip-gram vs CBOW</title>
+<rect class="fig-bg" width="760" height="260" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="380.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Skip-gram vs CBOW — đảo hướng dự đoán, cùng cửa sổ</text>
+<rect x="40.0" y="60.0" width="320.0" height="130.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="200.0" y="102.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Skip-gram</text>
+<text x="200.0" y="120.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">center → mỗi context</text>
+<text x="200.0" y="138.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#5C6570" text-anchor="middle">m cặp / vị trí</text>
+<text x="200.0" y="155.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Tốt từ hiếm · + SGNS mặc định</text>
+<rect x="400.0" y="60.0" width="320.0" height="130.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="560.0" y="102.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">CBOW</text>
+<text x="560.0" y="120.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">mean(context) → center</text>
+<text x="560.0" y="138.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#5C6570" text-anchor="middle">1 dự đoán / vị trí</text>
+<text x="560.0" y="155.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Nhanh hơn · blur từ hiếm</text>
+<text x="380.0" y="220.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#5C6570" text-anchor="middle">Cùng membership cửa sổ · khác input/target · cả hai dùng W_in / W_out</text>
+</svg>

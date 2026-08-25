@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="320" viewBox="0 0 820 320" role="img" aria-labelledby="lstm-06-title">
+<title id="lstm-06-title">Complete LSTM cell</title>
+<rect class="fig-bg" width="820" height="320" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="410.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">LSTM cell hoàn chỉnh: 4 gate song song → Cₜ → hₜ</text>
+<text x="410.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Input: xₜ, hₜ₋₁, Cₜ₋₁  ·  Output: hₜ, Cₜ  ·  Params: 4H(H+D)+4H</text>
+<rect x="30.0" y="55.0" width="70.0" height="45.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="65.0" y="82.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">xₜ</text>
+<rect x="30.0" y="115.0" width="70.0" height="45.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="65.0" y="141.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">hₜ₋₁</text>
+<rect x="30.0" y="240.0" width="70.0" height="45.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="65.0" y="266.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Cₜ₋₁</text>
+<rect x="130.0" y="85.0" width="95.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="177.5" y="104.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">[hₜ₋₁,xₜ]</text>
+<text x="177.5" y="122.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">→ 4× W</text>
+<line x1="108.0" y1="93.8" x2="114.0" y2="93.8" stroke="#5C6570" stroke-width="2"/>
+<polygon points="114.0,88.8 122.0,93.8 114.0,98.8" fill="#5C6570"/>
+<line x1="106.0" y1="137.5" x2="122.0" y2="118.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="122.0,118.0 128.0,113.0 128.0,123.0" fill="#5C6570"/>
+<rect x="260.0" y="55.0" width="95.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="307.5" y="79.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">fₜ=σ</text>
+<line x1="231.0" y1="110.0" x2="252.0" y2="76.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="252.0,76.0 258.0,72.0 258.0,80.0" fill="#5C6570"/>
+<rect x="260.0" y="107.0" width="95.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="307.5" y="131.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">iₜ=σ</text>
+<line x1="231.0" y1="110.0" x2="252.0" y2="128.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="252.0,128.0 258.0,124.0 258.0,132.0" fill="#5C6570"/>
+<rect x="260.0" y="159.0" width="95.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="307.5" y="183.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">C̃ₜ=tanh</text>
+<line x1="231.0" y1="110.0" x2="252.0" y2="180.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="252.0,180.0 258.0,176.0 258.0,184.0" fill="#5C6570"/>
+<rect x="260.0" y="211.0" width="95.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="307.5" y="235.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">oₜ=σ</text>
+<line x1="231.0" y1="110.0" x2="252.0" y2="232.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="252.0,232.0 258.0,228.0 258.0,236.0" fill="#5C6570"/>
+<rect x="390.0" y="155.0" width="140.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="460.0" y="184.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" fill="#1A1A1A" text-anchor="middle">Cₜ = fₜ⊙Cₜ₋₁</text>
+<text x="460.0" y="202.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" fill="#1A1A1A" text-anchor="middle">+ iₜ⊙C̃ₜ</text>
+<line x1="108.0" y1="262.5" x2="380.0" y2="202.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="380.0" y1="202.0" x2="388.0" y2="202.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="388.0,197.0 396.0,202.0 388.0,207.0" fill="#C45C0A"/>
+<line x1="361.0" y1="76.0" x2="380.0" y2="76.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="361.0" y1="128.0" x2="380.0" y2="128.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="361.0" y1="180.0" x2="380.0" y2="180.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="380.0" y1="76.0" x2="380.0" y2="190.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="380.0" y1="190.0" x2="388.0" y2="190.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="388.0,185.0 396.0,190.0 388.0,195.0" fill="#5C6570"/>
+<rect x="575.0" y="165.0" width="70.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="610.0" y="194.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">Cₜ</text>
+<line x1="538.0" y1="190.0" x2="559.0" y2="190.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="559.0,185.0 567.0,190.0 559.0,195.0" fill="#5C6570"/>
+<rect x="575.0" y="55.0" width="110.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="630.0" y="83.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" fill="#1A1A1A" text-anchor="middle">hₜ=oₜ⊙tanh(Cₜ)</text>
+<line x1="363.0" y1="232.0" x2="565.0" y2="232.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="565.0" y1="232.0" x2="565.0" y2="80.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="565.0" y1="80.0" x2="573.0" y2="80.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="573.0,75.0 581.0,80.0 573.0,85.0" fill="#C45C0A"/>
+<line x1="610.0" y1="161.0" x2="630.0" y2="109.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="626.0,109.0 630.0,115.0 634.0,109.0" fill="#5C6570"/>
+<rect x="720.0" y="55.0" width="70.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="755.0" y="84.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">hₜ</text>
+<line x1="695.0" y1="80.0" x2="702.0" y2="80.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="702.0,75.0 710.0,80.0 702.0,85.0" fill="#5C6570"/>
+<text x="410.0" y="305.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Bốn gate dùng chung concat · matmul gộp 4H×(H+D) trong triển khai thực tế</text>
+</svg>

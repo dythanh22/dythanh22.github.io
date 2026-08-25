@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="290" viewBox="0 0 800 290" role="img" aria-labelledby="tf-03-title">
+<title id="tf-03-title">Embedding with scaling</title>
+<rect class="fig-bg" width="800" height="290" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="400.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Embedding: ẽ = W_E[t] · √d_model  rồi  x = ẽ + PE</text>
+<text x="400.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Scale cân bằng độ lớn PE (∼1) · Xavier σ≈1/√d → sau scale ∼1</text>
+<rect x="40.0" y="120.0" width="80.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="80.0" y="140.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">t</text>
+<text x="80.0" y="157.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">token ID</text>
+<rect x="160.0" y="120.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="210.0" y="140.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">W_E[t]</text>
+<text x="210.0" y="157.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ℝ^{d}</text>
+<line x1="132.0" y1="145.0" x2="140.0" y2="145.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="140.0,140.0 148.0,145.0 140.0,150.0" fill="#5C6570"/>
+<rect x="300.0" y="120.0" width="110.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="355.0" y="140.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">× √d_model</text>
+<text x="355.0" y="157.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">√512≈22.6</text>
+<line x1="272.0" y1="145.0" x2="280.0" y2="145.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="280.0,140.0 288.0,145.0 280.0,150.0" fill="#5C6570"/>
+<rect x="300.0" y="200.0" width="110.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="355.0" y="220.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">+ PE_t</text>
+<text x="355.0" y="237.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">sin/cos</text>
+<rect x="460.0" y="140.0" width="90.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="505.0" y="160.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">x_t</text>
+<text x="505.0" y="177.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">→ encoder</text>
+<line x1="424.0" y1="155.0" x2="438.0" y2="155.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="438.0,150.0 446.0,155.0 438.0,160.0" fill="#5C6570"/>
+<line x1="418.0" y1="225.0" x2="450.0" y2="225.0" stroke="#2F6FED" stroke-width="2"/>
+<line x1="450.0" y1="225.0" x2="450.0" y2="165.0" stroke="#2F6FED" stroke-width="2"/>
+<line x1="450.0" y1="165.0" x2="458.0" y2="165.0" stroke="#2F6FED" stroke-width="2"/>
+<polygon points="458.0,160.0 466.0,165.0 458.0,170.0" fill="#2F6FED"/>
+<rect x="590.0" y="100.0" width="180.0" height="110.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="680.0" y="131.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" fill="#C45C0A" text-anchor="middle">Không scale:</text>
+<text x="680.0" y="149.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="500" fill="#5C6570" text-anchor="middle">emb ±0.04 vs PE ±1</text>
+<text x="680.0" y="167.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="500" fill="#5C6570" text-anchor="middle">PE át nội dung</text>
+<text x="680.0" y="185.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">Có scale: cả hai ∼1</text>
+<text x="400.0" y="270.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Tra cứu chỉ mục (không matmul) · gradient thưa theo hàng W_E</text>
+</svg>

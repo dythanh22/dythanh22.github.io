@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="320" viewBox="0 0 820 320" role="img" aria-labelledby="lstm-07-title">
+<title id="lstm-07-title">Complete LSTM network unroll</title>
+<rect class="fig-bg" width="820" height="320" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="410.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Mạng LSTM: unroll T bước · h₀,C₀=0 · yₜ = W_y hₜ + b_y</text>
+<text x="410.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Hai state: đường Cₜ (CEC) phía trên · hₜ + W_y phía dưới</text>
+<rect x="25.0" y="168.0" width="62.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="56.0" y="192.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" fill="#1A1A1A" text-anchor="middle">h₀=0</text>
+<rect x="25.0" y="68.0" width="62.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="56.0" y="92.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" fill="#1A1A1A" text-anchor="middle">C₀=0</text>
+<rect x="120.0" y="108.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="156.0" y="128.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">x_1</text>
+<rect x="110.0" y="148.0" width="92.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="156.0" y="172.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">t=1</text>
+<text x="156.0" y="189.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">LSTM</text>
+<line x1="156.0" y1="144.0" x2="156.0" y2="144.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="152.0,144.0 156.0,150.0 160.0,144.0" fill="#5C6570"/>
+<rect x="120.0" y="68.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="156.0" y="88.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">C_1</text>
+<line x1="156.0" y1="144.0" x2="156.0" y2="104.0" stroke="#C45C0A" stroke-width="1.5"/>
+<polygon points="152.0,104.0 156.0,110.0 160.0,104.0" fill="#C45C0A"/>
+<line x1="93.0" y1="89.0" x2="112.0" y2="89.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="112.0" y1="89.0" x2="118.0" y2="89.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="118.0,84.0 126.0,89.0 118.0,94.0" fill="#C45C0A"/>
+<line x1="93.0" y1="189.0" x2="102.0" y2="189.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="102.0" y1="189.0" x2="102.0" y2="177.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="102.0" y1="177.0" x2="108.0" y2="177.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="108.0,172.0 116.0,177.0 108.0,182.0" fill="#C45C0A"/>
+<rect x="120.0" y="218.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="156.0" y="238.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">h_1</text>
+<line x1="156.0" y1="208.0" x2="156.0" y2="214.0" stroke="#2F6FED" stroke-width="1.5"/>
+<polygon points="152.0,214.0 156.0,220.0 160.0,214.0" fill="#2F6FED"/>
+<rect x="124.0" y="255.0" width="64.0" height="28.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="156.0" y="272.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_y</text>
+<line x1="156.0" y1="254.0" x2="156.0" y2="251.0" stroke="#5C6570" stroke-width="1.5"/>
+<rect x="244.0" y="108.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="280.0" y="128.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">x_2</text>
+<rect x="234.0" y="148.0" width="92.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="280.0" y="172.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">t=2</text>
+<text x="280.0" y="189.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">LSTM</text>
+<line x1="280.0" y1="144.0" x2="280.0" y2="144.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="276.0,144.0 280.0,150.0 284.0,144.0" fill="#5C6570"/>
+<rect x="244.0" y="68.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="280.0" y="88.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">C_2</text>
+<line x1="280.0" y1="144.0" x2="280.0" y2="104.0" stroke="#C45C0A" stroke-width="1.5"/>
+<polygon points="276.0,104.0 280.0,110.0 284.0,104.0" fill="#C45C0A"/>
+<line x1="196.0" y1="85.0" x2="240.0" y2="85.0" stroke="#C45C0A" stroke-width="2.5"/>
+<line x1="212.0" y1="177.0" x2="216.0" y2="177.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="216.0,172.0 224.0,177.0 216.0,182.0" fill="#5C6570"/>
+<rect x="244.0" y="218.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="280.0" y="238.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">h_2</text>
+<line x1="280.0" y1="208.0" x2="280.0" y2="214.0" stroke="#2F6FED" stroke-width="1.5"/>
+<polygon points="276.0,214.0 280.0,220.0 284.0,214.0" fill="#2F6FED"/>
+<rect x="248.0" y="255.0" width="64.0" height="28.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="280.0" y="272.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_y</text>
+<line x1="280.0" y1="254.0" x2="280.0" y2="251.0" stroke="#5C6570" stroke-width="1.5"/>
+<rect x="368.0" y="108.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="404.0" y="128.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">x_3</text>
+<rect x="358.0" y="148.0" width="92.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="404.0" y="172.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">t=3</text>
+<text x="404.0" y="189.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">LSTM</text>
+<line x1="404.0" y1="144.0" x2="404.0" y2="144.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="400.0,144.0 404.0,150.0 408.0,144.0" fill="#5C6570"/>
+<rect x="368.0" y="68.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="404.0" y="88.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">C_3</text>
+<line x1="404.0" y1="144.0" x2="404.0" y2="104.0" stroke="#C45C0A" stroke-width="1.5"/>
+<polygon points="400.0,104.0 404.0,110.0 408.0,104.0" fill="#C45C0A"/>
+<line x1="320.0" y1="85.0" x2="364.0" y2="85.0" stroke="#C45C0A" stroke-width="2.5"/>
+<line x1="336.0" y1="177.0" x2="340.0" y2="177.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="340.0,172.0 348.0,177.0 340.0,182.0" fill="#5C6570"/>
+<rect x="368.0" y="218.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="404.0" y="238.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">h_3</text>
+<line x1="404.0" y1="208.0" x2="404.0" y2="214.0" stroke="#2F6FED" stroke-width="1.5"/>
+<polygon points="400.0,214.0 404.0,220.0 408.0,214.0" fill="#2F6FED"/>
+<rect x="372.0" y="255.0" width="64.0" height="28.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="404.0" y="272.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_y</text>
+<line x1="404.0" y1="254.0" x2="404.0" y2="251.0" stroke="#5C6570" stroke-width="1.5"/>
+<rect x="492.0" y="108.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="528.0" y="128.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">x_T</text>
+<rect x="482.0" y="148.0" width="92.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="528.0" y="172.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">t=T</text>
+<text x="528.0" y="189.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">LSTM</text>
+<line x1="528.0" y1="144.0" x2="528.0" y2="144.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="524.0,144.0 528.0,150.0 532.0,144.0" fill="#5C6570"/>
+<rect x="492.0" y="68.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="528.0" y="88.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">C_T</text>
+<line x1="528.0" y1="144.0" x2="528.0" y2="104.0" stroke="#C45C0A" stroke-width="1.5"/>
+<polygon points="524.0,104.0 528.0,110.0 532.0,104.0" fill="#C45C0A"/>
+<line x1="444.0" y1="85.0" x2="488.0" y2="85.0" stroke="#C45C0A" stroke-width="2.5"/>
+<line x1="460.0" y1="177.0" x2="464.0" y2="177.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="464.0,172.0 472.0,177.0 464.0,182.0" fill="#5C6570"/>
+<rect x="492.0" y="218.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="528.0" y="238.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">h_T</text>
+<line x1="528.0" y1="208.0" x2="528.0" y2="214.0" stroke="#2F6FED" stroke-width="1.5"/>
+<polygon points="524.0,214.0 528.0,220.0 532.0,214.0" fill="#2F6FED"/>
+<rect x="496.0" y="255.0" width="64.0" height="28.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="528.0" y="272.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_y</text>
+<line x1="528.0" y1="254.0" x2="528.0" y2="251.0" stroke="#5C6570" stroke-width="1.5"/>
+<text x="410.0" y="308.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Projection trên hₜ (không Cₜ) · trả (y_seq, h_T, C_T)</text>
+</svg>

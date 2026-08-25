@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="230" viewBox="0 0 720 230" role="img" aria-labelledby="word2vec-02-title">
+<title id="word2vec-02-title">Frequent-word keep probability</title>
+<rect class="fig-bg" width="720" height="230" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="360.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Subsample: P_keep(w) = min(1, √(t / f(w)))</text>
+<text x="360.0" y="44.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">f ≤ t → luôn giữ · f &gt; t → làm thưa theo căn · t ≈ 10⁻⁵</text>
+<rect x="98.0" y="80.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="153.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">counts</text>
+<text x="153.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ f = c/N</text>
+<rect x="236.0" y="80.0" width="120.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="296.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">t / f(w)</text>
+<text x="296.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">threshold t</text>
+<line x1="216.0" y1="108.0" x2="220.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="220.0,103.0 228.0,108.0 220.0,113.0" fill="#5C6570"/>
+<rect x="384.0" y="80.0" width="100.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="434.0" y="103.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">√(·)</text>
+<text x="434.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">soften</text>
+<line x1="364.0" y1="108.0" x2="368.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="368.0,103.0 376.0,108.0 368.0,113.0" fill="#5C6570"/>
+<rect x="512.0" y="80.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="567.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">min(1, ·)</text>
+<text x="567.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">P_keep</text>
+<line x1="492.0" y1="108.0" x2="496.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="496.0,103.0 504.0,108.0 496.0,113.0" fill="#5C6570"/>
+<text x="360.0" y="180.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Ví dụ t=10⁻⁵, f=[0.625,0.3125,0.0625] → P≈[0.004, 0.0057, 0.0126]</text>
+<text x="360.0" y="205.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Không nhầm keep ↔ discard (paper viết 1−√(t/f) là xác suất bỏ)</text>
+</svg>

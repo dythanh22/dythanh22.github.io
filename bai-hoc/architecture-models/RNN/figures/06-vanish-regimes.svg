@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="300" viewBox="0 0 780 300" role="img" aria-labelledby="rnn-06-title">
+<title id="rnn-06-title">Vanishing gradient regimes</title>
+<rect class="fig-bg" width="780" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Ba chế độ: ‖Wₕₕ‖₂ &lt; 1  ·  = 1  ·  &gt; 1   (gᵢ = σ₁ⁱ)</text>
+<text x="390.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Mô phỏng đơn giản: bỏ qua tanh′, chỉ nhân spectral norm</text>
+<rect x="30.0" y="70.0" width="220.0" height="140.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="140.0" y="117.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Vanishing</text>
+<text x="140.0" y="135.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#C45C0A" text-anchor="middle">σ₁ = 0.8 &lt; 1</text>
+<text x="140.0" y="152.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">0.8¹⁰ ≈ 0.11</text>
+<text x="140.0" y="170.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">0.8⁵⁰ ≈ 1.4×10⁻⁵</text>
+<rect x="280.0" y="70.0" width="220.0" height="140.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="390.0" y="117.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Stable</text>
+<text x="390.0" y="135.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#2F6FED" text-anchor="middle">σ₁ = 1</text>
+<text x="390.0" y="152.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">1ᵀ = 1 ∀ T</text>
+<text x="390.0" y="170.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">mọi t đóng góp đều</text>
+<rect x="530.0" y="70.0" width="220.0" height="140.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="640.0" y="117.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Exploding</text>
+<text x="640.0" y="135.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#C45C0A" text-anchor="middle">σ₁ = 1.2 &gt; 1</text>
+<text x="640.0" y="152.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">1.2¹⁰ ≈ 6.2</text>
+<text x="640.0" y="170.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">1.2¹⁰⁰ ≈ 8.3×10⁷</text>
+<text x="390.0" y="245.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">‖∂L/∂hₖ‖ ∝ ‖Wₕₕ‖₂^(T−k)  — lệch nhỏ khỏi 1 cũng mũ hóa</text>
+<text x="390.0" y="270.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Động lực LSTM/GRU: đường cộng/gate thay cho Wₕₕᵀ lặp lại</text>
+</svg>

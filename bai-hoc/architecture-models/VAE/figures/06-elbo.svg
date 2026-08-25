@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="290" viewBox="0 0 780 290" role="img" aria-labelledby="vae-06-title">
+<title id="vae-06-title">ELBO loss</title>
+<rect class="fig-bg" width="780" height="290" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">ELBO = 𝔼[log p_θ(x|z)] − D_KL(q_φ ‖ p(z))</text>
+<text x="390.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Minimize L = L_recon + D_KL  ·  cân bằng reconstruction vs regularization</text>
+<rect x="80.0" y="90.0" width="200.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="180.0" y="111.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Reconstruction</text>
+<text x="180.0" y="128.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">−𝔼[log p_θ(x|z)]</text>
+<text x="180.0" y="146.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">≈ MSE ‖x−x̂‖²</text>
+<rect x="80.0" y="185.0" width="200.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="180.0" y="206.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">KL Divergence</text>
+<text x="180.0" y="223.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">D_KL(q_φ ‖ p(z))</text>
+<text x="180.0" y="241.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">dạng kín Gaussian</text>
+<rect x="360.0" y="130.0" width="90.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="405.0" y="154.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#1A1A1A" text-anchor="middle">⊕</text>
+<text x="405.0" y="170.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">L_total</text>
+<line x1="288.0" y1="125.0" x2="350.0" y2="125.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="350.0" y1="125.0" x2="350.0" y2="157.5" stroke="#C45C0A" stroke-width="2"/>
+<line x1="288.0" y1="220.0" x2="350.0" y2="220.0" stroke="#2F6FED" stroke-width="2"/>
+<line x1="350.0" y1="220.0" x2="350.0" y2="157.5" stroke="#2F6FED" stroke-width="2"/>
+<line x1="350.0" y1="157.5" x2="358.0" y2="157.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="358.0,152.5 366.0,157.5 358.0,162.5" fill="#5C6570"/>
+<rect x="510.0" y="130.0" width="120.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="570.0" y="153.1" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">−ELBO</text>
+<text x="570.0" y="170.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">minimize</text>
+<line x1="462.0" y1="157.5" x2="490.0" y2="157.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="490.0,152.5 498.0,157.5 490.0,162.5" fill="#5C6570"/>
+<rect x="510.0" y="210.0" width="220.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="620.0" y="232.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">ELBO ≤ log p_θ(x)</text>
+<text x="620.0" y="250.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">maximize ELBO ≈ max evidence</text>
+<text x="390.0" y="275.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Chỉ recon → AE xác định · chỉ KL → bỏ qua dữ liệu · cả hai → VAE</text>
+</svg>

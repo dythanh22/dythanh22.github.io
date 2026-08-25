@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="280" viewBox="0 0 760 280" role="img" aria-labelledby="resnet-05-title">
+<title id="resnet-05-title">Skip connection gradient highway</title>
+<rect class="fig-bg" width="760" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="380.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Skip: ∂L/∂x = ∂L/∂y · (∂F/∂x + I) — đường identity không suy</text>
+<rect x="40.0" y="60.0" width="320.0" height="130.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="200.0" y="102.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Mạng thuần</text>
+<text x="200.0" y="120.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#C45C0A" text-anchor="middle">∂L/∂x ∝ ∏ Jacobian</text>
+<text x="200.0" y="138.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#5C6570" text-anchor="middle">0.9⁴⁹ ≈ 0.005  (50 lớp)</text>
+<text x="200.0" y="155.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">→ vanishing / degradation</text>
+<rect x="400.0" y="60.0" width="320.0" height="130.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="560.0" y="102.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Residual + skip</text>
+<text x="560.0" y="120.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#2F6FED" text-anchor="middle">∂L/∂x ∝ (∂F/∂x + I)</text>
+<text x="560.0" y="138.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#5C6570" text-anchor="middle">hạng +I ≥ gradient đầu ra</text>
+<text x="560.0" y="155.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">→ highway mọi độ sâu</text>
+<text x="380.0" y="230.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">x_N = x_0 + Σ F_i(x_i)  ·  học F gần 0 dễ hơn học H ≈ identity</text>
+<text x="380.0" y="255.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Khớp công thức chương Skip Connections — cộng, không concat</text>
+</svg>

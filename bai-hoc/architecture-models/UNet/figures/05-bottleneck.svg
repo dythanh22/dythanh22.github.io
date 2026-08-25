@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="300" viewBox="0 0 840 300" role="img" aria-labelledby="unet-05-title">
+<title id="unet-05-title">U-Net bottleneck</title>
+<rect class="fig-bg" width="840" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="420.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Bottleneck: 2× Conv3×3 · không MaxPool · điểm xoay U</text>
+<text x="420.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">512→1024 channel · 32→30→28 · không skip ngang ở đáy</text>
+<rect x="148.0" y="85.0" width="120.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="208.0" y="107.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">Từ E4 pool</text>
+<text x="208.0" y="125.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">32×32×512</text>
+<rect x="296.0" y="85.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="351.0" y="107.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">Conv+ReLU</text>
+<text x="351.0" y="125.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">30×30×1024</text>
+<line x1="274.0" y1="113.0" x2="282.0" y2="113.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="282.0,108.0 290.0,113.0 282.0,118.0" fill="#5C6570"/>
+<rect x="434.0" y="85.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="489.0" y="107.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">Conv+ReLU</text>
+<text x="489.0" y="125.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">28×28×1024</text>
+<line x1="412.0" y1="113.0" x2="420.0" y2="113.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="420.0,108.0 428.0,113.0 420.0,118.0" fill="#5C6570"/>
+<rect x="572.0" y="85.0" width="120.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="632.0" y="107.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">→ Decoder</text>
+<text x="632.0" y="125.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">UpConv đầu</text>
+<line x1="550.0" y1="113.0" x2="558.0" y2="113.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="558.0,108.0 566.0,113.0 558.0,118.0" fill="#5C6570"/>
+<rect x="80.0" y="180.0" width="320.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="240.0" y="201.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">Không pooling thêm</text>
+<text x="240.0" y="218.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">Đã pool ×4 (÷16 không gian)</text>
+<text x="240.0" y="236.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">Pool nữa → 14×14 quá mỏng</text>
+<rect x="440.0" y="180.0" width="320.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="600.0" y="201.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">RF lớn nhất · ngữ cảnh toàn cục</text>
+<text x="600.0" y="218.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">Bridge encoder ↔ decoder</text>
+<text x="600.0" y="236.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">Không có skip ngang tại đáy U</text>
+<text x="420.0" y="275.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Chỉ đáy chữ U không nối ngang · mọi mức khác có crop+concat</text>
+</svg>

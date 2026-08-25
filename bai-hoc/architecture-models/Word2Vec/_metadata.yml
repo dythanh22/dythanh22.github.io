@@ -1,0 +1,7 @@
+group: "Word2Vec"
+categories: [architecture-models, architecture, word2vec, nlp, embeddings]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

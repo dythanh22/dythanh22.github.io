@@ -1,0 +1,7 @@
+group: "RNN"
+categories: [architecture-models, architecture, rnn, sequence]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

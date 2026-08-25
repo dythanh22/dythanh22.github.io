@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="290" viewBox="0 0 800 290" role="img" aria-labelledby="bert-02-title">
+<title id="bert-02-title">WordPiece tokenization</title>
+<rect class="fig-bg" width="800" height="290" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="400.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">WordPiece: greedy longest-match · ## cho continuation</text>
+<text x="400.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">unhappy → un + ##happy · thất bại bất kỳ vị trí → toàn từ = [UNK]</text>
+<rect x="40.0" y="110.0" width="110.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="95.0" y="130.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">unhappy</text>
+<text x="95.0" y="147.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">một từ</text>
+<rect x="190.0" y="100.0" width="160.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="270.0" y="121.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">longest match</text>
+<text x="270.0" y="138.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">thử dài → ngắn</text>
+<text x="270.0" y="156.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">start&gt;0 → ##</text>
+<line x1="156.0" y1="135.0" x2="176.0" y2="135.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="176.0,130.0 184.0,135.0 176.0,140.0" fill="#5C6570"/>
+<rect x="400.0" y="70.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="450.0" y="90.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">un</text>
+<text x="450.0" y="107.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">start=0</text>
+<rect x="400.0" y="150.0" width="120.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="460.0" y="170.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">##happy</text>
+<text x="460.0" y="187.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">continuation</text>
+<line x1="358.0" y1="125.0" x2="390.0" y2="95.0" stroke="#5C6570" stroke-width="2"/>
+<line x1="358.0" y1="145.0" x2="390.0" y2="175.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="390.0,95.0 398.0,90.0 398.0,100.0" fill="#5C6570"/>
+<polygon points="390.0,175.0 398.0,170.0 398.0,180.0" fill="#C45C0A"/>
+<rect x="560.0" y="90.0" width="200.0" height="100.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="660.0" y="116.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">score(x,y)=P(xy)/(P(x)P(y))</text>
+<text x="660.0" y="134.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">xây vocab offline</text>
+<text x="660.0" y="152.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">|V|≈30K (BERT)</text>
+<text x="660.0" y="170.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">≠ BPE (gộp tần suất)</text>
+<text x="400.0" y="260.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Subword: cân bằng OOV vs độ dài chuỗi · [CLS]/[SEP]/[MASK]/[PAD]/[UNK]</text>
+</svg>

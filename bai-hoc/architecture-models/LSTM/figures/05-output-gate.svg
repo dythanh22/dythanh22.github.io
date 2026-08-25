@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="310" viewBox="0 0 780 310" role="img" aria-labelledby="lstm-05-title">
+<title id="lstm-05-title">Output gate and hidden state</title>
+<rect class="fig-bg" width="780" height="310" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Output gate: hₜ = oₜ ⊙ tanh(Cₜ)</text>
+<text x="390.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">oₜ = σ(W_o·[hₜ₋₁,xₜ]+b_o) · tanh nén Cₜ trước khi phơi bày</text>
+<rect x="40.0" y="125.0" width="72.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="76.0" y="153.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">hₜ₋₁</text>
+<rect x="40.0" y="55.0" width="72.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="76.0" y="83.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">xₜ</text>
+<rect x="135.0" y="90.0" width="90.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="180.0" y="108.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">[hₜ₋₁, xₜ]</text>
+<text x="180.0" y="126.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">H + D</text>
+<line x1="118.0" y1="149.0" x2="127.0" y2="126.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="118.0" y1="79.0" x2="127.0" y2="102.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="127.0,114.0 133.0,109.0 133.0,119.0" fill="#5C6570"/>
+<rect x="260.0" y="90.0" width="95.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="307.5" y="108.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_o</text>
+<text x="307.5" y="126.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">+ b</text>
+<line x1="235.0" y1="114.0" x2="242.0" y2="114.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="242.0,109.0 250.0,114.0 242.0,119.0" fill="#5C6570"/>
+<rect x="390.0" y="90.0" width="68.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="424.0" y="118.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">σ</text>
+<line x1="365.0" y1="114.0" x2="372.0" y2="114.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="372.0,109.0 380.0,114.0 372.0,119.0" fill="#5C6570"/>
+<rect x="495.0" y="90.0" width="68.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="529.0" y="118.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">oₜ</text>
+<line x1="468.0" y1="114.0" x2="477.0" y2="114.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="477.0,109.0 485.0,114.0 477.0,119.0" fill="#5C6570"/>
+<rect x="40.0" y="200.0" width="85.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="82.5" y="219.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Cₜ</text>
+<text x="82.5" y="236.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">đã cập nhật</text>
+<rect x="160.0" y="200.0" width="80.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="200.0" y="219.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">tanh</text>
+<text x="200.0" y="236.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">[−1,1]</text>
+<line x1="135.0" y1="224.0" x2="142.0" y2="224.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="142.0,219.0 150.0,224.0 142.0,229.0" fill="#5C6570"/>
+<rect x="580.0" y="155.0" width="80.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="620.0" y="184.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#1A1A1A" text-anchor="middle">⊙</text>
+<line x1="529.0" y1="142.0" x2="529.0" y2="130.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="529.0" y1="130.0" x2="570.0" y2="130.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="570.0" y1="130.0" x2="570.0" y2="179.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="570.0" y1="179.0" x2="578.0" y2="179.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="578.0,174.0 586.0,179.0 578.0,184.0" fill="#C45C0A"/>
+<line x1="248.0" y1="224.0" x2="570.0" y2="224.0" stroke="#5C6570" stroke-width="2"/>
+<line x1="570.0" y1="224.0" x2="570.0" y2="179.0" stroke="#5C6570" stroke-width="2"/>
+<rect x="695.0" y="155.0" width="75.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="732.5" y="174.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">hₜ</text>
+<text x="732.5" y="191.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ℝᴴ</text>
+<line x1="670.0" y1="179.0" x2="677.0" y2="179.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="677.0,174.0 685.0,179.0 677.0,184.0" fill="#5C6570"/>
+<rect x="40.0" y="248.0" width="400.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="240.0" y="263.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">Cₜ nội bộ · hₜ giao diện ngoài</text>
+<text x="240.0" y="281.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">→ lớp kế và hₜ₋₁ bước sau</text>
+<text x="390.0" y="298.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Output gate bảo vệ đơn vị khác khỏi nội dung Cₜ chưa liên quan</text>
+</svg>

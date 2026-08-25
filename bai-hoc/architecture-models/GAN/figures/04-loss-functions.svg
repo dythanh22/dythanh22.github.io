@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="300" viewBox="0 0 820 300" role="img" aria-labelledby="gan-04-title">
+<title id="gan-04-title">GAN loss functions</title>
+<rect class="fig-bg" width="820" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="410.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Loss: min_G max_D V(D,G)  ·  L_G non-saturating</text>
+<text x="410.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">V = 𝔼[log D(x)] + 𝔼[log(1−D(G(z)))]  ·  thực hành tách L_D và L_G</text>
+<rect x="40.0" y="80.0" width="280.0" height="90.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="180.0" y="111.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">L_D (minimize)</text>
+<text x="180.0" y="128.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">−mean[log D(x)</text>
+<text x="180.0" y="146.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">+ log(1−D(G(z)))]</text>
+<rect x="360.0" y="80.0" width="280.0" height="90.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="500.0" y="111.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">L_G non-sat (minimize)</text>
+<text x="500.0" y="128.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">−mean[log D(G(z))]</text>
+<text x="500.0" y="146.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#C45C0A" text-anchor="middle">≠ log(1−D(G)) saturating</text>
+<rect x="40.0" y="200.0" width="300.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="190.0" y="224.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#C45C0A" text-anchor="middle">Saturating: D(G)≈0 → ∇G ≈ 0</text>
+<text x="190.0" y="242.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">đầu train: G không học</text>
+<rect x="380.0" y="200.0" width="300.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="530.0" y="224.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">Non-sat: −log D(G) → ∞ khi D→0</text>
+<text x="530.0" y="242.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">gradient mạnh đúng lúc cần</text>
+<rect x="700.0" y="100.0" width="100.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="750.0" y="121.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">ε-clip</text>
+<text x="750.0" y="138.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">log(p+ε)</text>
+<text x="750.0" y="156.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ε=10⁻⁸</text>
+<text x="410.0" y="285.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Nash: p_g = p_data ⇒ D*(x)=1/2 · C(G)=−log 4 + 2·JSD</text>
+</svg>

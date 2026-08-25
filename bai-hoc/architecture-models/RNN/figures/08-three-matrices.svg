@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="250" viewBox="0 0 760 250" role="img" aria-labelledby="rnn-08-title">
+<title id="rnn-08-title">RNN weight matrices</title>
+<rect class="fig-bg" width="760" height="250" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="380.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Ba ma trận: Wₓₕ (input) · Wₕₕ (recurrent) · Wₕᵧ (output)</text>
+<rect x="37.0" y="60.0" width="210.0" height="120.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="142.0" y="98.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#1A1A1A" text-anchor="middle">Wₓₕ</text>
+<text x="142.0" y="115.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#5C6570" text-anchor="middle">H × D</text>
+<text x="142.0" y="133.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#1A1A1A" text-anchor="middle">input → hidden</text>
+<text x="142.0" y="150.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#2F6FED" text-anchor="middle">chỉ thấy xₜ</text>
+<rect x="275.0" y="60.0" width="210.0" height="120.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="380.0" y="98.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#1A1A1A" text-anchor="middle">Wₕₕ</text>
+<text x="380.0" y="115.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#5C6570" text-anchor="middle">H × H</text>
+<text x="380.0" y="133.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#1A1A1A" text-anchor="middle">hidden → hidden</text>
+<text x="380.0" y="150.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#C45C0A" text-anchor="middle">áp dụng T lần / pass</text>
+<rect x="513.0" y="60.0" width="210.0" height="120.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="618.0" y="98.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#1A1A1A" text-anchor="middle">Wₕᵧ</text>
+<text x="618.0" y="115.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#5C6570" text-anchor="middle">O × H</text>
+<text x="618.0" y="133.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="500" fill="#1A1A1A" text-anchor="middle">hidden → output</text>
+<text x="618.0" y="150.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#2F6FED" text-anchor="middle">ngoài recurrence</text>
+<text x="380.0" y="220.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Vanishing/exploding chủ yếu từ phổ của Wₕₕ qua BPTT</text>
+</svg>

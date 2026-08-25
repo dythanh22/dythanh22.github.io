@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="300" viewBox="0 0 840 300" role="img" aria-labelledby="ddpm-07-title">
+<title id="ddpm-07-title">DDPM sampling</title>
+<rect class="fig-bg" width="840" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="420.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Sampling: x_T ~ 𝒩(0,I) → reverse t=T…1 → x₀</text>
+<text x="420.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Algorithm 2 · T≈1000 forward pass tuần tự · chậm hơn GAN ~1000×</text>
+<rect x="30.0" y="120.0" width="90.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="75.0" y="140.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">x_T</text>
+<text x="75.0" y="157.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">~ 𝒩(0,I)</text>
+<rect x="170.0" y="120.0" width="80.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="210.0" y="140.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">t=T</text>
+<text x="210.0" y="157.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ε_θ</text>
+<line x1="130.0" y1="145.0" x2="152.0" y2="145.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="152.0,140.0 160.0,145.0 152.0,150.0" fill="#5C6570"/>
+<rect x="286.0" y="120.0" width="80.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="326.0" y="140.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">t=T−1</text>
+<text x="326.0" y="157.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ε_θ</text>
+<line x1="260.0" y1="145.0" x2="268.0" y2="145.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="268.0,140.0 276.0,145.0 268.0,150.0" fill="#5C6570"/>
+<rect x="402.0" y="120.0" width="48.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="426.0" y="149.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">…</text>
+<line x1="376.0" y1="145.0" x2="384.0" y2="145.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="384.0,140.0 392.0,145.0 384.0,150.0" fill="#5C6570"/>
+<rect x="486.0" y="120.0" width="80.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="526.0" y="140.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">t=1</text>
+<text x="526.0" y="157.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">z=0</text>
+<line x1="460.0" y1="145.0" x2="468.0" y2="145.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="468.0,140.0 476.0,145.0 468.0,150.0" fill="#5C6570"/>
+<rect x="602.0" y="120.0" width="75.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="639.5" y="140.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">x₀</text>
+<text x="639.5" y="157.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">mẫu</text>
+<line x1="576.0" y1="145.0" x2="584.0" y2="145.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="584.0,140.0 592.0,145.0 584.0,150.0" fill="#5C6570"/>
+<rect x="80.0" y="210.0" width="320.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="240.0" y="232.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">Mỗi bước: 1× forward ε_θ · +σ_t z (t&gt;1)</text>
+<text x="240.0" y="250.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">Không song song theo t (phụ thuộc tuần tự)</text>
+<rect x="440.0" y="210.0" width="320.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="600.0" y="232.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">vs GAN: 1 forward pass ~ms</text>
+<text x="600.0" y="250.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">DDPM: ổn định · không mode collapse</text>
+<text x="420.0" y="285.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">σ_t² = β_t (Ho) hoặc β̃_t posterior · inference mode, không gradient</text>
+</svg>

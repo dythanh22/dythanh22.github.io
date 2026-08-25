@@ -30,10 +30,10 @@ Homepage chỉ hiện **chuỗi**, không trộn từng chương. Vào chuỗi �
 
 :::: {.series-grid}
 ::: {.series-card}
-<p class="eyebrow">Thị giác · CNN</p>
+<p class="eyebrow">Kiến trúc · lộ trình</p>
 ### [Architecture Models](bai-hoc/architecture-models/index.qmd)
 
-AlexNet và VGG từ input đến logits — conv, pooling, classifier, config.
+CNN → sequence → generative → embeddings → attention → U-Net.
 
 [Mở Architecture Models →](bai-hoc/architecture-models/index.qmd)
 :::

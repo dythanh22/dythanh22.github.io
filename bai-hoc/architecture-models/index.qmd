@@ -1,13 +1,13 @@
 ---
 short-title: "Tổng quan chuỗi"
 title: "Architecture Models"
-subtitle: "Đọc kiến trúc CNN từ baseline — AlexNet rồi VGG"
+subtitle: "CNN → sequence → generative → embeddings → attention → U-Net"
 date: 2026-08-22
 order: 0
-categories: [architecture-models, architecture, cnn]
+categories: [architecture-models, architecture]
 series: architecture-models
 role: "Tổng quan chuỗi Architecture Models"
-description: "Chuỗi phân rã kiến trúc mạng: AlexNet, VGG, rồi ResNet."
+description: "Lộ trình kiến trúc: CNN, RNN/LSTM/GRU, VAE/GAN, Word2Vec, Transformer/BERT/ViT, U-Net."
 toc: true
 listing:
   - id: roadmap-alexnet
@@ -39,16 +39,198 @@ listing:
       title: "Chương"
       role: "Vai trò"
     max-description-length: 200
+
+  - id: roadmap-resnet
+    contents:
+      - "ResNet/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
+  - id: roadmap-densenet
+    contents:
+      - "DenseNet/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
+  - id: roadmap-rnn
+    contents:
+      - "RNN/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
+  - id: roadmap-lstm
+    contents:
+      - "LSTM/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
+  - id: roadmap-gru
+    contents:
+      - "GRU/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
+  - id: roadmap-vae
+    contents:
+      - "VAE/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
+  - id: roadmap-gan
+    contents:
+      - "GAN/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
+  - id: roadmap-word2vec
+    contents:
+      - "Word2Vec/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
+  - id: roadmap-transformer
+    contents:
+      - "Transformer/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
+  - id: roadmap-bert
+    contents:
+      - "BERT/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
+  - id: roadmap-vit
+    contents:
+      - "Vision-Transformer/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
+  - id: roadmap-unet
+    contents:
+      - "UNet/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
 ---
 
-Chuỗi này đọc **kiến trúc** như một hệ thống — không chỉ tên lớp, mà còn shape, thông lượng, bộ nhớ, và lựa chọn nào vẫn còn dùng.
+Chuỗi này đọc **kiến trúc** theo lộ trình sư phạm — từ thị giác CNN, qua sequence và generative, tới embedding/attention, rồi dense prediction.
+
+<p class="series-part">Phần 1 · CNN</p>
 
 :::: {.series-grid}
 ::: {.series-card}
 <p class="eyebrow">2012 · Baseline</p>
 ### [AlexNet](AlexNet/index.qmd)
 
-Pipeline: Input → Conv1–5 (ReLU / LRN / Pool) → Flatten → FC (+ dropout) → 1000 logits.
+Input → Conv1–5 → Flatten → FC. Đọc trước VGG.
 
 [Bắt đầu AlexNet →](AlexNet/index.qmd)
 :::
@@ -57,28 +239,212 @@ Pipeline: Input → Conv1–5 (ReLU / LRN / Pool) → Flatten → FC (+ dropout)
 <p class="eyebrow">2014 · Độ sâu đều</p>
 ### [VGG](VGG/index.qmd)
 
-Conv $3\times3$ xếp chồng, max pool $2\times2$, config A–E, VGG-16 đầu-cuối.
+Conv $3\times3$ xếp chồng, max pool $2\times2$, VGG-16.
 
 [Bắt đầu VGG →](VGG/index.qmd)
 :::
+
+::: {.series-card}
+<p class="eyebrow">2015 · Residual</p>
+### [ResNet](ResNet/index.qmd)
+
+$y = F(x)+x$: identity, projection, bottleneck.
+
+[Bắt đầu ResNet →](ResNet/index.qmd)
+:::
+
+::: {.series-card}
+<p class="eyebrow">2017 · Dense concat</p>
+### [DenseNet](DenseNet/index.qmd)
+
+Growth rate $k$, concat skip, transition $\theta$. Đọc sau ResNet.
+
+[Bắt đầu DenseNet →](DenseNet/index.qmd)
+:::
 ::::
 
-## Lộ trình AlexNet
+<p class="series-part">Phần 2 · Sequence</p>
 
+:::: {.series-grid}
+::: {.series-card}
+<p class="eyebrow">4 · RNN</p>
+### [RNN](RNN/index.qmd)
+
+Cell, unroll, BPTT, vanishing gradient. Nền sequence.
+
+[Bắt đầu RNN →](RNN/index.qmd)
+:::
+
+::: {.series-card}
+<p class="eyebrow">5 · LSTM</p>
+### [LSTM](LSTM/index.qmd)
+
+Forget / input / cell / output — CEC cho phụ thuộc dài.
+
+[Bắt đầu LSTM →](LSTM/index.qmd)
+:::
+
+::: {.series-card}
+<p class="eyebrow">6 · GRU</p>
+### [GRU](GRU/index.qmd)
+
+Reset + update, encoder–decoder seq2seq. Đọc sau LSTM.
+
+[Bắt đầu GRU →](GRU/index.qmd)
+:::
+::::
+
+<p class="series-part">Phần 3 · Generative</p>
+
+:::: {.series-grid}
+::: {.series-card}
+<p class="eyebrow">7 · VAE</p>
+### [VAE](VAE/index.qmd)
+
+Encoder, reparam, decoder, KL, ELBO.
+
+[Bắt đầu VAE →](VAE/index.qmd)
+:::
+
+::: {.series-card}
+<p class="eyebrow">8 · GAN</p>
+### [GAN](GAN/index.qmd)
+
+$G(z)$ vs $D(x)$, train xen kẽ, mode collapse.
+
+[Bắt đầu GAN →](GAN/index.qmd)
+:::
+::::
+
+<p class="series-part">Phần 4 · Embeddings</p>
+
+:::: {.series-grid}
+::: {.series-card}
+<p class="eyebrow">Word2Vec</p>
+### [Word2Vec](Word2Vec/index.qmd)
+
+Skip-gram / CBOW, negative sampling, embedding tĩnh. Cầu trước Transformer.
+
+[Bắt đầu Word2Vec →](Word2Vec/index.qmd)
+:::
+::::
+
+<p class="series-part">Phần 5 · Attention</p>
+
+:::: {.series-grid}
+::: {.series-card}
+<p class="eyebrow">9 · Transformer</p>
+### [Transformer](Transformer/index.qmd)
+
+Scaled attention, MHA, FFN, encoder block.
+
+[Bắt đầu Transformer →](Transformer/index.qmd)
+:::
+
+::: {.series-card}
+<p class="eyebrow">10 · BERT</p>
+### [BERT](BERT/index.qmd)
+
+WordPiece, MLM, NSP, pooler, fine-tune. Đọc sau Transformer.
+
+[Bắt đầu BERT →](BERT/index.qmd)
+:::
+
+::: {.series-card}
+<p class="eyebrow">11 · ViT</p>
+### [Vision Transformer](Vision-Transformer/index.qmd)
+
+Patch embed, [CLS], Pre-LN encoder. Transformer cho ảnh.
+
+[Bắt đầu ViT →](Vision-Transformer/index.qmd)
+:::
+::::
+
+<p class="series-part">Phần 6 · Dense prediction</p>
+
+:::: {.series-grid}
+::: {.series-card}
+<p class="eyebrow">12 · U-Net</p>
+### [U-Net](UNet/index.qmd)
+
+Encoder–decoder, crop+concat skip, mask pixel-level.
+
+[Bắt đầu U-Net →](UNet/index.qmd)
+:::
+::::
+
+## Lộ trình chi tiết
+
+### CNN
+
+#### AlexNet
 ::: {#roadmap-alexnet}
 :::
 
-Đọc tối thiểu: tổng quan → tích chập → ReLU.
-
-## Lộ trình VGG
-
+#### VGG
 ::: {#roadmap-vgg}
 :::
 
-Đọc tối thiểu: tổng quan → conv block → config → VGG-16.
+#### ResNet
+::: {#roadmap-resnet}
+:::
+
+#### DenseNet
+::: {#roadmap-densenet}
+:::
+
+### Sequence
+
+#### RNN
+::: {#roadmap-rnn}
+:::
+
+#### LSTM
+::: {#roadmap-lstm}
+:::
+
+#### GRU
+::: {#roadmap-gru}
+:::
+
+### Generative
+
+#### VAE
+::: {#roadmap-vae}
+:::
+
+#### GAN
+::: {#roadmap-gan}
+:::
+
+### Embeddings
+
+#### Word2Vec
+::: {#roadmap-word2vec}
+:::
+
+### Attention
+
+#### Transformer
+::: {#roadmap-transformer}
+:::
+
+#### BERT
+::: {#roadmap-bert}
+:::
+
+#### Vision Transformer
+::: {#roadmap-vit}
+:::
+
+### Dense prediction
+
+#### U-Net
+::: {#roadmap-unet}
+:::
 
 ::: {.callout-note}
-## Tiếp theo trong chuỗi
+## Cách đọc
 
-ResNet sẽ được thêm cùng cấu trúc (thư mục nhóm → các bài thành phần). Sidebar dùng `auto` nên nhận nhóm mới khi bạn tạo thư mục.
+Đi hết **một model** (tổng quan → các khối → mạng đầy đủ) rồi mới sang model kế. Sequence: RNN trước LSTM trước GRU. Attention: Transformer trước BERT và ViT. DenseNet nên sau ResNet (add vs concat).
 :::

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="300" viewBox="0 0 840 300" role="img" aria-labelledby="gru-08-title">
+<title id="gru-08-title">GRU Encoder-Decoder</title>
+<rect class="fig-bg" width="840" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="420.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Encoder–Decoder: h_T^enc = context → khởi tạo / điều kiện decoder</text>
+<text x="420.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Cho et al. (2014): seq2seq NMT · GRU không cell state riêng</text>
+<rect x="40.0" y="70.0" width="70.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="75.0" y="94.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">x₁ˢʳᶜ</text>
+<rect x="138.0" y="70.0" width="70.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="173.0" y="94.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">x₂ˢʳᶜ</text>
+<line x1="116.0" y1="91.0" x2="124.0" y2="91.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="124.0,86.0 132.0,91.0 124.0,96.0" fill="#5C6570"/>
+<rect x="236.0" y="70.0" width="55.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="263.5" y="95.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">…</text>
+<line x1="214.0" y1="91.0" x2="222.0" y2="91.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="222.0,86.0 230.0,91.0 222.0,96.0" fill="#5C6570"/>
+<rect x="319.0" y="70.0" width="70.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="354.0" y="94.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">x_Tˢʳᶜ</text>
+<line x1="297.0" y1="91.0" x2="305.0" y2="91.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="305.0,86.0 313.0,91.0 305.0,96.0" fill="#5C6570"/>
+<rect x="100.0" y="140.0" width="200.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="200.0" y="160.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">GRU Encoder</text>
+<text x="200.0" y="177.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">unroll nguồn</text>
+<rect x="360.0" y="140.0" width="120.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="420.0" y="160.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">h_T^enc</text>
+<text x="420.0" y="177.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">context</text>
+<line x1="314.0" y1="165.0" x2="338.0" y2="165.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="338.0,160.0 346.0,165.0 338.0,170.0" fill="#5C6570"/>
+<rect x="540.0" y="140.0" width="200.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="640.0" y="160.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">GRU Decoder</text>
+<text x="640.0" y="177.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">autoregressive đích</text>
+<line x1="494.0" y1="165.0" x2="518.0" y2="165.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="518.0,160.0 526.0,165.0 518.0,170.0" fill="#5C6570"/>
+<rect x="465.5" y="220.0" width="70.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="500.5" y="244.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">y₁ᵗᵍᵗ</text>
+<rect x="563.5" y="220.0" width="70.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="598.5" y="244.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">y₂ᵗᵍᵗ</text>
+<line x1="541.5" y1="241.0" x2="549.5" y2="241.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="549.5,236.0 557.5,241.0 549.5,246.0" fill="#5C6570"/>
+<rect x="661.5" y="220.0" width="55.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="689.0" y="245.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">…</text>
+<line x1="639.5" y1="241.0" x2="647.5" y2="241.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="647.5,236.0 655.5,241.0 647.5,246.0" fill="#5C6570"/>
+<rect x="744.5" y="220.0" width="70.0" height="42.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="779.5" y="244.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">y_T'ᵗᵍᵗ</text>
+<line x1="722.5" y1="241.0" x2="730.5" y2="241.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="730.5,236.0 738.5,241.0 730.5,246.0" fill="#5C6570"/>
+<line x1="640.0" y1="194.0" x2="640.0" y2="210.0" stroke="#2F6FED" stroke-width="1.5"/>
+<polygon points="635.0,210.0 640.0,218.0 645.0,210.0" fill="#2F6FED"/>
+<text x="420.0" y="285.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Context cố định · decoder dùng teacher forcing (train) / greedy|beam (infer)</text>
+</svg>

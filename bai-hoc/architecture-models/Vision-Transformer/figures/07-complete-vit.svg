@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="280" viewBox="0 0 900 280" role="img" aria-labelledby="vit-07-title">
+<title id="vit-07-title">Complete ViT</title>
+<rect class="fig-bg" width="900" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="450.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Pipeline đầy đủ: patch → [CLS]+E_pos → L×encoder → LN(z₀) W_head</text>
+<text x="450.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">z⁽⁰⁾=[z_cls; z₁…z_N]+E_pos · z'=MSA(LN(z))+z · z=MLP(LN(z'))+z'</text>
+<rect x="100.0" y="80.0" width="85.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="142.5" y="102.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">Ảnh</text>
+<text x="142.5" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">224²×3</text>
+<rect x="209.0" y="80.0" width="95.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="256.5" y="102.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">Patch</text>
+<text x="256.5" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">N=196</text>
+<line x1="191.0" y1="108.0" x2="195.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="195.0,103.0 203.0,108.0 195.0,113.0" fill="#5C6570"/>
+<rect x="328.0" y="80.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="383.0" y="102.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">[CLS]+E_pos</text>
+<text x="383.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">197 token</text>
+<line x1="310.0" y1="108.0" x2="314.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="314.0,103.0 322.0,108.0 314.0,113.0" fill="#5C6570"/>
+<rect x="462.0" y="80.0" width="100.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="512.0" y="102.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">Encoder×L</text>
+<text x="512.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">Pre-LN</text>
+<line x1="444.0" y1="108.0" x2="448.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="448.0,103.0 456.0,108.0 448.0,113.0" fill="#5C6570"/>
+<rect x="586.0" y="80.0" width="90.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="631.0" y="102.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">z₀^(L)</text>
+<text x="631.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">[CLS]</text>
+<line x1="568.0" y1="108.0" x2="572.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="572.0,103.0 580.0,108.0 572.0,113.0" fill="#5C6570"/>
+<rect x="700.0" y="80.0" width="100.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="750.0" y="102.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">LN·W</text>
+<text x="750.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">logits</text>
+<line x1="682.0" y1="108.0" x2="686.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="686.0,103.0 694.0,108.0 686.0,113.0" fill="#5C6570"/>
+<rect x="60.0" y="175.0" width="250.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="185.0" y="197.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">ViT-B: L=12, D=768, h=12</text>
+<text x="185.0" y="215.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">~86M params</text>
+<rect x="340.0" y="175.0" width="250.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="465.0" y="197.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">ViT-L: L=24, D=1024, h=16</text>
+<text x="465.0" y="215.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">~307M params</text>
+<rect x="620.0" y="175.0" width="230.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="735.0" y="197.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">ViT-H: L=32, D=1280</text>
+<text x="735.0" y="215.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">~632M params</text>
+<text x="450.0" y="255.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Sửa đổi tối thiểu so với Transformer chuẩn · chỉ patch embed là vision-specific</text>
+</svg>

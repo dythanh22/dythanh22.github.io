@@ -1,0 +1,7 @@
+group: "Transformer"
+categories: [architecture-models, architecture, transformer, nlp, attention]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

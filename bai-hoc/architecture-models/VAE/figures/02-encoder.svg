@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="280" viewBox="0 0 780 280" role="img" aria-labelledby="vae-02-title">
+<title id="vae-02-title">VAE encoder</title>
+<rect class="fig-bg" width="780" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Encoder: q_φ(z|x) = 𝒩(μ, diag(σ²))</text>
+<text x="390.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Hai đầu ra từ x: μ (mean) và log σ² (log-variance) · không phải điểm z cố định</text>
+<rect x="40.0" y="115.0" width="80.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="80.0" y="135.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">x</text>
+<text x="80.0" y="152.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ℝᴰ</text>
+<rect x="170.0" y="115.0" width="110.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="225.0" y="134.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">shared h</text>
+<text x="225.0" y="152.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">(linear)</text>
+<line x1="132.0" y1="140.0" x2="150.0" y2="140.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="150.0,135.0 158.0,140.0 150.0,145.0" fill="#5C6570"/>
+<rect x="340.0" y="70.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="390.0" y="90.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">μ</text>
+<text x="390.0" y="107.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">x W_μ</text>
+<rect x="340.0" y="160.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="390.0" y="180.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">log σ²</text>
+<text x="390.0" y="197.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">x W_logσ²</text>
+<line x1="288.0" y1="140.0" x2="330.0" y2="95.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="288.0" y1="140.0" x2="330.0" y2="185.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="330.0" y1="95.0" x2="338.0" y2="95.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="338.0,90.0 346.0,95.0 338.0,100.0" fill="#C45C0A"/>
+<line x1="330.0" y1="185.0" x2="338.0" y2="185.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="338.0,180.0 346.0,185.0 338.0,190.0" fill="#C45C0A"/>
+<rect x="500.0" y="115.0" width="130.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="565.0" y="135.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">q_φ(z|x)</text>
+<text x="565.0" y="152.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">Gaussian chéo</text>
+<line x1="448.0" y1="95.0" x2="490.0" y2="132.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="448.0" y1="185.0" x2="490.0" y2="148.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="490.0,140.0 498.0,135.0 498.0,145.0" fill="#5C6570"/>
+<rect x="660.0" y="115.0" width="90.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="705.0" y="134.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">→ reparam</text>
+<text x="705.0" y="152.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">downstream</text>
+<text x="390.0" y="255.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">σ² = exp(log σ²) · log-var đảm bảo σ² &gt; 0 và đơn giản hóa KL</text>
+</svg>

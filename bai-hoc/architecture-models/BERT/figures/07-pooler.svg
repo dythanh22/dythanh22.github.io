@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="280" viewBox="0 0 800 280" role="img" aria-labelledby="bert-07-title">
+<title id="bert-07-title">BERT Pooler</title>
+<rect class="fig-bg" width="800" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="400.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Pooler: h_pooled = tanh(h_CLS · W + b)</text>
+<text x="400.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">[CLS] ở vị trí 0 · W∈ℝ^{H×H} · vector C ∈ ℝᴴ cho phân loại chuỗi</text>
+<rect x="40.0" y="110.0" width="130.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="105.0" y="132.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">H ∈ ℝ^{T×H}</text>
+<text x="105.0" y="150.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">encoder out</text>
+<rect x="210.0" y="110.0" width="110.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="265.0" y="132.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">h₀ = [CLS]</text>
+<text x="265.0" y="150.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">index 0</text>
+<line x1="176.0" y1="137.5" x2="196.0" y2="137.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="196.0,132.5 204.0,137.5 196.0,142.5" fill="#5C6570"/>
+<rect x="360.0" y="110.0" width="110.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="415.0" y="133.1" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">W + b</text>
+<text x="415.0" y="150.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">H → H</text>
+<line x1="326.0" y1="137.5" x2="346.0" y2="137.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="346.0,132.5 354.0,137.5 346.0,142.5" fill="#5C6570"/>
+<rect x="510.0" y="110.0" width="90.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="555.0" y="133.4" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">tanh</text>
+<text x="555.0" y="150.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">[−1,1]</text>
+<line x1="476.0" y1="137.5" x2="496.0" y2="137.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="496.0,132.5 504.0,137.5 496.0,142.5" fill="#5C6570"/>
+<rect x="640.0" y="110.0" width="100.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="690.0" y="132.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">C / pooled</text>
+<text x="690.0" y="150.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ℝᴴ</text>
+<line x1="606.0" y1="137.5" x2="626.0" y2="137.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="626.0,132.5 634.0,137.5 626.0,142.5" fill="#5C6570"/>
+<text x="400.0" y="210.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">[CLS] = bảng trắng: attend mọi token qua các lớp · khớp pretrain NSP</text>
+<text x="400.0" y="245.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">tanh (không ReLU): giữ dấu · zero-centered · ~H²+H params</text>
+</svg>

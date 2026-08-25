@@ -1,0 +1,64 @@
+---
+title: "BERT"
+subtitle: "Tổng quan WordPiece, MLM, NSP, pooler"
+date: 2026-08-22
+order: 0
+categories: [architecture-models, architecture, bert, nlp, attention]
+series: architecture-models
+group: "BERT"
+role: "Mental model cả pipeline"
+description: "BERT: WordPiece, segment, MLM, NSP, pooler và fine-tune."
+aliases:
+  - /bai-hoc/architecture-models/BERT/index.md
+  - /bai-hoc/architecture-models/BERT/index.html
+---
+
+BERT (Bidirectional Encoder Representations from Transformers; Devlin et al., 2018) là mô hình biểu diễn ngôn ngữ pretrained dựa trên các encoder Transformer xếp chồng. Ý tưởng định nghĩa là ngữ cảnh hai chiều sâu: mỗi biểu diễn token được điều kiện hóa trên cả ngữ cảnh trái và phải trong giai đoạn pretraining.
+
+BERT được huấn luyện bằng các mục tiêu self-supervised, nổi bật nhất là Masked Language Modeling (MLM), và ban đầu là Next Sentence Prediction (NSP). Sau pretraining trên corpus lớn, mô hình được fine-tuning trên các tác vụ downstream bằng cách thêm các head nhẹ theo từng tác vụ.
+
+::: {#fig-bert-pipeline fig-cap="Pipeline BERT: WordPiece → $E_{\\mathrm{tok}}+E_{\\mathrm{pos}}+E_{\\mathrm{seg}}$ → MLM (15%, 80-10-10) + NSP → Pooler([CLS]) → fine-tune head." fig-alt="Chuỗi khối ngang từ WordPiece tới Fine-tune."}
+![](figures/01-pipeline-overview.svg){fig-align="center"}
+:::
+
+## Phần này bao gồm những gì
+
+Chuỗi chương này khảo sát các cơ chế cốt lõi của BERT:
+
+1. Tokenization WordPiece — phân rã văn bản thành subword để xử lý OOV và biến thể hình thái mà không làm vocabulary phình to.
+2. Segment embedding — mã hóa cặp câu (Sentence A / Sentence B) vào biểu diễn đầu vào trước khi self-attention chạy.
+3. Mục tiêu Masked Language Modeling (MLM) — huấn luyện dự đoán token bị che từ ngữ cảnh hai chiều.
+4. Mục tiêu Next Sentence Prediction (NSP) — phân loại liên kết giữa hai đoạn văn trong thiết lập pretraining gốc.
+5. BERT pooler và biểu diễn cấp chuỗi — cách trạng thái ẩn của [CLS] trở thành vector tóm tắt cho phân loại.
+6. Các mẫu kiến trúc fine-tuning — gắn head theo tác vụ lên backbone pretrained.
+
+Cùng nhau, các thành phần này giải thích cách BERT kết hợp hiệu quả pretraining với khả năng transfer rộng sang downstream.
+
+## Tại sao BERT vẫn quan trọng
+
+BERT định hình lại workflow NLP bằng cách chuẩn hóa thực hành pretrain-then-finetune:
+
+* embedding có ngữ cảnh thay thế word vector tĩnh,
+* encoding hai chiều cải thiện các tác vụ hiểu ngôn ngữ,
+* và transfer learning giảm mạnh nhu cầu dữ liệu riêng cho từng tác vụ.
+
+Hiểu BERT là cần thiết để diễn giải các mô hình encoder sau này và các baseline NLP hiện đại.
+
+## Kiến thức tiên quyết
+
+* Cơ bản về encoder Transformer.
+* Trực giác subword tokenization.
+* Mục tiêu language modeling và thiết lập masked prediction.
+* Quy trình fine-tuning cho các tác vụ NLP downstream.
+
+## Ký hiệu được sử dụng trong phần này
+
+$$
+\begin{aligned}
+x &:\ \text{chuỗi input đã tokenization}, \\
+h_i &:\ \text{embedding có ngữ cảnh của token } i, \\
+[\mathrm{CLS}] &:\ \text{token phân loại cấp chuỗi}, \\
+L_{\mathrm{MLM}} &:\ \text{loss masked language modeling}, \\
+L_{\mathrm{NSP}} &:\ \text{loss next sentence prediction (thiết lập BERT gốc)}.
+\end{aligned}
+$$

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="290" viewBox="0 0 840 290" role="img" aria-labelledby="vit-08-title">
+<title id="vit-08-title">Data scale and inductive bias</title>
+<rect class="fig-bg" width="840" height="290" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="420.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Quy mô dữ liệu: ViT thiếu bias CNN → cần pretrain lớn</text>
+<text x="420.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">ImageNet-1K: ViT kém ResNet · JFT-300M: ViT vượt CNN · linh hoạt thắng khi đủ data</text>
+<rect x="50.0" y="85.0" width="350.0" height="120.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="225.0" y="122.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Dữ liệu mid-size (IN-1K)</text>
+<text x="225.0" y="139.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">CNN: locality + translation</text>
+<text x="225.0" y="157.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">ViT phải học bố cục từ đầu</text>
+<text x="225.0" y="175.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#C45C0A" text-anchor="middle">→ accuracy khiêm tốn</text>
+<rect x="440.0" y="85.0" width="350.0" height="120.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="615.0" y="122.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Dữ liệu lớn (JFT-300M)</text>
+<text x="615.0" y="139.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Bias CNN trở thành ràng buộc</text>
+<text x="615.0" y="157.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Attention học quan hệ tùy ý</text>
+<text x="615.0" y="175.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#C45C0A" text-anchor="middle">→ ViT vượt CNN SOTA</text>
+<text x="420.0" y="250.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">"An Image is Worth 16×16 Words" — Transformer thuần scale với data</text>
+</svg>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="270" viewBox="0 0 780 270" role="img" aria-labelledby="gan-02-title">
+<title id="gan-02-title">GAN generator</title>
+<rect class="fig-bg" width="780" height="270" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Generator: G(z) = tanh(z · W_G + b)</text>
+<text x="390.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">z ~ 𝒩(0, I) → affine → tanh ∈ (−1,1) · khớp dữ liệu chuẩn hóa [-1,1]</text>
+<rect x="40.0" y="110.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="90.0" y="130.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">z</text>
+<text x="90.0" y="147.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">~ 𝒩(0,I)</text>
+<rect x="190.0" y="110.0" width="120.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="250.0" y="130.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">z · W + b</text>
+<text x="250.0" y="147.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">noise→data</text>
+<line x1="152.0" y1="135.0" x2="170.0" y2="135.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="170.0,130.0 178.0,135.0 170.0,140.0" fill="#5C6570"/>
+<rect x="360.0" y="110.0" width="90.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="405.0" y="130.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">tanh</text>
+<text x="405.0" y="147.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">(−1, 1)</text>
+<line x1="322.0" y1="135.0" x2="340.0" y2="135.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="340.0,130.0 348.0,135.0 340.0,140.0" fill="#5C6570"/>
+<rect x="500.0" y="110.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="550.0" y="130.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">G(z)</text>
+<text x="550.0" y="147.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">fake sample</text>
+<line x1="462.0" y1="135.0" x2="480.0" y2="135.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="480.0,130.0 488.0,135.0 480.0,140.0" fill="#5C6570"/>
+<rect x="640.0" y="100.0" width="110.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="695.0" y="120.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">không thấy</text>
+<text x="695.0" y="138.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">p_data trực tiếp</text>
+<text x="695.0" y="156.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#C45C0A" text-anchor="middle">chỉ qua ∇D</text>
+<text x="390.0" y="220.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Nội suy: z_t=(1−t)z₁+tz₂ → morph mượt G(z₁)→G(z₂)</text>
+<text x="390.0" y="250.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">tanh bão hòa |x|&gt;3 · pixel: x_norm = x/127.5 − 1</text>
+</svg>

@@ -1,0 +1,192 @@
+---
+title: "SGNS Gradient"
+date: 2026-08-22
+order: 6
+categories: [architecture-models, architecture, word2vec, nlp, embeddings]
+series: architecture-models
+group: "Word2Vec"
+role: "Một bước SGD trên Win/Wout"
+description: "Gradient step SGNS cập nhật embedding."
+aliases:
+  - /bai-hoc/architecture-models/Word2Vec/6_SGNS_Gradient_Step.md
+  - /bai-hoc/architecture-models/Word2Vec/6_SGNS_Gradient_Step.html
+---
+
+Skip-gram with Negative Sampling (SGNS) là objective huấn luyện then chốt đằng sau Word2Vec (Mikolov et al., 2013). Thay vì full softmax trên vocabulary, nó huấn luyện hai ma trận embedding bằng cách coi mỗi cặp (center, context) như bài toán phân loại nhị phân đối với một nắm từ negative lấy mẫu. Chương này triển khai một bước stochastic gradient descent (SGD) đầy đủ của objective đó, tính gradient bằng tay và cập nhật cả hai ma trận.
+
+## Objective SGNS
+
+Word2Vec giữ hai embedding mỗi từ: vector **input** (center) trong $W_{in}$ và vector **output** (context) trong $W_{out}$. Với từ center $c$ và từ context quan sát $o$, mô hình tối đa hóa xác suất rằng cặp là thật, trong khi đẩy xuống xác suất rằng $k$ từ negative lấy mẫu ngẫu nhiên $n_1, \ldots, n_k$ là hàng xóm thật của $c$.
+
+Viết $v_c = W_{in}[c]$ và $u_w = W_{out}[w]$, loss theo ví dụ cho một cặp (center, positive) với negatives của nó là:
+
+$$
+L = -\log \sigma(v_c \cdot u_o) - \sum_{i=1}^{k} \log \sigma(-\,v_c \cdot u_{n_i})
+$$
+
+với $\sigma(x) = 1 / (1 + e^{-x})$ là logistic sigmoid. Hạng tử đầu thưởng tích vô hướng cao giữa center và context thật. Mỗi hạng tử âm thưởng tích vô hướng **thấp** giữa center và non-neighbor lấy mẫu, vì $\sigma(-x) = 1 - \sigma(x)$.
+
+## Từ Softmax đến phân loại nhị phân
+
+Mô hình Skip-gram gốc định nghĩa $p(o \mid c)$ bằng softmax trên toàn vocabulary. Tính normalizer đó và gradient của nó tốn $O(V)$ mỗi bước — cấm kỵ với vocabulary hàng triệu từ. Bài báo Word2Vec giới thiệu negative sampling như xấp xỉ rẻ:
+
+* Coi cặp thật $(c, o)$ như ví dụ dương với nhãn $1$.
+* Rút $k$ từ negative từ phân phối nhiễu (bài báo dùng phân phối unigram nâng lên lũy thừa $3/4$) và gắn nhãn chúng $0$.
+* Chạy hồi quy logistic phân biệt context thật khỏi nhiễu.
+
+Điều này biến một softmax $O(V)$ đắt thành $k + 1$ hạng tử logistic rẻ, với $k$ thường $5$ đến $20$ cho dataset nhỏ và $2$ đến $5$ cho dataset lớn. Bài báo báo cáo điều này vừa tăng tốc huấn luyện vừa cải thiện chất lượng biểu diễn từ thường.
+
+## Suy ra gradient
+
+Gradient của loss phân rã gọn nhờ đạo hàm sigmoid $\sigma'(x) = \sigma(x)(1 - \sigma(x))$ và chain rule. Sự kiện hữu ích nhất đơn là gradient của $-\log \sigma(s)$ theo điểm số $s$ là $\sigma(s) - 1$, và gradient của $-\log \sigma(-s)$ theo $s$ là $\sigma(s)$.
+
+Định nghĩa điểm số $s_o = v_c \cdot u_o$ và $s_i = v_c \cdot u_{n_i}$. Thì các gradient là:
+
+$$
+\frac{\partial L}{\partial u_o} = (\sigma(s_o) - 1)\, v_c
+$$
+
+$$
+\frac{\partial L}{\partial u_{n_i}} = \sigma(s_i)\, v_c
+$$
+
+$$
+\frac{\partial L}{\partial v_c} = (\sigma(s_o) - 1)\, u_o + \sum_{i=1}^{k} \sigma(s_i)\, u_{n_i}
+$$
+
+Cách đọc sạch: mọi từ $w$ tham gia bước có **nhãn đích** $t_w$ (context dương có $t = 1$, mọi negative có $t = 0$). Cấu trúc dùng chung là mỗi gradient là hệ số $(\sigma(\text{score}) - t)$ nhân vector của ma trận kia. Đây đúng là gradient của hồi quy logistic, nơi $(\hat{y} - y)$ nhân các đặc trưng đầu vào.
+
+## Cấu trúc dùng chung với hồi quy logistic
+
+Hệ số $(\sigma(s) - t)$ là lỗi dự đoán của bộ phân loại nhị phân. Với từ dương đích là $1$, nên hệ số $\sigma(s_o) - 1$ âm khi mô hình chưa chắc, kéo $u_o$ và $v_c$ về phía nhau. Với từ âm đích là $0$, nên hệ số $\sigma(s_i)$ dương, đẩy $u_{n_i}$ và $v_c$ ra xa. Độ lớn mỗi cập nhật tỷ lệ với mức sai của dự đoán hiện tại — cùng hành vi tự sửa như hồi quy logistic thông thường.
+
+Đó là vì sao embedding SGNS kết thúc mã hóa thống kê đồng xuất hiện. Levy và Goldberg (2014) sau đó cho thấy SGNS ngầm factorize ma trận pointwise mutual information đã dịch, giải thích vì sao vector học được bắt quy luật ngữ nghĩa và cú pháp.
+
+## Cập nhật SGD
+
+SGD di chuyển mỗi tham số một bước nhỏ theo hướng giảm loss. Với learning rate $\eta$ (lr), các cập nhật là:
+
+$$
+u_o \leftarrow u_o - \eta\, (\sigma(s_o) - 1)\, v_c
+$$
+
+$$
+u_{n_i} \leftarrow u_{n_i} - \eta\, \sigma(s_i)\, v_c
+$$
+
+$$
+v_c \leftarrow v_c - \eta\, \Big[(\sigma(s_o) - 1)\, u_o + \sum_{i=1}^{k} \sigma(s_i)\, u_{n_i}\Big]
+$$
+
+Chỉ các hàng đụng bởi bước này đổi: hàng center đơn của $W_{in}$, và $k + 1$ hàng của $W_{out}$ cho từ dương và âm. Mọi hàng khác không bị đụng. Sparsity này là thứ làm SGNS nhanh đến vậy: mỗi bước là $O((k + 1) \cdot D)$ với $D$ là chiều embedding, độc lập kích thước vocabulary.
+
+::: {#fig-w2v-sgd fig-cap="Một bước SGD SGNS: snapshot vector → gradient $(\\sigma-t)$ → cập nhật cả $W_{\\mathrm{in}}$ và $W_{\\mathrm{out}}$ (thường xuất $W_{\\mathrm{in}}$)." fig-alt="Chuỗi Snapshot, Grads, Update, Export."}
+![](figures/07-sgd-step.svg){fig-align="center"}
+:::
+
+## Vì sao tính mọi gradient trước khi áp dụng
+
+Gradient cho $v_c$ phụ thuộc các vector output **trước cập nhật** $u_o$ và $u_{n_i}$, và gradient cho các vector output đó phụ thuộc vector center **trước cập nhật** $v_c$. Nếu vector center được cập nhật trước rồi tái sử dụng để tính gradient output, các cập nhật output sẽ dựa trên giá trị không còn khớp toán. Quy trình đúng là:
+
+* Snapshot $v_c$ và đọc mọi vector output.
+* Tính mọi gradient dùng các giá trị gốc này.
+* Chỉ rồi mới áp dụng mọi cập nhật.
+
+Đây là quy ước chuẩn cho một bước gradient đồng bộ. Trong implementation in-place ngây thơ cập nhật $W_{in}[c]$ trước khi tính gradient $W_{out}$, kết quả lệch — đặc biệt với learning rate lớn nơi giá trị đã mutate lệch đáng kể so với gốc.
+
+## Cả hai ma trận input và output đều cập nhật
+
+Điểm nhầm phổ biến là Word2Vec duy trì hai bảng embedding tách. Cả hai đều trainable và cả hai nhận gradient mỗi bước:
+
+* $W_{in}$ giữ các vector **center** (input). Sau huấn luyện, đây thường là embedding được xuất và dùng downstream.
+* $W_{out}$ giữ các vector **context** (output), dùng chỉ như nửa thứ hai của mỗi tích vô hướng khi huấn luyện.
+
+Một số practitioner trung bình hai bảng hoặc cộng chúng; bản thân bài báo giữ ma trận input làm word vector cuối. Dù cái nào được xuất, cả hai phải được cập nhật khi huấn luyện, vì objective đối xứng trong tích vô hướng $v_c \cdot u_w$.
+
+## Vai trò của learning rate
+
+Learning rate $\eta$ scale kích thước mỗi bước. Word2Vec dùng lịch tuyến tính suy giảm, bắt đầu khoảng $0.025$ và co về không khi huấn luyện tiến. $\eta$ lớn hơn làm tiến độ đầu nhanh hơn nhưng rủi ro overshoot và dao động; $\eta$ nhỏ hơn ổn định nhưng chậm. Vì cập nhật SGNS thưa và thường xuyên, ngay cả learning rate khiêm tốn cũng tích thành chuyển động tổng lớn trên corpus hàng tỷ token.
+
+Vì hệ số gradient $(\sigma(s) - t)$ bị chặn trong $[-1, 1]$, một bước SGNS không bao giờ di chuyển một hàng quá $\eta$ nhân độ lớn vector đối tác. Bound dựng sẵn này là một lý do SGNS ổn định ngay cả không có gradient clipping. Khi mô hình chắc và đúng (điểm dương lớn và dương, điểm âm lớn và âm), mọi hệ số tiến tới không và hàng ngừng di chuyển — tín hiệu hội tụ tự nhiên cho cặp đó.
+
+## Phân phối nhiễu và lựa chọn $k$
+
+Trong vòng huấn luyện đầy đủ các id negative được lấy mẫu, không cho sẵn. Word2Vec rút chúng từ phân phối unigram nâng lên lũy thừa $3/4$, $P(w) \propto f(w)^{3/4}$, với $f(w)$ là tần suất corpus của từ $w$. Nâng lên $3/4$ làm phẳng phân phối: nó lấy mẫu từ hiếm thường hơn tần suất thô của chúng, và từ rất thường hơi ít hơn — bài báo thấy cho embedding tốt hơn unigram thuần hoặc uniform.
+
+Số negatives $k$ đánh đổi chất lượng với tốc độ:
+
+* Corpus nhỏ hưởng lợi từ $k$ trong khoảng $5$ đến $20$, cho mỗi cặp dương tín hiệu contrastive mạnh hơn.
+* Corpus lớn có thể dùng $k$ nhỏ đến $2$ đến $5$, vì số cập nhật thuần bù đắp.
+
+Chương này cố định các id negative trong mỗi case kiểm thử để bước xác định và kiểm được, nhưng toán gradient giống hệt bất kể negatives được chọn thế nào. Một id negative có thể trùng id dương hoặc lặp trong list; trong trường hợp đó các đóng góp gradient tích trên hàng output dùng chung thay vì ghi đè lẫn nhau.
+
+## So sánh với autograd
+
+Framework hiện đại sẽ biểu đạt loss này và gọi `backward()`, để automatic differentiation chế độ ngược tính cùng gradient. Triển khai dạng đóng bằng tay có giá trị để hiểu vì:
+
+* Gradient thủ công đúng là thứ autograd tạo; đối chiếu chúng với nhau là sanity check chuẩn.
+* Word2Vec gốc viết bằng C với gradient mã tay, đúng vì cập nhật thưa, dạng đóng rẻ hơn nhiều so với đồ thị autograd tổng quát cho objective cụ thể này.
+* Thấy cấu trúc $(\sigma - t)$ làm nối với hồi quy logistic và góc nhìn matrix factorization ngầm tường minh — thứ lệnh `backward()` hộp đen che.
+
+## Ví dụ số ($D = 2$, $k = 1$)
+
+Cho $v_c = [0.1, 0.2]$, vector dương $u_o = [0.1, 0.4]$, vector âm $u_n = [-0.5, 0.3]$, và $\eta = 0.1$.
+
+1. **Điểm dương:** $s_o = v_c \cdot u_o = 0.1 \cdot 0.1 + 0.2 \cdot 0.4 = 0.09$, nên $\sigma(s_o) \approx 0.5225$ và hệ số là $\sigma(s_o) - 1 \approx -0.4775$.
+2. **Điểm âm:** $s_n = v_c \cdot u_n = 0.1 \cdot (-0.5) + 0.2 \cdot 0.3 = 0.01$, nên $\sigma(s_n) \approx 0.5025$ và hệ số là $0.5025$.
+3. **Gradient center:** $\nabla v_c = -0.4775 \cdot [0.1, 0.4] + 0.5025 \cdot [-0.5, 0.3] \approx [-0.2990, -0.0403]$.
+4. **Gradient output:** $\nabla u_o = -0.4775 \cdot [0.1, 0.2] \approx [-0.0477, -0.0955]$ và $\nabla u_n = 0.5025 \cdot [0.1, 0.2] \approx [0.0503, 0.1005]$.
+5. **Áp dụng cập nhật** với $\eta = 0.1$: $v_c \leftarrow [0.1, 0.2] - 0.1 \cdot [-0.2990, -0.0403] \approx [0.1299, 0.2040]$, và tương tự $u_o \leftarrow [0.1048, 0.4096]$, $u_n \leftarrow [-0.5050, 0.2899]$.
+
+Lưu ý vector center di chuyển về phía context dương và hơi ra xa negative — đúng như objective ý định.
+
+## Biến thể và bối cảnh hiện đại
+
+SGNS ngồi ở gốc một dòng dài các phương pháp representation learning, và bước gradient của nó lặp lại ở nhiều nơi:
+
+* **GloVe** (Pennington et al., 2014) thay objective lấy mẫu bằng fit least-squares có trọng số tới log count đồng xuất hiện, nhưng kết thúc trong không gian hình học tương tự.
+* **FastText** (Bojanowski et al., 2017) giữ đúng cập nhật SGNS nhưng biểu diễn mỗi từ như tổng các vector n-gram ký tự, nên cùng gradient chảy vào embedding subword.
+* **Contrastive learning** trong hệ hiện đại (ví dụ InfoNCE dùng bởi CLIP và SimCLR) tổng quát hóa cấu trúc positive-versus-negatives: cặp thật chấm điểm đối với negatives lấy mẫu, với cùng tín hiệu lỗi kiểu $(\sigma - t)$ điều khiển cập nhật.
+
+Thiết kế dual-table cũng tái xuất hiện: nhiều mô hình recommendation và retrieval giữ bảng embedding query và item tách, huấn luyện bằng loss negative-sampling, và cập nhật cả hai phía mỗi bước đúng như SGNS làm ở đây.
+
+## Các lỗi thường gặp
+
+* **Mutate vector center trước khi tính gradient output.** Nếu $W_{in}[c]$ được cập nhật in-place trước, gradient cho $W_{out}$ rồi được tính với vector sai. Luôn snapshot $v_c$ và đọc các hàng output gốc, tính mọi gradient, rồi áp dụng. Lỗi tăng với learning rate.
+* **Nhầm dấu (ascent vs descent).** SGD trừ gradient. Dùng dấu cộng thực hiện gradient ascent và đẩy loss lên, tách từ đáng lẽ gần. Hệ số dương là $\sigma(s_o) - 1$, vốn âm; quên $-1$ dùng $\sigma(s_o)$ và coi context thật như negative.
+* **Bỏ hạng tử âm trong gradient center.** Gradient center cộng đóng góp dương và mọi đóng góp âm. Bỏ tổng âm để $v_c$ chỉ cập nhật về phía context, bỏ lực đẩy xa ngăn mọi vector sụp chung.
+* **Quên cập nhật một trong hai ma trận.** Cả $W_{in}$ và $W_{out}$ nhận gradient. Chỉ cập nhật bảng output (hoặc chỉ bảng input) lặng lẽ phá huấn luyện; objective tích vô hướng đối xứng và cần cả hai phía di chuyển. Id negative lặp hoặc trùng cũng phải tích gradient trên hàng dùng chung thay vì ghi đè.
+
+## Code
+
+```python
+import torch
+
+def sgns_sgd_step(W_in: torch.Tensor, W_out: torch.Tensor, center_id: int, pos_id: int,
+                  neg_ids: torch.Tensor, lr: float) -> tuple:
+    W_in = W_in.clone()
+    W_out = W_out.clone()
+    neg_ids = torch.as_tensor(neg_ids, dtype=torch.int64)
+    c = int(center_id)
+    o = int(pos_id)
+
+    # Snapshot the pre-update center vector.
+    v_c = W_in[c].clone()
+
+    # Positive term: target label 1, coefficient sigmoid(score) - 1.
+    score_o = torch.sigmoid(torch.dot(v_c, W_out[o]))
+    grad_vc = (score_o - 1.0) * W_out[o].clone()
+    grad_out = {o: (score_o - 1.0) * v_c}
+
+    # Negative terms: target label 0, coefficient sigmoid(score).
+    for ni in neg_ids.tolist():
+        s = torch.sigmoid(torch.dot(v_c, W_out[ni]))
+        grad_vc = grad_vc + s * W_out[ni].clone()
+        grad_out[ni] = grad_out.get(ni, torch.zeros_like(v_c)) + s * v_c
+
+    # Apply all updates after every gradient is computed.
+    for idx, g in grad_out.items():
+        W_out[idx] = W_out[idx] - lr * g
+    W_in[c] = W_in[c] - lr * grad_vc
+    return W_in, W_out
+```

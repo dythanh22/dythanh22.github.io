@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="290" viewBox="0 0 840 290" role="img" aria-labelledby="unet-06-title">
+<title id="unet-06-title">U-Net output layer</title>
+<rect class="fig-bg" width="840" height="290" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="420.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Output: Conv1×1 · 64 → N_classes · logits thô (không softmax)</text>
+<text x="420.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">o_ij = W_out · f_ij + b · bảo toàn H×W · ~65·N_classes params</text>
+<rect x="138.0" y="80.0" width="120.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="198.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">F decoder</text>
+<text x="198.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">H×W×64</text>
+<rect x="286.0" y="80.0" width="120.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="346.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Conv 1×1</text>
+<text x="346.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">không trộn NN</text>
+<line x1="264.0" y1="108.0" x2="272.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="272.0,103.0 280.0,108.0 272.0,113.0" fill="#5C6570"/>
+<rect x="434.0" y="80.0" width="120.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="494.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Logits</text>
+<text x="494.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">H×W×N</text>
+<line x1="412.0" y1="108.0" x2="420.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="420.0,103.0 428.0,108.0 420.0,113.0" fill="#5C6570"/>
+<rect x="582.0" y="80.0" width="120.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="642.0" y="103.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">argmax / CE</text>
+<text x="642.0" y="120.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ngoài mạng</text>
+<line x1="560.0" y1="108.0" x2="568.0" y2="108.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="568.0,103.0 576.0,108.0 568.0,113.0" fill="#5C6570"/>
+<rect x="80.0" y="175.0" width="320.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="240.0" y="199.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">Gốc: 388×388×64 → 388×388×2</text>
+<text x="240.0" y="217.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">130 params (N=2) · lớp #23</text>
+<rect x="440.0" y="175.0" width="320.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="600.0" y="199.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">Softmax nằm trong loss / inference</text>
+<text x="600.0" y="217.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">Giữ logits → ổn định số học</text>
+<text x="420.0" y="265.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">≡ FC dùng chung mọi pixel · không thêm receptive field</text>
+</svg>

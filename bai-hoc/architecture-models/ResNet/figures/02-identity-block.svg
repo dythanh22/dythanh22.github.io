@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="280" viewBox="0 0 720 280" role="img" aria-labelledby="resnet-02-title">
+<title id="resnet-02-title">Identity residual block</title>
+<rect class="fig-bg" width="720" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="360.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Identity block: y = ReLU(F(x) + x) — shortcut = x</text>
+<text x="360.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Không ReLU giữa W₂ và phép cộng; chiều khớp → không projection</text>
+<rect x="40.0" y="100.0" width="70.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="75.0" y="123.4" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">x</text>
+<text x="75.0" y="140.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">ℝᵈ</text>
+<rect x="150.0" y="70.0" width="100.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="200.0" y="92.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">W₁ + ReLU</text>
+<text x="200.0" y="110.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">d→d</text>
+<rect x="300.0" y="70.0" width="100.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="350.0" y="92.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">W₂</text>
+<text x="350.0" y="110.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ F(x)</text>
+<line x1="118.0" y1="112.5" x2="134.0" y2="112.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="134.0,107.5 142.0,112.5 134.0,117.5" fill="#5C6570"/>
+<line x1="258.0" y1="97.5" x2="284.0" y2="97.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="284.0,92.5 292.0,97.5 284.0,102.5" fill="#5C6570"/>
+<rect x="450.0" y="100.0" width="90.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="495.0" y="124.1" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="16" font-weight="700" fill="#1A1A1A" text-anchor="middle">⊕</text>
+<text x="495.0" y="140.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">F+x</text>
+<line x1="410.0" y1="112.5" x2="432.0" y2="112.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="432.0,107.5 440.0,112.5 432.0,117.5" fill="#5C6570"/>
+<rect x="590.0" y="100.0" width="90.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="635.0" y="122.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">ReLU</text>
+<text x="635.0" y="140.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="400" fill="#5C6570" text-anchor="middle">→ y</text>
+<line x1="548.0" y1="127.5" x2="574.0" y2="127.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="574.0,122.5 582.0,127.5 574.0,132.5" fill="#5C6570"/>
+<line x1="75.0" y1="163.0" x2="75.0" y2="200.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="75.0" y1="200.0" x2="495.0" y2="200.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="495.0" y1="200.0" x2="495.0" y2="163.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="490.0,169.0 495.0,161.0 500.0,169.0" fill="#C45C0A"/>
+<text x="285.0" y="190.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#C45C0A" text-anchor="middle">identity skip: I(x) = x  (0 params)</text>
+<text x="360.0" y="255.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Khớp He et al.: học residual F(x)=H(x)−x khi chiều khớp</text>
+</svg>

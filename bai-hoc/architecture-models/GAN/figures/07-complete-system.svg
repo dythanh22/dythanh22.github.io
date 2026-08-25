@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="310" viewBox="0 0 840 310" role="img" aria-labelledby="gan-07-title">
+<title id="gan-07-title">Complete GAN system</title>
+<rect class="fig-bg" width="840" height="310" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="420.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Hệ thống GAN: G(z)=tanh(zW_G) · D(x)=σ(xW_D) · L_D + L_G</text>
+<text x="420.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Hai mạng một hệ · loss của mỗi bên phụ thuộc bên kia</text>
+<rect x="30.0" y="80.0" width="70.0" height="45.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="65.0" y="107.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">z</text>
+<rect x="130.0" y="80.0" width="100.0" height="45.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="180.0" y="106.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">G = tanh</text>
+<line x1="110.0" y1="102.5" x2="112.0" y2="102.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="112.0,97.5 120.0,102.5 112.0,107.5" fill="#5C6570"/>
+<rect x="270.0" y="80.0" width="80.0" height="45.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="310.0" y="106.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">x̂ fake</text>
+<line x1="240.0" y1="102.5" x2="252.0" y2="102.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="252.0,97.5 260.0,102.5 252.0,107.5" fill="#5C6570"/>
+<rect x="270.0" y="160.0" width="80.0" height="45.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="310.0" y="186.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">x_real</text>
+<rect x="400.0" y="115.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="450.0" y="135.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">D = σ</text>
+<text x="450.0" y="152.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">W_D chung</text>
+<line x1="358.0" y1="102.5" x2="390.0" y2="130.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="358.0" y1="182.5" x2="390.0" y2="150.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="390.0,140.0 398.0,135.0 398.0,145.0" fill="#5C6570"/>
+<rect x="550.0" y="70.0" width="120.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="610.0" y="90.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">L_D</text>
+<text x="610.0" y="107.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">real+fake</text>
+<rect x="550.0" y="160.0" width="120.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="610.0" y="180.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">L_G</text>
+<text x="610.0" y="197.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">−log D(x̂)</text>
+<line x1="508.0" y1="132.0" x2="540.0" y2="95.0" stroke="#2F6FED" stroke-width="2"/>
+<line x1="508.0" y1="148.0" x2="540.0" y2="185.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="540.0,95.0 548.0,90.0 548.0,100.0" fill="#2F6FED"/>
+<polygon points="540.0,185.0 548.0,180.0 548.0,190.0" fill="#C45C0A"/>
+<rect x="700.0" y="100.0" width="120.0" height="80.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="760.0" y="117.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">W_G, W_D</text>
+<text x="760.0" y="134.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">~𝒩(0,0.01)</text>
+<text x="760.0" y="152.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">σ nhỏ · tránh</text>
+<text x="760.0" y="170.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">bão hòa</text>
+<text x="420.0" y="250.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">∇L_G chảy ngược qua D vào G (D đóng băng khi update G)</text>
+<text x="420.0" y="280.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Equilibrium lý tưởng: p_g=p_data · D(x)=0.5 mọi nơi</text>
+</svg>

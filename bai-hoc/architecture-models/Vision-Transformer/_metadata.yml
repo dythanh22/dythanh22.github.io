@@ -1,0 +1,7 @@
+group: "ViT"
+categories: [architecture-models, architecture, vit, vision, attention]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

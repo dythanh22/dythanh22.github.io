@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="280" viewBox="0 0 820 280" role="img" aria-labelledby="gru-04-title">
+<title id="gru-04-title">Candidate hidden state</title>
+<rect class="fig-bg" width="820" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="410.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Candidate: h̃ₜ = tanh(W_h · [rₜ ⊙ hₜ₋₁, xₜ] + b_h)</text>
+<text x="410.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Reset trước concat · xₜ luôn full strength · tanh → (−1,1)</text>
+<rect x="30.0" y="140.0" width="70.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="65.0" y="168.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">hₜ₋₁</text>
+<rect x="30.0" y="70.0" width="70.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="65.0" y="98.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">rₜ</text>
+<rect x="140.0" y="100.0" width="85.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="182.5" y="127.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" fill="#1A1A1A" text-anchor="middle">rₜ ⊙ hₜ₋₁</text>
+<line x1="106.0" y1="94.0" x2="132.0" y2="116.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="106.0" y1="164.0" x2="132.0" y2="132.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="132.0,124.0 138.0,119.0 138.0,129.0" fill="#5C6570"/>
+<rect x="140.0" y="200.0" width="85.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="182.5" y="228.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">xₜ</text>
+<rect x="280.0" y="140.0" width="120.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="340.0" y="158.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">[r⊙h, xₜ]</text>
+<text x="340.0" y="176.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">H + D</text>
+<line x1="237.0" y1="144.0" x2="260.0" y2="144.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="260.0,139.0 268.0,144.0 260.0,149.0" fill="#5C6570"/>
+<line x1="233.0" y1="224.0" x2="270.0" y2="224.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="270.0" y1="224.0" x2="270.0" y2="164.0" stroke="#5C6570" stroke-width="1.5"/>
+<line x1="270.0" y1="164.0" x2="278.0" y2="164.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="278.0,159.0 286.0,164.0 278.0,169.0" fill="#5C6570"/>
+<rect x="450.0" y="140.0" width="95.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="497.5" y="167.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_h + b_h</text>
+<line x1="412.0" y1="164.0" x2="430.0" y2="164.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="430.0,159.0 438.0,164.0 430.0,169.0" fill="#5C6570"/>
+<rect x="590.0" y="140.0" width="70.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="625.0" y="168.6" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">tanh</text>
+<line x1="555.0" y1="164.0" x2="572.0" y2="164.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="572.0,159.0 580.0,164.0 572.0,169.0" fill="#5C6570"/>
+<rect x="710.0" y="140.0" width="80.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="750.0" y="159.9" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">h̃ₜ</text>
+<text x="750.0" y="176.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">đề xuất</text>
+<line x1="670.0" y1="164.0" x2="692.0" y2="164.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="692.0,159.0 700.0,164.0 692.0,169.0" fill="#5C6570"/>
+<text x="410.0" y="255.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Candidate ≠ hₜ cuối — update gate mới quyết chấp nhận bao nhiêu</text>
+</svg>

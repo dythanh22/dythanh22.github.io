@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="280" viewBox="0 0 780 280" role="img" aria-labelledby="lstm-04-title">
+<title id="lstm-04-title">Cell state update</title>
+<rect class="fig-bg" width="780" height="280" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Cập nhật cell: Cₜ = fₜ ⊙ Cₜ₋₁ + iₜ ⊙ C̃ₜ</text>
+<text x="390.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Cộng element-wise · không kích hoạt trên Cₜ (CEC / constant error carousel)</text>
+<rect x="60.0" y="70.0" width="130.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="125.0" y="92.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">fₜ ⊙ Cₜ₋₁</text>
+<text x="125.0" y="110.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">xóa chọn lọc</text>
+<rect x="60.0" y="165.0" width="130.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="125.0" y="187.7" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">iₜ ⊙ C̃ₜ</text>
+<text x="125.0" y="205.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ghi chọn lọc</text>
+<rect x="260.0" y="115.0" width="90.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="305.0" y="139.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="18" font-weight="700" fill="#1A1A1A" text-anchor="middle">⊕</text>
+<text x="305.0" y="155.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">cộng</text>
+<line x1="202.0" y1="120.0" x2="240.0" y2="120.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="240.0,115.0 248.0,120.0 240.0,125.0" fill="#5C6570"/>
+<line x1="198.0" y1="192.5" x2="250.0" y2="192.5" stroke="#5C6570" stroke-width="2"/>
+<line x1="250.0" y1="192.5" x2="250.0" y2="142.5" stroke="#5C6570" stroke-width="2"/>
+<line x1="250.0" y1="142.5" x2="258.0" y2="142.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="258.0,137.5 266.0,142.5 258.0,147.5" fill="#5C6570"/>
+<rect x="410.0" y="115.0" width="90.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="455.0" y="138.4" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="14" font-weight="700" fill="#1A1A1A" text-anchor="middle">Cₜ</text>
+<text x="455.0" y="155.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ℝᴴ thô</text>
+<line x1="360.0" y1="142.5" x2="392.0" y2="142.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="392.0,137.5 400.0,142.5 392.0,147.5" fill="#5C6570"/>
+<rect x="540.0" y="70.0" width="200.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="640.0" y="92.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">fₜ, iₜ độc lập</text>
+<text x="640.0" y="110.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">không cộng = 1</text>
+<rect x="540.0" y="165.0" width="200.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="640.0" y="187.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#C45C0A" text-anchor="middle">∂Cₜ/∂Cₜ₋₁ = fₜ</text>
+<text x="640.0" y="205.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">gradient highway</text>
+<text x="390.0" y="255.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Khác GRU: một zₜ duy nhất · LSTM có thể fₜ≈1 và iₜ≈1 cùng lúc</text>
+</svg>

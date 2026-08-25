@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="300" viewBox="0 0 800 300" role="img" aria-labelledby="bert-06-title">
+<title id="bert-06-title">Next Sentence Prediction</title>
+<rect class="fig-bg" width="800" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="400.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">NSP: h_CLS → W∈ℝ^{H×2} → IsNext / NotNext</text>
+<text x="400.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">50% IsNext (B theo A) · 50% NotNext (B ngẫu nhiên) · L_total = L_MLM + L_NSP</text>
+<rect x="40.0" y="120.0" width="100.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="90.0" y="143.1" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">h_CLS</text>
+<text x="90.0" y="160.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">ℝᴴ</text>
+<rect x="180.0" y="120.0" width="120.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="240.0" y="143.1" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">W, b</text>
+<text x="240.0" y="160.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">H → 2</text>
+<line x1="146.0" y1="147.5" x2="166.0" y2="147.5" stroke="#5C6570" stroke-width="2"/>
+<polygon points="166.0,142.5 174.0,147.5 166.0,152.5" fill="#5C6570"/>
+<rect x="350.0" y="70.0" width="140.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="420.0" y="93.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">IsNext</text>
+<text x="420.0" y="110.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">y=1 · 50%</text>
+<rect x="350.0" y="160.0" width="140.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="420.0" y="183.1" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">NotNext</text>
+<text x="420.0" y="200.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">y=0 · 50%</text>
+<line x1="308.0" y1="147.5" x2="340.0" y2="97.5" stroke="#2F6FED" stroke-width="2"/>
+<line x1="308.0" y1="147.5" x2="340.0" y2="187.5" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="340.0,97.5 348.0,92.5 348.0,102.5" fill="#2F6FED"/>
+<polygon points="340.0,187.5 348.0,182.5 348.0,192.5" fill="#C45C0A"/>
+<rect x="540.0" y="100.0" width="220.0" height="90.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="650.0" y="131.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">L_NSP = CE nhị phân</text>
+<text x="650.0" y="148.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#C45C0A" text-anchor="middle">L_total = L_MLM + L_NSP</text>
+<text x="650.0" y="166.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">weight = 1.0 mỗi bên</text>
+<text x="400.0" y="270.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Phục vụ NLI / QA / paraphrase · RoBERTa sau này bỏ NSP</text>
+</svg>

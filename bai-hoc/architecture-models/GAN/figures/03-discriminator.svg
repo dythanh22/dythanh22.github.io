@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="290" viewBox="0 0 800 290" role="img" aria-labelledby="gan-03-title">
+<title id="gan-03-title">GAN discriminator</title>
+<rect class="fig-bg" width="800" height="290" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="400.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Discriminator: D(x) = σ(x · W_D) ∈ (0, 1)</text>
+<text x="400.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Bộ phân loại nhị phân: thật ≈ 1 · fake ≈ 0 · D(x)=0.5 = không chắc chắn</text>
+<rect x="40.0" y="70.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="90.0" y="90.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">x_real</text>
+<text x="90.0" y="107.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">~ p_data</text>
+<rect x="40.0" y="170.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="90.0" y="190.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">G(z)</text>
+<text x="90.0" y="207.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">fake</text>
+<rect x="200.0" y="115.0" width="110.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="255.0" y="138.1" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">D(·) = σ</text>
+<text x="255.0" y="155.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">cùng W_D</text>
+<line x1="148.0" y1="95.0" x2="190.0" y2="130.5" stroke="#5C6570" stroke-width="2"/>
+<line x1="148.0" y1="195.0" x2="190.0" y2="154.5" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="190.0,142.5 198.0,137.5 198.0,147.5" fill="#5C6570"/>
+<rect x="370.0" y="70.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="420.0" y="90.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">D(x)→1</text>
+<text x="420.0" y="107.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">thật</text>
+<rect x="370.0" y="170.0" width="100.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="420.0" y="190.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">D(G)→0</text>
+<text x="420.0" y="207.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">fake</text>
+<line x1="318.0" y1="134.5" x2="360.0" y2="95.0" stroke="#2F6FED" stroke-width="2"/>
+<line x1="318.0" y1="150.5" x2="360.0" y2="195.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="360.0,95.0 368.0,90.0 368.0,100.0" fill="#2F6FED"/>
+<polygon points="360.0,195.0 368.0,190.0 368.0,200.0" fill="#C45C0A"/>
+<rect x="520.0" y="100.0" width="250.0" height="90.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="645.0" y="130.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">σ(0)=0.5 · max uncertainty</text>
+<text x="645.0" y="148.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">∇_a L = D(x) − y  (BCE)</text>
+<text x="645.0" y="166.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">logit a = log(D/(1−D))</text>
+<text x="400.0" y="270.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">D maximize V · G minimize V · cùng critic đánh giá thật và fake</text>
+</svg>

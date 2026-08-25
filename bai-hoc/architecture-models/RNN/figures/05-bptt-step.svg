@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="290" viewBox="0 0 780 290" role="img" aria-labelledby="rnn-05-title">
+<title id="rnn-05-title">Backpropagation Through Time</title>
+<rect class="fig-bg" width="780" height="290" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">BPTT một bước: d_tanh = (1−hₜ²)⊙dh_next  →  dWₕₕ, dh_prev</text>
+<rect x="127.0" y="55.0" width="95.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="174.5" y="83.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">dh_T</text>
+<rect x="246.0" y="55.0" width="95.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="293.5" y="83.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">dh_{T-1}</text>
+<line x1="228.0" y1="79.0" x2="232.0" y2="79.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="232.0,74.0 240.0,79.0 232.0,84.0" fill="#5C6570"/>
+<rect x="365.0" y="55.0" width="50.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="390.0" y="83.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">…</text>
+<line x1="347.0" y1="79.0" x2="351.0" y2="79.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="351.0,74.0 359.0,79.0 351.0,84.0" fill="#5C6570"/>
+<rect x="439.0" y="55.0" width="95.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="486.5" y="83.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">dh_1</text>
+<line x1="421.0" y1="79.0" x2="425.0" y2="79.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="425.0,74.0 433.0,79.0 425.0,84.0" fill="#5C6570"/>
+<rect x="558.0" y="55.0" width="95.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="605.5" y="83.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">dh_0</text>
+<line x1="540.0" y1="79.0" x2="544.0" y2="79.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="544.0,74.0 552.0,79.0 544.0,84.0" fill="#5C6570"/>
+<text x="390.0" y="130.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">Mỗi mũi tên: × (1−hₜ²) rồi × Wₕₕ   ·   dWₕₕ = Σ_t d_tanhᵀ hₜ₋₁</text>
+<rect x="40.0" y="160.0" width="220.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="150.0" y="190.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">d_tanh</text>
+<text x="150.0" y="207.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">(1−hₜ²) ⊙ dh_next</text>
+<rect x="280.0" y="160.0" width="220.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="390.0" y="190.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">dWₕₕ</text>
+<text x="390.0" y="207.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">d_tanhᵀ · hₜ₋₁</text>
+<rect x="520.0" y="160.0" width="220.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="630.0" y="190.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">dh_prev</text>
+<text x="630.0" y="207.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">d_tanh · Wₕₕ</text>
+<text x="390.0" y="265.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">tanh′ ≤ 1 luôn — chỉ thu nhỏ hoặc giữ, không khuếch đại cục bộ</text>
+</svg>

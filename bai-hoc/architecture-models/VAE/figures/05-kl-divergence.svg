@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="290" viewBox="0 0 800 290" role="img" aria-labelledby="vae-05-title">
+<title id="vae-05-title">KL divergence regularization</title>
+<rect class="fig-bg" width="800" height="290" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="400.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">KL: D_KL(q_φ(z|x) ‖ p(z)),  p(z) = 𝒩(0, I)</text>
+<text x="400.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Dạng kín: −½Σ(1 + log_var − μ² − exp(log_var)) · regularize latent space</text>
+<rect x="60.0" y="80.0" width="280.0" height="100.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="200.0" y="116.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">q_φ(z|x)</text>
+<text x="200.0" y="133.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">𝒩(μ, diag(σ²))</text>
+<text x="200.0" y="151.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">encoder → μ, log σ²</text>
+<rect x="460.0" y="80.0" width="280.0" height="100.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="600.0" y="116.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">p(z)</text>
+<text x="600.0" y="133.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">𝒩(0, I)</text>
+<text x="600.0" y="151.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">prior cố định</text>
+<text x="400.0" y="130.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="20" font-weight="700" fill="#5C6570" text-anchor="middle">‖</text>
+<rect x="250.0" y="210.0" width="300.0" height="55.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="400.0" y="232.3" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" fill="#1A1A1A" text-anchor="middle">D_KL = −½ Σⱼ(1+log_varⱼ−μⱼ²−e^log_varⱼ)</text>
+<text x="400.0" y="250.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">μ→0, log_var→0 ⇒ D_KL=0</text>
+<text x="400.0" y="275.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Ngăn posterior cô lập · latent mượt cho interpolation &amp; generation</text>
+</svg>

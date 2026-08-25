@@ -1,0 +1,64 @@
+---
+title: "Vision Transformer"
+subtitle: "Tổng quan patch, CLS, encoder, head"
+date: 2026-08-22
+order: 0
+categories: [architecture-models, architecture, vit, vision, attention]
+series: architecture-models
+group: "ViT"
+role: "Mental model cả pipeline"
+description: "ViT: patch embed, position, CLS, encoder Pre-LN, classification head."
+aliases:
+  - /bai-hoc/architecture-models/Vision-Transformer/index.md
+  - /bai-hoc/architecture-models/Vision-Transformer/index.html
+---
+
+Vision Transformer (ViT; Dosovitskiy et al., 2020) chuyển các nguyên lý Transformer từ văn bản sang ảnh bằng cách biểu diễn một ảnh thành chuỗi các patch cố định kích thước. Mỗi patch được chiếu tuyến tính thành một token embedding, position embedding được cộng vào, và các khối encoder Transformer xử lý chuỗi token trên phạm vi toàn cục.
+
+Thay vì prior cục bộ kiểu convolution, ViT dựa vào quy mô dữ liệu và self-attention để học quan hệ thị giác trên toàn ảnh. Cách tiếp cận này cho hiệu năng mạnh khi pretrained trên dataset lớn và đã trở thành kiến trúc trung tâm cho phân loại ảnh cũng như nhiều vision foundation model.
+
+::: {#fig-vit-pipeline fig-cap="Pipeline ViT: ảnh → patch embed → $[\\mathrm{CLS}]+E_{\\mathrm{pos}}$ → $L\\times$ Pre-LN encoder → LN → linear head → logits." fig-alt="Chuỗi khối ngang từ Anh tới Logits."}
+![](figures/01-pipeline-overview.svg){fig-align="center"}
+:::
+
+## Phần này bao gồm những gì
+
+Chuỗi chương này xây dựng ViT từ biểu diễn đầu vào đến dự đoán đầu ra:
+
+1. Patch embedding — chuyển lưới ảnh thành chuỗi token.
+2. Position embedding — bơm nhận biết thứ tự không gian.
+3. Token [CLS] — embedding học được được prepend để tổng hợp thông tin cấp ảnh cho phân loại.
+4. Cấu trúc khối encoder ViT.
+5. Classification head — từ token đã encode sang dự đoán lớp.
+6. Pipeline Vision Transformer hoàn chỉnh.
+
+Thứ tự cho thấy từng lựa chọn thiết kế ánh xạ trực tiếp từ khái niệm Transformer sang miền thị giác.
+
+## Tại sao Vision Transformer vẫn quan trọng
+
+ViT hiện là backbone then chốt trong thị giác máy tính hiện đại:
+
+* self-attention toàn cục mô hình hóa phụ thuộc thị giác tầm xa,
+* thống nhất kiến trúc với Transformer NLP cho phép transfer liên miền,
+* và hành vi scaling hỗ trợ chiến lược pretraining foundation model.
+
+Hiểu ViT làm rõ bước chuyển từ mô hình hóa thị giác lấy convolution làm trung tâm sang mô hình hóa lấy attention làm trung tâm.
+
+## Kiến thức tiên quyết
+
+* Khái niệm encoder Transformer.
+* Biểu diễn tensor ảnh cơ bản và cách chia patch.
+* Mục đích positional encoding trong mô hình dựa trên token.
+* Classification head và loss supervised cơ bản.
+
+## Ký hiệu được sử dụng trong phần này
+
+$$
+\begin{aligned}
+x \in \mathbb{R}^{H \times W \times C} &:\ \text{tensor ảnh đầu vào}, \\
+p &:\ \text{kích thước patch}, \\
+N = \frac{HW}{p^2} &:\ \text{số lượng patch}, \\
+z_0 &:\ \text{chuỗi token ban đầu sau patch embedding và position embedding}, \\
+h_{\mathrm{cls}} &:\ \text{biểu diễn token lớp cuối cùng dùng cho dự đoán}.
+\end{aligned}
+$$

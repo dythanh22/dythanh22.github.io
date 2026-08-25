@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="300" viewBox="0 0 820 300" role="img" aria-labelledby="gru-07-title">
+<title id="gru-07-title">Complete GRU network unroll</title>
+<rect class="fig-bg" width="820" height="300" fill="#F7F8FA"/>
+<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<text x="410.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Mạng GRU: unroll T bước · h₀=0 · yₜ = W_y hₜ + b_y</text>
+<text x="410.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Weight sharing · một state hₜ (không Cₜ) · projection sau cell</text>
+<rect x="25.0" y="140.0" width="62.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>
+<text x="56.0" y="167.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="700" fill="#1A1A1A" text-anchor="middle">h₀=0</text>
+<rect x="125.0" y="55.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="161.0" y="75.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">x_1</text>
+<rect x="115.0" y="110.0" width="92.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="161.0" y="134.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">t=1</text>
+<text x="161.0" y="151.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">GRU</text>
+<line x1="161.0" y1="91.0" x2="161.0" y2="106.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="157.0,106.0 161.0,112.0 165.0,106.0" fill="#5C6570"/>
+<line x1="93.0" y1="164.0" x2="107.0" y2="164.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="107.0" y1="164.0" x2="107.0" y2="139.0" stroke="#C45C0A" stroke-width="2"/>
+<line x1="107.0" y1="139.0" x2="113.0" y2="139.0" stroke="#C45C0A" stroke-width="2"/>
+<polygon points="113.0,134.0 121.0,139.0 113.0,144.0" fill="#C45C0A"/>
+<rect x="125.0" y="195.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="161.0" y="215.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">h_1</text>
+<line x1="161.0" y1="170.0" x2="161.0" y2="191.0" stroke="#2F6FED" stroke-width="1.5"/>
+<polygon points="157.0,191.0 161.0,197.0 165.0,191.0" fill="#2F6FED"/>
+<rect x="129.0" y="245.0" width="64.0" height="28.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="161.0" y="262.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_y</text>
+<line x1="161.0" y1="231.0" x2="161.0" y2="241.0" stroke="#5C6570" stroke-width="1.5"/>
+<rect x="249.0" y="55.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="285.0" y="75.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">x_2</text>
+<rect x="239.0" y="110.0" width="92.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="285.0" y="134.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">t=2</text>
+<text x="285.0" y="151.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">GRU</text>
+<line x1="285.0" y1="91.0" x2="285.0" y2="106.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="281.0,106.0 285.0,112.0 289.0,106.0" fill="#5C6570"/>
+<line x1="217.0" y1="139.0" x2="221.0" y2="139.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="221.0,134.0 229.0,139.0 221.0,144.0" fill="#5C6570"/>
+<rect x="249.0" y="195.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="285.0" y="215.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">h_2</text>
+<line x1="285.0" y1="170.0" x2="285.0" y2="191.0" stroke="#2F6FED" stroke-width="1.5"/>
+<polygon points="281.0,191.0 285.0,197.0 289.0,191.0" fill="#2F6FED"/>
+<rect x="253.0" y="245.0" width="64.0" height="28.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="285.0" y="262.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_y</text>
+<line x1="285.0" y1="231.0" x2="285.0" y2="241.0" stroke="#5C6570" stroke-width="1.5"/>
+<rect x="373.0" y="55.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="409.0" y="75.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">x_3</text>
+<rect x="363.0" y="110.0" width="92.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="409.0" y="134.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">t=3</text>
+<text x="409.0" y="151.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">GRU</text>
+<line x1="409.0" y1="91.0" x2="409.0" y2="106.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="405.0,106.0 409.0,112.0 413.0,106.0" fill="#5C6570"/>
+<line x1="341.0" y1="139.0" x2="345.0" y2="139.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="345.0,134.0 353.0,139.0 345.0,144.0" fill="#5C6570"/>
+<rect x="373.0" y="195.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="409.0" y="215.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">h_3</text>
+<line x1="409.0" y1="170.0" x2="409.0" y2="191.0" stroke="#2F6FED" stroke-width="1.5"/>
+<polygon points="405.0,191.0 409.0,197.0 413.0,191.0" fill="#2F6FED"/>
+<rect x="377.0" y="245.0" width="64.0" height="28.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="409.0" y="262.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_y</text>
+<line x1="409.0" y1="231.0" x2="409.0" y2="241.0" stroke="#5C6570" stroke-width="1.5"/>
+<rect x="497.0" y="55.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="533.0" y="75.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">x_T</text>
+<rect x="487.0" y="110.0" width="92.0" height="58.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="533.0" y="134.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="700" fill="#1A1A1A" text-anchor="middle">t=T</text>
+<text x="533.0" y="151.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="400" fill="#5C6570" text-anchor="middle">GRU</text>
+<line x1="533.0" y1="91.0" x2="533.0" y2="106.0" stroke="#5C6570" stroke-width="1.5"/>
+<polygon points="529.0,106.0 533.0,112.0 537.0,106.0" fill="#5C6570"/>
+<line x1="465.0" y1="139.0" x2="469.0" y2="139.0" stroke="#5C6570" stroke-width="2"/>
+<polygon points="469.0,134.0 477.0,139.0 469.0,144.0" fill="#5C6570"/>
+<rect x="497.0" y="195.0" width="72.0" height="34.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="533.0" y="215.8" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="600" fill="#1A1A1A" text-anchor="middle">h_T</text>
+<line x1="533.0" y1="170.0" x2="533.0" y2="191.0" stroke="#2F6FED" stroke-width="1.5"/>
+<polygon points="529.0,191.0 533.0,197.0 537.0,191.0" fill="#2F6FED"/>
+<rect x="501.0" y="245.0" width="64.0" height="28.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
+<text x="533.0" y="262.5" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="10" font-weight="600" fill="#1A1A1A" text-anchor="middle">W_y</text>
+<line x1="533.0" y1="231.0" x2="533.0" y2="241.0" stroke="#5C6570" stroke-width="1.5"/>
+<text x="410.0" y="288.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">H_all ∈ ℝᴺ×ᵀ×ᴴ · h_last = h_T · params cell dùng chung mọi t</text>
+</svg>
