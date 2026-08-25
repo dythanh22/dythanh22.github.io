@@ -201,3 +201,13 @@ def unet(x: np.ndarray, num_classes: int = 2) -> np.ndarray:
     return np.zeros((B, d1h, d1w, num_classes))
 
 ```
+
+::: {.callout-tip}
+## Học tiếp: tối ưu inference
+U-Net (và các biến thể densenet/residual trong backbone) thường là model được export → optimize → serve. Chuỗi [AI Optimization](../../ai-optimize/index.qmd) bắt đầu từ mental model GPU inference và đi tới Triton production.
+:::
+
+::: {.callout-note}
+## Bạn đã hoàn thành chuỗi Architecture Models
+Đã đi hết lộ trình CNN → sequence → generative → embeddings → attention → dense prediction. Sidebar đánh dấu các mục đã đọc (trình duyệt này). Bước tự nhiên tiếp theo: [AI Optimization](../../ai-optimize/index.qmd).
+:::

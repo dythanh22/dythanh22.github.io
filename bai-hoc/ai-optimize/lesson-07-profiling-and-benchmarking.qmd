@@ -9,1981 +9,3040 @@ description: "trtexec, Perf Analyzer, Nsight Systems, tail latency và bottlenec
 role: "trtexec, Perf Analyzer, Nsight Systems, tail latency và bottleneck"
 ---
 
-```{=html}
-<div class="callout callout-style-default callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Ghi chú</span>Mục tiêu bài học
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Đo hiệu năng inference <strong>đúng</strong>: <code>trtexec</code>, Perf Analyzer, metrics GPU/server/client, Nsight Systems, và suy luận bottleneck bằng chứng — không chỉ một số latency hay GPU utilization. Bài <strong>không</strong> dạy build engine sâu (Lesson 4), quant accuracy (Lesson 5), Triton config cơ bản (Lesson 6), hay rollout/canary (Lesson 8).</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Ghi chú</span>Lộ trình bài học
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<table class="caption-top table">
-<colgroup>
-<col style="width: 7%">
-<col style="width: 15%">
-<col style="width: 44%">
-<col style="width: 31%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">#</th>
-<th style="text-align: left;">Phần</th>
-<th style="text-align: left;">Trả lời câu hỏi</th>
-<th style="text-align: left;">Thời lượng</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">1–2</td>
-<td style="text-align: left;">Vì sao đo / metrics</td>
-<td style="text-align: left;">Tool nào cho câu hỏi nào? Latency đo ở đâu?</td>
-<td style="text-align: left;">20 phút</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">3–4</td>
-<td style="text-align: left;">p99, knee, methodology</td>
-<td style="text-align: left;">SLO fail dù mean đẹp? Warmup? Control variables?</td>
-<td style="text-align: left;">20 phút</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">5</td>
-<td style="text-align: left;">trtexec</td>
-<td style="text-align: left;">Engine ceiling, H2D/enqueue, layer profile?</td>
-<td style="text-align: left;">25 phút</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">6</td>
-<td style="text-align: left;">Perf / Model Analyzer</td>
-<td style="text-align: left;">Concurrency sweep, CSV, config search?</td>
-<td style="text-align: left;">25 phút</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">7</td>
-<td style="text-align: left;">Nsight + Triton metrics</td>
-<td style="text-align: left;">Timeline khi số đo chưa đủ? Queue vs compute?</td>
-<td style="text-align: left;">20 phút</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">8–9</td>
-<td style="text-align: left;">Bottleneck + workflow</td>
-<td style="text-align: left;">Symptom→fix; E2E labs</td>
-<td style="text-align: left;">30 phút + labs</td>
-</tr>
-</tbody>
-</table>
-<p>Đọc tối thiểu: phần 1–6. Phần 7–9 và Mini-lab nên hoàn thành trước khi chọn production operating point.</p>
-</div>
-</div>
-<div class="reading-modes">
-<p><strong>Đọc nhanh:</strong> callout <em>Ý chính</em> + bảng + sơ đồ xương sống.<br>
-<strong>Đọc đủ:</strong> mở tip đào sâu, làm Mini-lab và Checkpoint.</p>
-</div>
-<section id="bối-cảnh" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="bối-cảnh">Bối cảnh</h2>
-<p>Lesson 1–6 đi từ kiến trúc → ONNX → ORT → TensorRT → quantization → Triton serving. Lesson 7 trả lời: <strong>làm sao biết hệ thống thật sự nhanh, nghẽn ở đâu, và chứng minh thay đổi tốt hơn?</strong></p>
-<div class="cell" data-fig-width="7" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-l7-spine" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-l7-spine-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div>
-<pre class="mermaid mermaid-js" data-label="fig-l7-spine">flowchart LR
-  A([Artifact]) --&gt;|"trtexec / ORT"| E([Engine bench])
-  E --&gt;|"Perf Analyzer"| S([Service load])
-  S --&gt;|"Metrics / MA"| M([Config + metrics])
-  M --&gt;|"Nsight"| N([Timeline])
-  N --&gt;|"optimize"| B([New baseline])
-  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
-  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
-  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
-  class A,B soft
-  class E,S,M ok
-  class N hot
-</pre>
-</div>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l7-spine-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Hình&nbsp;7.1: Sơ đồ xương sống Lesson 7: Artifact → engine bench → service load → metrics → timeline → baseline mới.
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p>Mantra của bài:</p>
-<pre class="text"><code>Optimization without measurement is guessing.
-Measurement without methodology is noise.
-Benchmarking without bottleneck analysis is just number collection.</code></pre>
-</section>
-<section id="learning-outcomes" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="learning-outcomes">Learning outcomes</h2>
-<ol type="1">
-<li>Phân biệt model benchmark, service benchmark, system profiling và production monitoring<br>
-</li>
-<li>Metrics cốt lõi: latency (client/server), throughput, concurrency, request rate, batch, queue, compute, p50/p95/p99<br>
-</li>
-<li>Vì sao mean đánh lừa; vì sao p99 và knee point quan trọng với SLO<br>
-</li>
-<li>Methodology: warmup, tách build/infer, control variables, input đại diện, report distribution<br>
-</li>
-<li>Dùng <code>trtexec</code>: ceiling engine, flags ổn định, đọc H2D/enqueue/GPU/D2H, dumpProfile<br>
-</li>
-<li>Perf Analyzer (concurrency / request-rate) + đọc CSV; Model Analyzer sweep dưới constraint<br>
-</li>
-<li>Khi nào Nsight Systems / Compute; NVTX; Triton metrics và queue vs compute<br>
-</li>
-<li>Playbook symptom→evidence→hypothesis→experiment→fix→remeasure; case phổ biến<br>
-</li>
-<li>Workflow E2E + checklist production + tránh 10 lỗi đo phổ biến</li>
-</ol>
-</section>
-<section id="prerequisites" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="prerequisites">Prerequisites</h2>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 47%">
-<col style="width: 52%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Chủ đề</th>
-<th style="text-align: left;">Cần nắm</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Shape / batch</td>
-<td style="text-align: left;">Tensor shape, batch dimension</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">ONNX</td>
-<td style="text-align: left;">Input/output names</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">TensorRT</td>
-<td style="text-align: left;">Engine, optimization profile (Lesson 4)</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Triton</td>
-<td style="text-align: left;">Dynamic batching, <code>config.pbtxt</code>, <code>instance_group</code>, <code>max_batch_size</code> (Lesson 6)</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Tooling</td>
-<td style="text-align: left;">Docker, Linux CLI, Python cơ bản</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">GPU labs</td>
-<td style="text-align: left;">Driver, CUDA, TensorRT, Triton container</td>
-</tr>
-</tbody>
-</table>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Hai nhóm lab
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><strong>Design-only:</strong> ledger, methodology, đọc CSV/metrics — làm được trên mọi máy.<br>
-<strong>GPU labs:</strong> <code>trtexec</code>, Perf Analyzer, Nsight — cần NVIDIA GPU / container. Không có GPU vẫn học đủ bài; khi có GPU chỉ cần chạy lệnh và điền số thật.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-why-measure" class="level2" data-number="7.1">
-<h2 data-number="7.1" class="anchored" data-anchor-id="sec-why-measure"><span class="header-section-number">7.1</span> Đo đúng trước khi tối ưu</h2>
-<blockquote class="blockquote">
-<p>Vì sao “chạy thử vài request rồi kết luận nhanh hơn” nguy hiểm — và tool nào trả lời câu hỏi nào?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Inference performance phụ thuộc hàng chục biến (shape, precision, batch, concurrency, network, queue, warmup…). Mean tốt hơn không đồng nghĩa p99 tốt hơn; engine nhanh trong <code>trtexec</code> không đồng nghĩa Triton service nhanh. Chọn <strong>đúng tool cho đúng câu hỏi</strong>.</p>
-</div>
-</div>
-<p>Nhiều người làm: export ONNX → build engine → vài request → “nhanh hơn”. Cách đó bỏ qua biến như input shape, batch, precision, GPU/driver/CUDA/TRT version, preprocessing, H2D/D2H, network, dynamic batching, concurrency, queue, clocks/thermal, warmup, instance count, Python overhead, sync.</p>
-<p>Một thay đổi có thể làm mean tốt hơn nhưng <strong>p99 xấu hơn</strong>, hoặc throughput tăng nhưng single-request latency tăng.</p>
-<p>Nhìn hệ thống theo lớp — mỗi lớp có metric riêng; chỉ tối ưu đúng khi biết lớp nào chi phối:</p>
-<pre class="text"><code>Client → (serialization, network) → Triton frontend
-  → (parse, scheduler queue, dynamic batching) → Backend
-  → (input copy/binding, enqueue) → GPU (kernels, bandwidth, Tensor Cores)
-  → Backend output → (output copy, response serialize) → Client receive</code></pre>
-<p>Engine nhanh trong <code>trtexec</code> nhưng Triton chậm thường vì: concurrency thấp, batching không gom được, serialize/preprocess đắt, output copy lớn, network, <code>instance_group</code> chưa khớp, queue lâu, hoặc GPU chia sẻ.</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 21%">
-<col style="width: 34%">
-<col style="width: 43%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Câu hỏi</th>
-<th style="text-align: left;">Tool phù hợp</th>
-<th style="text-align: left;">Điều bạn đo được</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">TensorRT engine chạy nhanh nhất khoảng bao nhiêu?</td>
-<td style="text-align: left;"><code>trtexec</code></td>
-<td style="text-align: left;">latency/throughput engine-level</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Layer nào trong engine tốn thời gian nhất?</td>
-<td style="text-align: left;"><code>trtexec --dumpProfile</code></td>
-<td style="text-align: left;">per-layer runtime</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Triton service đạt throughput bao nhiêu với concurrency N?</td>
-<td style="text-align: left;">Perf Analyzer</td>
-<td style="text-align: left;">service throughput, client/server latency</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Dynamic batching có giúp không?</td>
-<td style="text-align: left;">Perf Analyzer</td>
-<td style="text-align: left;">latency–throughput tradeoff theo concurrency/batch</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Config <code>instance_group</code> nào tốt hơn?</td>
-<td style="text-align: left;">Model Analyzer</td>
-<td style="text-align: left;">throughput/latency/memory/util theo config</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Vì sao có khoảng trống giữa các CUDA kernels?</td>
-<td style="text-align: left;">Nsight Systems</td>
-<td style="text-align: left;">CPU/GPU timeline</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Có nhiều H2D/D2H copy bất thường không?</td>
-<td style="text-align: left;"><code>trtexec</code>, Nsight Systems</td>
-<td style="text-align: left;">copy time, memcpy timeline</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Kernel cụ thể memory-bound hay compute-bound?</td>
-<td style="text-align: left;">Nsight Compute</td>
-<td style="text-align: left;">kernel-level metrics</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Production đang có queue/p99 spike không?</td>
-<td style="text-align: left;">Triton metrics / Prometheus</td>
-<td style="text-align: left;">server latency, queue, request count, GPU</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Model version mới làm performance regress không?</td>
-<td style="text-align: left;">Benchmark report + CI</td>
-<td style="text-align: left;">baseline comparison</td>
-</tr>
-</tbody>
-</table>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Category</th>
-<th style="text-align: left;">Ví dụ biến</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Model / artifact</td>
-<td style="text-align: left;">ONNX opset, precision, dynamic shape profile</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Runtime</td>
-<td style="text-align: left;">TensorRT / ORT version, CUDA Graph, I/O Binding</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Serving</td>
-<td style="text-align: left;"><code>max_batch_size</code>, dynamic batching, <code>instance_group</code></td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Load</td>
-<td style="text-align: left;">concurrency, request rate, payload, protocol</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">System</td>
-<td style="text-align: left;">GPU model, driver, clocks, thermal, shared workload</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Client</td>
-<td style="text-align: left;">serialization, network RTT, preprocess</td>
-</tr>
-</tbody>
-</table>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Mental model tool stack
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-5" class="callout-5-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><code>trtexec</code> = <strong>ceiling</strong> (engine có thể nhanh tới đâu?).<br>
-Perf Analyzer = <strong>service</strong> dưới load.<br>
-Model Analyzer = <strong>config search</strong>.<br>
-<code>nsys</code> = <strong>timeline</strong> khi số đo chưa đủ.<br>
-<code>ncu</code> = <strong>kernel</strong> khi đã biết kernel nghi ngờ.<br>
-Prometheus / Triton metrics = <strong>production</strong> liên tục.</p>
-<p>Không mở Nsight cho mọi thay đổi — chỉ khi numbers không giải thích được behavior.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-metrics" class="level2" data-number="7.2">
-<h2 data-number="7.2" class="anchored" data-anchor-id="sec-metrics"><span class="header-section-number">7.2</span> Metrics và điểm đo</h2>
-<blockquote class="blockquote">
-<p>“Latency bao nhiêu?” đã đủ chưa — và concurrency khác batch thế nào?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Latency chỉ có nghĩa khi kèm <strong>điểm đo</strong>. Throughput phải kèm batch (request/s ≠ sample/s). <strong>Concurrency ≠ batch size</strong>. Percentile (đặc biệt p99) quan trọng hơn mean cho SLO; queue time thường đẩy tail khi gần saturation.</p>
-</div>
-</div>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Điểm đo</th>
-<th style="text-align: left;">Định nghĩa</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Client-side latency</td>
-<td style="text-align: left;">Client send start → client nhận response</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Server-side latency</td>
-<td style="text-align: left;">Server nhận request → server gửi response</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Backend compute</td>
-<td style="text-align: left;">Backend bắt đầu → output sẵn sàng</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">GPU compute</td>
-<td style="text-align: left;">CUDA kernels start → done</td>
-</tr>
-</tbody>
-</table>
-<p>Câu hỏi bắt buộc kèm: đo ở đâu? Có network / serialization / queue / H2D-D2H / preprocess / warmup không?</p>
-<p><strong>Throughput</strong> thường báo dạng requests/s, inferences/s, samples/s, tokens/s, images/s. Ví dụ: batch = 8 và 100 rps → <strong>800 samples/s</strong>. Báo throughput mà không nói batch là thiếu ngữ cảnh.</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 55%">
-<col style="width: 45%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Khái niệm</th>
-<th style="text-align: left;">Ý nghĩa</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;"><strong>Concurrency</strong></td>
-<td style="text-align: left;">Số request outstanding cùng lúc (vd. 1 vs 32)</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Batch size</strong></td>
-<td style="text-align: left;">Số samples trong một request / một batch execution</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Request rate</strong></td>
-<td style="text-align: left;">Tốc độ client cố tình gửi (vd. 500 rps) — mô phỏng arrival</td>
-</tr>
-</tbody>
-</table>
-<p>Triton dynamic batching có thể gom nhiều request (concurrency cao) thành một batch execution lớn hơn.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Percentile</th>
-<th style="text-align: left;">Ý nghĩa</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">p50</td>
-<td style="text-align: left;">50% request ≤ giá trị</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">p90 / p95</td>
-<td style="text-align: left;">90% / 95% request ≤ giá trị</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">p99 / p999</td>
-<td style="text-align: left;">99% / 99.9% request ≤ giá trị</td>
-</tr>
-</tbody>
-</table>
-<p>Ví dụ p50 = 20 ms, p99 = 200 ms: đa số nhanh nhưng 1% rất chậm — với 1 triệu request/ngày là ~10 000 request bị ảnh hưởng.</p>
-<p><strong>Queue time:</strong> chờ trước khi execute (gom batch, hết instance, GPU/CPU bận, rate limiter). Thường là nguyên nhân p99 tăng nhanh gần saturation.</p>
-<p><strong>Compute time</strong> cũng nhiều lớp: compute input (copy/binding) → compute infer (runtime) → compute output; cộng GPU kernels. Queue cao ≠ kernel chậm.</p>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Client vs server latency breakdown
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-7" class="callout-7-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p>Perf Analyzer thường tách: Client Send, Network+Server Send/Recv, Server Queue, Server Compute Input / Infer / Output, Client Recv.<br>
-Client ≫ Server → nghi network/serialization/client.<br>
-Server Queue cao → capacity/batching/saturation.<br>
-Compute Infer cao → model/backend đắt.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-tail-knee" class="level2" data-number="7.3">
-<h2 data-number="7.3" class="anchored" data-anchor-id="sec-tail-knee"><span class="header-section-number">7.3</span> Tail latency và knee point</h2>
-<blockquote class="blockquote">
-<p>Mean đẹp có đủ để đạt SLO không — knee nằm ở đâu trên latency–throughput curve?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>SLO thường gắn <strong>p99</strong>, không phải mean. Gần saturation, latency ≈ service time + queueing; overload thì queue chiếm. Chọn <strong>operating point</strong> ở vùng knee dưới SLO, giữ <strong>headroom</strong> — không chạy sát 100% utilization.</p>
-</div>
-</div>
-<p>SLO giả định: <strong>p99 &lt; 100 ms</strong>.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Run</th>
-<th style="text-align: right;">mean</th>
-<th style="text-align: right;">p50</th>
-<th style="text-align: right;">p95</th>
-<th style="text-align: right;">p99</th>
-<th style="text-align: left;">Kết luận</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">A</td>
-<td style="text-align: right;">25 ms</td>
-<td style="text-align: right;">20</td>
-<td style="text-align: right;">60</td>
-<td style="text-align: right;"><strong>180</strong></td>
-<td style="text-align: left;"><strong>FAIL</strong> SLO</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">B</td>
-<td style="text-align: right;">30 ms</td>
-<td style="text-align: right;">26</td>
-<td style="text-align: right;">70</td>
-<td style="text-align: right;"><strong>95</strong></td>
-<td style="text-align: left;"><strong>PASS</strong></td>
-</tr>
-</tbody>
-</table>
-<p>Run A mean tốt hơn nhưng fail; Run B mean xấu hơn nhưng đạt SLO.</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 22%">
-<col style="width: 37%">
-<col style="width: 40%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Vùng</th>
-<th style="text-align: left;">Đặc điểm</th>
-<th style="text-align: left;">Hành động</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;"><strong>Underutilized</strong></td>
-<td style="text-align: left;">Concurrency thấp, GPU chưa fill, TP thấp, latency thấp</td>
-<td style="text-align: left;">Tăng concurrency/batch để lấy throughput</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Knee</strong></td>
-<td style="text-align: left;">TP gần plateau, latency tăng rõ, gần saturation</td>
-<td style="text-align: left;">Thường là <strong>operating point</strong> tốt nếu SLO cho phép</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Overload</strong></td>
-<td style="text-align: left;">TP không tăng, latency/p99/queue tăng mạnh, timeout</td>
-<td style="text-align: left;">Không vận hành ổn định ở đây</td>
-</tr>
-</tbody>
-</table>
-<p>Mục tiêu benchmark: <strong>max throughput under latency SLO</strong> — không phải max throughput tuyệt đối. Ví dụ Config A 1000 rps / p99=80 ms (OK) thắng Config B 1200 rps / p99=160 ms (Fail).</p>
-<p><strong>Little’s Law</strong> (sanity check): <span class="math inline">\(\text{concurrency} \approx \text{throughput} \times \text{latency}\)</span>. Với concurrency = 32 và latency = 40 ms (= 0.04 s) → throughput ≈ 32 / 0.04 = <strong>~800 rps</strong>. Nếu PA báo concurrency 32, mean 40 ms nhưng chỉ 100 rps — số đo hoặc concurrency giữ chưa khớp.</p>
-<div class="cell" data-fig-width="6.5" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-l7-knee" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-l7-knee-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div>
-<pre class="mermaid mermaid-js" data-label="fig-l7-knee">flowchart LR
-  U([Underutilized]) --&gt;|"↑ concurrency"| K([Knee])
-  K --&gt;|"qua saturation"| O([Overload])
-  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
-  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
-  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
-  class U soft
-  class K hot
-  class O ok
-</pre>
-</div>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l7-knee-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Hình&nbsp;7.2: Ba vùng trên latency–throughput curve: underutilized → knee → overload.
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Nguyên nhân tail latency thường gặp
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-9" class="callout-9-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<table class="caption-top table">
-<colgroup>
-<col style="width: 59%">
-<col style="width: 40%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Nguyên nhân</th>
-<th style="text-align: left;">Ghi chú</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Queueing / dynamic batch delay</td>
-<td style="text-align: left;">Gần saturation hoặc max queue delay lớn</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">GPU shared / thermal / power</td>
-<td style="text-align: left;">Jitter định kỳ</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">CPU preprocess không ổn định</td>
-<td style="text-align: left;">GC, malloc, logging</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Cold start / instance switch</td>
-<td style="text-align: left;">First request, profile switch</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Dynamic shape / large output</td>
-<td style="text-align: left;">Serialization, D2H</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Network jitter / lock / page fault</td>
-<td style="text-align: left;">Client–server path</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Autoscaling cold pod</td>
-<td style="text-align: left;">Latency spike khi scale</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-methodology" class="level2" data-number="7.4">
-<h2 data-number="7.4" class="anchored" data-anchor-id="sec-methodology"><span class="header-section-number">7.4</span> Methodology chuẩn</h2>
-<blockquote class="blockquote">
-<p>Làm sao đo để so sánh được qua nhiều lần chạy — không trộn noise vào kết luận?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Luôn <strong>warmup</strong> (100–1000 iter), đo ổn định, lặp 3–5 lần, báo median + variance. <strong>Tách build engine khỏi infer</strong>. Ghi environment, cố định biến khi so sánh, dùng input đại diện, chạy đủ lâu, report <strong>distribution</strong> không chỉ mean.</p>
-</div>
-</div>
-<p>Cold start gồm CUDA init, model load, deserialize, alloc, autotune/cache, first launch, page cache, Triton warmup — không đại diện steady-state.</p>
-<p><strong>Sai:</strong> <code>time trtexec --onnx=model.onnx --fp16</code> (trộn build + infer).<br>
-<strong>Đúng:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--onnx</span><span class="op">=</span>model.onnx <span class="at">--saveEngine</span><span class="op">=</span>model_fp16.plan <span class="at">--fp16</span> <span class="dt">\</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--minShapes</span><span class="op">=</span>input:1x3x224x224 <span class="at">--optShapes</span><span class="op">=</span>input:8x3x224x224 <span class="at">--maxShapes</span><span class="op">=</span>input:32x3x224x224</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>model_fp16.plan <span class="at">--shapes</span><span class="op">=</span>input:8x3x224x224</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Thời lượng</th>
-<th style="text-align: left;">Mục đích</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">30–60 s / config</td>
-<td style="text-align: left;">Dev iteration nhanh</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Vài phút × nhiều lần</td>
-<td style="text-align: left;">Baseline nghiêm túc</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Soak dài</td>
-<td style="text-align: left;">Production readiness</td>
-</tr>
-</tbody>
-</table>
-<p>Report nên có: throughput, mean, p50/p90/p95/p99, max, server queue/compute, GPU util/memory, errors/timeouts.</p>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Environment checklist + control variables
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-11" class="callout-11-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p>Ghi: Date, Machine, GPU/count, Driver, CUDA, cuDNN, TensorRT, Triton, ORT, Model name/version, Precision, Shape, Batch, Dynamic profile, Dataset/input gen, Warmup, Duration, Client machine, Protocol, Concurrency/RPS, <code>config.pbtxt</code>, Power/clocks, Other GPU workloads.</p>
-<p>So sánh FP16 vs INT8: <strong>cùng</strong> GPU, driver, CUDA/TRT, input, shape, concurrency, Triton config (chỉ khác artifact). Không so A10+batch1 với L4+batch16.</p>
-<p>Input đại diện: nếu production 70% <code>224×224</code>, 20% <code>512×512</code>, 10% <code>1024×1024</code> — chỉ bench <code>224</code> sẽ quá lạc quan (NLP/LLM: sequence length; detection: output size; sparse/recommender: distribution).</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-trtexec" class="level2" data-number="7.5">
-<h2 data-number="7.5" class="anchored" data-anchor-id="sec-trtexec"><span class="header-section-number">7.5</span> trtexec — engine ceiling</h2>
-<blockquote class="blockquote">
-<p>Engine nhanh tối đa bao nhiêu nếu bỏ service overhead — và H2D / enqueue / GPU nói gì?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><code>trtexec</code> đo <strong>ceiling</strong> TensorRT: build/bench engine, precision, shape, per-layer. Không dùng nó để kết luận p99 production (thiếu scheduler, network, client, Python preprocess, queue). Đọc tách H2D, GPU Compute, D2H, Enqueue.</p>
-</div>
-</div>
-<p>Dùng khi cần biết: ceiling latency/throughput; build OK?; FP16/INT8/shape/batch; layer hotspot; copy vs enqueue. Không đại diện đầy đủ Triton production.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Static</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--onnx</span><span class="op">=</span>model.onnx <span class="at">--saveEngine</span><span class="op">=</span>model_fp16.plan <span class="dt">\</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--shapes</span><span class="op">=</span>input:1x3x224x224 <span class="at">--fp16</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Dynamic + bench saved</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--onnx</span><span class="op">=</span>model.onnx <span class="at">--saveEngine</span><span class="op">=</span>model_fp16_dynamic.plan <span class="at">--fp16</span> <span class="dt">\</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--minShapes</span><span class="op">=</span>input:1x3x224x224 <span class="at">--optShapes</span><span class="op">=</span>input:8x3x224x224 <span class="at">--maxShapes</span><span class="op">=</span>input:32x3x224x224</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>model_fp16_dynamic.plan <span class="at">--shapes</span><span class="op">=</span>input:8x3x224x224</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Flags ổn định hơn (ví dụ ResNet-50):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--onnx</span><span class="op">=</span>resnet50-v1-12.onnx <span class="at">--shapes</span><span class="op">=</span>data:4x3x224x224 <span class="at">--fp16</span> <span class="dt">\</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--noDataTransfers</span> <span class="at">--useCudaGraph</span> <span class="at">--useSpinWait</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>--noDataTransfers</code> tập trung GPU compute; production nếu copy PCIe mỗi request thì <strong>cũng</strong> phải bench có transfer. <code>--useCudaGraph</code> giảm launch overhead; <code>--useSpinWait</code> ổn định latency hơn (CPU busy hơn).</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 20%">
-<col style="width: 23%">
-<col style="width: 56%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Metric</th>
-<th style="text-align: left;">Ý nghĩa</th>
-<th style="text-align: left;">Nếu cao thì nghĩ tới</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Throughput</td>
-<td style="text-align: left;">tốc độ inference</td>
-<td style="text-align: left;">so với SLO và batch</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Host Latency</td>
-<td style="text-align: left;">H2D + GPU + D2H</td>
-<td style="text-align: left;">end-to-end engine path</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Enqueue</td>
-<td style="text-align: left;">CPU enqueue/launch</td>
-<td style="text-align: left;">CPU bottleneck, tiny kernels, thiếu CUDA Graph</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">H2D</td>
-<td style="text-align: left;">input copy</td>
-<td style="text-align: left;">input lớn, PCIe, thiếu pinned memory</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">GPU Compute</td>
-<td style="text-align: left;">kernels</td>
-<td style="text-align: left;">model compute, bandwidth, Tensor Core</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">D2H</td>
-<td style="text-align: left;">output copy</td>
-<td style="text-align: left;">output lớn, postprocess CPU</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Total Host Walltime</td>
-<td style="text-align: left;">thời gian host thấy</td>
-<td style="text-align: left;">underutilization nếu ≫ GPU compute</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Total GPU Compute</td>
-<td style="text-align: left;">tổng GPU time</td>
-<td style="text-align: left;">so với walltime → độ fill</td>
-</tr>
-</tbody>
-</table>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 21%">
-<col style="width: 32%">
-<col style="width: 46%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Case</th>
-<th style="text-align: left;">Pattern</th>
-<th style="text-align: left;">Hướng xử lý</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">A</td>
-<td style="text-align: left;">GPU ≈ Host; H2D/D2H/Enqueue nhỏ</td>
-<td style="text-align: left;">Precision, batch, fusion, architecture, layer profile</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">B</td>
-<td style="text-align: left;">H2D hoặc D2H lớn</td>
-<td style="text-align: left;">Giữ tensor trên GPU, I/O Binding/shared mem, giảm output, pinned</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">C</td>
-<td style="text-align: left;">Enqueue &gt; GPU Compute</td>
-<td style="text-align: left;">CUDA Graph, tăng batch, fusion, tránh sync, async</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">D</td>
-<td style="text-align: left;">Total GPU ≪ Host Walltime</td>
-<td style="text-align: left;">Underutilized — giống B/C</td>
-</tr>
-</tbody>
-</table>
-<div class="cell" data-fig-width="7" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-l7-trtexec" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-l7-trtexec-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div>
-<pre class="mermaid mermaid-js" data-label="fig-l7-trtexec">flowchart LR
-  A([Artifact]) --&gt;|"trtexec / ORT"| E([Engine bench])
-  E --&gt;|"Perf Analyzer"| S([Service load])
-  S --&gt;|"Metrics / MA"| M([Config + metrics])
-  M --&gt;|"Nsight"| N([Timeline])
-  N --&gt;|"optimize"| B([New baseline])
-  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
-  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
-  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
-  class A,B,S,M,N soft
-  class E hot
-</pre>
-</div>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l7-trtexec-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Hình&nbsp;7.3: Spine tô sáng giai đoạn Engine bench — ceiling trước khi đo service.
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Per-layer, dynamic shape, precision
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-13" class="callout-13-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>model.plan <span class="at">--shapes</span><span class="op">=</span>input:8x3x224x224 <span class="dt">\</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--profilingVerbosity</span><span class="op">=</span>detailed <span class="at">--dumpLayerInfo</span> <span class="at">--dumpProfile</span> <span class="at">--separateProfileRun</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Chú ý: Layer name, Time(%), type, precision, shape, tactic; một TRT layer có thể = nhiều ONNX ops (vd. Conv+BN+ReLU fused).</p>
-<p>Dynamic: bench shape 1 / 8 / 32. <code>opt</code> nhanh nhưng <code>max</code> chậm không nhất thiết lỗi — builder tối ưu quanh <code>opt</code>. Production chủ yếu batch=1 mà <code>opt=32</code> → latency batch 1 có thể kém.</p>
-<p>Precision: FP32 baseline; <code>--fp16</code>; INT8 Q/DQ với <code>--stronglyTyped</code>. INT8 có thể <strong>không</strong> thắng FP16 nếu model nhỏ, memory-bound, nhiều layer không INT8, Q/DQ overhead, copy chi phối, batch nhỏ, hoặc hardware không lợi rõ. Đo latency + throughput + accuracy + memory + p99 service trước khi kết luận.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-perf-analyzer" class="level2" data-number="7.6">
-<h2 data-number="7.6" class="anchored" data-anchor-id="sec-perf-analyzer"><span class="header-section-number">7.6</span> Perf Analyzer và Model Analyzer</h2>
-<blockquote class="blockquote">
-<p>Service chịu bao nhiêu load — và config nào đạt throughput dưới p99 SLO?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Perf Analyzer đo <strong>service behavior</strong> (concurrency hoặc request-rate, HTTP/gRPC, breakdown client/server). Model Analyzer <strong>sweep</strong> batch/instance/memory để maximize throughput <strong>subject to</strong> p99 &lt; SLO, memory budget, error = 0 — không chọn blindly max TP.</p>
-</div>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Concurrency mode: 1 → 64, step 4</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> resnet50 <span class="at">-i</span> grpc <span class="at">--concurrency-range</span> 1:64:4 <span class="at">-f</span> perf_concurrency.csv</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Request-rate mode (mô phỏng arrival)</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> resnet50 <span class="at">-i</span> grpc <span class="at">--request-rate-range</span> 100:2000:100 <span class="at">-f</span> perf_request_rate.csv</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Shape: nếu max_batch_size &gt; 0, --shape thường KHÔNG gồm batch dim</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> resnet50 <span class="at">-i</span> grpc <span class="at">--shape</span> input:3,224,224 <span class="at">--concurrency-range</span> 1:32</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> resnet50 <span class="at">-i</span> grpc <span class="at">--input-data</span> input_data.json <span class="at">--concurrency-range</span> 1:32</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> resnet50 <span class="at">-i</span> grpc <span class="at">--concurrency-range</span> 1:64:4 <span class="dt">\</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--collect-metrics</span> <span class="at">--verbose-csv</span> <span class="at">-f</span> perf_with_metrics.csv</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># metrics URL khác: --metrics-url http://server-host:8002/metrics</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>CSV thường có: Concurrency, Inferences/Second, Client Send, Network+Server Send/Recv, Server Queue, Server Compute Input/Infer/Output, Client Recv, p50/p90/p95/p99 latency.</p>
-<p>Model Analyzer ví dụ:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">model_repository</span><span class="kw">:</span><span class="at"> /models</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">profile_models</span><span class="kw">:</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">resnet50</span><span class="kw">:</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">batch_sizes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">1</span><span class="kw">,</span><span class="at"> </span><span class="dv">4</span><span class="kw">,</span><span class="at"> </span><span class="dv">8</span><span class="kw">,</span><span class="at"> </span><span class="dv">16</span><span class="kw">,</span><span class="at"> </span><span class="dv">32</span><span class="kw">]</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">concurrency</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">1</span><span class="kw">,</span><span class="at"> </span><span class="dv">2</span><span class="kw">,</span><span class="at"> </span><span class="dv">4</span><span class="kw">,</span><span class="at"> </span><span class="dv">8</span><span class="kw">,</span><span class="at"> </span><span class="dv">16</span><span class="kw">,</span><span class="at"> </span><span class="dv">32</span><span class="kw">,</span><span class="at"> </span><span class="dv">64</span><span class="kw">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">model-analyzer</span> profile <span class="at">--config-file</span> profile_config.yaml <span class="at">--triton-launch-mode</span><span class="op">=</span>local</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">model-analyzer</span> report <span class="at">--report-model-configs</span> resnet50_config_default</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># luôn: model-analyzer --help (flags theo version)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Constraint: maximize TP s.t. <strong>p99 &lt; SLO AND mem budget AND error = 0</strong>.</p>
-<div class="cell" data-fig-width="7" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-l7-service" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-l7-service-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div>
-<pre class="mermaid mermaid-js" data-label="fig-l7-service">flowchart LR
-  A([Artifact]) --&gt;|"trtexec / ORT"| E([Engine bench])
-  E --&gt;|"Perf Analyzer"| S([Service load])
-  S --&gt;|"Metrics / MA"| M([Config + metrics])
-  M --&gt;|"Nsight"| N([Timeline])
-  N --&gt;|"optimize"| B([New baseline])
-  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
-  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
-  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
-  class A,B,E,M,N soft
-  class S hot
-</pre>
-</div>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l7-service-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Hình&nbsp;7.4: Spine tô sáng Service load — Perf Analyzer / Model Analyzer.
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Đọc Perf Analyzer theo 6 câu hỏi + HTTP/gRPC + MA report
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-15" class="callout-15-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<table class="caption-top table">
-<colgroup>
-<col style="width: 13%">
-<col style="width: 40%">
-<col style="width: 45%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">#</th>
-<th style="text-align: left;">Câu hỏi</th>
-<th style="text-align: left;">Tín hiệu</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Q1</td>
-<td style="text-align: left;">TP còn tăng khi concurrency tăng?</td>
-<td style="text-align: left;">Tăng nhẹ latency → chưa saturated; plateau + latency↑ mạnh → gần/overload</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Q2</td>
-<td style="text-align: left;">p99 vượt SLO?</td>
-<td style="text-align: left;">p50 tốt / p99 xấu → queue, jitter, batching, outlier</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Q3</td>
-<td style="text-align: left;">Server Queue tăng?</td>
-<td style="text-align: left;">Tăng instance, chỉnh batch delay, giảm target concurrency, scale, tối ưu compute</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Q4</td>
-<td style="text-align: left;">Compute Infer vs Queue?</td>
-<td style="text-align: left;">Infer cao → model đắt; Queue cao → capacity; Client Send/Recv → network/payload</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Q5</td>
-<td style="text-align: left;">GPU util cao nhưng TP không tăng?</td>
-<td style="text-align: left;">Bandwidth, saturated, serialization, batch không scale, thermal</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Q6</td>
-<td style="text-align: left;">GPU util thấp nhưng latency cao?</td>
-<td style="text-align: left;">CPU/Python/network, concurrency thấp, batch nhỏ, H2D/D2H, sync, chờ batch</td>
-</tr>
-</tbody>
-</table>
-<p><strong>HTTP vs gRPC</strong> — đo, đừng đoán:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> model_name <span class="at">-i</span> http <span class="at">--concurrency-range</span> 1:64:4 <span class="at">-f</span> perf_http.csv</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> model_name <span class="at">-i</span> grpc <span class="at">--concurrency-range</span> 1:64:4 <span class="at">-f</span> perf_grpc.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>So <code>Concurrency</code>, <code>Inferences/Second</code>, <code>p99 latency</code> giữa hai CSV. Hỏi: protocol nào tốt hơn về p99/TP? Ổn định qua nhiều lần chạy? Payload size có ảnh hưởng?</p>
-<p><strong>Model Analyzer report</strong> tìm: throughput, p99, GPU memory/util, instance count, batch size, dynamic batching config. Config TP cao nhất ≠ production tốt nhất — chọn theo constraint TP + p99 + mem + error=0.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-timeline-metrics" class="level2" data-number="7.7">
-<h2 data-number="7.7" class="anchored" data-anchor-id="sec-timeline-metrics"><span class="header-section-number">7.7</span> Nsight Systems và Triton metrics</h2>
-<blockquote class="blockquote">
-<p>Khi số đo “chậm” nhưng chưa nói vì sao — timeline và metrics server nói gì?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Nsight Systems trả lời <strong>khi nào</strong> CPU/GPU chạy, gap, copy, sync. Nsight Compute trả lời <strong>vì sao</strong> một kernel chậm — chỉ sau khi đã biết kernel nghi ngờ. Triton <code>/metrics</code> tách queue vs compute; dùng <strong>focused profiling</strong> + NVTX thay vì profile cả server mù quáng.</p>
-</div>
-</div>
-<p>Dùng <code>nsys</code> khi: PA/<code>trtexec</code> nói chậm nhưng không giải thích; gap giữa kernels; CPU overhead; H2D/D2H bất thường; sync nhiều; Python/C++ nghi nghẽn; p99 spike metrics chưa đủ.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nsys</span> profile <span class="at">--trace</span><span class="op">=</span>cuda,nvtx,osrt <span class="at">--output</span><span class="op">=</span>infer_report python infer.py</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">nsys-ui</span> infer_report.nsys-rep</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">nsys</span> stats infer_report.nsys-rep</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> nvtx</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> nvtx.annotate(<span class="st">"preprocess"</span>):</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> preprocess(image)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> nvtx.annotate(<span class="st">"inference"</span>):</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> session.run(<span class="va">None</span>, {<span class="st">"input"</span>: x})</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> nvtx.annotate(<span class="st">"postprocess"</span>):</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> postprocess(y)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Focused: warmup → start profile → measured iters → stop (<code>cudaProfilerStart/Stop</code> hoặc NVTX).</p>
-<p><strong>Hướng A — profile Triton server rồi gửi load:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nsys</span> profile <span class="at">--trace</span><span class="op">=</span>cuda,nvtx,osrt <span class="at">--output</span><span class="op">=</span>triton_server_profile <span class="dt">\</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  tritonserver <span class="at">--model-repository</span><span class="op">=</span>/models</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># terminal khác:</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> resnet50 <span class="at">-i</span> grpc <span class="at">--concurrency-range</span> 8</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Hướng B:</strong> profile custom backend/Python app. Production server lớn → focused profiling hoặc trace sampling, tránh report khổng lồ.</p>
-<p>CPU timeline xem: client/server/backend/Python threads, CUDA API, sync, NVTX. GPU timeline xem: kernels, memcpy H2D/D2H, streams, idle gaps.</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 72%">
-<col style="width: 28%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Pattern timeline</th>
-<th style="text-align: left;">Gợi ý</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Gap giữa kernels</td>
-<td style="text-align: left;">GPU chờ CPU launch hoặc data</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Nhiều tiny kernels (10 µs + gap 30 µs)</td>
-<td style="text-align: left;">Launch overhead → fusion / CUDA Graph</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">H2D→kernels→D2H lặp</td>
-<td style="text-align: left;">Copy về CPU giữa pipeline</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><code>cudaDeviceSynchronize</code> / <code>cudaMalloc</code> mỗi request</td>
-<td style="text-align: left;">Sync/alloc trong hot path</td>
-</tr>
-</tbody>
-</table>
-<p>Nsight Systems: <em>when</em>. Nsight Compute: occupancy, memory throughput, Tensor Core, warp stalls — sau khi đã pinpoint kernel.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> localhost:8002/metrics <span class="kw">|</span> <span class="fu">head</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Nhóm metrics: request success/failure/count/exec; request/queue/compute_*_duration_us; GPU util/memory. Queue↑ = saturation hoặc batch delay. Interpret cùng latency/TP/p99 — không chỉ GPU util.</p>
-<p>Trace (format có thể đổi theo version):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tritonserver</span> <span class="at">--model-repository</span><span class="op">=</span>/models <span class="dt">\</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--trace-config</span> triton,file=/tmp/trace.json <span class="dt">\</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--trace-config</span> triton,log-frequency=50 <span class="dt">\</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--trace-config</span> rate=100 <span class="at">--trace-config</span> level=TIMESTAMPS <span class="dt">\</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--trace-config</span> count=100</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-17-contents" aria-controls="callout-17" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Tên metric thường gặp (kiểm tra version)
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-17" class="callout-17-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><code>nv_inference_request_success</code>, <code>nv_inference_request_failure</code>, <code>nv_inference_count</code>, <code>nv_inference_exec_count</code>, <code>nv_inference_request_duration_us</code>, <code>nv_inference_queue_duration_us</code>, <code>nv_inference_compute_input_duration_us</code>, <code>nv_inference_compute_infer_duration_us</code>, <code>nv_inference_compute_output_duration_us</code>, <code>nv_gpu_utilization</code>, <code>nv_gpu_memory_total_bytes</code>, <code>nv_gpu_memory_used_bytes</code>. Tên có thể đổi — luôn đối chiếu output thật.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-bottlenecks" class="level2" data-number="7.8">
-<h2 data-number="7.8" class="anchored" data-anchor-id="sec-bottlenecks"><span class="header-section-number">7.8</span> Bottleneck playbook</h2>
-<blockquote class="blockquote">
-<p>Thấy chậm rồi nhảy tối ưu — hay đi symptom → evidence → hypothesis → experiment?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Chuỗi bắt buộc: <strong>symptom → metric evidence → hypothesis → experiment → fix → remeasure</strong>. Một bảng triệu chứng thay cho đoán mò; case study cho thấy <code>trtexec</code> nhanh / Triton chậm không mâu thuẫn.</p>
-</div>
-</div>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 23%">
-<col style="width: 21%">
-<col style="width: 35%">
-<col style="width: 19%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Triệu chứng</th>
-<th style="text-align: left;">Bằng chứng</th>
-<th style="text-align: left;">Nguyên nhân có thể</th>
-<th style="text-align: left;">Hành động</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;"><code>trtexec</code> nhanh, Triton chậm</td>
-<td style="text-align: left;">PA queue/client latency cao</td>
-<td style="text-align: left;">service, batching, network, config</td>
-<td style="text-align: left;">PA breakdown, metrics, config sweep</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">GPU util thấp, latency cao</td>
-<td style="text-align: left;">GPU thấp + CPU busy / client high</td>
-<td style="text-align: left;">CPU/network/preprocess</td>
-<td style="text-align: left;">profile CPU, gRPC, tối ưu preprocess</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">GPU util thấp, TP thấp</td>
-<td style="text-align: left;">concurrency/batch thấp</td>
-<td style="text-align: left;">không đủ load</td>
-<td style="text-align: left;">tăng concurrency/batch/dynamic batch</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">GPU util cao, p99 cao</td>
-<td style="text-align: left;">queue↑</td>
-<td style="text-align: left;">saturation</td>
-<td style="text-align: left;">giảm load, scale, tăng instance, tối ưu model</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">TP plateau, latency↑</td>
-<td style="text-align: left;">concurrency↑ nhưng TP không↑</td>
-<td style="text-align: left;">overload</td>
-<td style="text-align: left;">chọn knee, capacity planning</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">H2D cao</td>
-<td style="text-align: left;"><code>trtexec</code> H2D, Nsight memcpy</td>
-<td style="text-align: left;">data transfer</td>
-<td style="text-align: left;">pinned, GPU preprocess, shared mem</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">D2H cao</td>
-<td style="text-align: left;">output copy lớn</td>
-<td style="text-align: left;">output/postprocess CPU</td>
-<td style="text-align: left;">giảm output, GPU postprocess, top-k GPU</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Enqueue cao</td>
-<td style="text-align: left;">enqueue &gt; GPU</td>
-<td style="text-align: left;">CPU launch</td>
-<td style="text-align: left;">CUDA Graph, fusion, batch, async</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Một layer chiếm nhiều</td>
-<td style="text-align: left;"><code>--dumpProfile</code></td>
-<td style="text-align: left;">layer bottleneck</td>
-<td style="text-align: left;">plugin, arch, precision, shape</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">INT8 ≯ FP16</td>
-<td style="text-align: left;">layer precision, fallback</td>
-<td style="text-align: left;">unsupported INT8, Q/DQ, mem-bound</td>
-<td style="text-align: left;">inspect precision, QAT, so batch</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Dynamic batching↑ p99</td>
-<td style="text-align: left;">queue, max delay</td>
-<td style="text-align: left;">batching delay</td>
-<td style="text-align: left;">giảm delay/preferred batch, scale</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Client ≫ server</td>
-<td style="text-align: left;">PA client components</td>
-<td style="text-align: left;">network/serialization</td>
-<td style="text-align: left;">co-locate, gRPC, binary</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">p99 spike định kỳ</td>
-<td style="text-align: left;">time series, trace, logs</td>
-<td style="text-align: left;">GC, reload, cron, scrape</td>
-<td style="text-align: left;">isolate, giảm log, tránh hot reload</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">First request chậm</td>
-<td style="text-align: left;">cold start</td>
-<td style="text-align: left;">load/CUDA/deserialize</td>
-<td style="text-align: left;">warmup, readiness, model warmup</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Shape cụ thể chậm</td>
-<td style="text-align: left;">shape sweep</td>
-<td style="text-align: left;">profile không tối ưu shape</td>
-<td style="text-align: left;">chỉnh opt, split engines</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Memory tăng theo thời gian</td>
-<td style="text-align: left;">metrics, <code>nvidia-smi</code></td>
-<td style="text-align: left;">leak/cache</td>
-<td style="text-align: left;">reuse buffers, inspect backend</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Load OK nhưng không batch</td>
-<td style="text-align: left;">PA, config</td>
-<td style="text-align: left;"><code>max_batch_size=0</code>, dims, low concurrency</td>
-<td style="text-align: left;">fix config, tăng concurrency</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">CPU 100%, GPU idle</td>
-<td style="text-align: left;">system + Nsight</td>
-<td style="text-align: left;">preprocess/backend/client</td>
-<td style="text-align: left;">chuyển GPU/C++, scale CPU</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Many tiny kernels</td>
-<td style="text-align: left;">Nsight</td>
-<td style="text-align: left;">chưa fuse / fallback</td>
-<td style="text-align: left;">TensorRT, tối ưu ONNX, CUDA Graph</td>
-</tr>
-</tbody>
-</table>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-19-contents" aria-controls="callout-19" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Case studies (số liệu)
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-19" class="callout-19-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><strong>CS1:</strong> <code>trtexec</code> median <strong>2 ms</strong> vs PA p50=<strong>15</strong> / p99=<strong>80</strong> — không mâu thuẫn (<code>trtexec</code> = engine; Triton thêm serialize, network, queue, batching, I/O). Debug: CSV breakdown (Client Send … Client Recv) + metrics <code>request</code>/<code>queue</code>/<code>compute_infer</code> duration. So <strong>Server Compute Infer</strong> với <code>trtexec</code>: ≈ → overhead ngoài compute; ≫ → backend/shape/batch/precision/instance mismatch.</p>
-<p><strong>CS2:</strong> GPU util <strong>25%</strong>, p99=<strong>200</strong>, Queue low, Client Send/Recv high → client/network. Thử client local, gRPC, giảm payload, binary tensor, kiểm preprocess client. Latency giảm mạnh khi local → không phải GPU.</p>
-<p><strong>CS3:</strong> <code>max_queue_delay_microseconds: 10000</code> → TP <strong>+40%</strong>, p99 <strong>80→180</strong>. Giảm delay, bỏ preferred batch không cần, tăng instance, chọn OP theo p99 (không chỉ max TP).</p>
-<p><strong>CS4:</strong> FP16 p50 <strong>4.0 ms</strong> vs INT8 <strong>4.3 ms</strong> — dumpProfile, precision fallback, so <code>--noDataTransfers</code>, batch 1/8/16/32, kiểm accuracy trước khi kết luận “INT8 chậm hơn”.</p>
-<p><strong>CS5:</strong> p99 spike mỗi <strong>~5 phút</strong>, queue spike — poll/reload, logging, cron, scrape nặng, GC, contention. Time-align logs, Triton trace, <code>nsys</code> quanh cửa sổ spike.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-workflow" class="level2" data-number="7.9">
-<h2 data-number="7.9" class="anchored" data-anchor-id="sec-workflow"><span class="header-section-number">7.9</span> Workflow E2E và production</h2>
-<blockquote class="blockquote">
-<p>Từ model mới tới operating point an toàn — các bước nào và lỗi nào tránh?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Correctness trước performance. Workflow: env → <code>trtexec</code> shapes → Triton repo → health → PA single → PA sweep (+ metrics) → plot (µs→ms) → chọn OP dưới SLO → Nsight nếu cần → report. Production capacity = <strong>max safe TP under SLO with headroom</strong>.</p>
-</div>
-</div>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 15%">
-<col style="width: 26%">
-<col style="width: 57%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Step</th>
-<th style="text-align: left;">Việc làm</th>
-<th style="text-align: left;">Lệnh / ghi chú chính</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">0</td>
-<td style="text-align: left;">Correctness</td>
-<td style="text-align: left;">ONNX≈PT, TRT≈ONNX, INT8 accuracy, Triton shape/type</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">Environment</td>
-<td style="text-align: left;"><code>nvidia-smi</code> + print TensorRT/ORT versions</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">2</td>
-<td style="text-align: left;">Baseline <code>trtexec</code></td>
-<td style="text-align: left;">build FP16 dynamic; loop batch 1…32 + dumpProfile</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">3–4</td>
-<td style="text-align: left;">Triton repo + start</td>
-<td style="text-align: left;"><code>model_repository/.../model.plan</code>; <code>docker run ... tritonserver</code></td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">5</td>
-<td style="text-align: left;">Health</td>
-<td style="text-align: left;"><code>curl .../v2/health/ready</code>; model metadata</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">6–7</td>
-<td style="text-align: left;">PA</td>
-<td style="text-align: left;">concurrency 1; rồi <code>1:128:4</code> + <code>--collect-metrics</code></td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">8</td>
-<td style="text-align: left;">Plot</td>
-<td style="text-align: left;"><code>p99 latency</code> thường <strong>µs</strong> → <code>/1000</code> ra ms</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">9</td>
-<td style="text-align: left;">Operating point</td>
-<td style="text-align: left;">max TP s.t. p99&lt;SLO, error=0, mem OK, headroom</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">10</td>
-<td style="text-align: left;">Nsight nếu cần</td>
-<td style="text-align: left;">profile server + load trong cửa sổ đo</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">11</td>
-<td style="text-align: left;">Report</td>
-<td style="text-align: left;">reproducible: env, tables, curve, bottleneck, recommendation</td>
-</tr>
-</tbody>
-</table>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 45%">
-<col style="width: 25%">
-<col style="width: 30%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Mistake</th>
-<th style="text-align: left;">Sai</th>
-<th style="text-align: left;">Đúng</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">“Latency = 5 ms”</td>
-<td style="text-align: left;">Nêu tool, batch, shape, precision, có/không transfer</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">2</td>
-<td style="text-align: left;">FP16 trên A100 vs INT8 trên T4</td>
-<td style="text-align: left;">Cùng GPU/driver/TRT/input/batch/concurrency</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">3</td>
-<td style="text-align: left;">Max TP bỏ p99</td>
-<td style="text-align: left;">Maximize TP <strong>subject to</strong> p99 SLO</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">4</td>
-<td style="text-align: left;">Chỉ nhìn GPU util</td>
-<td style="text-align: left;">Kèm p99, queue, bandwidth, copy</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">5</td>
-<td style="text-align: left;">Không warmup</td>
-<td style="text-align: left;">Steady-state sau warmup</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">6</td>
-<td style="text-align: left;">Synthetic → kết luận production</td>
-<td style="text-align: left;">Input đại diện cho acceptance</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">7</td>
-<td style="text-align: left;">Bật dynamic batch không đo p99</td>
-<td style="text-align: left;">Batching là tradeoff</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">8</td>
-<td style="text-align: left;">Bỏ qua data transfer</td>
-<td style="text-align: left;">Compute 1 ms + H2D/D2H 5 ms → bottleneck là copy</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">9</td>
-<td style="text-align: left;">Không lưu baseline</td>
-<td style="text-align: left;">Không phát hiện regress</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">10</td>
-<td style="text-align: left;">Nsight quá sớm</td>
-<td style="text-align: left;">Metrics/bench trước; timeline khi cần giải thích</td>
-</tr>
-</tbody>
-</table>
-<div class="cell" data-fig-width="7" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-l7-workflow" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-l7-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div>
-<pre class="mermaid mermaid-js" data-label="fig-l7-workflow">flowchart LR
-  A([Artifact]) --&gt;|"trtexec / ORT"| E([Engine bench])
-  E --&gt;|"Perf Analyzer"| S([Service load])
-  S --&gt;|"Metrics / MA"| M([Config + metrics])
-  M --&gt;|"Nsight"| N([Timeline])
-  N --&gt;|"optimize"| B([New baseline])
-  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
-  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
-  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
-  class A,E,S,M,N soft
-  class B hot
-</pre>
-</div>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l7-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Hình&nbsp;7.5: Spine tô sáng New baseline / operating point sau khi đo và tối ưu.
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-21-contents" aria-controls="callout-21" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Workflow — lệnh môi trường + operating point
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-21" class="callout-21-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nvidia-smi</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-</span> <span class="op">&lt;&lt;'PY'</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="st">import sys</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="st">print("python", sys.version)</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="st">try:</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="st">    import tensorrt as trt; print("tensorrt", trt.__version__)</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="st">except Exception as e: print("tensorrt not available", e)</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="st">try:</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="st">    import onnxruntime as ort; print("onnxruntime", ort.__version__)</span></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="st">except Exception as e: print("onnxruntime not available", e)</span></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="op">PY</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Candidate OP: max TP s.t. p99 &lt; SLO, error/timeout = 0, GPU mem OK, còn headroom (không chạy sát saturation). Báo cáo tối thiểu: env + bảng trtexec/PA + curve + bottleneck + recommendation config.</p>
-</div>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-22-contents" aria-controls="callout-22" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Production checklist (6 nhóm)
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-22" class="callout-22-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><strong>Correctness</strong></p>
-<ul class="task-list">
-<li><label><input type="checkbox">Output / accuracy vs reference; FP16/INT8 numerical OK<br>
-</label></li>
-<li><label><input type="checkbox">Dynamic shape inputs nằm trong profile</label></li>
-</ul>
-<p><strong>Engine-level</strong></p>
-<ul class="task-list">
-<li><label><input type="checkbox"><code>trtexec</code> các batch/shape quan trọng; so precision nếu phù hợp<br>
-</label></li>
-<li><label><input type="checkbox">dumpProfile; H2D/D2H; warmup; <strong>không</strong> trộn build với infer</label></li>
-</ul>
-<p><strong>Service-level</strong></p>
-<ul class="task-list">
-<li><label><input type="checkbox">PA concurrency (± request-rate nếu traffic theo RPS)<br>
-</label></li>
-<li><label><input type="checkbox">p50/p95/p99 + queue/compute; HTTP vs gRPC đã đo<br>
-</label></li>
-<li><label><input type="checkbox">Input đại diện; dynamic batching + instance đã thử<br>
-</label></li>
-<li><label><input type="checkbox">Error/timeout = 0 tại recommended operating point</label></li>
-</ul>
-<p><strong>System profiling</strong></p>
-<ul class="task-list">
-<li><label><input type="checkbox"><code>nsys</code> nếu bottleneck chưa rõ: gaps, copies, sync, no <code>cudaMalloc</code> hot path</label></li>
-</ul>
-<p><strong>Observability</strong></p>
-<ul class="task-list">
-<li><label><input type="checkbox">Scrape <code>/metrics</code>; dashboard TP / latency / p99 / queue / errors / GPU util+mem<br>
-</label></li>
-<li><label><input type="checkbox">Alerts: SLO p99, error rate, queue duration, GPU memory; version labels; lưu baseline</label></li>
-</ul>
-<p><strong>Capacity</strong></p>
-<ul class="task-list">
-<li><label><input type="checkbox">Max TP under SLO + headroom; replica estimate; autoscaling signal<br>
-</label></li>
-<li><label><input type="checkbox">Overload behavior + backpressure/timeout đã thử<br>
-</label></li>
-</ul>
-</div>
-</div>
-</div>
-</section>
-<section id="mini-lab" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="mini-lab">Mini-lab</h2>
-<div class="callout callout-style-default callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Ghi chú</span>Thực hành — design ledger (mọi máy) + GPU labs optional
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Lab 1 làm được không GPU. Lab 2–4 cần TensorRT / Triton / Nsight khi có GPU. Điền số thật vào ledger khi chạy được.</p>
-</div>
-</div>
-<section id="lab-1-benchmark-ledger" class="level3 unnumbered">
-<h3 class="unnumbered anchored" data-anchor-id="lab-1-benchmark-ledger">Lab 1: Benchmark ledger</h3>
-<p>Tạo <code>benchmark_ledger.md</code> với Environment (Date, Machine, GPU, Driver, CUDA, TRT, Triton, ORT, Model, artifact, precision, shape, batch, profile, notes) và Experiment Matrix:</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">ID</th>
-<th style="text-align: left;">Tool</th>
-<th style="text-align: left;">Config</th>
-<th style="text-align: left;">Metric target</th>
-<th style="text-align: left;">Result</th>
-<th style="text-align: left;">Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">E001</td>
-<td style="text-align: left;">trtexec</td>
-<td style="text-align: left;">FP16 batch=1</td>
-<td style="text-align: left;">latency</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;"></td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">E002</td>
-<td style="text-align: left;">trtexec</td>
-<td style="text-align: left;">FP16 batch=8</td>
-<td style="text-align: left;">throughput</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;"></td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">E003</td>
-<td style="text-align: left;">perf_analyzer</td>
-<td style="text-align: left;">concurrency 1:64</td>
-<td style="text-align: left;">p99</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;"></td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">E004</td>
-<td style="text-align: left;">model_analyzer</td>
-<td style="text-align: left;">batch/instance sweep</td>
-<td style="text-align: left;">best config</td>
-<td style="text-align: left;"></td>
-<td style="text-align: left;"></td>
-</tr>
-</tbody>
-</table>
-<p>Mục tiêu: thói quen đo có hệ thống.</p>
-</section>
-<section id="lab-2-trtexec-static-dynamic-layer" class="level3 unnumbered">
-<h3 class="unnumbered anchored" data-anchor-id="lab-2-trtexec-static-dynamic-layer">Lab 2: trtexec static + dynamic + layer</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--onnx</span><span class="op">=</span>model.onnx <span class="at">--saveEngine</span><span class="op">=</span>model_fp16.plan <span class="dt">\</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--shapes</span><span class="op">=</span>input:1x3x224x224 <span class="at">--fp16</span> <span class="at">--verbose</span> <span class="op">&gt;</span> build_fp16.log</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>model_fp16.plan <span class="at">--shapes</span><span class="op">=</span>input:1x3x224x224 <span class="op">&gt;</span> bench_fp16_b1.log</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-E</span> <span class="st">"Throughput|Latency|Enqueue|H2D|GPU Compute|D2H|Total Host|Total GPU"</span> bench_fp16_b1.log</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--onnx</span><span class="op">=</span>model.onnx <span class="at">--saveEngine</span><span class="op">=</span>model_dynamic_fp16.plan <span class="at">--fp16</span> <span class="dt">\</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--minShapes</span><span class="op">=</span>input:1x3x224x224 <span class="at">--optShapes</span><span class="op">=</span>input:8x3x224x224 <span class="at">--maxShapes</span><span class="op">=</span>input:32x3x224x224</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> b <span class="kw">in</span> 1 2 4 8 16 32<span class="kw">;</span> <span class="cf">do</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>model_dynamic_fp16.plan <span class="at">--shapes</span><span class="op">=</span>input:<span class="va">${b}</span>x3x224x224 <span class="dt">\</span></span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">&gt;</span> bench_dynamic_b<span class="va">${b}</span>.log</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>model_dynamic_fp16.plan <span class="at">--shapes</span><span class="op">=</span>input:8x3x224x224 <span class="dt">\</span></span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--profilingVerbosity</span><span class="op">=</span>detailed <span class="at">--dumpLayerInfo</span> <span class="at">--dumpProfile</span> <span class="at">--separateProfileRun</span> <span class="dt">\</span></span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> profile_layers.log</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Quan sát: GPU Compute % Host Latency? H2D/D2H đáng kể? Enqueue &gt; GPU? <code>--noDataTransfers</code> đổi gì? Batch nào sample TP cao nhất / latency thấp nhất? <code>opt</code> có nhanh nhất? Production batch=1 thì profile có hợp? Top layer Time(%) / type / precision / conversion / Q-DQ / fusion?</p>
-</section>
-<section id="lab-3-perf-analyzer-sweep-curve-metrics" class="level3 unnumbered">
-<h3 class="unnumbered anchored" data-anchor-id="lab-3-perf-analyzer-sweep-curve-metrics">Lab 3: Perf Analyzer sweep + curve + metrics</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--gpus</span> all <span class="at">--rm</span> <span class="at">--net</span> host <span class="dt">\</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-v</span> <span class="va">$(</span><span class="bu">pwd</span><span class="va">)</span>/model_repository:/models <span class="dt">\</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  nvcr.io/nvidia/tritonserver:<span class="op">&lt;</span>RELEASE<span class="op">&gt;</span>-py3 <span class="dt">\</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  tritonserver <span class="at">--model-repository</span><span class="op">=</span>/models</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> model_name <span class="at">-i</span> grpc <span class="at">--concurrency-range</span> 1:64:4 <span class="at">-f</span> perf_concurrency.csv</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> model_name <span class="at">-i</span> grpc <span class="at">--concurrency-range</span> 1:64:4 <span class="dt">\</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--collect-metrics</span> <span class="at">--verbose-csv</span> <span class="at">-f</span> perf_metrics.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">"perf_concurrency.csv"</span>)</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> col <span class="kw">in</span> [<span class="st">"p50 latency"</span>, <span class="st">"p90 latency"</span>, <span class="st">"p95 latency"</span>, <span class="st">"p99 latency"</span>]:</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> col <span class="kw">in</span> df.columns:</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        df[col <span class="op">+</span> <span class="st">" (ms)"</span>] <span class="op">=</span> df[col] <span class="op">/</span> <span class="fl">1000.0</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>plt.plot(df[<span class="st">"Inferences/Second"</span>], df[<span class="st">"p99 latency"</span>] <span class="op">/</span> <span class="fl">1000.0</span>, marker<span class="op">=</span><span class="st">"o"</span>)</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Inferences/Second"</span>)</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"p99 latency (ms)"</span>)</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"p99 latency vs throughput"</span>)</span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>)</span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">"latency_throughput_curve.png"</span>, dpi<span class="op">=</span><span class="dv">160</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Ghi: knee point; max TP under p99 SLO; recommended OP; headroom. Plateau ở concurrency nào? p99 vượt SLO ở đâu? Server Queue tăng từ đâu? GPU util/memory theo concurrency?</p>
-</section>
-<section id="lab-4-optional-nsight-nvtx" class="level3 unnumbered">
-<h3 class="unnumbered anchored" data-anchor-id="lab-4-optional-nsight-nvtx">Lab 4 (optional): Nsight + NVTX</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nsys</span> profile <span class="at">--trace</span><span class="op">=</span>cuda,nvtx,osrt <span class="at">--output</span><span class="op">=</span>infer_loop_profile python infer_loop.py</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Trong vòng lặp: annotate <code>preprocess</code> / <code>inference</code> / <code>postprocess</code>. Hỏi: CPU gap trước kernels? H2D/D2H? Overlap? Sync hot path? Tiny kernels?</p>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-24-contents" aria-controls="callout-24" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Labs phụ (5–12) + mini project
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-24" class="callout-24-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><strong>Lab 5–6 (đã gộp Lab 3):</strong> concurrency sweep → plot curve → chọn knee / OP dưới SLO.<br>
-<strong>Lab 7:</strong> HTTP vs gRPC (xem tip Perf Analyzer).<br>
-<strong>Lab 8:</strong> <code>--collect-metrics --verbose-csv</code>; ghi GPU util/memory theo concurrency.<br>
-<strong>Lab 9:</strong> <code>curl localhost:8002/metrics | head</code> trong lúc PA chạy — đối chiếu queue vs compute.<br>
-<strong>Lab 10:</strong> bật <code>--trace-config</code> (rate/level/count/file) + PA concurrency ~32; mở <code>trace.json</code> khi p99 spike.<br>
-<strong>Lab 11:</strong> <code>infer_loop.py</code> + NVTX <code>preprocess</code>/<code>inference</code>/<code>postprocess</code> + <code>nsys profile</code>.<br>
-<strong>Lab 12 — template <code>benchmark_report.md</code>:</strong> Summary → Environment → Model → trtexec Results → PA Results → Latency–throughput Curve → Bottleneck Analysis → Recommendation.</p>
-<p><strong>Mini project</strong> (input <code>model.onnx</code> hoặc <code>.plan</code>):</p>
-<ol type="1">
-<li>Build FP16 <code>trtexec</code> → bench batch 1/4/8/16 → dumpProfile<br>
-</li>
-<li>Serve Triton → PA concurrency 1:64 → thu GPU metrics → vẽ curve<br>
-</li>
-<li>Chọn OP theo SLO; <code>nsys</code> nếu chưa rõ bottleneck → viết report</li>
-</ol>
-<p><strong>SLO giả định:</strong> p99 &lt; 100 ms · error = 0 · GPU mem &lt; 80%.</p>
-<p><strong>Deliverables:</strong> <code>benchmark_report.md</code>, trtexec logs, PA CSV, plot, bottleneck notes, recommended <code>config.pbtxt</code>.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">## Recommendation</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>Deploy <span class="in">`model_fp16.plan`</span> with:</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>max_batch_size: …</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>dynamic_batching: …</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>instance_group: …</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>preferred protocol: …</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>expected throughput / p99 / GPU util / GPU memory:</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>known risks:</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
-</section>
-</section>
-<section id="checkpoint-questions" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="checkpoint-questions">Checkpoint questions</h2>
-<ol type="1">
-<li>Vì sao <code>trtexec</code> nhanh không đảm bảo Triton service nhanh?<br>
-</li>
-<li>Throughput requests/s khác samples/s thế nào?<br>
-</li>
-<li>Vì sao p99 quan trọng hơn mean trong SLO?<br>
-</li>
-<li>Client-side latency gồm những thành phần nào?<br>
-</li>
-<li>Server-side latency gồm những thành phần nào?<br>
-</li>
-<li>Server Queue tăng nghĩa là gì?<br>
-</li>
-<li>Enqueue Time cao trong <code>trtexec</code> gợi ý gì?<br>
-</li>
-<li>H2D/D2H cao thì nên tối ưu gì?<br>
-</li>
-<li>GPU Compute Time cao thì nên tối ưu gì?<br>
-</li>
-<li>Vì sao dynamic batching có thể làm p99 xấu hơn?<br>
-</li>
-<li>Concurrency khác request rate thế nào?<br>
-</li>
-<li>Khi nào dùng request-rate mode thay concurrency mode?<br>
-</li>
-<li>Model Analyzer khác Perf Analyzer thế nào?<br>
-</li>
-<li>Nsight Systems trả lời câu hỏi gì mà PA không trả lời được?<br>
-</li>
-<li>Dấu hiệu Nsight cho CPU launch overhead?<br>
-</li>
-<li>Khi nào cần Nsight Compute?<br>
-</li>
-<li>Vì sao cần warmup?<br>
-</li>
-<li>Vì sao không trộn engine build với inference time?<br>
-</li>
-<li>Vì sao GPU utilization cao chưa chắc tốt?<br>
-</li>
-<li>Chọn production config theo max TP hay TP under p99 SLO?</li>
-</ol>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-25-contents" aria-controls="callout-25" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Tự kiểm — đáp án ngắn
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-25" class="callout-25-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<ol type="1">
-<li>PA đo thêm network, queue, batching, serialize, preprocess, concurrency.<br>
-</li>
-<li>samples/s ≈ requests/s × batch.<br>
-</li>
-<li>User/SLO cảm nhận worst-case; mean che tail.<br>
-</li>
-<li>Send + network + server path + recv (toàn bộ phía client thấy).<br>
-</li>
-<li>Nhận request → queue → compute in/infer/out → gửi response.<br>
-</li>
-<li>Request chờ trước execute — saturation/batch delay/thiếu instance.<br>
-</li>
-<li>Host/CPU launch overhead; thử CUDA Graph/fusion/batch.<br>
-</li>
-<li>Pinned memory, giữ data trên GPU, giảm tensor, shared mem.<br>
-</li>
-<li>Precision, batch, fusion, architecture, layer profile.<br>
-</li>
-<li>Chờ gom batch làm queue delay tăng tail.<br>
-</li>
-<li>Outstanding đồng thời vs tốc độ gửi có chủ đích.<br>
-</li>
-<li>Khi traffic production mô tả bằng arrival rate (RPS).<br>
-</li>
-<li>PA đo một config; MA sweep nhiều config + memory/util.<br>
-</li>
-<li>Timeline: khi nào CPU/GPU, gap, copy, sync.<br>
-</li>
-<li>Nhiều tiny kernels + gap lớn giữa chúng.<br>
-</li>
-<li>Đã biết kernel/layer cụ thể đáng nghi.<br>
-</li>
-<li>Loại cold start (CUDA, load, cache) khỏi steady-state.<br>
-</li>
-<li>Build có thể phút; production không build mỗi request.<br>
-</li>
-<li>Có thể saturated, queue↑, p99 fail, bandwidth-bound.<br>
-</li>
-<li><strong>Throughput under p99 SLO</strong> (+ headroom, error=0).</li>
-</ol>
-</div>
-</div>
-</div>
-</section>
-<section id="glossary" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="glossary">Glossary</h2>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 47%">
-<col style="width: 52%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Thuật ngữ</th>
-<th style="text-align: left;">Định nghĩa</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;"><strong>Benchmark</strong></td>
-<td style="text-align: left;">Đo performance theo methodology cụ thể</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Profiling</strong></td>
-<td style="text-align: left;">Phân tích nơi thời gian/tài nguyên bị tiêu thụ</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Latency</strong></td>
-<td style="text-align: left;">Thời gian từ start tới finish (cần nêu điểm đo)</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Throughput</strong></td>
-<td style="text-align: left;">Số inference/request/sample mỗi giây</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Concurrency</strong></td>
-<td style="text-align: left;">Số request outstanding cùng lúc</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Request rate</strong></td>
-<td style="text-align: left;">Tốc độ gửi request vào server</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>p99</strong></td>
-<td style="text-align: left;">99th percentile latency</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Tail latency</strong></td>
-<td style="text-align: left;">Phần cuối phân phối (p95/p99/p999)</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Queue time</strong></td>
-<td style="text-align: left;">Thời gian chờ trước khi execute</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>H2D / D2H</strong></td>
-<td style="text-align: left;">Host-to-device / device-to-host transfer</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Enqueue Time</strong></td>
-<td style="text-align: left;">Thời gian host enqueue inference/CUDA work</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>GPU Compute Time</strong></td>
-<td style="text-align: left;">Thời gian GPU execute kernels</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Dynamic batching</strong></td>
-<td style="text-align: left;">Gom nhiều request thành batch để tăng util/TP</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Knee point</strong></td>
-<td style="text-align: left;">Điểm latency tăng nhanh trong khi TP gần plateau</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Saturation</strong></td>
-<td style="text-align: left;">Tài nguyên gần full; queue thường tăng mạnh</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Nsight Systems</strong></td>
-<td style="text-align: left;">System-wide profiler timeline CPU/GPU/CUDA</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Nsight Compute</strong></td>
-<td style="text-align: left;">Kernel-level profiler</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Prometheus metrics</strong></td>
-<td style="text-align: left;">Metrics text endpoint để scrape/monitor</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Warmup</strong></td>
-<td style="text-align: left;">Iterations trước cửa sổ đo để loại cold start</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Operating point</strong></td>
-<td style="text-align: left;">Config/load vận hành (thường gần knee dưới SLO)</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Headroom</strong></td>
-<td style="text-align: left;">Dung lượng dự phòng dưới saturation</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Client-side latency</strong></td>
-<td style="text-align: left;">Đo từ phía client (gồm network)</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Server-side latency</strong></td>
-<td style="text-align: left;">Đo trong server (nhận → gửi)</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Focused profiling</strong></td>
-<td style="text-align: left;">Chỉ profile vùng performance-critical</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="summary" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
-<ul>
-<li>Đo trước khi tối ưu; methodology trước khi tin số; bottleneck analysis trước khi “sưu tập số”.<br>
-</li>
-<li>Tool map: <code>trtexec</code> = ceiling, PA = service, MA = config search, <code>nsys</code> = timeline, Prometheus = prod.<br>
-</li>
-<li>Luôn nêu điểm đo latency; report p50/p95/p99 + queue/compute — không chỉ mean/GPU util.<br>
-</li>
-<li>Chọn <strong>max TP under p99 SLO</strong> tại knee, giữ headroom.<br>
-</li>
-<li>Warmup; tách build/infer; control variables; input đại diện; Little’s Law để sanity-check.<br>
-</li>
-<li>Đọc <code>trtexec</code> theo case A–D (compute / copy / enqueue / underutilized).<br>
-</li>
-<li>PA: concurrency vs RPS; CSV breakdown; MA dưới constraint.<br>
-</li>
-<li>Timeline khi số đo chưa đủ; metrics để tách queue vs compute.<br>
-</li>
-<li>Playbook symptom→remeasure; lưu baseline cho regression.</li>
-</ul>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-26-contents" aria-controls="callout-26" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Mental models cần nhớ
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-26" class="callout-26-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p>Đừng hỏi “model nhanh không?” — hỏi: nhanh <strong>ở đâu</strong> (engine/service/client), <strong>dưới load nào</strong>, <strong>metric nào</strong> (p99?), <strong>so với baseline nào</strong>.<br>
-Benchmark là thí nghiệm: một thay đổi chính, control variables, warmup, lặp lại, report distribution.<br>
-Tối ưu là vòng lặp: measure → hypothesize → change → remeasure.<br>
-Max throughput ≠ production capacity — capacity = max <strong>safe</strong> TP under SLO + headroom.<br>
-Một metric không bao giờ đủ: luôn cặp latency↔︎throughput, mean↔︎p99, util↔︎queue, compute↔︎copy.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="preview-bài-tiếp-theo" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="preview-bài-tiếp-theo">Preview bài tiếp theo</h2>
-<p>Lesson 8 — <strong>Safe Model Rollouts and Production Operations</strong>: Canary, A/B, Shadow, Versioning, Rollback, Monitoring, Autoscaling, SLOs, Incident Response.</p>
-<pre class="text"><code>Lesson 7: How do we know the model/service is fast enough?
-Lesson 8: How do we deploy changes safely without breaking users?</code></pre>
-</section>
-<section id="references" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
-<ol type="1">
-<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/reference/command-line-programs.html">NVIDIA TensorRT — Command-Line Programs (<code>trtexec</code>)</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/benchmarking.html">NVIDIA TensorRT — Performance Benchmarking with <code>trtexec</code></a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/benchmarking.html">NVIDIA TensorRT — Per-Layer Runtime and Layer Information</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/perf_analyzer/README.html">NVIDIA Triton — Performance Analyzer</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/perf_analyzer/docs/measurements_metrics.html">NVIDIA Triton — Perf Analyzer Measurements and Metrics</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_analyzer.html">NVIDIA Triton — Model Analyzer</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/nsight-systems/UserGuide/index.html">NVIDIA Nsight Systems User Guide — Focused Profiling / NVTX</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/metrics.html">NVIDIA Triton — Metrics</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/trace.html">NVIDIA Triton — Server Trace</a></li>
-</ol>
+::: {.callout-note icon=false}
+## Mục tiêu bài học
+Mục tiêu của bài này là giúp bạn biết **đo hiệu năng inference một cách đúng đắn**, thay vì chỉ nhìn một con số latency hoặc GPU utilization rồi vội tối ưu. Sau bài này, bạn cần biết cách benchmark TensorRT engine bằng `trtexec`, benchmark Triton service bằng Perf Analyzer, đọc metrics GPU/server/client, dùng Nsight Systems để nhìn timeline CPU/GPU, và suy luận bottleneck dựa trên bằng chứng.
+:::
 
+## Vị trí của Lesson 7 trong chuỗi học
 
-</section>
+Ở các bài trước, bạn đã học cách đi từ model artifact tới production serving:
+
+```text
+Lesson 1: Modern GPU Inference Architecture
+    request -> preprocessing -> batching -> runtime -> GPU execution -> response
+
+Lesson 2: ONNX Fundamentals
+    model graph -> operators -> opset -> shapes -> export pipeline
+
+Lesson 3: ONNX Runtime Deep Dive
+    InferenceSession -> Execution Providers -> graph optimization -> I/O Binding
+
+Lesson 4: TensorRT Internals
+    ONNX -> builder -> optimized engine -> execution context -> FP16/INT8
+
+Lesson 5: Quantization Deep Dive
+    PTQ/QAT -> calibration -> Q/DQ graph -> INT8/FP8 -> accuracy recovery
+
+Lesson 6: NVIDIA Triton Inference Server
+    model repository -> backend -> scheduler -> dynamic batching -> production serving
 ```
+
+Lesson 7 trả lời câu hỏi tiếp theo:
+
+```text
+Làm sao biết hệ thống inference của mình thật sự nhanh?
+Làm sao biết nó nghẽn ở đâu?
+Làm sao chứng minh một thay đổi là tốt hơn, chứ không chỉ "có vẻ nhanh hơn"?
+```
+
+Một pipeline inference production không thể tối ưu bằng cảm giác. Bạn cần một phương pháp đo có cấu trúc:
+
+```text
+model artifact
+    |
+    | benchmark isolated model execution
+    v
+TensorRT / ONNX Runtime benchmark
+    |
+    | benchmark service behavior
+    v
+Triton + client load benchmark
+    |
+    | inspect server metrics and GPU metrics
+    v
+Prometheus / metrics / Model Analyzer
+    |
+    | inspect timeline when numbers are not enough
+    v
+Nsight Systems
+    |
+    | infer bottleneck and optimize
+    v
+new baseline
+```
+
+Tư duy quan trọng nhất của bài này:
+
+```text
+Optimization without measurement is guessing.
+Measurement without methodology is noise.
+Benchmarking without bottleneck analysis is just number collection.
+```
+
+
+## Learning outcomes
+
+Sau bài này, bạn cần giải thích và thực hành được:
+
+1. Vì sao benchmark inference khó hơn chỉ chạy `time python app.py`.
+2. Sự khác nhau giữa model benchmark, service benchmark, system profiling và production monitoring.
+3. Các metric cốt lõi: latency, throughput, concurrency, request rate, batch size, queue time, compute time, p50, p95, p99.
+4. Sự khác nhau giữa client-side latency và server-side latency.
+5. Vì sao average latency thường đánh lừa trong production.
+6. Vì sao p99 latency quan trọng với SLO.
+7. Vì sao GPU utilization cao chưa chắc tốt, GPU utilization thấp chưa chắc model chậm.
+8. Cách dùng `trtexec` để benchmark ONNX model hoặc TensorRT plan file.
+9. Cách đọc các metric của `trtexec`: throughput, host latency, enqueue time, H2D, GPU compute, D2H.
+10. Cách dùng `--dumpProfile`, `--dumpLayerInfo`, `--profilingVerbosity=detailed` để xem per-layer profile.
+11. Cách dùng Perf Analyzer để benchmark Triton theo concurrency mode và request rate mode.
+12. Cách đọc output CSV của Perf Analyzer.
+13. Cách dùng Perf Analyzer để thu server-side Prometheus metrics.
+14. Cách phân biệt throughput plateau, latency knee và overload region.
+15. Cách dùng Model Analyzer để sweep cấu hình batch size / instance count / GPU memory.
+16. Khi nào dùng Nsight Systems thay vì chỉ nhìn logs.
+17. Cách đọc timeline CPU/GPU ở mức khái niệm: CUDA API, kernel launch, memcpy, synchronization, NVTX ranges.
+18. Cách phát hiện CPU launch overhead, H2D/D2H bottleneck, GPU compute bottleneck, queueing bottleneck.
+19. Cách xây benchmark report có thể so sánh qua nhiều lần chạy.
+20. Cách thiết kế một quy trình performance regression test cho model serving.
+21. Cách xử lý các case phổ biến: `trtexec` nhanh nhưng Triton chậm, p99 spike, GPU util thấp, INT8 không nhanh hơn FP16, dynamic batching làm latency xấu đi.
+
+
+## Prerequisites
+
+Bạn nên đã nắm:
+
+- Tensor shape và batch dimension.
+- ONNX input/output names.
+- TensorRT engine và optimization profile.
+- Dynamic batching trong Triton.
+- `config.pbtxt`, `instance_group`, `max_batch_size`.
+- Docker cơ bản.
+- Linux command line.
+- Python cơ bản.
+- NVIDIA GPU stack: driver, CUDA, TensorRT, Triton container nếu muốn chạy lab.
+
+Các lab trong bài chia thành hai nhóm:
+
+1. **Benchmark design labs**: bạn có thể đọc và chuẩn bị trên bất kỳ máy nào.
+2. **GPU labs**: cần NVIDIA GPU, TensorRT hoặc Triton container.
+
+Nếu chưa có GPU, bạn vẫn nên học toàn bộ bài. Khi có GPU, bạn chỉ cần chạy lại các lệnh benchmark và điền số đo thật vào template.
+
+
+## Vì sao profiling và benchmarking là một kỹ năng riêng?
+
+Nhiều người mới học inference optimization thường làm như sau:
+
+```text
+1. Export model sang ONNX.
+2. Build TensorRT engine.
+3. Chạy thử vài request.
+4. Thấy "nhanh hơn" hoặc "chậm hơn".
+5. Kết luận.
+```
+
+Cách này nguy hiểm vì inference performance phụ thuộc vào rất nhiều biến:
+
+- input shape,
+- batch size,
+- precision,
+- GPU model,
+- driver version,
+- CUDA version,
+- TensorRT version,
+- CPU preprocessing,
+- memory copy,
+- network,
+- dynamic batching,
+- client concurrency,
+- request payload format,
+- server queue,
+- GPU clocks,
+- thermal throttling,
+- first-run warmup,
+- model instance count,
+- Python overhead,
+- CUDA synchronization,
+- data transfer mode,
+- p99 tail behavior.
+
+Một thay đổi có thể làm **mean latency tốt hơn** nhưng **p99 xấu hơn**.
+
+Một thay đổi có thể làm **throughput tăng** nhưng **single-request latency tăng**.
+
+Một TensorRT engine có thể rất nhanh trong `trtexec` nhưng service Triton vẫn chậm vì:
+
+- client gửi request không đủ concurrency,
+- dynamic batching không gom được batch,
+- request serialization/deserialization đắt,
+- preprocessing nằm trong Python backend,
+- output tensor copy về CPU quá lớn,
+- network overhead cao,
+- `instance_group` chưa phù hợp,
+- model bị queue lâu,
+- GPU bị chia sẻ với workload khác.
+
+Bạn cần nhìn inference system như một hệ thống nhiều lớp:
+
+```text
+Client
+  |
+  | serialization
+  | network
+  v
+Triton frontend
+  |
+  | request parsing
+  | scheduler queue
+  | dynamic batching
+  v
+Backend
+  |
+  | input copy / binding
+  | runtime enqueue
+  v
+GPU
+  |
+  | kernels
+  | memory bandwidth
+  | tensor cores
+  v
+Backend output
+  |
+  | output copy
+  | response serialization
+  v
+Client receive
+```
+
+Mỗi lớp có metric riêng. Bạn chỉ tối ưu đúng khi biết lớp nào đang chi phối.
+
+
+## Bản đồ công cụ: dùng tool nào cho câu hỏi nào?
+
+Một lỗi phổ biến là dùng sai tool cho sai câu hỏi.
+
+| Câu hỏi | Tool phù hợp | Điều bạn đo được |
+|---|---|---|
+| TensorRT engine chạy nhanh nhất khoảng bao nhiêu? | `trtexec` | latency/throughput engine-level |
+| Layer nào trong TensorRT engine tốn thời gian nhất? | `trtexec --dumpProfile` | per-layer runtime |
+| Triton service đạt throughput bao nhiêu với concurrency N? | Perf Analyzer | service throughput, client/server latency |
+| Dynamic batching có giúp không? | Perf Analyzer | latency-throughput tradeoff theo concurrency/batch |
+| Config `instance_group` nào tốt hơn? | Model Analyzer | throughput/latency/memory/utilization theo config |
+| Vì sao có khoảng trống giữa các CUDA kernels? | Nsight Systems | CPU/GPU timeline |
+| Có nhiều H2D/D2H copy bất thường không? | `trtexec`, Nsight Systems | copy time, memcpy timeline |
+| Kernel cụ thể bị memory-bound hay compute-bound? | Nsight Compute | kernel-level metrics |
+| Production đang có queue/p99 spike không? | Triton metrics / Prometheus | server latency, queue, request count, GPU metrics |
+| Model version mới làm performance regress không? | Benchmark report + CI | baseline comparison |
+
+Một mental model tốt:
+
+```text
+trtexec       -> đo "engine có thể nhanh tới đâu?"
+perf_analyzer -> đo "service chạy thế nào dưới load?"
+model_analyzer -> tìm config Triton tốt hơn
+nsys          -> giải thích timeline khi số đo chưa đủ
+ncu           -> đi sâu vào kernel khi cần
+prometheus    -> quan sát production liên tục
+```
+
+Bạn không cần mở Nsight Systems cho mọi thay đổi. Nhưng khi numbers không giải thích được behavior, timeline là công cụ rất mạnh.
+
+
+## Metrics nền tảng
+
+###  Latency
+
+Latency là thời gian một request mất từ lúc bắt đầu tới lúc hoàn tất.
+
+Nhưng "bắt đầu" và "hoàn tất" phụ thuộc vào điểm đo.
+
+```text
+Client-side latency:
+    client send start -> client receives response
+
+Server-side latency:
+    server receives request -> server sends response
+
+Backend compute latency:
+    backend starts execution -> backend output ready
+
+GPU compute latency:
+    CUDA kernels start -> CUDA kernels done
+```
+
+Vì vậy, câu hỏi "latency bao nhiêu?" chưa đủ. Bạn phải hỏi tiếp:
+
+```text
+Latency đo ở đâu?
+Client hay server?
+Có network không?
+Có serialization không?
+Có queue không?
+Có H2D/D2H copy không?
+Có preprocessing/postprocessing không?
+Có warmup không?
+```
+
+### Throughput
+
+Throughput là số lượng inference xử lý được trên một đơn vị thời gian.
+
+Thường gặp:
+
+```text
+requests/second
+inferences/second
+samples/second
+tokens/second
+images/second
+```
+
+Cần phân biệt:
+
+```text
+request throughput != sample throughput
+```
+
+Ví dụ:
+
+```text
+batch size = 8
+request throughput = 100 requests/second
+
+sample throughput = 800 samples/second
+```
+
+Nếu bạn báo throughput mà không nói batch size, con số đó thiếu ngữ cảnh.
+
+### Concurrency
+
+Concurrency là số request đang outstanding cùng lúc.
+
+```text
+concurrency = 1:
+    client gửi 1 request, đợi xong, rồi gửi tiếp
+
+concurrency = 32:
+    client giữ khoảng 32 request đang bay cùng lúc
+```
+
+Concurrency khác batch size.
+
+```text
+batch size:
+    số samples trong một request hoặc một batch execution
+
+concurrency:
+    số requests đồng thời trong hệ thống
+```
+
+Triton dynamic batching có thể gom nhiều request concurrency cao thành một batch execution lớn hơn.
+
+### Request rate
+
+Request rate là tốc độ client cố tình gửi request vào server.
+
+```text
+request rate = 500 requests/second
+```
+
+Request rate mode phù hợp khi bạn muốn mô phỏng arrival pattern production.
+
+Concurrency mode phù hợp khi bạn muốn tìm latency/throughput curve theo số request outstanding.
+
+### 5.5 Percentiles
+
+Percentile cho bạn biết phân phối latency.
+
+```text
+p50  = 50% request có latency <= giá trị này
+p90  = 90% request có latency <= giá trị này
+p95  = 95% request có latency <= giá trị này
+p99  = 99% request có latency <= giá trị này
+p999 = 99.9% request có latency <= giá trị này
+```
+
+Ví dụ:
+
+```text
+p50 = 20 ms
+p99 = 200 ms
+```
+
+Nghĩa là đa số request nhanh, nhưng 1% request bị rất chậm. Với 1 triệu request/ngày, 1% là 10,000 request/ngày bị ảnh hưởng.
+
+Trong production inference, p99 thường quan trọng hơn mean vì user thường cảm nhận worst-case hơn average.
+
+### Queue time
+
+Queue time là thời gian request chờ trước khi được execute.
+
+Trong Triton, queue time có thể đến từ:
+
+- dynamic batching đang chờ gom batch,
+- không có model instance rảnh,
+- GPU đang bận,
+- rate limiter,
+- CPU/backend đang bận,
+- request bị xếp hàng phía frontend.
+
+Queue time thường là nguyên nhân p99 tăng nhanh khi hệ thống gần saturation.
+
+### Compute time
+
+Compute time là thời gian thực thi tính toán.
+
+Nhưng compute time cũng có nhiều lớp:
+
+```text
+server compute input:
+    chuẩn bị input, copy, binding
+
+server compute infer:
+    runtime/model execution
+
+server compute output:
+    chuẩn bị output
+
+GPU compute:
+    CUDA kernels
+```
+
+Nếu `server compute infer` cao, có thể model execution đắt. Nếu `server queue` cao, vấn đề có thể không nằm ở model kernel.
+
+
+## Tail latency: vì sao p99 thường là vấn đề thật?
+
+Một inference service có thể có average latency đẹp nhưng vẫn không đạt SLO.
+
+Ví dụ:
+
+```text
+SLO: p99 < 100 ms
+
+Run A:
+    mean = 25 ms
+    p50  = 20 ms
+    p95  = 60 ms
+    p99  = 180 ms
+
+Run B:
+    mean = 30 ms
+    p50  = 26 ms
+    p95  = 70 ms
+    p99  = 95 ms
+```
+
+Run A có mean tốt hơn nhưng fail SLO. Run B có mean xấu hơn nhưng đạt SLO.
+
+Nguyên nhân tail latency thường là:
+
+- queueing khi load tăng,
+- dynamic batching queue delay,
+- GPU shared workload,
+- CPU preprocessing không ổn định,
+- memory allocation trong hot path,
+- first request cold start,
+- model instance switching,
+- dynamic shape/profile switching,
+- Python garbage collection,
+- kernel launch overhead,
+- network jitter,
+- large output serialization,
+- thermal/power throttling,
+- autoscaling cold pod,
+- page fault,
+- lock contention,
+- logging quá nhiều.
+
+Mental model:
+
+```text
+At low load:
+    latency ≈ service time
+
+Near saturation:
+    latency ≈ service time + queueing delay
+
+At overload:
+    queueing delay dominates everything
+```
+
+Khi utilization tiến gần 100%, một biến động nhỏ về request arrival hoặc execution time có thể làm queue tăng mạnh. Vì vậy, production system thường cần capacity headroom thay vì chạy sát 100% liên tục.
+
+
+## Benchmark methodology chuẩn
+
+### Không benchmark cold start
+
+Lần chạy đầu tiên thường có:
+
+- CUDA context initialization,
+- model load,
+- TensorRT engine deserialization,
+- memory allocation,
+- autotuning/caching,
+- first kernel launch overhead,
+- page cache effects,
+- Triton model warmup nếu có.
+
+Benchmark phải có warmup.
+
+Ví dụ methodology:
+
+```text
+1. Load model.
+2. Run warmup 100-1000 iterations.
+3. Start measurement window.
+4. Run enough iterations for stable statistics.
+5. Repeat 3-5 times.
+6. Report median of runs and variance.
+```
+
+### Không trộn build time với inference time
+
+TensorRT build engine có thể mất từ vài giây tới nhiều phút. Production inference không build engine mỗi request.
+
+Sai:
+
+```bash
+time trtexec --onnx=model.onnx --fp16
+```
+
+Nếu bạn lấy tổng wall-clock của command này, bạn đang trộn build time và inference time.
+
+Đúng hơn:
+
+```bash
+# Build once
+trtexec \
+  --onnx=model.onnx \
+  --saveEngine=model_fp16.plan \
+  --fp16 \
+  --minShapes=input:1x3x224x224 \
+  --optShapes=input:8x3x224x224 \
+  --maxShapes=input:32x3x224x224
+
+# Benchmark saved engine
+trtexec \
+  --loadEngine=model_fp16.plan \
+  --shapes=input:8x3x224x224
+```
+
+### Ghi lại environment
+
+Một benchmark không ghi environment rất khó so sánh.
+
+Nên lưu:
+
+```text
+Date:
+Machine:
+GPU model:
+GPU count:
+Driver version:
+CUDA version:
+cuDNN version:
+TensorRT version:
+Triton version:
+ONNX Runtime version:
+Model name:
+Model version:
+Precision:
+Input shape:
+Batch size:
+Dynamic shape profile:
+Dataset/input generation:
+Warmup:
+Measurement duration:
+Client machine:
+Protocol:
+Concurrency/request-rate:
+Triton config.pbtxt:
+Power mode/clocks:
+Other GPU workloads:
+```
+
+### Cố định biến khi so sánh
+
+Nếu bạn muốn so sánh FP16 vs INT8, đừng đồng thời đổi batch size, concurrency, Triton version, input shape và machine.
+
+Sai:
+
+```text
+FP16:
+    batch=1, concurrency=1, GPU=A10, Triton 24.xx
+
+INT8:
+    batch=16, concurrency=64, GPU=L4, Triton 25.xx
+```
+
+Đúng:
+
+```text
+Same GPU
+Same driver
+Same CUDA/TensorRT
+Same input
+Same shape
+Same concurrency
+Same Triton config except model artifact
+```
+
+### Dùng input đại diện
+
+Random input có thể đủ để đo kernel time cho nhiều vision model, nhưng không đủ cho mọi hệ thống.
+
+Ví dụ:
+
+- NLP/LLM phụ thuộc sequence length.
+- Object detection output size phụ thuộc ảnh.
+- Sparse model phụ thuộc sparsity.
+- Preprocessing phụ thuộc image size/format.
+- Recommender phụ thuộc feature distribution.
+- Dynamic shape model phụ thuộc real shape distribution.
+
+Nếu production có input distribution như sau:
+
+```text
+70%: 224x224
+20%: 512x512
+10%: 1024x1024
+```
+
+Benchmark chỉ với `224x224` sẽ quá lạc quan.
+
+### Chạy đủ lâu
+
+Benchmark quá ngắn dễ bị nhiễu bởi:
+
+- clock ramp-up,
+- scheduler noise,
+- background process,
+- thermal state,
+- network transient,
+- JIT/caching.
+
+Một rule thực dụng:
+
+```text
+For quick dev iteration:
+    30-60 seconds per config
+
+For serious baseline:
+    several minutes per config, repeated runs
+
+For production readiness:
+    include long soak test under expected traffic pattern
+```
+
+### Report distribution, không chỉ mean
+
+Một report tốt nên có:
+
+```text
+throughput
+mean latency
+p50
+p90
+p95
+p99
+max
+server queue time
+server compute time
+GPU utilization
+GPU memory
+notes about errors/timeouts
+```
+
+
+## Latency-throughput curve và "knee point"
+
+Khi tăng concurrency hoặc request rate, thường bạn sẽ thấy curve như sau:
+
+```text
+Latency
+  ^
+  |                                  overload
+  |                                  /
+  |                               __/
+  |                            __/
+  |                         __/
+  |                      __/
+  |_____________________/________________> Throughput
+        efficient region     knee
+```
+
+Ba vùng quan trọng:
+
+### Underutilized region
+
+```text
+concurrency thấp
+GPU chưa được fill
+throughput thấp
+latency thấp
+```
+
+Trong vùng này, tăng concurrency/batch có thể tăng throughput mà latency chưa tăng nhiều.
+
+### Knee region
+
+```text
+throughput gần plateau
+latency bắt đầu tăng rõ
+GPU/server gần saturation
+```
+
+Đây thường là vùng tốt nhất để chọn production operating point nếu SLO cho phép.
+
+### Overload region
+
+```text
+throughput không tăng nữa
+latency tăng mạnh
+p99 tăng rất mạnh
+queue time tăng
+timeout có thể xuất hiện
+```
+
+Production không nên vận hành ổn định trong vùng này.
+
+Một benchmark tốt không chỉ tìm max throughput. Nó tìm:
+
+```text
+max throughput under latency SLO
+```
+
+Ví dụ:
+
+```text
+Target: p99 < 100 ms
+
+Config A:
+    throughput = 1000 rps
+    p99 = 80 ms
+    OK
+
+Config B:
+    throughput = 1200 rps
+    p99 = 160 ms
+    Fail
+
+Chọn A, không chọn B.
+```
+
+
+## Little's Law cho inference engineer
+
+Một công thức rất hữu ích:
+
+```text
+concurrency ≈ throughput * latency
+```
+
+Nếu latency tính bằng giây:
+
+```text
+throughput ≈ concurrency / latency
+```
+
+Ví dụ:
+
+```text
+concurrency = 32
+mean latency = 40 ms = 0.04 s
+
+throughput ≈ 32 / 0.04 = 800 requests/s
+```
+
+Công thức này không thay thế benchmark, nhưng giúp sanity check.
+
+Nếu Perf Analyzer báo:
+
+```text
+concurrency = 32
+mean latency = 40 ms
+throughput = 100 requests/s
+```
+
+thì có gì đó không khớp: có thể latency bạn đang nhìn không phải mean end-to-end, hoặc có lỗi đo, hoặc request không được giữ đủ concurrency.
+
+
+## `trtexec`: benchmark TensorRT engine
+
+### `trtexec` dùng để làm gì?
+
+`trtexec` là command-line tool của TensorRT. Nó đặc biệt hữu ích để:
+
+- benchmark network bằng random hoặc user-provided input,
+- build serialized TensorRT engine từ ONNX,
+- benchmark serialized engine,
+- xuất timing cache,
+- xem per-layer performance,
+- kiểm tra dynamic shapes,
+- kiểm tra FP16/INT8 execution,
+- debug input/output shape và performance ở mức engine.
+
+NVIDIA mô tả `trtexec` là công cụ để benchmark network, tạo serialized engines từ model, và tạo serialized timing cache từ builder.[^trtexec_cli]
+
+### Khi nào dùng `trtexec`?
+
+Dùng `trtexec` khi bạn muốn trả lời:
+
+```text
+Model/engine này nhanh tối đa khoảng bao nhiêu nếu bỏ qua service overhead?
+TensorRT có build engine thành công không?
+FP16 có nhanh hơn FP32 không?
+INT8 có nhanh hơn FP16 không?
+Shape nào chậm?
+Batch size nào tốt?
+Layer nào chiếm nhiều GPU time?
+H2D/D2H copy có đáng kể không?
+CPU enqueue có bottleneck không?
+```
+
+Không dùng `trtexec` để kết luận trực tiếp service production đạt p99 bao nhiêu. `trtexec` không đại diện đầy đủ cho Triton scheduler, network, client concurrency, serialization, Python preprocessing hoặc production queueing.
+
+### Build engine từ ONNX
+
+Static shape đơn giản:
+
+```bash
+trtexec \
+  --onnx=model.onnx \
+  --saveEngine=model_fp16.plan \
+  --shapes=input:1x3x224x224 \
+  --fp16
+```
+
+Dynamic shape:
+
+```bash
+trtexec \
+  --onnx=model.onnx \
+  --saveEngine=model_fp16_dynamic.plan \
+  --fp16 \
+  --minShapes=input:1x3x224x224 \
+  --optShapes=input:8x3x224x224 \
+  --maxShapes=input:32x3x224x224
+```
+
+Benchmark engine đã lưu:
+
+```bash
+trtexec \
+  --loadEngine=model_fp16_dynamic.plan \
+  --shapes=input:8x3x224x224
+```
+
+Nếu input name không chắc, dùng Netron hoặc Polygraphy inspect:
+
+```bash
+polygraphy inspect model model.onnx
+```
+
+### Benchmark với flags ổn định hơn
+
+Ví dụ NVIDIA dùng cho ResNet-50:
+
+```bash
+trtexec \
+  --onnx=resnet50-v1-12.onnx \
+  --shapes=data:4x3x224x224 \
+  --fp16 \
+  --noDataTransfers \
+  --useCudaGraph \
+  --useSpinWait
+```
+
+Ý nghĩa thực dụng:
+
+- `--fp16`: cho phép FP16 tactics.
+- `--noDataTransfers`: bỏ H2D/D2H khỏi benchmark để tập trung GPU compute.
+- `--useCudaGraph`: giảm overhead launch ở một số workload.
+- `--useSpinWait`: có thể giúp latency ổn định hơn, đổi lại CPU busy hơn.
+
+Không phải lúc nào bạn cũng nên dùng `--noDataTransfers`. Nếu production app thật sự phải copy input/output qua PCIe mỗi request, bạn cần benchmark cả trường hợp có data transfer.
+
+Nên chạy cả hai:
+
+```bash
+# Đo engine compute gần như thuần túy
+trtexec --loadEngine=model.plan --shapes=input:8x3x224x224 --noDataTransfers
+
+# Đo có H2D/D2H
+trtexec --loadEngine=model.plan --shapes=input:8x3x224x224
+```
+
+### Đọc output `trtexec`
+
+Một output TensorRT thường có các metric như:
+
+```text
+Throughput
+Latency
+Enqueue Time
+H2D Latency
+GPU Compute Time
+D2H Latency
+Total Host Walltime
+Total GPU Compute Time
+```
+
+NVIDIA giải thích các metric chính như sau: Throughput được tính từ số inference chia cho Total Host Walltime; Host Latency là tổng H2D, GPU Compute và D2H; Enqueue Time là host latency để enqueue một inference gồm CUDA API, host-side heuristics và kernel launch; GPU Compute Time là thời gian GPU thực thi CUDA kernels.[^trtexec_metrics]
+
+Cách đọc nhanh:
+
+| Metric                 | Ý nghĩa                          | Nếu cao thì nghĩ tới                                 |
+|------------------------|----------------------------------|------------------------------------------------------|
+| Throughput             | tốc độ inference                 | so với SLO và batch size                             |
+| Latency / Host Latency | H2D + GPU + D2H                  | end-to-end engine path                               |
+| Enqueue Time           | CPU-side enqueue/launch overhead | CPU bottleneck, many small kernels, thiếu CUDA Graph |
+| H2D Latency            | host-to-device input copy        | input lớn, PCIe, không dùng pinned memory            |
+| GPU Compute Time       | kernel execution                 | model compute, memory bandwidth, tensor core usage   |
+| D2H Latency            | output copy về host              | output lớn, postprocess CPU                          |
+| Total Host Walltime    | tổng thời gian host nhìn thấy    | underutilization nếu quá lớn so với GPU compute      |
+| Total GPU Compute Time | tổng GPU time                    | so sánh với walltime để đo độ fill                   |
+
+### Diagnostic rules từ `trtexec`
+
+#### Case A: GPU Compute Time chiếm phần lớn latency
+
+```text
+GPU Compute Time ≈ Host Latency
+H2D/D2H nhỏ
+Enqueue Time nhỏ
+```
+
+Bottleneck có thể là model compute.
+
+Hướng xử lý:
+
+- FP16/INT8,
+- batch size phù hợp,
+- TensorRT fusion,
+- đổi architecture,
+- giảm input size,
+- kiểm tra layer profile,
+- kiểm tra Tensor Core-friendly shapes.
+
+#### Case B: H2D/D2H cao
+
+```text
+H2D Latency hoặc D2H Latency chiếm nhiều
+```
+
+Bottleneck có thể là data transfer.
+
+Hướng xử lý:
+
+- giữ input/output trên GPU,
+- dùng I/O Binding hoặc CUDA shared memory,
+- giảm output tensor size,
+- move preprocessing/postprocessing lên GPU,
+- dùng pinned memory,
+- tránh copy không cần thiết,
+- kiểm tra PCIe bandwidth.
+
+#### Case C: Enqueue Time cao hơn GPU Compute Time
+
+```text
+Enqueue Time > GPU Compute Time
+```
+
+Bottleneck có thể là CPU launch overhead hoặc workload có quá nhiều kernel nhỏ. TensorRT documentation nêu nếu Enqueue Time dài hơn GPU Compute Time, throughput có thể bị host-side overhead chi phối và CUDA Graph có thể giảm Enqueue Time.[^trtexec_metrics]
+
+Hướng xử lý:
+
+- thử `--useCudaGraph`,
+- tăng batch size,
+- giảm số kernel nhỏ qua fusion,
+- kiểm tra Python/C++ overhead trong app thật,
+- tránh synchronization không cần thiết,
+- dùng async execution.
+
+#### Case D: Total GPU Compute Time ngắn hơn nhiều so với Total Host Walltime
+
+```text
+Total GPU Compute Time << Total Host Walltime
+```
+
+GPU có thể bị underutilized do host overhead hoặc data transfer. Hướng xử lý tương tự Case B/C.
+
+### Per-layer profiling
+
+Để xem layer nào chiếm thời gian:
+
+```bash
+trtexec \
+  --loadEngine=model.plan \
+  --shapes=input:8x3x224x224 \
+  --profilingVerbosity=detailed \
+  --dumpLayerInfo \
+  --dumpProfile \
+  --separateProfileRun
+```
+
+NVIDIA nêu `--dumpProfile` dùng để xem per-layer performance; `--profilingVerbosity=detailed` và `--dumpLayerInfo` giúp xem thông tin chi tiết engine/layer/binding.[^trtexec_layer]
+
+Khi đọc per-layer profile, chú ý:
+
+```text
+Layer name
+Time(ms)
+Avg(ms)
+Median(ms)
+Time(%)
+Layer type
+Input/output format
+Precision
+Tensor shape
+Tactic name
+ONNX metadata
+```
+
+Một TensorRT layer có thể tương ứng với nhiều ONNX ops vì TensorRT có fusion.
+
+Ví dụ:
+
+```text
+Conv + BatchNorm + ReLU
+```
+
+có thể trở thành một layer fused trong engine.
+
+### Benchmark dynamic shape
+
+Bạn nên test các shape quan trọng:
+
+```bash
+# Small shape
+trtexec \
+  --loadEngine=model_dynamic.plan \
+  --shapes=input:1x3x224x224
+
+# Opt shape
+trtexec \
+  --loadEngine=model_dynamic.plan \
+  --shapes=input:8x3x224x224
+
+# Max shape
+trtexec \
+  --loadEngine=model_dynamic.plan \
+  --shapes=input:32x3x224x224
+```
+
+Nếu `opt` shape nhanh nhưng `max` shape rất chậm, đó không nhất thiết là lỗi. Builder tối ưu tactics quanh `opt` shape nhưng vẫn phải hỗ trợ toàn range. Nếu production chủ yếu chạy batch 1 nhưng bạn đặt `opt` batch 32, latency batch 1 có thể không tối ưu.
+
+### Benchmark precision
+
+```bash
+# FP32 baseline
+trtexec \
+  --onnx=model.onnx \
+  --saveEngine=model_fp32.plan \
+  --shapes=input:8x3x224x224
+
+# FP16
+trtexec \
+  --onnx=model.onnx \
+  --saveEngine=model_fp16.plan \
+  --shapes=input:8x3x224x224 \
+  --fp16
+
+# INT8 explicit Q/DQ model
+trtexec \
+  --onnx=model_int8_qdq.onnx \
+  --saveEngine=model_int8.plan \
+  --shapes=input:8x3x224x224 \
+  --stronglyTyped
+```
+
+Không kết luận INT8 tốt hơn chỉ vì engine build thành công. Cần đo:
+
+```text
+latency
+throughput
+accuracy
+memory
+p99 in service
+```
+
+INT8 có thể không nhanh hơn FP16 nếu:
+
+- model nhỏ,
+- bị memory-bound,
+- có nhiều layer không chạy INT8,
+- Q/DQ overhead cao,
+- output/input copy chi phối,
+- batch size quá nhỏ,
+- hardware không có lợi rõ ở workload đó.
+
+
+## Perf Analyzer: benchmark Triton service
+
+### Perf Analyzer dùng để làm gì?
+
+Perf Analyzer là CLI tool của Triton giúp đo performance của model đang chạy trên Triton khi bạn thử các optimization strategies khác nhau.[^perf_analyzer_overview]
+
+Nó trả lời các câu hỏi:
+
+```text
+Triton endpoint chịu được bao nhiêu throughput?
+Latency thay đổi thế nào khi tăng concurrency?
+Dynamic batching có giúp không?
+gRPC và HTTP khác nhau ra sao?
+Server queue time có tăng không?
+Client-side latency và server-side latency lệch nhau bao nhiêu?
+GPU utilization có tăng theo concurrency không?
+```
+
+Perf Analyzer đo service behavior, không chỉ engine behavior.
+
+### Concurrency mode
+
+Concurrency mode giữ số outstanding requests ở một mức nhất định.
+
+Ví dụ:
+
+```bash
+perf_analyzer \
+  -m resnet50 \
+  -i grpc \
+  --concurrency-range 1:64:4 \
+  -f perf_concurrency.csv
+```
+
+Ý nghĩa:
+
+```text
+start concurrency = 1
+end concurrency   = 64
+step              = 4
+```
+
+Dùng khi bạn muốn vẽ curve:
+
+```text
+concurrency -> throughput, p50, p95, p99
+```
+
+### Request rate mode
+
+Request rate mode gửi request với tốc độ xác định.
+
+```bash
+perf_analyzer \
+  -m resnet50 \
+  -i grpc \
+  --request-rate-range 100:2000:100 \
+  -f perf_request_rate.csv
+```
+
+Dùng khi bạn muốn mô phỏng production arrival rate:
+
+```text
+100 rps
+200 rps
+...
+2000 rps
+```
+
+Request rate mode phù hợp hơn concurrency mode nếu production traffic được mô tả bằng arrival rate.
+
+### Chọn protocol HTTP hay gRPC
+
+```bash
+# HTTP
+perf_analyzer -m resnet50 -i http --concurrency-range 1:32
+
+# gRPC
+perf_analyzer -m resnet50 -i grpc --concurrency-range 1:32
+```
+
+Nên benchmark cả hai nếu hệ thống production chưa cố định protocol. gRPC thường phù hợp cho high-throughput service, nhưng kết quả thực tế phụ thuộc payload, client/server network stack và môi trường.
+
+### Input shape và batch
+
+Nếu model có shape cụ thể:
+
+```bash
+perf_analyzer \
+  -m resnet50 \
+  -i grpc \
+  --shape input:3,224,224 \
+  --concurrency-range 1:32
+```
+
+Chú ý: với Triton, nếu model config có `max_batch_size > 0`, input shape trong request thường không bao gồm batch dimension ở `--shape`; Triton thêm batch dimension ở level request/batching. Kiểm tra bằng `perf_analyzer --help` và model metadata của bạn.
+
+### Input data thật
+
+Auto-generated random data có thể đủ cho benchmark ban đầu. Nhưng production benchmark nên dùng data đại diện.
+
+```bash
+perf_analyzer \
+  -m resnet50 \
+  -i grpc \
+  --input-data input_data.json \
+  --concurrency-range 1:32
+```
+
+Với vision/NLP/object detection/LLM, input distribution có thể ảnh hưởng lớn tới runtime và output size.
+
+### Output CSV
+
+```bash
+perf_analyzer \
+  -m resnet50 \
+  -i grpc \
+  --concurrency-range 1:64:4 \
+  -f perf.csv
+```
+
+Perf Analyzer CSV có thể chứa các cột như:
+
+```text
+Concurrency
+Inferences/Second
+Client Send
+Network+Server Send/Recv
+Server Queue
+Server Compute Input
+Server Compute Infer
+Server Compute Output
+Client Recv
+p50 latency
+p90 latency
+p95 latency
+p99 latency
+```
+
+Tài liệu Triton cho thấy output CSV có thể được import vào spreadsheet để visualize tradeoff latency vs inferences/second và các thành phần latency.[^perf_analyzer_metrics]
+
+### Thu server-side Prometheus metrics
+
+Perf Analyzer có thể thu server-side metrics như GPU utilization và GPU power usage bằng `--collect-metrics`; mặc định nó query metrics endpoint ở `localhost:8002/metrics`.[^perf_analyzer_metrics]
+
+```bash
+perf_analyzer \
+  -m resnet50 \
+  -i grpc \
+  --concurrency-range 1:64:4 \
+  --collect-metrics \
+  --verbose-csv \
+  -f perf_with_metrics.csv
+```
+
+Nếu metrics endpoint ở URL khác:
+
+```bash
+perf_analyzer \
+  -m resnet50 \
+  --collect-metrics \
+  --metrics-url http://server-host:8002/metrics \
+  -f perf.csv
+```
+
+### Đọc Perf Analyzer như inference engineer
+
+Bạn không chỉ đọc dòng throughput cao nhất. Hãy đọc theo câu hỏi.
+
+#### Câu hỏi 1: throughput còn tăng khi concurrency tăng không?
+
+Nếu có:
+
+```text
+concurrency tăng -> throughput tăng -> latency tăng nhẹ
+```
+
+hệ thống có thể chưa saturated.
+
+Nếu không:
+
+```text
+concurrency tăng -> throughput plateau -> latency tăng mạnh
+```
+
+hệ thống đã gần hoặc vượt saturation.
+
+#### Câu hỏi 2: p99 có vượt SLO không?
+
+```text
+p50 tốt
+p99 xấu
+```
+
+có thể do queueing, jitter, dynamic batching, hoặc outlier path.
+
+#### Câu hỏi 3: server queue time có tăng không?
+
+```text
+Server Queue tăng theo concurrency
+```
+
+nghĩa là request chờ trước khi execute. Có thể cần:
+
+- tăng instance count,
+- điều chỉnh dynamic batching,
+- giảm concurrency target,
+- scale thêm replicas,
+- tối ưu model compute,
+- chia traffic theo shape/model,
+- giảm max queue delay.
+
+#### Câu hỏi 4: server compute infer cao hay queue cao?
+
+```text
+Server Compute Infer cao:
+    model/backend execution đắt
+
+Server Queue cao:
+    scheduler/instance capacity/batching/saturation
+
+Client Send/Recv cao:
+    client/network/payload issue
+```
+
+#### Câu hỏi 5: GPU utilization cao nhưng throughput không tăng?
+
+Có thể:
+
+- memory bandwidth bottleneck,
+- server saturated,
+- queue tăng,
+- output serialization/copy bottleneck,
+- model không scale với batch,
+- CPU backend overhead,
+- thermal/power throttling.
+
+#### Câu hỏi 6: GPU utilization thấp nhưng latency cao?
+
+Có thể:
+
+- CPU preprocessing bottleneck,
+- Python backend bottleneck,
+- network/client bottleneck,
+- request không đủ concurrency,
+- batch quá nhỏ,
+- H2D/D2H copy,
+- synchronization,
+- model instance count thấp nhưng compute rất ngắn,
+- dynamic batching chờ nhưng không fill.
+
+
+## Model Analyzer: tìm config Triton tốt hơn
+
+Perf Analyzer đo một cấu hình. Model Analyzer giúp sweep nhiều cấu hình.
+
+NVIDIA mô tả Model Analyzer là tool dùng Perf Analyzer để gửi request tới model, đồng thời đo GPU memory và compute utilization; nó hữu ích để characterize GPU memory requirements dưới các cấu hình batching và model instance khác nhau.[^model_analyzer]
+
+### Khi nào dùng Model Analyzer?
+
+Dùng khi bạn muốn trả lời:
+
+```text
+instance_group count bao nhiêu là tốt?
+max_batch_size nào tốt?
+dynamic batching có nên bật không?
+GPU memory có đủ để chạy nhiều model không?
+Config nào đạt throughput cao nhất dưới latency constraint?
+```
+
+### Ví dụ config Model Analyzer
+
+Tạo `profile_config.yaml`:
+
+```yaml
+model_repository: /models
+profile_models:
+  resnet50:
+    parameters:
+      batch_sizes: [1, 4, 8, 16, 32]
+      concurrency: [1, 2, 4, 8, 16, 32, 64]
+```
+
+Chạy:
+
+```bash
+model-analyzer profile \
+  --config-file profile_config.yaml \
+  --triton-launch-mode=local
+```
+
+Tạo report:
+
+```bash
+model-analyzer report \
+  --report-model-configs resnet50_config_default
+```
+
+Tên flags có thể thay đổi theo version, nên luôn kiểm tra:
+
+```bash
+model-analyzer --help
+```
+
+### Đọc Model Analyzer report
+
+Hãy tìm:
+
+```text
+throughput
+p99 latency
+GPU memory usage
+GPU utilization
+instance count
+batch size
+dynamic batching config
+```
+
+Cẩn thận: config throughput cao nhất không nhất thiết là config production tốt nhất.
+
+Bạn cần chọn config theo constraint:
+
+```text
+maximize throughput
+subject to p99 < SLO
+and GPU memory < budget
+and error rate = 0
+```
+
+
+## Nsight Systems: nhìn timeline CPU/GPU
+
+###  Khi nào cần Nsight Systems?
+
+Dùng Nsight Systems khi:
+
+- `trtexec`/Perf Analyzer nói "chậm" nhưng không nói vì sao.
+- Có khoảng trống giữa GPU kernels.
+- CPU overhead nghiêm trọng.
+- H2D/D2H copy xuất hiện bất thường.
+- App có nhiều synchronization.
+- Python/C++ host code có vẻ nghẽn.
+- Dynamic batching/threads/streams khó hiểu.
+- Triton service có p99 spike nhưng metrics chưa đủ.
+
+Nsight Systems là system-wide profiler giúp visualize performance của ứng dụng qua CPU, GPU, CUDA API, kernels, memory copy, threads và NVTX ranges. NVIDIA khuyến nghị focused profiling: không nhất thiết profile toàn bộ app, mà nên giới hạn vùng performance-critical để dữ liệu nhỏ hơn và tập trung hơn.[^nsys_focused]
+
+### 13.2 Profile một app Python đơn giản
+
+```bash
+nsys profile \
+  --trace=cuda,nvtx,osrt \
+  --output=infer_report \
+  python infer.py
+```
+
+Mở report bằng GUI:
+
+```bash
+nsys-ui infer_report.nsys-rep
+```
+
+Hoặc xuất stats:
+
+```bash
+nsys stats infer_report.nsys-rep
+```
+
+### Dùng NVTX để đánh dấu region
+
+Trong Python:
+
+```python
+import nvtx
+
+with nvtx.annotate("preprocess"):
+    x = preprocess(image)
+
+with nvtx.annotate("inference"):
+    y = session.run(None, {"input": x})
+
+with nvtx.annotate("postprocess"):
+    result = postprocess(y)
+```
+
+Khi mở Nsight Systems, bạn sẽ thấy các vùng:
+
+```text
+preprocess
+inference
+postprocess
+```
+
+trên CPU timeline, và có thể liên hệ chúng với CUDA activity.
+
+### Focused profiling với CUDA profiler API
+
+Ý tưởng:
+
+```text
+warmup trước
+start profiling
+run measured iterations
+stop profiling
+```
+
+C/C++ có thể dùng `cudaProfilerStart()` và `cudaProfilerStop()` để giới hạn vùng profile; Nsight Systems cũng hỗ trợ NVTX ranges để đánh dấu CPU activity.[^nsys_focused]
+
+Python có thể dùng package hoặc wrapper tương ứng nếu stack hỗ trợ.
+
+### Profile Triton server
+
+Có hai hướng:
+
+#### Hướng A: profile server process
+
+```bash
+nsys profile \
+  --trace=cuda,nvtx,osrt \
+  --output=triton_server_profile \
+  tritonserver --model-repository=/models
+```
+
+Sau đó chạy load từ client:
+
+```bash
+perf_analyzer \
+  -m resnet50 \
+  -i grpc \
+  --concurrency-range 8
+```
+
+#### Hướng B: profile custom backend/app
+
+Nếu bạn có Python backend hoặc custom app, profile chính process đó. Với production server lớn, profile toàn bộ Triton có thể tạo report rất lớn; nên dùng focused profiling hoặc trace sampling.
+
+### Đọc timeline Nsight Systems
+
+Những thứ cần nhìn:
+
+#### CPU timeline
+
+```text
+Client threads
+Server threads
+Backend threads
+Python threads
+CUDA API calls
+Synchronization calls
+NVTX ranges
+```
+
+Nếu CPU thread mất nhiều thời gian trước khi launch CUDA kernel, có thể bottleneck ở preprocessing, serialization, Python, hoặc scheduler.
+
+#### GPU timeline
+
+```text
+CUDA kernels
+Memcpy H2D
+Memcpy D2H
+CUDA streams
+Gaps between kernels
+Overlap between copy and compute
+```
+
+Nếu GPU timeline có nhiều gap:
+
+```text
+kernel -> gap -> kernel -> gap -> kernel
+```
+
+GPU có thể đang đợi CPU launch hoặc data transfer.
+
+Nếu có nhiều tiny kernels:
+
+```text
+kernel 10 us
+gap 30 us
+kernel 8 us
+gap 25 us
+...
+```
+
+CPU launch overhead có thể chi phối. Fusion hoặc CUDA Graph có thể giúp.
+
+Nếu có H2D/D2H giữa các nhóm kernel:
+
+```text
+H2D -> kernels -> D2H -> H2D -> kernels -> D2H
+```
+
+có thể app đang copy về CPU giữa pipeline, làm mất lợi thế GPU.
+
+#### CUDA API timeline
+
+Tìm các calls như:
+
+```text
+cudaMemcpy
+cudaMemcpyAsync
+cudaStreamSynchronize
+cudaDeviceSynchronize
+cudaLaunchKernel
+cudaMalloc
+cudaFree
+```
+
+Các dấu hiệu xấu:
+
+- `cudaDeviceSynchronize` trong hot path,
+- `cudaMalloc/cudaFree` lặp lại mỗi request,
+- blocking memcpy,
+- launch kernel quá nhiều,
+- CPU thread bị block chờ GPU quá thường xuyên.
+
+### Khi nào cần Nsight Compute?
+
+Nsight Systems trả lời:
+
+```text
+Khi nào CPU launch?
+Khi nào GPU chạy?
+Có gap không?
+Có copy không?
+Có overlap không?
+```
+
+Nsight Compute trả lời:
+
+```text
+Kernel cụ thể bị bottleneck bởi gì?
+SM occupancy thế nào?
+Memory throughput ra sao?
+Tensor Core usage ra sao?
+Warp stalls vì lý do gì?
+```
+
+Dùng Nsight Compute khi bạn đã xác định một kernel/layer cụ thể đáng nghi. Đừng bắt đầu bằng Nsight Compute nếu bạn chưa biết kernel nào là vấn đề.
+
+
+## Triton metrics và tracing
+### Metrics endpoint
+
+Triton expose metrics cho request/server/GPU/CPU/pinned memory/cache/custom metrics. Tài liệu Triton liệt kê các nhóm như inference request metrics, GPU metrics, CPU metrics, pinned memory metrics, response cache metrics và custom metrics.[^triton_metrics]
+
+Thường endpoint mặc định là:
+
+```text
+http://localhost:8002/metrics
+```
+
+Kiểm tra:
+
+```bash
+curl localhost:8002/metrics | head
+```
+
+Một số metrics bạn có thể gặp:
+
+```text
+nv_inference_request_success
+nv_inference_request_failure
+nv_inference_count
+nv_inference_exec_count
+nv_inference_request_duration_us
+nv_inference_queue_duration_us
+nv_inference_compute_input_duration_us
+nv_inference_compute_infer_duration_us
+nv_inference_compute_output_duration_us
+nv_gpu_utilization
+nv_gpu_memory_total_bytes
+nv_gpu_memory_used_bytes
+```
+
+Tên cụ thể có thể thay đổi theo version; luôn kiểm tra output thật.
+
+### Metrics quan trọng
+
+#### Request count
+
+```text
+Có request không?
+Request có fail không?
+Throughput production bao nhiêu?
+```
+
+#### Queue duration
+
+```text
+Request chờ bao lâu trước khi execute?
+```
+
+Queue duration tăng là tín hiệu rất mạnh của saturation hoặc batching delay.
+
+#### Compute input/infer/output
+
+```text
+input copy/binding/preprocess
+model execution
+output copy/postprocess
+```
+
+Nếu compute output cao, có thể output tensor lớn hoặc postprocessing/copy đắt.
+
+#### GPU utilization
+
+```text
+GPU có busy không?
+```
+
+Nhưng đừng chỉ nhìn GPU utilization. Hãy nhìn cùng queue, latency, throughput, memory, p99.
+
+#### GPU memory
+
+```text
+Có đủ memory cho instance count/batch không?
+Có memory leak không?
+```
+
+### Triton server trace
+
+Triton có khả năng generate trace chi tiết cho individual inference requests. Trace có thể bật bằng command-line arguments như `--trace-config`; tài liệu mới dùng format `--trace-config <mode>,<setting>=<value>` và hỗ trợ các settings như `rate`, `level`, `count`, `file`.[^triton_trace]
+
+Ví dụ:
+
+```bash
+tritonserver \
+  --model-repository=/models \
+  --trace-config triton,file=/tmp/trace.json \
+  --trace-config triton,log-frequency=50 \
+  --trace-config rate=100 \
+  --trace-config level=TIMESTAMPS \
+  --trace-config count=100
+```
+
+Dùng trace khi cần debug một số request cụ thể, đặc biệt khi p99 spike.
+
+
+## Bottleneck analysis: bảng triệu chứng
+
+### Tổng quan
+
+Khi thấy performance không đạt, đừng nhảy ngay vào tối ưu. Hãy đi theo chain:
+
+```text
+symptom -> metric evidence -> hypothesis -> experiment -> fix -> remeasure
+```
+
+### 15.2 Bảng triệu chứng
+
+| Triệu chứng                                | Bằng chứng cần tìm                                 | Nguyên nhân có thể                              | Hành động                                               |
+|--------------------------------------------|----------------------------------------------------|-------------------------------------------------|---------------------------------------------------------|
+| `trtexec` nhanh, Triton chậm               | Perf Analyzer server queue/client latency cao      | service overhead, batching, network, config     | đo Perf Analyzer breakdown, metrics, config sweep       |
+| GPU utilization thấp, latency cao          | GPU util thấp + CPU busy hoặc client send/recv cao | CPU/network/preprocessing bottleneck            | profile CPU, dùng gRPC, optimize preprocessing          |
+| GPU utilization thấp, throughput thấp      | concurrency thấp, batch nhỏ                        | không đủ load                                   | tăng concurrency/batch/dynamic batching                 |
+| GPU utilization cao, p99 cao               | queue time tăng                                    | saturation                                      | giảm load, scale replicas, tăng instance, tối ưu model  |
+| Throughput plateau, latency tăng           | concurrency tăng nhưng throughput không tăng       | overload                                        | chọn knee point, capacity planning                      |
+| H2D latency cao                            | `trtexec` H2D lớn, Nsight memcpy H2D nhiều         | data transfer bottleneck                        | pinned memory, GPU preprocessing, shared memory         |
+| D2H latency cao                            | output copy lớn                                    | output tensor lớn/postprocess CPU               | giảm output, GPU postprocess, top-k trên GPU            |
+| Enqueue time cao                           | `trtexec` enqueue > GPU compute                    | CPU launch overhead                             | CUDA Graph, fusion, batch, async                        |
+| Per-layer profile có một layer chiếm nhiều | `--dumpProfile`                                    | layer bottleneck                                | plugin, architecture change, precision, shape           |
+| INT8 không nhanh hơn FP16                  | layer profile, precision fallback                  | unsupported INT8, overhead Q/DQ, memory-bound   | inspect layer precision, recalibrate/QAT, compare batch |
+| Dynamic batching tăng p99                  | server queue time, max queue delay                 | batching delay                                  | giảm max queue delay, lower preferred batch, scale      |
+| Client latency cao hơn server nhiều        | Perf Analyzer client components                    | network/client serialization                    | co-locate client, gRPC, binary format                   |
+| p99 spike định kỳ                          | time series, trace, logs                           | GC, checkpoint, model reload, background job    | isolate workload, reduce logging, avoid hot reload      |
+| First request chậm                         | cold start                                         | model load, CUDA init, engine deserialize       | warmup, readiness gate, model warmup                    |
+| Shape cụ thể chậm                          | dynamic shape sweep                                | profile not optimized for shape                 | adjust opt shape, split engines                         |
+| Memory tăng theo thời gian                 | metrics, nvidia-smi                                | leak, caching, accumulating outputs             | inspect app/backend, reuse buffers                      |
+| Triton model load OK nhưng no batching     | Perf Analyzer, config                              | `max_batch_size=0`, wrong dims, low concurrency | fix config, increase concurrency                        |
+| CPU at 100%, GPU idle                      | system metrics, Nsight                             | preprocessing/backend/client bottleneck         | move CPU work to GPU/C++, scale CPU                     |
+| Many tiny kernels                          | Nsight Systems                                     | graph not fused, runtime fallback               | TensorRT, optimize ONNX, CUDA Graph                     |
+
+
+## Case studies
+
+### Case Study 1: `trtexec` rất nhanh nhưng Triton service chậm
+
+Bạn benchmark engine:
+
+```text
+trtexec median latency = 2 ms
+```
+
+Nhưng Perf Analyzer báo:
+
+```text
+p50 = 15 ms
+p99 = 80 ms
+```
+
+Không có mâu thuẫn. `trtexec` đo engine path; Triton service có thêm:
+
+- client serialization,
+- network,
+- request queue,
+- dynamic batching delay,
+- backend input/output,
+- response serialization,
+- concurrency behavior.
+
+Cách debug:
+
+```text
+1. Perf Analyzer output CSV:
+   - Client Send
+   - Network+Server Send/Recv
+   - Server Queue
+   - Server Compute Input
+   - Server Compute Infer
+   - Server Compute Output
+   - Client Recv
+
+2. Triton metrics:
+   - request duration
+   - queue duration
+   - compute infer duration
+
+3. Compare Server Compute Infer với trtexec GPU/host latency.
+
+4. Nếu Server Compute Infer ≈ trtexec:
+   model engine OK, overhead nằm ngoài inference compute.
+
+5. Nếu Server Compute Infer >> trtexec:
+   backend config, shape, batch, precision, instance, or runtime mismatch.
+```
+
+### Case Study 2: GPU utilization thấp nhưng latency vẫn cao
+
+Perf Analyzer:
+
+```text
+GPU util = 25%
+p99 = 200 ms
+Server Queue low
+Client Send/Recv high
+```
+
+Có thể bottleneck nằm ở client/network/payload.
+
+Thử:
+
+```text
+- chạy client cùng máy với server,
+- đổi HTTP sang gRPC,
+- giảm payload size,
+- dùng binary tensor data,
+- kiểm tra preprocessing ở client,
+- kiểm tra network latency.
+```
+
+Nếu latency giảm mạnh khi client chạy local, vấn đề không nằm ở GPU.
+
+### Case Study 3: Dynamic batching tăng throughput nhưng làm p99 fail
+
+Config:
+
+```protobuf
+dynamic_batching {
+  max_queue_delay_microseconds: 10000
+}
+```
+
+Perf Analyzer:
+
+```text
+throughput +40%
+p99 từ 80 ms lên 180 ms
+```
+
+Giải thích:
+
+- Triton chờ gom request thành batch lớn hơn.
+- Throughput tăng vì GPU chạy batch hiệu quả hơn.
+- Một số request phải chờ queue delay, làm tail latency xấu.
+
+Hướng xử lý:
+
+```text
+- giảm max_queue_delay_microseconds,
+- bỏ preferred_batch_size nếu không có lý do,
+- tăng instance_group count,
+- scale thêm replicas,
+- chọn operating point theo p99 SLO, không theo max throughput.
+```
+
+### Case Study 4: INT8 không nhanh hơn FP16
+
+Bạn kỳ vọng INT8 nhanh hơn, nhưng:
+
+```text
+FP16 p50 = 4.0 ms
+INT8 p50 = 4.3 ms
+```
+
+Có thể:
+
+- phần lớn model không chạy INT8,
+- layer fallback sang FP16/FP32,
+- Q/DQ overhead,
+- model memory-bound,
+- batch size quá nhỏ,
+- output/input copy chi phối,
+- GPU không có lợi rõ cho pattern đó.
+
+Debug:
+
+```text
+1. trtexec --dumpLayerInfo --dumpProfile.
+2. Kiểm tra layer precision.
+3. So sánh --noDataTransfers.
+4. So sánh batch 1, 8, 16, 32.
+5. Kiểm tra accuracy để đảm bảo INT8 đúng trước khi tối ưu tiếp.
+```
+
+### Case Study 5: P99 spike định kỳ mỗi vài phút
+
+Metrics:
+
+```text
+p99 spike every 5 minutes
+GPU util normal
+queue time spikes
+```
+
+Có thể:
+
+- model repository poll/reload,
+- logging flush,
+- background cron,
+- Prometheus scrape quá nặng,
+- CPU contention,
+- GC,
+- container resource contention,
+- clock/thermal behavior.
+
+Debug:
+
+```text
+- time-align p99 with server logs,
+- inspect CPU/memory/disk/network metrics,
+- use Triton trace for sampled requests,
+- use Nsight Systems around spike window,
+- disable non-critical background jobs,
+- fix model control mode if hot reload triggers.
+```
+
+
+## End-to-end benchmark workflow
+
+Dưới đây là workflow chuẩn cho một model mới.
+
+### Step 0: Correctness first
+
+Trước performance:
+
+```text
+ONNX output gần PyTorch output?
+TensorRT output gần ONNX output?
+INT8 accuracy acceptable?
+Triton output đúng shape/type?
+```
+
+Không benchmark performance của một model sai.
+
+### Step 1: Record environment
+
+```bash
+nvidia-smi
+
+python - <<'PY'
+import sys
+print("python", sys.version)
+try:
+    import tensorrt as trt
+    print("tensorrt", trt.__version__)
+except Exception as e:
+    print("tensorrt not available", e)
+try:
+    import onnxruntime as ort
+    print("onnxruntime", ort.__version__)
+except Exception as e:
+    print("onnxruntime not available", e)
+PY
+```
+
+### Step 2: Baseline `trtexec`
+
+```bash
+trtexec \
+  --onnx=model.onnx \
+  --saveEngine=model_fp16.plan \
+  --fp16 \
+  --minShapes=input:1x3x224x224 \
+  --optShapes=input:8x3x224x224 \
+  --maxShapes=input:32x3x224x224
+```
+
+Benchmark important shapes:
+
+```bash
+for b in 1 4 8 16 32; do
+  trtexec \
+    --loadEngine=model_fp16.plan \
+    --shapes=input:${b}x3x224x224 \
+    --dumpProfile \
+    > trtexec_b${b}.log
+done
+```
+
+### Step 3: Create Triton model repository
+
+```text
+model_repository/
+└── resnet50_trt/
+    ├── config.pbtxt
+    └── 1/
+        └── model.plan
+```
+
+### Step 4: Start Triton
+
+```bash
+docker run --gpus all --rm --net host \
+  -v $(pwd)/model_repository:/models \
+  nvcr.io/nvidia/tritonserver:<RELEASE>-py3 \
+  tritonserver --model-repository=/models
+```
+
+### Step 5: Verify model is ready
+
+```bash
+curl localhost:8000/v2/health/ready
+curl localhost:8000/v2/models/resnet50_trt
+```
+
+### Step 6: Perf Analyzer single config
+
+```bash
+perf_analyzer \
+  -m resnet50_trt \
+  -i grpc \
+  --concurrency-range 1 \
+  -f perf_c1.csv
+```
+
+### Step 7: Perf Analyzer sweep
+
+```bash
+perf_analyzer \
+  -m resnet50_trt \
+  -i grpc \
+  --concurrency-range 1:128:4 \
+  --collect-metrics \
+  --verbose-csv \
+  -f perf_sweep.csv
+```
+
+### Step 8: Plot latency-throughput curve
+
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("perf_sweep.csv")
+
+plt.figure()
+plt.plot(df["Inferences/Second"], df["p99 latency"], marker="o")
+plt.xlabel("Inferences/Second")
+plt.ylabel("p99 latency (us)")
+plt.title("Latency-throughput curve")
+plt.grid(True)
+plt.show()
+```
+
+Nếu CSV dùng đơn vị microseconds, hãy convert:
+
+```python
+df["p99_ms"] = df["p99 latency"] / 1000.0
+```
+
+### Step 9: Pick candidate operating point
+
+Chọn config theo:
+
+```text
+highest throughput
+while p99 < SLO
+and error rate = 0
+and GPU memory within budget
+and headroom acceptable
+```
+
+### Step 10: Profile with Nsight Systems if needed
+
+Nếu Perf Analyzer cho thấy vấn đề chưa rõ:
+
+```bash
+nsys profile \
+  --trace=cuda,nvtx,osrt \
+  --output=profile_triton \
+  tritonserver --model-repository=/models
+```
+
+Rồi chạy load trong window đo.
+
+### Step 11: Write benchmark report
+
+Report phải giúp người khác reproduce và hiểu kết luận.
+
+Template ở cuối bài.
+
+
+##  Lab 1 — Tạo benchmark ledger
+
+Tạo file `benchmark_ledger.md`:
+
+```markdown
+# Benchmark Ledger
+
+## Environment
+
+- Date:
+- Machine:
+- GPU:
+- Driver:
+- CUDA:
+- TensorRT:
+- Triton:
+- ONNX Runtime:
+- Model:
+- Model artifact:
+- Precision:
+- Input shape:
+- Batch:
+- Dynamic shape profile:
+- Notes:
+
+## Experiment Matrix
+
+| ID | Tool | Config | Metric target | Result | Notes |
+|-----|----|----|----|----|----|
+| E001 | trtexec | FP16 batch=1 | latency | | |
+| E002 | trtexec | FP16 batch=8 | throughput | | |
+| E003 | perf_analyzer | concurrency 1:64 | p99 | | |
+| E004 | model_analyzer | batch/instance sweep | best config | | |
+```
+
+Mục tiêu của lab này là hình thành thói quen đo có hệ thống.
+
+
+## Lab 2 — `trtexec` static shape benchmark
+
+Giả sử bạn có `model.onnx` input `input`.
+
+Build engine:
+
+```bash
+trtexec \
+  --onnx=model.onnx \
+  --saveEngine=model_fp16.plan \
+  --shapes=input:1x3x224x224 \
+  --fp16 \
+  --verbose \
+  > build_fp16.log
+```
+
+Benchmark engine:
+
+```bash
+trtexec \
+  --loadEngine=model_fp16.plan \
+  --shapes=input:1x3x224x224 \
+  > bench_fp16_b1.log
+```
+
+Trích các dòng quan trọng:
+
+```bash
+grep -E "Throughput|Latency|Enqueue|H2D|GPU Compute|D2H|Total Host|Total GPU" bench_fp16_b1.log
+```
+
+Điền vào bảng:
+
+| Metric             | Value |
+|--------------------|-------|
+| Throughput         |       |
+| Latency median     |       |
+| Latency p99        |       |
+| Enqueue median     |       |
+| H2D median         |       |
+| GPU Compute median |       |
+| D2H median         |       |
+
+Câu hỏi:
+
+1. GPU Compute chiếm bao nhiêu phần trăm Host Latency?
+2. H2D/D2H có đáng kể không?
+3. Enqueue Time có lớn hơn GPU Compute không?
+4. Nếu dùng `--noDataTransfers`, latency thay đổi thế nào?
+
+
+##  Lab 3 — Dynamic shape sweep
+
+Build dynamic engine:
+
+```bash
+trtexec \
+  --onnx=model.onnx \
+  --saveEngine=model_dynamic_fp16.plan \
+  --fp16 \
+  --minShapes=input:1x3x224x224 \
+  --optShapes=input:8x3x224x224 \
+  --maxShapes=input:32x3x224x224
+```
+
+Benchmark:
+
+```bash
+for b in 1 2 4 8 16 32; do
+  trtexec \
+    --loadEngine=model_dynamic_fp16.plan \
+    --shapes=input:${b}x3x224x224 \
+    > bench_dynamic_b${b}.log
+done
+```
+
+Tạo bảng:
+
+| Batch | Median latency | p99 latency | Throughput | Images/s |
+|-------|---------------:|------------:|-----------:|---------:|
+| 1     |                |             |            |          |
+| 2     |                |             |            |          |
+| 4     |                |             |            |          |
+| 8     |                |             |            |          |
+| 16    |                |             |            |          |
+| 32    |                |             |            |          |
+
+Câu hỏi:
+
+1. Batch nào có sample throughput cao nhất?
+2. Batch nào có per-request latency thấp nhất?
+3. Shape `opt` có nhanh nhất không?
+4. Nếu production chủ yếu batch=1, profile hiện tại có hợp lý không?
+
+
+## Lab 4 — Per-layer profile
+
+Chạy:
+
+```bash
+trtexec \
+  --loadEngine=model_dynamic_fp16.plan \
+  --shapes=input:8x3x224x224 \
+  --profilingVerbosity=detailed \
+  --dumpLayerInfo \
+  --dumpProfile \
+  --separateProfileRun \
+  > profile_layers.log
+```
+
+Tìm top layers:
+
+```bash
+grep -A200 "=== Profile" profile_layers.log | head -n 220
+```
+
+Hoặc dùng script parse đơn giản tùy output version.
+
+Checklist:
+
+```text
+Layer nào chiếm Time(%) lớn nhất?
+Layer đó là Conv/GEMM/Attention/Resize/Concat/Normalization?
+Precision là FP16/FP32/INT8?
+Có layer format conversion không?
+Có Q/DQ overhead rõ không?
+Có layer nào không được fuse như kỳ vọng không?
+```
+
+
+## Lab 5 — Triton Perf Analyzer concurrency sweep
+
+Start Triton:
+
+```bash
+docker run --gpus all --rm --net host \
+  -v $(pwd)/model_repository:/models \
+  nvcr.io/nvidia/tritonserver:<RELEASE>-py3 \
+  tritonserver --model-repository=/models
+```
+
+Benchmark:
+
+```bash
+perf_analyzer \
+  -m model_name \
+  -i grpc \
+  --concurrency-range 1:64:4 \
+  -f perf_concurrency.csv
+```
+
+Đọc CSV:
+
+```python
+import pandas as pd
+
+df = pd.read_csv("perf_concurrency.csv")
+print(df.head())
+print(df.columns)
+```
+
+Tạo các cột ms:
+
+```python
+for col in ["p50 latency", "p90 latency", "p95 latency", "p99 latency"]:
+    if col in df.columns:
+        df[col + " (ms)"] = df[col] / 1000.0
+```
+
+Câu hỏi:
+
+1. Throughput bắt đầu plateau ở concurrency nào?
+2. p99 vượt SLO ở concurrency nào?
+3. Server Queue tăng từ đâu?
+4. Config production nên chọn concurrency/request rate khoảng nào?
+
+
+## 23. Lab 6 — Vẽ latency-throughput curve
+
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("perf_concurrency.csv")
+
+x = df["Inferences/Second"]
+y = df["p99 latency"] / 1000.0
+
+plt.figure()
+plt.plot(x, y, marker="o")
+plt.xlabel("Inferences/Second")
+plt.ylabel("p99 latency (ms)")
+plt.title("p99 latency vs throughput")
+plt.grid(True)
+plt.savefig("latency_throughput_curve.png", dpi=160)
+```
+
+Viết nhận xét:
+
+```text
+Knee point:
+Max throughput under p99 SLO:
+Recommended operating point:
+Headroom:
+```
+
+
+## Lab 7 — So sánh HTTP vs gRPC
+
+```bash
+perf_analyzer \
+  -m model_name \
+  -i http \
+  --concurrency-range 1:64:4 \
+  -f perf_http.csv
+
+perf_analyzer \
+  -m model_name \
+  -i grpc \
+  --concurrency-range 1:64:4 \
+  -f perf_grpc.csv
+```
+
+So sánh:
+
+```python
+import pandas as pd
+
+http = pd.read_csv("perf_http.csv")
+grpc = pd.read_csv("perf_grpc.csv")
+
+merged = http[["Concurrency", "Inferences/Second", "p99 latency"]].merge(
+    grpc[["Concurrency", "Inferences/Second", "p99 latency"]],
+    on="Concurrency",
+    suffixes=("_http", "_grpc"),
+)
+
+print(merged)
+```
+
+Câu hỏi:
+
+1. Protocol nào có p99 tốt hơn?
+2. Protocol nào có throughput tốt hơn?
+3. Kết quả có ổn định qua nhiều lần chạy không?
+4. Payload size có ảnh hưởng không?
+
+
+## Lab 8 — Thu GPU metrics bằng Perf Analyzer
+
+```bash
+perf_analyzer \
+  -m model_name \
+  -i grpc \
+  --concurrency-range 1:64:4 \
+  --collect-metrics \
+  --verbose-csv \
+  -f perf_metrics.csv
+```
+
+Đọc:
+
+```python
+import pandas as pd
+
+df = pd.read_csv("perf_metrics.csv")
+print(df.columns)
+```
+
+Tìm các cột liên quan:
+
+```python
+for c in df.columns:
+    if "GPU" in c or "gpu" in c:
+        print(c)
+```
+
+Câu hỏi:
+
+1. GPU utilization tăng theo concurrency không?
+2. GPU memory có đổi theo concurrency không?
+3. Throughput plateau khi GPU utilization khoảng bao nhiêu?
+4. GPU utilization cao nhưng p99 có vượt SLO không?
+
+
+## Lab 9 — Triton metrics endpoint
+
+```bash
+curl localhost:8002/metrics > metrics.txt
+```
+
+Tìm metrics:
+
+```bash
+grep -E "nv_inference|nv_gpu|queue|duration" metrics.txt | head -n 50
+```
+
+Câu hỏi:
+
+1. Request count có tăng không?
+2. Failure count có bằng 0 không?
+3. Queue duration có đáng kể không?
+4. Compute input/infer/output component nào lớn nhất?
+5. GPU memory used bao nhiêu?
+
+
+## Lab 10 — Triton trace cho sampled requests
+
+Start Triton với trace:
+
+```bash
+tritonserver \
+  --model-repository=/models \
+  --trace-config triton,file=/tmp/triton_trace.json \
+  --trace-config triton,log-frequency=50 \
+  --trace-config rate=100 \
+  --trace-config level=TIMESTAMPS \
+  --trace-config count=100
+```
+
+Chạy load:
+
+```bash
+perf_analyzer \
+  -m model_name \
+  -i grpc \
+  --concurrency-range 32
+```
+
+Kiểm tra trace:
+
+```bash
+ls -lh /tmp/triton_trace.json*
+```
+
+Câu hỏi:
+
+1. Request nào có trace dài bất thường?
+2. Thời gian nằm ở queue hay compute?
+3. Có pattern chung giữa slow requests không?
+
+
+## Lab 11 — Nsight Systems cho app inference
+
+Tạo `infer_loop.py`:
+
+```python
+import time
+import numpy as np
+
+# Pseudocode. Thay bằng runtime thật của bạn.
+def preprocess():
+    return np.random.rand(1, 3, 224, 224).astype("float32")
+
+def infer(x):
+    # session.run(...) hoặc TensorRT execution ở đây
+    time.sleep(0.002)
+    return x
+
+def postprocess(y):
+    return y.argmax()
+
+for _ in range(100):
+    x = preprocess()
+    y = infer(x)
+    z = postprocess(y)
+```
+
+Profile:
+
+```bash
+nsys profile \
+  --trace=cuda,nvtx,osrt \
+  --output=infer_loop_profile \
+  python infer_loop.py
+```
+
+Nếu dùng NVTX:
+
+```python
+import nvtx
+
+with nvtx.annotate("preprocess"):
+    x = preprocess()
+
+with nvtx.annotate("inference"):
+    y = infer(x)
+
+with nvtx.annotate("postprocess"):
+    z = postprocess(y)
+```
+
+Câu hỏi khi mở report:
+
+1. CPU có gap trước GPU kernels không?
+2. Có H2D/D2H memcpy không?
+3. Kernels có overlap không?
+4. Có sync call trong hot path không?
+5. Có nhiều tiny kernels không?
+
+
+## Lab 12 — Benchmark report template
+
+Tạo `benchmark_report.md`:
+
+```markdown
+# Inference Benchmark Report
+
+## 1. Summary
+
+- Model:
+- Artifact:
+- Precision:
+- Best config:
+- Recommended operating point:
+- Max throughput under SLO:
+- p99 SLO:
+- Main bottleneck:
+- Recommendation:
+
+## 2. Environment
+
+| Item | Value |
+|---|---|
+| GPU | |
+| Driver | |
+| CUDA | |
+| TensorRT | |
+| Triton | |
+| OS | |
+| Container | |
+| CPU | |
+| Memory | |
+
+## 3. Model
+
+| Item | Value |
+|---|---|
+| Input | |
+| Output | |
+| Dynamic shapes | |
+| Optimization profile | |
+| Precision | |
+| Batch support | |
+
+## 4. trtexec Results
+
+| Batch | Median latency | p99 latency | Throughput | H2D | GPU compute | D2H | Enqueue |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | | | | | | | |
+| 8 | | | | | | | |
+| 16 | | | | | | | |
+
+## 5. Triton Perf Analyzer Results
+
+| Concurrency | Throughput | p50 | p95 | p99 | Queue | Compute infer | GPU util |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | | | | | | | |
+| 8 | | | | | | | |
+| 32 | | | | | | | |
+| 64 | | | | | | | |
+
+## 6. Latency-throughput Curve
+
+Include plot here.
+
+## 7. Bottleneck Analysis
+
+Evidence:
+- 
+- 
+
+Hypothesis:
+- 
+
+Experiment:
+- 
+
+Result:
+- 
+
+## 8. Recommendation
+
+- Config to deploy:
+- Expected throughput:
+- Expected p99:
+- Required replicas:
+- Headroom:
+- Risks:
+- Follow-up:
+```
+
+
+## Production performance checklist
+
+Trước khi đưa model vào production, kiểm tra:
+
+### Correctness
+
+- [ ] Output đúng so với reference.
+- [ ] Accuracy không regress.
+- [ ] FP16/INT8 đã kiểm tra numerical behavior.
+- [ ] Dynamic shape inputs nằm trong profile.
+
+### Engine-level benchmark
+
+- [ ] `trtexec` benchmark cho các batch/shape quan trọng.
+- [ ] Có FP32/FP16/INT8 comparison nếu phù hợp.
+- [ ] Có per-layer profile cho candidate engine.
+- [ ] Có H2D/D2H comparison.
+- [ ] Có warmup.
+- [ ] Không trộn build time với inference time.
+
+### Service-level benchmark
+
+- [ ] Perf Analyzer concurrency sweep.
+- [ ] Request rate sweep nếu production traffic theo RPS.
+- [ ] p50/p95/p99 reported.
+- [ ] Server queue/compute breakdown reported.
+- [ ] HTTP/gRPC chosen based on measurement.
+- [ ] Input data representative.
+- [ ] Dynamic batching config tested.
+- [ ] Instance count tested.
+- [ ] Error/timeout rate = 0 ở recommended point.
+
+### System profiling
+
+- [ ] Nsight Systems run nếu bottleneck chưa rõ.
+- [ ] CPU/GPU gaps inspected.
+- [ ] H2D/D2H copies understood.
+- [ ] Synchronization calls checked.
+- [ ] Memory allocation in hot path avoided.
+
+### Production observability
+
+- [ ] Metrics endpoint scraped.
+- [ ] Dashboards for throughput, latency, p99, queue, errors, GPU util, GPU memory.
+- [ ] Alerts for p99 SLO breach.
+- [ ] Alerts for error rate.
+- [ ] Alerts for queue duration.
+- [ ] Alerts for GPU memory pressure.
+- [ ] Version labels in metrics/logs.
+- [ ] Benchmark baseline stored.
+
+### Capacity planning
+
+- [ ] Max throughput under SLO known.
+- [ ] Headroom defined.
+- [ ] Replica count estimated.
+- [ ] Autoscaling signal selected.
+- [ ] Overload behavior tested.
+- [ ] Backpressure/timeout policy defined.
+
+
+## Common mistakes
+
+### Mistake 1: Báo latency không nói đo ở đâu
+
+Sai:
+
+```text
+Latency = 5 ms
+```
+
+Đúng:
+
+```text
+TensorRT engine median host latency measured by trtexec at batch=8, shape=8x3x224x224, FP16, no data transfer = 5 ms.
+```
+
+### Mistake 2: So sánh benchmark khác environment
+
+Sai:
+
+```text
+FP16 trên A100 vs INT8 trên T4.
+```
+
+Đúng:
+
+```text
+FP16 và INT8 cùng GPU, cùng driver, cùng TensorRT, cùng input, cùng batch, cùng concurrency.
+```
+
+### Mistake 3: Tối ưu theo max throughput nhưng bỏ p99
+
+Production thường cần:
+
+```text
+maximize throughput subject to p99 SLO
+```
+
+không phải:
+
+```text
+maximize throughput no matter what
+```
+
+### Mistake 4: Nhìn GPU utilization như metric duy nhất
+
+GPU utilization không nói đủ:
+
+- kernel có dùng Tensor Cores hiệu quả không?
+- memory bandwidth có bottleneck không?
+- queue time có tăng không?
+- p99 có fail không?
+- output copy có chi phối không?
+
+### Mistake 5: Không warmup
+
+Cold start không đại diện steady-state.
+
+### Mistake 6: Benchmark bằng synthetic input rồi kết luận production
+
+Synthetic input tốt cho dev iteration, chưa đủ cho production acceptance.
+
+### Mistake 7: Bật dynamic batching nhưng không đo p99
+
+Dynamic batching là tradeoff, không phải magic.
+
+### Mistake 8: Không kiểm tra data transfer
+
+Một model có GPU compute 1 ms nhưng H2D+D2H 5 ms thì bottleneck không còn là compute.
+
+### Mistake 9: Không lưu baseline
+
+Không có baseline thì không biết release mới có regress hay không.
+
+### Mistake 10: Dùng Nsight quá sớm
+
+Nsight rất mạnh nhưng có chi phí phân tích. Bắt đầu bằng metrics và benchmark; dùng Nsight khi cần giải thích timeline.
+
+
+## 32. Mini project cuối bài
+
+### Mục tiêu
+
+Xây một benchmark report hoàn chỉnh cho một model ONNX/TensorRT served bằng Triton.
+
+### Input
+
+Bạn có:
+
+```text
+model.onnx
+```
+
+hoặc:
+
+```text
+model.plan
+```
+
+### Nhiệm vụ
+
+1. Build TensorRT FP16 engine bằng `trtexec`.
+2. Benchmark batch 1, 4, 8, 16.
+3. Export per-layer profile.
+4. Serve engine bằng Triton.
+5. Benchmark Triton bằng Perf Analyzer với concurrency 1:64.
+6. Thu GPU metrics.
+7. Vẽ latency-throughput curve.
+8. Chọn operating point theo p99 SLO giả định.
+9. Nếu có bottleneck chưa rõ, chạy Nsight Systems.
+10. Viết benchmark report.
+
+### SLO giả định
+
+```text
+p99 latency < 100 ms
+error rate = 0
+GPU memory < 80%
+```
+
+### Deliverables
+
+```text
+benchmark_report.md
+trtexec logs
+perf_analyzer CSV
+latency-throughput plot
+notes on bottleneck
+recommended config.pbtxt
+```
+
+### Expected conclusion format
+
+```markdown
+## Recommendation
+
+Deploy `model_fp16.plan` with:
+
+- max_batch_size:
+- dynamic_batching:
+- instance_group:
+- preferred protocol:
+- expected throughput:
+- p99:
+- GPU utilization:
+- GPU memory:
+- known risks:
+```
+
+
+## Câu hỏi tự kiểm tra
+
+1. Vì sao `trtexec` nhanh không đảm bảo Triton service nhanh?
+2. Sự khác nhau giữa throughput requests/s và samples/s là gì?
+3. Vì sao p99 quan trọng hơn mean trong service SLO?
+4. Client-side latency gồm những thành phần nào?
+5. Server-side latency gồm những thành phần nào?
+6. Server Queue tăng nghĩa là gì?
+7. Enqueue Time trong `trtexec` cao gợi ý vấn đề gì?
+8. H2D/D2H latency cao thì nên tối ưu gì?
+9. GPU Compute Time cao thì nên tối ưu gì?
+10. Vì sao dynamic batching có thể làm p99 xấu hơn?
+11. Concurrency khác request rate như thế nào?
+12. Khi nào dùng request rate mode thay vì concurrency mode?
+13. Model Analyzer khác Perf Analyzer thế nào?
+14. Nsight Systems trả lời câu hỏi gì mà Perf Analyzer không trả lời được?
+15. Dấu hiệu nào trên Nsight Systems cho thấy CPU launch overhead?
+16. Khi nào cần Nsight Compute?
+17. Vì sao cần warmup?
+18. Vì sao không nên trộn engine build time với inference time?
+19. Vì sao GPU utilization cao chưa chắc tốt?
+20. Bạn chọn production config dựa trên max throughput hay throughput under p99 SLO?
+
+
+## Glossary
+
+### Benchmark
+
+Quá trình đo performance theo một methodology cụ thể.
+
+### Profiling
+
+Quá trình phân tích chi tiết nơi thời gian/tài nguyên được tiêu thụ.
+
+### Latency
+
+Thời gian một request mất từ start tới finish.
+
+### Throughput
+
+Số lượng inference/request/sample xử lý mỗi giây.
+
+### Concurrency
+
+Số request outstanding cùng lúc.
+
+### Request rate
+
+Tốc độ gửi request vào server.
+
+### p99
+
+99th percentile latency; 99% request nhanh hơn hoặc bằng giá trị này.
+
+### Tail latency
+
+Phần latency ở cuối phân phối, ví dụ p95/p99/p999.
+
+### Queue time
+
+Thời gian request chờ trước khi được execute.
+
+### H2D
+
+Host-to-device transfer.
+
+### D2H
+
+Device-to-host transfer.
+
+### Enqueue Time
+
+Thời gian host enqueue inference/CUDA work.
+
+### GPU Compute Time
+
+Thời gian GPU execute kernels.
+
+### Dynamic batching
+
+Cơ chế gom nhiều request thành batch để tăng GPU utilization/throughput.
+
+### Knee point
+
+Điểm trên latency-throughput curve nơi latency bắt đầu tăng nhanh trong khi throughput gần plateau.
+
+### Saturation
+
+Trạng thái tài nguyên gần full capacity; queue thường tăng mạnh.
+
+### Nsight Systems
+
+System-wide profiler để xem timeline CPU/GPU/CUDA.
+
+### Nsight Compute
+
+Kernel-level profiler để phân tích chi tiết CUDA kernel.
+
+### Prometheus metrics
+
+Metrics text endpoint có thể scrape để monitoring.
+
+
+## Mental models cần nhớ
+
+### Đừng hỏi "model nhanh không?"
+
+Hỏi đúng hơn:
+
+```text
+Nhanh ở layer nào?
+Nhanh ở batch nào?
+Nhanh ở shape nào?
+Nhanh ở precision nào?
+Nhanh ở concurrency nào?
+Nhanh theo p50 hay p99?
+Nhanh ở engine-level hay service-level?
+Nhanh khi có data transfer hay không?
+Nhanh với input thật hay random?
+```
+
+### Benchmark là một thí nghiệm
+
+Mỗi benchmark cần:
+
+```text
+hypothesis
+controlled variables
+measurement method
+result
+interpretation
+next action
+```
+
+### Tối ưu là vòng lặp
+
+```text
+measure -> locate bottleneck -> change one thing -> remeasure -> document
+```
+
+###  Max throughput không phải production capacity
+
+Production capacity là:
+
+```text
+max safe throughput under SLO with headroom
+```
+
+###  Một metric không bao giờ đủ
+
+Cần nhìn ít nhất:
+
+```text
+throughput
+p50/p95/p99
+queue
+compute
+GPU util
+GPU memory
+error rate
+```
+
+
+##  Chuẩn bị cho Lesson 8
+
+Sau Lesson 7, bạn đã biết cách đo và debug performance. Lesson tiếp theo nên chuyển sang production operations:
+
+```text
+Lesson 8: Safe Model Rollouts and Production Operations
+    Canary Deployment
+    A/B Testing
+    Shadow Traffic
+    Model Versioning
+    Rollback
+    Monitoring
+    Autoscaling
+    SLOs
+    Incident Response
+```
+
+Tư duy chuyển tiếp:
+
+```text
+Lesson 7:
+    How do we know the model/service is fast enough?
+
+Lesson 8:
+    How do we deploy changes safely without breaking users?
+```
+
+
+##  References
+
+[^trtexec_cli]: NVIDIA TensorRT Documentation — Command-Line Programs: `trtexec`. <https://docs.nvidia.com/deeplearning/tensorrt/latest/reference/command-line-programs.html>
+
+[^trtexec_metrics]: NVIDIA TensorRT Documentation — Performance Benchmarking using `trtexec`. <https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/benchmarking.html>
+
+[^trtexec_layer]: NVIDIA TensorRT Documentation — Per-Layer Runtime and Layer Information using `trtexec`. <https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/benchmarking.html>
+
+[^perf_analyzer_overview]: NVIDIA Triton Inference Server Documentation — Triton Performance Analyzer. <https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/perf_analyzer/README.html>
+
+[^perf_analyzer_metrics]: NVIDIA Triton Inference Server Documentation — Perf Analyzer Measurements and Metrics. <https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/perf_analyzer/docs/measurements_metrics.html>
+
+[^model_analyzer]: NVIDIA Triton Inference Server Documentation — Model Analyzer. <https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_analyzer.html>
+
+[^nsys_focused]: NVIDIA Nsight Systems User Guide — Focused Profiling and NVTX annotations. <https://docs.nvidia.com/nsight-systems/UserGuide/index.html>
+
+[^triton_metrics]: NVIDIA Triton Inference Server Documentation — Metrics. <https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/metrics.html>
+
+[^triton_trace]: NVIDIA Triton Inference Server Documentation — Triton Server Trace. <https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/trace.html>

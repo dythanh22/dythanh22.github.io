@@ -9,7 +9,7 @@ bai-hoc/
   architecture-models/     → chuỗi có nhóm (mỗi model = 1 thư mục)
     AlexNet/ VGG/ ResNet/ DenseNet/
     RNN/ LSTM/ GRU/
-    VAE/ GAN/
+    VAE/ GAN/ Denoising-Diffusion-Probabilistic-Models/
     Word2Vec/
     Transformer/ BERT/ Vision-Transformer/
     UNet/
@@ -40,6 +40,8 @@ description: "Một câu mô tả"
 role: "Vai trò ngắn trên bảng lộ trình"
 # categories / series / group kế thừa từ _metadata.yml
 ```
+
+Khung mở đầu gợi ý (AI Optimization / bài dài): xem `_partials/lesson-opener.md` và `{{< include /_partials/reading-modes.md >}}`.
 
 ## GitHub Pages
 

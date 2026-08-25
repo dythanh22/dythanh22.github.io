@@ -1,6 +1,105 @@
 <script>
 (() => {
-  const inject = () => {
+  const READ_PREFIX = "read:";
+  const WORDS_PER_MIN = 180;
+
+  const pathKey = (pathname) => READ_PREFIX + pathname.replace(/\/index\.html$/, "/").replace(/\.html$/, "");
+
+  const markCurrentRead = () => {
+    try {
+      localStorage.setItem(pathKey(location.pathname), "1");
+    } catch (_) {
+      /* private mode / quota */
+    }
+  };
+
+  const markSidebarRead = () => {
+    const links = document.querySelectorAll(
+      "#quarto-sidebar a.sidebar-link, .sidebar-navigation a.sidebar-link"
+    );
+    links.forEach((a) => {
+      try {
+        const href = a.getAttribute("href");
+        if (!href || href.startsWith("#")) return;
+        const url = new URL(a.href, location.origin);
+        if (localStorage.getItem(pathKey(url.pathname))) {
+          a.classList.add("is-read");
+        }
+      } catch (_) {
+        /* ignore bad href */
+      }
+    });
+  };
+
+  const readingMinutes = () => {
+    const content = document.querySelector("#quarto-document-content");
+    if (!content) return null;
+    const text = (content.innerText || "").trim();
+    if (!text) return null;
+    const words = text.split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.round(words / WORDS_PER_MIN));
+  };
+
+  const appendReadingTime = (badge) => {
+    const mins = readingMinutes();
+    if (mins != null) {
+      badge.textContent += ` · ~${mins} phút đọc`;
+    }
+  };
+
+  const seriesReadStats = () => {
+    const links = [
+      ...document.querySelectorAll(
+        "#quarto-sidebar a.sidebar-link[href], .sidebar-navigation a.sidebar-link[href]"
+      ),
+    ].filter((a) => {
+      const href = a.getAttribute("href") || "";
+      return href && !href.startsWith("#");
+    });
+    if (links.length < 2) return null;
+    let read = 0;
+    links.forEach((a) => {
+      try {
+        if (localStorage.getItem(pathKey(new URL(a.href, location.origin).pathname))) {
+          read += 1;
+        }
+      } catch (_) {
+        /* ignore */
+      }
+    });
+    return { read, total: links.length };
+  };
+
+  const injectCompletion = () => {
+    const isCapstone = /lesson-10-end-to-end-capstone/.test(location.pathname);
+    const isUNetComplete = /UNet\/complete-unet/.test(location.pathname);
+    if (!isCapstone && !isUNetComplete) return;
+
+    const content = document.querySelector("#quarto-document-content");
+    if (!content) return;
+    if (content.querySelector(".series-completion")) return;
+
+    const stats = seriesReadStats();
+    const box = document.createElement("div");
+    box.className = "series-completion";
+    const title = isCapstone
+      ? "Bạn đã hoàn thành chuỗi AI Optimization"
+      : "Bạn đã hoàn thành Architecture Models (U-Net)";
+    const next = isCapstone
+      ? '<a href="../architecture-models/">Quay lại Architecture Models →</a>'
+      : '<a href="../../ai-optimize/">Tiếp: AI Optimization →</a>';
+
+    let statsHtml = "";
+    if (stats) {
+      const pct = Math.round((100 * stats.read) / stats.total);
+      statsHtml = `<p class="series-completion-stats">Tiến độ chuỗi hiện tại: đã đọc <strong>${stats.read}/${stats.total}</strong> mục trên sidebar (~${pct}%).</p>`;
+    }
+
+    box.innerHTML = `<strong>${title}</strong>${statsHtml}<p>${next}</p>`;
+    content.appendChild(box);
+  };
+
+  const injectBadge = () => {
     const active = document.querySelector(
       "#quarto-sidebar a.sidebar-item-text.sidebar-link.active, " +
         ".sidebar-navigation a.sidebar-item-text.sidebar-link.active"
@@ -9,18 +108,42 @@
 
     const titleBlock = document.getElementById("title-block-header");
     if (!titleBlock) return;
+    if (document.querySelector(".lesson-progress")) return;
 
     const label = (active.textContent || "").trim();
-    if (/tổng quan chuỗi/i.test(label)) return;
-
     const li = active.closest("li.sidebar-item");
-    // Section header (nhóm/model): không đếm như một "chương" trong list con
+
+    // Series overview (short-title "Tổng quan chuỗi") or section overview
+    if (/tổng quan chuỗi/i.test(label)) {
+      const root =
+        active.closest(".sidebar-item-section") ||
+        document.querySelector("#quarto-sidebar, .sidebar-navigation");
+      const nested = root
+        ? root.querySelectorAll("a.sidebar-link:not(.active)")
+        : [];
+      // Count all chapter links in this sidebar (exclude active overview)
+      const allLinks = [
+        ...document.querySelectorAll(
+          "#quarto-sidebar a.sidebar-link, .sidebar-navigation a.sidebar-link"
+        ),
+      ].filter((a) => a !== active);
+      const count = allLinks.length || nested.length;
+      const badge = document.createElement("p");
+      badge.className = "lesson-progress";
+      badge.textContent =
+        count > 0 ? `Tổng quan chuỗi · ${count} chương` : "Tổng quan chuỗi";
+      appendReadingTime(badge);
+      titleBlock.insertAdjacentElement("afterend", badge);
+      return;
+    }
+
     if (li && li.classList.contains("sidebar-item-section")) {
       const nested = li.querySelectorAll(":scope > ul a.sidebar-link");
       if (nested.length > 0) {
         const badge = document.createElement("p");
         badge.className = "lesson-progress";
         badge.textContent = `${label} · Tổng quan · ${nested.length} chương`;
+        appendReadingTime(badge);
         titleBlock.insertAdjacentElement("afterend", badge);
       }
       return;
@@ -29,7 +152,11 @@
     const list = active.closest("ul");
     if (!list) return;
 
-    const links = [...list.querySelectorAll(":scope > li > .sidebar-item-container > a.sidebar-link")];
+    const links = [
+      ...list.querySelectorAll(
+        ":scope > li > .sidebar-item-container > a.sidebar-link"
+      ),
+    ];
     if (links.length < 1) return;
 
     const idx = links.indexOf(active);
@@ -38,20 +165,30 @@
     const sectionTitle =
       list
         .closest(".sidebar-item-section")
-        ?.querySelector(":scope > .sidebar-item-container .sidebar-item-text, :scope > .sidebar-item-container a")
+        ?.querySelector(
+          ":scope > .sidebar-item-container .sidebar-item-text, :scope > .sidebar-item-container a"
+        )
         ?.textContent?.trim() || "";
 
     const badge = document.createElement("p");
     badge.className = "lesson-progress";
     const chapter = `Chương ${idx + 1}/${links.length}`;
     badge.textContent = sectionTitle ? `${sectionTitle} · ${chapter}` : chapter;
+    appendReadingTime(badge);
     titleBlock.insertAdjacentElement("afterend", badge);
   };
 
+  const run = () => {
+    markCurrentRead();
+    markSidebarRead();
+    injectBadge();
+    injectCompletion();
+  };
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", inject);
+    document.addEventListener("DOMContentLoaded", run);
   } else {
-    inject();
+    run();
   }
 })();
 </script>

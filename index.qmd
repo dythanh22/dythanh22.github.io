@@ -33,7 +33,7 @@ Homepage chỉ hiện **chuỗi**, không trộn từng chương. Vào chuỗi �
 <p class="eyebrow">Kiến trúc · lộ trình</p>
 ### [Architecture Models](bai-hoc/architecture-models/index.qmd)
 
-CNN → sequence → generative → embeddings → attention → U-Net.
+CNN → sequence → generative (VAE/GAN/DDPM) → embeddings → attention → U-Net.
 
 [Mở Architecture Models →](bai-hoc/architecture-models/index.qmd)
 :::
@@ -44,6 +44,6 @@ CNN → sequence → generative → embeddings → attention → U-Net.
 
 10 bài: ONNX, TensorRT, Triton, LLM serving và vận hành production.
 
-[Bắt đầu Lesson 1 →](bai-hoc/ai-optimize/lesson-01-modern-gpu-inference-architecture.qmd)
+[Mở AI Optimization →](bai-hoc/ai-optimize/index.qmd)
 :::
 ::::

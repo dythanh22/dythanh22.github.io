@@ -1,4 +1,16 @@
-# Reverse Diffusion Process
+---
+title: "Reverse Diffusion Process"
+date: 2026-08-22
+order: 2
+categories: [architecture-models, architecture, ddpm, generative, diffusion]
+series: architecture-models
+group: "DDPM"
+role: "p_θ(x_{t-1}|x_t) đã học"
+description: "Reverse process: denoiser ε_θ khôi phục x_{t-1} từ x_t."
+aliases:
+  - /bai-hoc/architecture-models/Denoising-Diffusion-Probabilistic-Models/2-Reverse_Diffusion_Process.md
+  - /bai-hoc/architecture-models/Denoising-Diffusion-Probabilistic-Models/2-Reverse_Diffusion_Process.html
+---
 
 Reverse diffusion process là nơi generation thực sự diễn ra trong Denoising Diffusion Probabilistic Models (DDPM). Ho et al. (2020) giới thiệu DDPM: sinh dữ liệu bằng cách học đảo ngược quá trình làm nhiễu dần. Forward process làm hỏng mẫu $x_0$ qua $T$ timestep cho đến khi gần như không phân biệt được với pure Gaussian noise $x_T \sim \mathcal{N}(0, I)$. Reverse process đi ngược từ $x_T$ về $x_0$, khử nhiễu từng bước.
 

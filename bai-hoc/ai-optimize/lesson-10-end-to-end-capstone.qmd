@@ -9,582 +9,246 @@ description: "Build, optimize, benchmark và vận hành một production infere
 role: "Build, optimize, benchmark và vận hành một production inference service"
 ---
 
-```{=html}
-<div class="callout callout-style-default callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Ghi chú</span>Mục tiêu bài học
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Ghép Lesson 1–9 thành <strong>một project vận hành được</strong>: PyTorch → ONNX → TensorRT → Triton (hoặc nhánh LLM: vLLM / TensorRT-LLM) → benchmark → Prometheus/Grafana → canary/rollback → cost + final report. Bài <strong>không</strong> dạy lại chi tiết từng tool — mà buộc bạn chứng minh service <strong>đúng, đủ nhanh dưới SLO, quan sát được, rollback được</strong>.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Ghi chú</span>Lộ trình bài học
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<table class="caption-top table">
-<colgroup>
-<col style="width: 7%">
-<col style="width: 15%">
-<col style="width: 44%">
-<col style="width: 31%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">#</th>
-<th style="text-align: left;">Phần</th>
-<th style="text-align: left;">Trả lời câu hỏi</th>
-<th style="text-align: left;">Thời lượng</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">Phạm vi + workload</td>
-<td style="text-align: left;">CNN mặc định vs LLM optional? In/out scope?</td>
-<td style="text-align: left;">15 phút</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">2</td>
-<td style="text-align: left;">Architecture + contract</td>
-<td style="text-align: left;">Repo, deliverables, SLO, kiến trúc mục tiêu?</td>
-<td style="text-align: left;">20 phút</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">3</td>
-<td style="text-align: left;">Export + optimize (+quant)</td>
-<td style="text-align: left;">ONNX → validate → TRT FP16/INT8?</td>
-<td style="text-align: left;">35 phút</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">4</td>
-<td style="text-align: left;">Deploy + benchmark</td>
-<td style="text-align: left;">Triton dual backend, Perf Analyzer, knee?</td>
-<td style="text-align: left;">35 phút</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">5</td>
-<td style="text-align: left;">Ops + canary</td>
-<td style="text-align: left;">Metrics, alert, K8s, shadow/canary, runbook?</td>
-<td style="text-align: left;">30 phút</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">6</td>
-<td style="text-align: left;">Cost + report + rubric</td>
-<td style="text-align: left;">$/1M, PRR, Level 1–8?</td>
-<td style="text-align: left;">20 phút</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">7</td>
-<td style="text-align: left;">Failure + mental models</td>
-<td style="text-align: left;">Bug thường gặp? Mantra cả khóa?</td>
-<td style="text-align: left;">15 phút + labs</td>
-</tr>
-</tbody>
-</table>
-<p>Đọc tối thiểu: phần 1–4. Phần 5–7 + Mini-lab bắt buộc trước khi coi capstone “xong”.</p>
-</div>
-</div>
-<div class="reading-modes">
-<p><strong>Đọc nhanh:</strong> callout <em>Ý chính</em> + bảng + sơ đồ xương sống.<br>
-<strong>Đọc đủ:</strong> mở tip (templates/scripts), làm Mini-lab theo phase, Checkpoint 20 câu.</p>
-</div>
-<section id="bối-cảnh" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="bối-cảnh">Bối cảnh</h2>
-<p>Chín lesson trước là từng mảnh. Lesson 10 là <strong>workflow thật</strong> khi biến model nghiên cứu thành service:</p>
-<pre class="text"><code>L1 GPU pipeline → L2 ONNX → L3 ORT → L4 TensorRT → L5 Quantization
-→ L6 Triton → L7 Profiling → L8 Safe rollouts → L9 LLM systems
-→ L10 Capstone (ghép end-to-end)</code></pre>
-<div class="cell" data-fig-width="7" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-l10-spine" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-l10-spine-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div>
-<pre class="mermaid mermaid-js" data-label="fig-l10-spine">flowchart LR
-  PT([PyTorch]) --&gt;|"export"| ON([ONNX])
-  ON --&gt;|"build"| TR([TRT])
-  TR --&gt;|"serve"| TS([Triton])
-  TS --&gt;|"Perf Analyzer"| BN([Bench])
-  BN --&gt;|"Prom/Grafana"| MO([Monitor])
-  MO --&gt;|"1→100%"| CA([Canary])
-  CA --&gt;|"PRR + cost"| RP([Report])
-  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
-  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
-  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2.5px,color:#5C3B10
-  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
-  class PT,RP soft
-  class ON,TR ok
-  class TS,BN hot
-  class MO,CA io
-</pre>
-</div>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l10-spine-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Hình&nbsp;10.1: Sơ đồ xương sống Lesson 10: PyTorch → ONNX → TRT → Triton → Bench → Monitor → Canary → Report.
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p>Mantra:</p>
-<pre class="text"><code>Capstone không chỉ “chạy được”.
-Capstone = correctness + SLO + observability + reversible rollout + cost.</code></pre>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Chuỗi kiến thức Lesson 1–9 gắn vào phase nào?
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Lesson</th>
-<th style="text-align: left;">Gắn phase capstone</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">1 GPU pipeline</td>
-<td style="text-align: left;">Latency vs throughput; H2D/D2H vs compute</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">2 ONNX</td>
-<td style="text-align: left;">Export, opset, dynamic batch, checker</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">3 ORT</td>
-<td style="text-align: left;">Baseline CUDA/CPU; I/O binding mindset</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">4 TensorRT</td>
-<td style="text-align: left;"><code>trtexec</code>, profiles, FP16 engine</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">5 Quantization</td>
-<td style="text-align: left;">INT8 optional; calibration + accuracy gate</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">6 Triton</td>
-<td style="text-align: left;">Model repo, <code>config.pbtxt</code>, dynamic batching</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">7 Profiling</td>
-<td style="text-align: left;">Perf Analyzer, knee, bottleneck table</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">8 Rollouts</td>
-<td style="text-align: left;">SLO, canary, shadow, runbook, HPA</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">9 LLM</td>
-<td style="text-align: left;">Nhánh optional: TTFT/ITL/KV/vLLM</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-</section>
-<section id="learning-outcomes" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="learning-outcomes">Learning outcomes</h2>
-<ol type="1">
-<li>Định nghĩa phạm vi, SLO và <strong>model contract</strong> trước khi tối ưu</li>
-<li>Export ONNX + validate semantic (PyTorch vs ORT) trước TensorRT</li>
-<li>Build TensorRT FP16 (và INT8 optional) với profile <code>min/opt/max</code> đúng traffic</li>
-<li>Serve dual backend (ORT + TRT) trên Triton; client HTTP/gRPC</li>
-<li>Benchmark hai lớp: model/server vs end-to-end API; tìm <strong>knee point</strong></li>
-<li>Observability: Prometheus scrape, alert actionable, dashboard golden signals</li>
-<li>Rollout an toàn: shadow → canary → promote/rollback + incident runbook</li>
-<li>Cost per 1M inferences; production readiness review; tự chấm Level 1–8</li>
-<li>(Optional) Nhánh LLM: vLLM/TensorRT-LLM + metric token-level</li>
-<li>Mental models khóa học: artifact ≠ service; p99 &gt; mean; config là code</li>
-</ol>
-</section>
-<section id="prerequisites" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="prerequisites">Prerequisites</h2>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 47%">
-<col style="width: 52%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Chủ đề</th>
-<th style="text-align: left;">Cần nắm</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Lessons 1–5</td>
-<td style="text-align: left;">Pipeline GPU, ONNX, ORT, TensorRT, quantization cơ bản</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Lesson 6</td>
-<td style="text-align: left;">Triton model repository, <code>config.pbtxt</code>, dynamic batching</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Lesson 7</td>
-<td style="text-align: left;"><code>trtexec</code>, Perf Analyzer, p50/p95/p99, bottleneck</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Lesson 8</td>
-<td style="text-align: left;">SLO, canary, shadow, runbook, HPA mindset</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Lesson 9</td>
-<td style="text-align: left;">Optional nếu làm nhánh LLM (TTFT/ITL/KV)</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Môi trường</td>
-<td style="text-align: left;">Docker + GPU khuyến nghị; CPU vẫn làm được export/validate/ORT</td>
-</tr>
-</tbody>
-</table>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Hai track lab
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-4" class="callout-4-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><strong>Track A (mặc định):</strong> image classification ResNet-50 / MobileNetV3 → Triton.<br>
-<strong>Track B (optional):</strong> LLM serving vLLM / TensorRT-LLM — chỉ sau khi Track A đạt ít nhất Level 6.<br>
-Không có GPU: làm contract, scripts, configs, report design, runbook; benchmark TRT/Triton đánh dấu “blocked by hardware”.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-scope" class="level2" data-number="10.1">
-<h2 data-number="10.1" class="anchored" data-anchor-id="sec-scope"><span class="header-section-number">10.1</span> Phạm vi, mục tiêu và chọn workload</h2>
-<blockquote class="blockquote">
-<p>Capstone này “làm gì đủ” và khi nào nên chọn CNN mặc định thay vì nhảy thẳng sang LLM?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><strong>Track mặc định</strong> là image classification (ResNet-50 hoặc MobileNetV3) vì đủ nhỏ để lặp nhanh mà vẫn bao phủ full pipeline production. LLM là <strong>nhánh mở rộng</strong> — không thay deliverable chính trừ khi bạn đã hoàn thành Track A tới Level 6+.</p>
-</div>
-</div>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 12%">
-<col style="width: 41%">
-<col style="width: 46%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Chiều</th>
-<th style="text-align: left;">Track A — Classic CNN</th>
-<th style="text-align: left;">Track B — LLM (optional)</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Model</td>
-<td style="text-align: left;">ResNet-50 / MobileNetV3</td>
-<td style="text-align: left;">HF causal LM nhỏ (7B nếu có GPU)</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">IR / engine</td>
-<td style="text-align: left;">ONNX → TensorRT <code>.plan</code></td>
-<td style="text-align: left;">Checkpoint → vLLM / TensorRT-LLM</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Serving</td>
-<td style="text-align: left;">NVIDIA Triton</td>
-<td style="text-align: left;">OpenAI-compatible API</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Metric chính</td>
-<td style="text-align: left;">p99 latency, img/s, error rate</td>
-<td style="text-align: left;">TTFT, ITL, tokens/s, KV util</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Correctness</td>
-<td style="text-align: left;">logits/top-k vs PyTorch</td>
-<td style="text-align: left;">smoke + quality sample / disagreement</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Rollout</td>
-<td style="text-align: left;">shadow top-k + canary</td>
-<td style="text-align: left;">canary + streaming stability</td>
-</tr>
-</tbody>
-</table>
-<p><strong>In scope:</strong> export → validate → optimize → serve → load test → monitor → canary → cost → final report.<br>
-<strong>Out of scope:</strong> train từ đầu, MLOps feature store đầy đủ, multi-region HA production thật.</p>
-<p>Project mặc định:</p>
-<pre class="text"><code>Task: Image classification
-Framework: PyTorch → ONNX → TensorRT
-Serve: Triton (ORT + TRT backends)
-Bench: trtexec + Perf Analyzer (+ Nsight optional)
-Ops: Prometheus + Grafana + rollout/runbook
-Deploy: Docker Compose trước; Kubernetes optional</code></pre>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Success criteria + ví dụ SLO (đặt trước khi tối ưu)
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-6" class="callout-6-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<table class="caption-top table">
-<colgroup>
-<col style="width: 55%">
-<col style="width: 44%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Category</th>
-<th style="text-align: left;">Target</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Correctness</td>
-<td style="text-align: left;">ONNX ≈ PyTorch (max abs diff nhỏ; assert <code>atol</code>/<code>rtol</code>)</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Accuracy</td>
-<td style="text-align: left;">Drop vs baseline &lt; 1% nếu có validation set</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Latency</td>
-<td style="text-align: left;">p99 server-side &lt; 100 ms ở concurrency mục tiêu</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Throughput</td>
-<td style="text-align: left;">Đạt target trong latency budget</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Stability</td>
-<td style="text-align: left;">Không crash load test 10–30 phút</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Observability</td>
-<td style="text-align: left;">Request, latency, error, GPU util</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Rollout safety</td>
-<td style="text-align: left;">Canary + rollback plan đã viết</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Reproducibility</td>
-<td style="text-align: left;">Scripts rebuild artifacts từ đầu</td>
-</tr>
-</tbody>
-</table>
-<p>Ví dụ SLO:</p>
-<pre class="text"><code>availability: 99.9% monthly
-p99 latency: &lt; 100 ms for 3×224×224
-error rate: &lt; 0.1%
-correctness: top-1 consistent with baseline ≥ 99% sampled</code></pre>
-<p>Không có SLO → không biết “tối ưu đủ chưa”.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-architecture" class="level2" data-number="10.2">
-<h2 data-number="10.2" class="anchored" data-anchor-id="sec-architecture"><span class="header-section-number">10.2</span> Kiến trúc, contract và deliverables</h2>
-<blockquote class="blockquote">
-<p>Service production cần những thành phần nào — và artifact nào phải bàn giao?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Kiến trúc mục tiêu là <strong>Client → (optional FastAPI gateway) → Triton → ORT và/hoặc TensorRT → GPU → metrics</strong>. Deliverable không chỉ là <code>.onnx</code>/<code>.plan</code> mà là <strong>repo scripts + configs + reports + ops</strong> chứng minh service vận hành được.</p>
-</div>
-</div>
-<div class="cell" data-fig-width="6.5" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-l10-arch" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-l10-arch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div>
-<pre class="mermaid mermaid-js" data-label="fig-l10-arch">flowchart TB
-  CL([Client]) --&gt; GW([API Gateway])
-  GW --&gt; TR([Triton scheduler])
-  TR --&gt; OR([ORT backend])
-  TR --&gt; TE([TRT backend])
-  OR --&gt; GPU([NVIDIA GPU])
-  TE --&gt; GPU
-  TR --&gt; OB([Metrics/Logs/Traces])
-  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
-  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
-  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2.5px,color:#5C3B10
-  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
-  class CL,OB soft
-  class GW,TR io
-  class OR,TE ok
-  class GPU hot
-</pre>
-</div>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l10-arch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Hình&nbsp;10.2: Kiến trúc capstone: Client → Gateway → Triton (ORT + TRT) → GPU → Observability.
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p>So sánh runtime trong project:</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Layer</th>
-<th style="text-align: left;">Artifact</th>
-<th style="text-align: left;">Vai trò</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Baseline</td>
-<td style="text-align: left;">PyTorch eager / <code>torch.compile</code></td>
-<td style="text-align: left;">Tham chiếu correctness</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Intermediate</td>
-<td style="text-align: left;">ONNX Runtime CPU/CUDA</td>
-<td style="text-align: left;">Baseline portable</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Optimized</td>
-<td style="text-align: left;">TensorRT FP16 <code>.plan</code></td>
-<td style="text-align: left;">Production path chính</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Optional</td>
-<td style="text-align: left;">TensorRT INT8 <code>.plan</code></td>
-<td style="text-align: left;">Cost/latency nếu accuracy OK</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Model contract</strong> (bắt buộc viết trước export):</p>
-<pre class="text"><code>input:  name=input, FP32, [N,3,224,224], NCHW, ImageNet normalize
-output: name=logits, FP32, [N,1000]
-pre: decode RGB → resize 256 → center crop 224 → normalize → NCHW
-post: optional softmax → top-k → labels.txt</code></pre>
-<p>Bug production thường nằm ở preprocess/postprocess, không phải “weights sai”.</p>
-<div class="callout callout-style-default callout-warning no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Cảnh báo</span>Bẫy thường gặp
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Notebook một file “chạy được trên máy tôi” ≠ production project. Capstone yêu cầu scripts đánh số, model repository, ops files và report tái tạo được.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Deliverables + repository layout + environment + model contract
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-9" class="callout-9-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><strong>Deliverables checklist</strong></p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 13%">
-<col style="width: 27%">
-<col style="width: 59%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">#</th>
-<th style="text-align: left;">Nhóm</th>
-<th style="text-align: left;">Files chính</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">Model artifacts</td>
-<td style="text-align: left;"><code>model.onnx</code>, <code>model_fp16.plan</code>, optional INT8, <code>labels.txt</code></td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">2</td>
-<td style="text-align: left;">Triton repo</td>
-<td style="text-align: left;"><code>resnet50_onnx/</code>, <code>resnet50_trt/</code> + <code>config.pbtxt</code></td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">3</td>
-<td style="text-align: left;">Validation</td>
-<td style="text-align: left;"><code>01_export_to_onnx.py</code>, <code>02_validate_onnx.py</code>, <code>03_compare_outputs.py</code></td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">4</td>
-<td style="text-align: left;">Benchmark</td>
-<td style="text-align: left;"><code>04_benchmark_onnxruntime.py</code>, <code>05_build_engine_trtexec.sh</code>, <code>08_run_perf_analyzer.sh</code>, <code>benchmark_report.md</code></td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">5</td>
-<td style="text-align: left;">Serving</td>
-<td style="text-align: left;"><code>06_run_triton.sh</code>, <code>07_client.py</code>, optional <code>gateway_fastapi.py</code></td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">6</td>
-<td style="text-align: left;">Operations</td>
-<td style="text-align: left;"><code>prometheus.yml</code>, <code>alert_rules.yml</code>, <code>rollout_plan.md</code>, <code>incident_runbook.md</code>, optional k8s</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">7</td>
-<td style="text-align: left;">Final report</td>
-<td style="text-align: left;">architecture, numbers, bottleneck, rollout, PRR</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Repo layout</strong></p>
-<pre class="text"><code>inference-capstone/
+::: {.callout-note icon=false}
+## Mục tiêu bài học
+Mục tiêu của bài này là giúp bạn ghép toàn bộ 9 lesson trước thành một project hoàn chỉnh: từ model PyTorch ban đầu, export sang ONNX, tối ưu bằng TensorRT, serve bằng NVIDIA Triton, benchmark bằng `trtexec` và Perf Analyzer, monitor bằng Prometheus/Grafana, triển khai rollout an toàn, rồi viết runbook vận hành production.
+:::
+
+## Vị trí của Lesson 10 trong chuỗi học
+
+Ở 9 lesson trước, bạn đã học từng mảnh quan trọng của inference engineering:
+
+```text
+Lesson 1: Modern GPU Inference Architecture
+    inference pipeline, GPU execution, latency vs throughput
+
+Lesson 2: ONNX Fundamentals
+    graph IR, operators, opset, export pipeline
+
+Lesson 3: ONNX Runtime Deep Dive
+    execution providers, graph optimization, I/O binding
+
+Lesson 4: TensorRT Internals
+    engine building, tactic selection, dynamic shapes, FP16/INT8
+
+Lesson 5: Quantization Deep Dive
+    PTQ, QAT, calibration, Q/DQ graphs, accuracy recovery
+
+Lesson 6: NVIDIA Triton Inference Server
+    model repository, backends, dynamic batching, production serving
+
+Lesson 7: Profiling and Benchmarking
+    trtexec, Perf Analyzer, Nsight Systems, p99, bottleneck analysis
+
+Lesson 8: Safe Rollouts and Production Operations
+    canary, A/B testing, shadow traffic, monitoring, autoscaling, incident response
+
+Lesson 9: Advanced LLM Inference Systems
+    KV cache, continuous batching, vLLM, TensorRT-LLM, token-level metrics
+```
+
+Lesson 10 là bài tổng hợp:
+
+```text
+trained model artifact
+    -> ONNX export
+    -> ONNX validation
+    -> baseline benchmark
+    -> TensorRT optimization
+    -> Triton serving
+    -> load testing
+    -> monitoring
+    -> rollout
+    -> incident response
+    -> final production report
+```
+
+Trong thực tế, đây là workflow mà một inference engineer hoặc ML systems engineer cần làm khi biến một model nghiên cứu thành một service có thể vận hành.
+
+
+
+## Capstone objective
+
+Bạn sẽ xây dựng một production inference service cho bài toán image classification.
+
+Ta chọn image classification làm project mặc định vì:
+
+1. model đủ nhỏ để chạy trên laptop/GPU cloud;
+2. input/output dễ hiểu;
+3. metric correctness dễ kiểm tra;
+4. pipeline vẫn bao gồm đầy đủ các bước production: export, optimize, serve, benchmark, monitor, rollout;
+5. có thể mở rộng sang object detection, embedding service hoặc LLM serving sau khi hoàn thành.
+
+Project mặc định:
+
+```text
+Task: Image classification
+Model: ResNet-50 hoặc MobileNetV3
+Framework gốc: PyTorch
+Intermediate representation: ONNX
+Optimization runtime: TensorRT
+Serving system: NVIDIA Triton Inference Server
+Benchmark tools: trtexec, Perf Analyzer, optional Nsight Systems
+Monitoring: Triton metrics + Prometheus + Grafana
+Deployment target: Docker Compose trước, Kubernetes optional
+```
+
+Bạn có thể thay model bằng model của riêng bạn, nhưng nên giữ workflow giống nhau.
+
+
+
+## Final deliverables
+
+Khi hoàn thành capstone, bạn cần có các deliverables sau:
+
+```text
+1. Model artifacts
+   - model.onnx
+   - model_fp16.plan
+   - optional: model_int8.plan
+   - labels.txt
+
+2. Triton model repository
+   - models/resnet50_onnx/config.pbtxt
+   - models/resnet50_onnx/1/model.onnx
+   - models/resnet50_trt/config.pbtxt
+   - models/resnet50_trt/1/model.plan
+
+3. Validation scripts
+   - export_to_onnx.py
+   - validate_onnx.py
+   - compare_outputs.py
+
+4. Benchmark scripts
+   - benchmark_onnxruntime.py
+   - build_engine_trtexec.sh
+   - run_perf_analyzer.sh
+   - benchmark_report.md
+
+5. Serving scripts
+   - run_triton.sh
+   - client.py
+   - optional: gateway_fastapi.py
+
+6. Operations files
+   - prometheus.yml
+   - grafana_dashboard_notes.md
+   - alert_rules.yml
+   - rollout_plan.md
+   - incident_runbook.md
+
+7. Final report
+   - architecture
+   - latency/throughput numbers
+   - bottleneck analysis
+   - optimization decisions
+   - rollout and rollback strategy
+   - production readiness checklist
+```
+
+Capstone không chỉ yêu cầu "chạy được". Nó yêu cầu bạn chứng minh service có thể được vận hành.
+
+
+## Success criteria
+
+Bạn nên đặt mục tiêu định lượng trước khi bắt đầu.
+
+Ví dụ:
+
+| Category        | Target                                                             |
+|-----------------|--------------------------------------------------------------------|
+| Correctness     | ONNX output gần PyTorch output với max absolute difference nhỏ     |
+| Accuracy        | Accuracy drop so với baseline nhỏ hơn 1% nếu có dataset validation |
+| Latency         | p99 server-side latency nhỏ hơn 100 ms ở concurrency mục tiêu      |
+| Throughput      | đạt throughput mục tiêu ở latency budget cho phép                  |
+| Stability       | service không crash trong load test 10-30 phút                     |
+| Observability   | có metrics về request count, latency, error, GPU utilization       |
+| Rollout safety  | có kế hoạch canary + rollback                                      |
+| Reproducibility | có scripts để build lại artifacts từ đầu                           |
+
+Một production project tốt luôn bắt đầu bằng SLO.
+
+Ví dụ SLO:
+
+```text
+For image classification API:
+- availability: 99.9% monthly
+- p99 latency: < 100 ms for images of shape 3x224x224
+- error rate: < 0.1%
+- model correctness: top-1 prediction consistent with baseline for >= 99% sampled requests
+```
+
+Nếu không có SLO, bạn không biết "tối ưu đủ chưa".
+
+
+
+## Target architecture
+
+Kiến trúc capstone mặc định:
+
+```text
+                           ┌─────────────────────┐
+                           │      Client App      │
+                           └──────────┬──────────┘
+                                      │ HTTP/gRPC
+                                      ▼
+                           ┌─────────────────────┐
+                           │ Optional API Gateway │
+                           │ FastAPI / Flask      │
+                           └──────────┬──────────┘
+                                      │ Triton HTTP/gRPC client
+                                      ▼
+                           ┌─────────────────────┐
+                           │ NVIDIA Triton Server │
+                           │ model scheduler      │
+                           │ dynamic batching     │
+                           │ backend execution    │
+                           └──────────┬──────────┘
+                                      │
+                 ┌────────────────────┴────────────────────┐
+                 ▼                                         ▼
+      ┌─────────────────────┐                  ┌─────────────────────┐
+      │ ONNX Runtime Backend │                  │ TensorRT Backend     │
+      │ model.onnx           │                  │ model.plan           │
+      └─────────────────────┘                  └─────────────────────┘
+                                      │
+                                      ▼
+                           ┌─────────────────────┐
+                           │ NVIDIA GPU           │
+                           │ CUDA / Tensor Cores  │
+                           └─────────────────────┘
+                                      │
+                                      ▼
+                           ┌─────────────────────┐
+                           │ Metrics / Logs /     │
+                           │ Traces               │
+                           └─────────────────────┘
+```
+
+Trong capstone này, bạn nên triển khai cả ONNX Runtime backend và TensorRT backend để so sánh.
+
+```text
+Baseline:
+    PyTorch eager or torch.compile
+
+Intermediate baseline:
+    ONNX Runtime CPU/CUDA
+
+Optimized:
+    TensorRT FP16 engine
+
+Optional:
+    TensorRT INT8 engine
+```
+
+
+
+## Repository layout
+
+Tạo project như sau:
+
+```text
+inference-capstone/
 ├── README.md
 ├── requirements.txt
 ├── docker/
@@ -592,1390 +256,2843 @@ post: optional softmax → top-k → labels.txt</code></pre>
 │   └── docker-compose.yml
 ├── models/
 │   ├── labels.txt
-│   ├── resnet50_onnx/{config.pbtxt, 1/model.onnx}
-│   └── resnet50_trt/{config.pbtxt, 1/model.plan}
+│   ├── resnet50_onnx/
+│   │   ├── config.pbtxt
+│   │   └── 1/
+│   │       └── model.onnx
+│   └── resnet50_trt/
+│       ├── config.pbtxt
+│       └── 1/
+│           └── model.plan
 ├── scripts/
-│   ├── 01_export_to_onnx.py … 09_collect_metrics.sh
+│   ├── 01_export_to_onnx.py
+│   ├── 02_validate_onnx.py
+│   ├── 03_compare_outputs.py
+│   ├── 04_benchmark_onnxruntime.py
+│   ├── 05_build_engine_trtexec.sh
+│   ├── 06_run_triton.sh
+│   ├── 07_client.py
+│   ├── 08_run_perf_analyzer.sh
+│   └── 09_collect_metrics.sh
 ├── ops/
-│   ├── prometheus.yml, alert_rules.yml
-│   ├── rollout_plan.md, incident_runbook.md
-│   └── k8s/{triton-deployment,triton-service,hpa}.yaml
+│   ├── prometheus.yml
+│   ├── alert_rules.yml
+│   ├── rollout_plan.md
+│   ├── incident_runbook.md
+│   └── k8s/
+│       ├── triton-deployment.yaml
+│       ├── triton-service.yaml
+│       └── hpa.yaml
 ├── reports/
-│   ├── benchmark_report.md, bottleneck_analysis.md
+│   ├── benchmark_report.md
+│   ├── bottleneck_analysis.md
 │   └── production_readiness_review.md
 └── tests/
     ├── test_preprocessing.py
     ├── test_output_schema.py
-    └── test_regression_predictions.py</code></pre>
-<p><strong><code>requirements.txt</code>:</strong> <code>numpy pillow torch torchvision onnx onnxruntime onnxsim tritonclient[http,grpc] fastapi uvicorn prometheus-client</code>. GPU: <code>pip install onnxruntime-gpu</code>. Pin Triton image tag.</p>
-<p>Ports: <code>8000</code> HTTP, <code>8001</code> gRPC, <code>8002</code> metrics.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--rm</span> <span class="at">--gpus</span> all <span class="dt">\</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-p</span> 8000:8000 <span class="at">-p</span> 8001:8001 <span class="at">-p</span> 8002:8002 <span class="dt">\</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-v</span> <span class="st">"</span><span class="va">$PWD</span><span class="st">/models:/models"</span> <span class="dt">\</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  nvcr.io/nvidia/tritonserver:<span class="op">&lt;</span>version<span class="op">&gt;</span>-py3 <span class="dt">\</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  tritonserver <span class="at">--model-repository</span><span class="op">=</span>/models</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong><code>reports/model_contract.md</code> template</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Model Contract</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">## Model</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Name: resnet50 | Task: image classification</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Source: PyTorch torchvision | Export: ONNX | Optimized: TensorRT plan</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">## Input</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Name: input | FP32 | <span class="co">[</span><span class="ot">N,3,224,224</span><span class="co">]</span> | NCHW | ImageNet normalized</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## Output</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Name: logits | FP32 | <span class="co">[</span><span class="ot">N,1000</span><span class="co">]</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## Preprocessing</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Decode RGB  2. Resize short side 256  3. Center crop 224</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>float32  5. ImageNet mean/std  6. NHWC→NCHW  7. Add batch</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="fu">## Postprocessing</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Softmax optional  2. top-k  3. Map id → label</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-export-optimize" class="level2" data-number="10.3">
-<h2 data-number="10.3" class="anchored" data-anchor-id="sec-export-optimize"><span class="header-section-number">10.3</span> Phase A–B: Export, validate và tối ưu (+ quant)</h2>
-<blockquote class="blockquote">
-<p>Làm sao đi từ weights PyTorch tới engine TensorRT mà không mang theo bug silent?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Thứ tự cứng: <strong>export → ONNX checker → so sánh logits PyTorch vs ORT → (optional onnxsim) → baseline ORT → <code>trtexec</code> FP16 với profile khớp traffic</strong>. Fail equivalence thì <strong>không</strong> build TensorRT. INT8 chỉ sau khi FP16 đạt SLO và accuracy gate.</p>
-</div>
-</div>
-<div class="cell" data-fig-width="7" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-l10-export-hot" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-l10-export-hot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div>
-<pre class="mermaid mermaid-js" data-label="fig-l10-export-hot">flowchart LR
-  PT([PyTorch]) --&gt;|"export"| ON([ONNX])
-  ON --&gt;|"build"| TR([TRT])
-  TR --&gt; TS([Triton])
-  TS --&gt; BN([Bench])
-  BN --&gt; MO([Monitor])
-  MO --&gt; CA([Canary])
-  CA --&gt; RP([Report])
-  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
-  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
-  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
-  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
-  class TS,BN,MO,CA,RP soft
-  class PT,ON,TR hot
-</pre>
-</div>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l10-export-hot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Hình&nbsp;10.3: Xương sống tô sáng Phase A–B: PyTorch → ONNX → TRT.
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Bước</th>
-<th style="text-align: left;">Việc</th>
-<th style="text-align: left;">Gate thoát</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">A1</td>
-<td style="text-align: left;">Contract + chọn model</td>
-<td style="text-align: left;">Contract đã ghi; shape/dtype cố định</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">A2</td>
-<td style="text-align: left;"><code>torch.onnx.export</code> (opset 17, dynamic batch)</td>
-<td style="text-align: left;">File <code>.onnx</code> tồn tại</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">A3</td>
-<td style="text-align: left;"><code>onnx.checker</code> + inspect graph</td>
-<td style="text-align: left;">Checker OK</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">A4</td>
-<td style="text-align: left;">Compare PyTorch vs ORT</td>
-<td style="text-align: left;"><code>assert_allclose</code> pass</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">A5</td>
-<td style="text-align: left;">Optional <code>onnxsim</code> + re-validate</td>
-<td style="text-align: left;">Semantic vẫn OK</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">B1</td>
-<td style="text-align: left;">ORT CPU/CUDA baseline</td>
-<td style="text-align: left;">Số liệu trong <code>benchmark_report.md</code></td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">B2</td>
-<td style="text-align: left;"><code>trtexec --fp16</code> + profiles</td>
-<td style="text-align: left;">Engine load + dumpProfile</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">B3</td>
-<td style="text-align: left;">Optional INT8</td>
-<td style="text-align: left;">Accuracy delta chấp nhận được</td>
-</tr>
-</tbody>
-</table>
-<p>Dynamic batch chỉ ở dim 0; H/W cố định 224 để giảm phức tạp profile. Profile gợi ý: <code>min=1, opt=8, max=32</code> — khớp dynamic batching Triton, không <code>max=1024</code>.</p>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Scripts Phase A–B (export / validate / compare / ORT bench / trtexec)
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-11" class="callout-11-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><strong>Export</strong> (<code>scripts/01_export_to_onnx.py</code>):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> argparse</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torchvision.models <span class="im">as</span> models</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> export_resnet50(output_path: <span class="bu">str</span>, dynamic_batch: <span class="bu">bool</span> <span class="op">=</span> <span class="va">True</span>) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> models.resnet50(weights<span class="op">=</span>models.ResNet50_Weights.DEFAULT)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">eval</span>()</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    dummy_input <span class="op">=</span> torch.randn(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>)</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    dynamic_axes <span class="op">=</span> <span class="va">None</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> dynamic_batch:</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>        dynamic_axes <span class="op">=</span> {<span class="st">"input"</span>: {<span class="dv">0</span>: <span class="st">"batch"</span>}, <span class="st">"logits"</span>: {<span class="dv">0</span>: <span class="st">"batch"</span>}}</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    torch.onnx.export(</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        model, dummy_input, output_path,</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>        export_params<span class="op">=</span><span class="va">True</span>, opset_version<span class="op">=</span><span class="dv">17</span>, do_constant_folding<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>        input_names<span class="op">=</span>[<span class="st">"input"</span>], output_names<span class="op">=</span>[<span class="st">"logits"</span>],</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>        dynamic_axes<span class="op">=</span>dynamic_axes,</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Exported ONNX model to: </span><span class="sc">{</span>output_path<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> main() <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    parser <span class="op">=</span> argparse.ArgumentParser()</span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    parser.add_argument(<span class="st">"--output"</span>, default<span class="op">=</span><span class="st">"models/resnet50_onnx/1/model.onnx"</span>)</span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    parser.add_argument(<span class="st">"--static-batch"</span>, action<span class="op">=</span><span class="st">"store_true"</span>)</span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    args <span class="op">=</span> parser.parse_args()</span>
-<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    Path(args.output).parent.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    export_resnet50(args.output, dynamic_batch<span class="op">=</span><span class="kw">not</span> args.static_batch)</span>
-<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">"__main__"</span>:</span>
-<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    main()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> scripts/01_export_to_onnx.py <span class="at">--output</span> models/resnet50_onnx/1/model.onnx</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Validate</strong> (<code>02_validate_onnx.py</code>): <code>onnx.load</code> + <code>onnx.checker.check_model</code>; in IR version, opset imports, graph name, inputs/outputs, initializer count, first 20 nodes.</p>
-<p><strong>Compare</strong> (<code>03_compare_outputs.py</code>): seed cố định; PyTorch <code>no_grad</code> vs <code>ort.InferenceSession(..., providers=["CPUExecutionProvider"])</code>; in <code>max_abs_diff</code> / <code>max_rel_diff</code>; <code>np.testing.assert_allclose(..., atol=1e-4, rtol=1e-3)</code>. Fail → <strong>không</strong> sang TensorRT.</p>
-<p><strong>Simplify:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> onnxsim models/resnet50_onnx/1/model.onnx <span class="dt">\</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  models/resnet50_onnx/1/model_simplified.onnx</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># re-validate rồi mới mv replace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>ORT bench</strong> (<code>04_benchmark_onnxruntime.py</code>): warmup → vòng đo ms → mean/p50/p95/p99 + images/s. Chạy <code>CPUExecutionProvider</code> rồi <code>CUDAExecutionProvider</code>; ghi bảng Baseline trong <code>benchmark_report.md</code>.</p>
-<p><strong><code>trtexec</code> build</strong> (<code>05_build_engine_trtexec.sh</code>):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="va">ONNX_MODEL</span><span class="op">=</span><span class="st">"</span><span class="va">${1</span><span class="op">:-</span>models/resnet50_onnx/1/model.onnx<span class="va">}</span><span class="st">"</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="va">ENGINE_OUTPUT</span><span class="op">=</span><span class="st">"</span><span class="va">${2</span><span class="op">:-</span>models/resnet50_trt/1/model.plan<span class="va">}</span><span class="st">"</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">"</span><span class="va">$(</span><span class="fu">dirname</span> <span class="st">"</span><span class="va">$ENGINE_OUTPUT</span><span class="st">"</span><span class="va">)</span><span class="st">"</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="dt">\</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--onnx</span><span class="op">=</span><span class="st">"</span><span class="va">$ONNX_MODEL</span><span class="st">"</span> <span class="at">--saveEngine</span><span class="op">=</span><span class="st">"</span><span class="va">$ENGINE_OUTPUT</span><span class="st">"</span> <span class="dt">\</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--minShapes</span><span class="op">=</span>input:1x3x224x224 <span class="dt">\</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--optShapes</span><span class="op">=</span>input:8x3x224x224 <span class="dt">\</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--maxShapes</span><span class="op">=</span>input:32x3x224x224 <span class="dt">\</span></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--fp16</span> <span class="at">--workspace</span><span class="op">=</span>4096 <span class="dt">\</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--profilingVerbosity</span><span class="op">=</span>detailed <span class="at">--dumpLayerInfo</span> <span class="at">--dumpProfile</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Flags cần hiểu: <code>--onnx</code>, <code>--saveEngine</code>, min/opt/max shapes, <code>--fp16</code>, <code>--workspace</code>, dump profile/layer. Profile xấu: <code>min=1,opt=1,max=1024</code>. Profile tốt khớp serving: <code>1/8/32</code>.</p>
-<p><strong>Validate engine:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">trtexec</span> <span class="at">--loadEngine</span><span class="op">=</span>models/resnet50_trt/1/model.plan <span class="dt">\</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--shapes</span><span class="op">=</span>input:1x3x224x224 <span class="at">--warmUp</span><span class="op">=</span>500 <span class="at">--duration</span><span class="op">=</span>30 <span class="dt">\</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--iterations</span><span class="op">=</span>1000 <span class="at">--dumpProfile</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># lặp với shapes ...:8x3x224x224</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Ghi: Throughput, Latency, Enqueue, H2D, GPU Compute, D2H.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Symptom <code>trtexec</code></th>
-<th style="text-align: left;">Nghĩa thường gặp</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">GPU Compute cao</td>
-<td style="text-align: left;">Bottleneck model</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">H2D / D2H cao</td>
-<td style="text-align: left;">Transfer / preprocess</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Enqueue cao</td>
-<td style="text-align: left;">CPU schedule / launch nhỏ</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Throughput thấp, latency thấp</td>
-<td style="text-align: left;">Concurrency/batch thấp</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">p99 ≫ p50</td>
-<td style="text-align: left;">Queue / contention / cold path</td>
-</tr>
-</tbody>
-</table>
-<p><strong>INT8 extension:</strong> calibration dataset → cache/QDQ → INT8 engine → validate accuracy → bench → bảng Precision comparison (Runtime | Precision | p99 | Throughput | Accuracy delta | Decision). Chỉ accept nếu latency/throughput↑ và accuracy/stability OK.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-deploy-bench" class="level2" data-number="10.4">
-<h2 data-number="10.4" class="anchored" data-anchor-id="sec-deploy-bench"><span class="header-section-number">10.4</span> Phase C–D: Deploy Triton và benchmark</h2>
-<blockquote class="blockquote">
-<p>Engine nhanh với <code>trtexec</code> — làm sao chứng minh Triton + API cũng đạt SLO?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Serve <strong>cả hai</strong> backend (<code>resnet50_onnx</code> + <code>resnet50_trt</code>) để so sánh công bằng. Benchmark <strong>hai lớp</strong>: Perf Analyzer → Triton trực tiếp (model/server) và load test → gateway → Triton (E2E). Mục tiêu là tìm <strong>knee</strong>: concurrency trước khi p99 phá SLO.</p>
-</div>
-</div>
-<div class="cell" data-fig-width="7" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-l10-deploy-hot" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-l10-deploy-hot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div>
-<pre class="mermaid mermaid-js" data-label="fig-l10-deploy-hot">flowchart LR
-  PT([PyTorch]) --&gt; ON([ONNX]) --&gt; TR([TRT])
-  TR --&gt; TS([Triton])
-  TS --&gt; BN([Bench])
-  BN --&gt; MO([Monitor]) --&gt; CA([Canary]) --&gt; RP([Report])
-  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
-  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
-  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
-  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
-  class PT,ON,TR,MO,CA,RP soft
-  class TS,BN hot
-</pre>
-</div>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l10-deploy-hot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Hình&nbsp;10.4: Xương sống tô sáng Phase C–D: Triton → Bench.
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p><code>config.pbtxt</code> phải khớp artifact — không đoán tên I/O:</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 17%">
-<col style="width: 35%">
-<col style="width: 46%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Field</th>
-<th style="text-align: left;">ONNX backend</th>
-<th style="text-align: left;">TensorRT backend</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">name</td>
-<td style="text-align: left;"><code>resnet50_onnx</code></td>
-<td style="text-align: left;"><code>resnet50_trt</code></td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">backend/platform</td>
-<td style="text-align: left;"><code>backend: "onnxruntime"</code></td>
-<td style="text-align: left;"><code>platform: "tensorrt_plan"</code></td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">max_batch_size</td>
-<td style="text-align: left;">32</td>
-<td style="text-align: left;">32 (≤ profile max)</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">input dims</td>
-<td style="text-align: left;"><code>[3,224,224]</code> FP32</td>
-<td style="text-align: left;">giống</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">output dims</td>
-<td style="text-align: left;"><code>[1000]</code> FP32</td>
-<td style="text-align: left;">giống</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">dynamic_batching</td>
-<td style="text-align: left;"><code>max_queue_delay_microseconds: 1000</code></td>
-<td style="text-align: left;">giống</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">instance_group</td>
-<td style="text-align: left;"><code>count: 1</code>, <code>KIND_GPU</code></td>
-<td style="text-align: left;">giống</td>
-</tr>
-</tbody>
-</table>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Mistake config</th>
-<th style="text-align: left;">Hệ quả</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Sai input/output name</td>
-<td style="text-align: left;">Request fail</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Sai dims / dtype</td>
-<td style="text-align: left;">Shape mismatch</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><code>max_batch_size</code> lệch profile TRT</td>
-<td style="text-align: left;">Runtime error batch lớn</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Sai backend/platform</td>
-<td style="text-align: left;">Model load fail</td>
-</tr>
-</tbody>
-</table>
-<p>Health: <code>/v2/health/live</code>, <code>/v2/health/ready</code>; metadata models; metrics <code>:8002/metrics</code>.</p>
-<p>Phân rã latency:</p>
-<pre class="text"><code>client latency ≈ network + queue + input + compute infer + output + transfer</code></pre>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 44%">
-<col style="width: 33%">
-<col style="width: 22%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Symptom Triton</th>
-<th style="text-align: left;">Bottleneck</th>
-<th style="text-align: left;">Action</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Queue time cao</td>
-<td style="text-align: left;">Overload / batch delay</td>
-<td style="text-align: left;">Giảm concurrency, thêm instance, tune batch</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Compute infer cao</td>
-<td style="text-align: left;">Model/GPU</td>
-<td style="text-align: left;">TRT/precision/model nhỏ hơn</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Input/output cao</td>
-<td style="text-align: left;">Pre/post / copy</td>
-<td style="text-align: left;">Tối ưu preprocess, giảm output</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">GPU util thấp, latency cao</td>
-<td style="text-align: left;">CPU/client</td>
-<td style="text-align: left;">Profile gateway</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">GPU util cao, p99 cao</td>
-<td style="text-align: left;">Saturation</td>
-<td style="text-align: left;">Scale out / giảm delay</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">p50 tốt, p99 xấu</td>
-<td style="text-align: left;">Queue / noisy neighbor</td>
-<td style="text-align: left;">Buffer capacity, isolate</td>
-</tr>
-</tbody>
-</table>
-<div class="callout callout-style-default callout-warning no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Cảnh báo</span>Bẫy thường gặp
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><code>Gateway latency ≠ model latency.</code> Triton TRT 5 ms nhưng API p99 90 ms → bottleneck ngoài engine (decode, Python, network, queue). Đo cả hai lớp.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Triton configs, run, client, Perf Analyzer, gateway, report
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-14" class="callout-14-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><strong><code>models/resnet50_onnx/config.pbtxt</code>:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode protobuf code-with-copy"><code class="sourceCode protobuf"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>name<span class="op">:</span> <span class="st">"resnet50_onnx"</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>backend<span class="op">:</span> <span class="st">"onnxruntime"</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>max_batch_size<span class="op">:</span> <span class="dv">32</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>input [{ name<span class="op">:</span> <span class="st">"input"</span> data_type<span class="op">:</span> TYPE_FP32 dims<span class="op">:</span> [<span class="dv">3</span>, <span class="dv">224</span>, <span class="dv">224</span>] }]</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>output [{ name<span class="op">:</span> <span class="st">"logits"</span> data_type<span class="op">:</span> TYPE_FP32 dims<span class="op">:</span> [<span class="dv">1000</span>] }]</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>dynamic_batching { max_queue_delay_microseconds<span class="op">:</span> <span class="dv">1000</span> }</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>instance_group [{ count<span class="op">:</span> <span class="dv">1</span> kind<span class="op">:</span> KIND_GPU }]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong><code>models/resnet50_trt/config.pbtxt</code>:</strong> giống I/O/batching/instance; đổi <code>name: "resnet50_trt"</code> và <code>platform: "tensorrt_plan"</code> (không dùng <code>backend: onnxruntime</code>).</p>
-<p>Layout:</p>
-<pre class="text"><code>models/
-├── resnet50_onnx/config.pbtxt + 1/model.onnx
-└── resnet50_trt/config.pbtxt  + 1/model.plan</code></pre>
-<p><strong>Run Triton</strong> (<code>06_run_triton.sh</code>):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--rm</span> <span class="at">--gpus</span> all <span class="at">--name</span> triton-capstone <span class="dt">\</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-p</span> 8000:8000 <span class="at">-p</span> 8001:8001 <span class="at">-p</span> 8002:8002 <span class="dt">\</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-v</span> <span class="st">"</span><span class="va">${MODEL_REPOSITORY}</span><span class="st">:/models"</span> <span class="st">"</span><span class="va">${TRITON_IMAGE}</span><span class="st">"</span> <span class="dt">\</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  tritonserver <span class="at">--model-repository</span><span class="op">=</span>/models <span class="dt">\</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--strict-model-config</span><span class="op">=</span>true <span class="at">--log-verbose</span><span class="op">=</span>1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Health: <code>curl localhost:8000/v2/health/live|ready</code>; models metadata; <code>curl localhost:8002/metrics</code>.</p>
-<p><strong>Client</strong> (<code>07_client.py</code>): random NCHW batch → <code>InferInput("input")</code> → <code>InferRequestedOutput("logits")</code> → in shape, client latency ms, top-5. Chạy <code>--model resnet50_onnx</code> rồi <code>resnet50_trt</code>.</p>
-<p><strong>Perf Analyzer</strong> (<code>08_run_perf_analyzer.sh</code>):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">perf_analyzer</span> <span class="at">-m</span> <span class="st">"</span><span class="va">$MODEL</span><span class="st">"</span> <span class="at">-i</span> http <span class="at">-u</span> localhost:8000 <span class="at">-b</span> <span class="st">"</span><span class="va">$BATCH_SIZE</span><span class="st">"</span> <span class="dt">\</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--concurrency-range</span> 1:32:2 <span class="at">--measurement-interval</span> 5000 <span class="dt">\</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--percentile</span><span class="op">=</span>99 <span class="at">--input-data</span> random <span class="dt">\</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-f</span> <span class="st">"reports/</span><span class="va">${MODEL}</span><span class="st">_batch</span><span class="va">${BATCH_SIZE}</span><span class="st">_perf.csv"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Trước knee: throughput↑, p99 OK. Sau knee: throughput đứng, p99↑ → concurrency production gần knee.</p>
-<p><strong>Gateway FastAPI (optional):</strong> ImageNet <code>Resize(256)+CenterCrop(224)+Normalize</code>; <code>/healthz</code>; <code>/predict</code> upload → stack batch → Triton → top-5 + <code>latency_ms</code>. <code>uvicorn scripts.gateway_fastapi:app --host 0.0.0.0 --port 8080</code>. Gateway = auth, validation, decode, preprocess, postprocess, routing, logging, tracing.</p>
-<p><strong>Benchmark report skeleton</strong></p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Mục</th>
-<th style="text-align: left;">Ghi</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Environment</td>
-<td style="text-align: left;">GPU/CPU/RAM/CUDA/TRT/Triton/Driver/Model/shape/precision</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">SLO</td>
-<td style="text-align: left;">p99, throughput, max error</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">ORT table</td>
-<td style="text-align: left;">concurrency 1…32 × throughput × avg/p95/p99</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">TRT table</td>
-<td style="text-align: left;">tương tự</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Interpretation</td>
-<td style="text-align: left;">best backend, knee, recommendation, remaining bottleneck</td>
-</tr>
-</tbody>
-</table>
-<p>Hai lớp:</p>
-<pre class="text"><code>1) Model/server: perf_analyzer → Triton
-2) E2E API: load test → FastAPI → Triton → GPU</code></pre>
-<p>Số điển hình: Triton TRT 5 ms nhưng API p99 90 ms → bottleneck ngoài engine.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-ops-rollout" class="level2" data-number="10.5">
-<h2 data-number="10.5" class="anchored" data-anchor-id="sec-ops-rollout"><span class="header-section-number">10.5</span> Phase E–F: Monitoring, rollout và vận hành</h2>
-<blockquote class="blockquote">
-<p>Service đã đạt số trên lab — làm sao đưa vào traffic thật mà vẫn rollback trong vài phút?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Ops bắt đầu <strong>trước</strong> khi mở traffic: Prometheus scrape, alert actionable, Docker Compose (rồi K8s), <strong>shadow → canary 1→10→50→100%</strong> với gate, rollback triggers đã test, và runbook cho latency / error / quality. Canary ≠ A/B.</p>
-</div>
-</div>
-<div class="cell" data-fig-width="7" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-l10-ops-hot" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-l10-ops-hot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div>
-<pre class="mermaid mermaid-js" data-label="fig-l10-ops-hot">flowchart LR
-  PT([PyTorch]) --&gt; ON([ONNX]) --&gt; TR([TRT]) --&gt; TS([Triton]) --&gt; BN([Bench])
-  BN --&gt; MO([Monitor])
-  MO --&gt; CA([Canary])
-  CA --&gt; RP([Report])
-  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
-  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
-  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
-  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
-  class PT,ON,TR,TS,BN soft
-  class MO,CA,RP hot
-</pre>
-</div>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l10-ops-hot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Hình&nbsp;10.5: Xương sống tô sáng Phase E–F: Monitor → Canary → Report.
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p>Dashboard tối thiểu: request rate, error rate, p50/p95/p99, queue duration, compute infer, GPU util/mem, model name/version, instance count.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Strategy</th>
-<th style="text-align: left;">Mục tiêu</th>
-<th style="text-align: left;">Khi dùng</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Shadow</td>
-<td style="text-align: left;">So sánh v2 không ảnh hưởng user</td>
-<td style="text-align: left;">Trước canary</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Canary</td>
-<td style="text-align: left;">An toàn, rollback nhanh</td>
-<td style="text-align: left;">Mặc định production</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">A/B</td>
-<td style="text-align: left;">Đo business/quality impact</td>
-<td style="text-align: left;">Ranking/LLM/moderation…</td>
-</tr>
-</tbody>
-</table>
-<p>Shadow metrics: top-1 match, top-5 overlap, KL (optional), latency/error v1 vs v2. Không log raw user data nếu policy không cho.</p>
-<p>K8s: <code>readinessProbe</code> = nhận traffic; <code>livenessProbe</code> = restart; <code>startupProbe</code> = engine load chậm. HPA theo CPU thường <strong>không đủ</strong> cho GPU — ưu tiên queue/pending/RPS/replica (custom metrics / KEDA). Scale out khi queue cao vài phút; scale in chậm; giữ capacity buffer.</p>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-16-contents" aria-controls="callout-16" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Prometheus, alerts, Compose, K8s, rollout, runbook, CI/CD, tests
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-16" class="callout-16-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><strong><code>ops/prometheus.yml</code>:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">global</span><span class="kw">:</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">scrape_interval</span><span class="kw">:</span><span class="at"> 15s</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">scrape_configs</span><span class="kw">:</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> </span><span class="st">"triton"</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">static_configs</span><span class="kw">:</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">targets</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">"triton:8002"</span><span class="kw">]</span><span class="co">   # hoặc localhost:8002</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> </span><span class="st">"gateway"</span></span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">static_configs</span><span class="kw">:</span></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">targets</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">"gateway:8080"</span><span class="kw">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Verify: <code>curl localhost:8002/metrics | grep nv_inference</code> (tên metric đổi theo version).</p>
-<p><strong><code>ops/alert_rules.yml</code> (ý tưởng):</strong> <code>InferenceHighErrorRate</code> — failure/success &gt; 0.01 for 10m (page); <code>InferenceHighQueueTime</code> — avg queue &gt; 50 ms (warning); <code>InferenceHighComputeLatency</code> — avg compute infer &gt; 50 ms (warning). Alert phải actionable.</p>
-<p><strong>Docker Compose:</strong> <code>triton</code> (GPU, ports 8000–8002, mount models, strict config) + <code>prometheus</code> (yml + alert_rules) + <code>grafana:3000</code>. Cần NVIDIA Container Toolkit.</p>
-<p><strong>K8s Deployment:</strong> 1× <code>nvidia.com/gpu</code>; args <code>tritonserver --model-repository=/models --strict-model-config=true</code>; readiness <code>/v2/health/ready</code>; liveness <code>/v2/health/live</code>; startupProbe dài cho engine lớn; PVC mount <code>/models</code>. Service expose 8000/8001/8002.</p>
-<p><strong>HPA:</strong> minReplicas 1, maxReplicas 5. CPU utilization 70% chỉ là skeleton — production ưu tiên queue duration / pending requests / RPS/replica (custom metrics hoặc KEDA). Scale out khi queue cao vài phút; scale in chậm; giữ capacity buffer.</p>
-<p><strong>Rollout plan (<code>ops/rollout_plan.md</code>) pre-flight:</strong> ONNX OK; TRT OK; PyTorch↔︎ONNX; ONNX↔︎TRT; offline accuracy; Perf Analyzer; p99 in SLO; dashboard; rollback artifact.</p>
-<p>Stages: Shadow → Canary 1% → 10% → 50% → 100% (mỗi bậc: no SLO violation, no alert, no quality regression).<br>
-Rollback triggers: error↑, p99↑, GPU OOM, quality↓, crash loop, queue↑, user-visible incident.<br>
-Procedure: stop v2 → 100% v1 → verify recover → freeze → incident review.</p>
-<p><strong>Shadow:</strong></p>
-<pre class="text"><code>prod request → v1 = real response
-            → v2 = copy; log/compare only</code></pre>
-<p>So sánh: top-1 match, top-5 overlap, KL optional, latency/error. Không log raw PII.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compare_topk(logits_v1, logits_v2, k<span class="op">=</span><span class="dv">5</span>):</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    top_v1 <span class="op">=</span> <span class="bu">set</span>(logits_v1.argsort()[<span class="op">-</span>k:])</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    top_v2 <span class="op">=</span> <span class="bu">set</span>(logits_v2.argsort()[<span class="op">-</span>k:])</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">len</span>(top_v1 <span class="op">&amp;</span> top_v2) <span class="op">/</span> k</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>A/B ≠ canary:</strong> canary = safety; A/B = sticky bucketing + primary metric + guardrails + statistical power + duration. Ví dụ INT8 vs FP16; primary = completion rate; guardrails = p99, error, human sample. Classification API ít cần A/B; ranking/LLM/moderation thì trung tâm.</p>
-<p><strong>Runbook (<code>ops/incident_runbook.md</code>)</strong></p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 16%">
-<col style="width: 16%">
-<col style="width: 20%">
-<col style="width: 16%">
-<col style="width: 28%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Incident</th>
-<th style="text-align: left;">Symptoms</th>
-<th style="text-align: left;">Check ngay</th>
-<th style="text-align: left;">Mitigate</th>
-<th style="text-align: left;">Root candidates</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">High latency</td>
-<td style="text-align: left;">p99↑, queue↑, timeout</td>
-<td style="text-align: left;">RPS, queue, compute, GPU, recent change</td>
-<td style="text-align: left;">Rollback / scale / tắt canary / giảm postprocess</td>
-<td style="text-align: left;">spike, batch delay, thiếu instance, GPU sat, CPU preprocess</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Error spike</td>
-<td style="text-align: left;">5xx, model unavailable</td>
-<td style="text-align: left;">load status, logs, OOM, shape/dtype</td>
-<td style="text-align: left;">Rollback, drain pod, disable canary</td>
-<td style="text-align: left;">bad config, engine/GPU mismatch, corrupt artifact</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Quality regression</td>
-<td style="text-align: left;">shadow mismatch, complaints</td>
-<td style="text-align: left;">preprocess, labels, version, drift, INT8</td>
-<td style="text-align: left;">Rollback, FP16 path, sample</td>
-<td style="text-align: left;">wrong labels, calibration, silent mapping</td>
-</tr>
-</tbody>
-</table>
-<p><strong>CI/CD:</strong></p>
-<pre class="text"><code>PR: lint + unit + ONNX export/validate/compare (CPU)
-Build: export → sim → validate → TRT (GPU runner) → trtexec smoke → upload
-Staging: deploy Triton → integration → Perf smoke → shadow sample
-Prod: canary 1→10→50→100 + monitor</code></pre>
-<p>GitHub Actions skeleton: checkout → setup-python 3.11 → <code>pip install -r requirements.txt</code> → export → validate → compare. CPU CI không giả validate TRT performance.</p>
-<p><strong>Tests:</strong> <code>test_output_schema</code> (shape <code>(N,1000)</code> FP32); <code>test_preprocessing</code> (NCHW); regression top-k ảnh biết trước; equivalence; accuracy drop threshold.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-cost-report" class="level2" data-number="10.6">
-<h2 data-number="10.6" class="anchored" data-anchor-id="sec-cost-report"><span class="header-section-number">10.6</span> Cost, báo cáo cuối và rubric</h2>
-<blockquote class="blockquote">
-<p>Tối ưu “đủ” nghĩa là gì khi nhìn cost, PRR và Level tự đánh giá?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Cost không chỉ là GPU-giờ tại peak throughput — phải tính <strong>operating point đạt SLO</strong> + idle buffer + HA + gateway + observability. Final report + production readiness review biến số liệu thành <strong>quyết định</strong> (demo / staging / limited / full production). Aim <strong>Level 6+</strong>.</p>
-</div>
-</div>
-<p>Công thức cơ bản:</p>
-<p><span class="math display">\[
-\text{cost per 1M} = \frac{\text{hourly GPU cost}}{\text{sustained inferences/hour}} \times 10^{6}
-\]</span></p>
-<p>Ví dụ: $2/h, 500 req/s → 1.8M req/h → <strong>$1.11 / 1M</strong>. Production còn idle buffer, replication, gateway, logging, egress, on-call.</p>
-<div class="cell" data-fig-width="7" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-l10-report-hot" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-l10-report-hot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div>
-<pre class="mermaid mermaid-js" data-label="fig-l10-report-hot">flowchart LR
-  PT([PyTorch]) --&gt; ON([ONNX]) --&gt; TR([TRT]) --&gt; TS([Triton]) --&gt; BN([Bench]) --&gt; MO([Monitor])
-  MO --&gt; CA([Canary])
-  CA --&gt; RP([Report])
-  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
-  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
-  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
-  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
-  class PT,ON,TR,TS,BN,MO soft
-  class CA,RP hot
-</pre>
-</div>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-l10-report-hot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Hình&nbsp;10.6: Xương sống tô sáng kết thúc: Canary → Report (cost + PRR + quyết định production).
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Lever</th>
-<th style="text-align: left;">Effect</th>
-<th style="text-align: left;">Risk</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">FP16</td>
-<td style="text-align: left;">Nhanh / ít mem</td>
-<td style="text-align: left;">Sai số nhỏ</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">INT8</td>
-<td style="text-align: left;">Rẻ hơn</td>
-<td style="text-align: left;">Accuracy drop</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Dynamic batching</td>
-<td style="text-align: left;">Throughput↑</td>
-<td style="text-align: left;">Latency↑</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Smaller model</td>
-<td style="text-align: left;">Cost↓</td>
-<td style="text-align: left;">Quality↓</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Autoscaling</td>
-<td style="text-align: left;">Idle↓</td>
-<td style="text-align: left;">Cold start</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Multi-model share</td>
-<td style="text-align: left;">Util↑</td>
-<td style="text-align: left;">Contention</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">CPU serve</td>
-<td style="text-align: left;">Rẻ (model nhỏ)</td>
-<td style="text-align: left;">Có thể miss SLO</td>
-</tr>
-</tbody>
-</table>
-<p>Bottleneck framework (dùng trong report):</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 23%">
-<col style="width: 18%">
-<col style="width: 34%">
-<col style="width: 23%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Observation</th>
-<th style="text-align: left;">Evidence</th>
-<th style="text-align: left;">Likely bottleneck</th>
-<th style="text-align: left;">Next action</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">p99↑ sau concurrency 16</td>
-<td style="text-align: left;">Perf Analyzer</td>
-<td style="text-align: left;">Queue/saturation</td>
-<td style="text-align: left;">Target ≤16 hoặc scale</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">GPU util thấp, latency cao</td>
-<td style="text-align: left;">Triton metrics</td>
-<td style="text-align: left;">CPU/client</td>
-<td style="text-align: left;">Profile gateway</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">H2D cao</td>
-<td style="text-align: left;"><code>trtexec</code></td>
-<td style="text-align: left;">Transfer</td>
-<td style="text-align: left;">Input placement</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">TRT ≉ nhanh hơn ORT</td>
-<td style="text-align: left;">Bench</td>
-<td style="text-align: left;">Unsupported op / model nhỏ</td>
-<td style="text-align: left;">Inspect layers</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">INT8 accuracy kém</td>
-<td style="text-align: left;">Validation</td>
-<td style="text-align: left;">Calibration</td>
-<td style="text-align: left;">Cải calibration</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">First request chậm</td>
-<td style="text-align: left;">Trace</td>
-<td style="text-align: left;">Cold start</td>
-<td style="text-align: left;">Warmup</td>
-</tr>
-</tbody>
-</table>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-18-contents" aria-controls="callout-18" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Final report template + PRR + rubric + LLM extension + portfolio
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-18" class="callout-18-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><strong><code>reports/final_capstone_report.md</code> — 13 mục</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1. Executive summary</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>Service / model / best runtime / có đạt SLO?</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2. Architecture</span></span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>client -&gt; gateway -&gt; Triton -&gt; TensorRT -&gt; GPU -&gt; metrics</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3. Model contract</span></span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>Input / Output / Pre / Post / batch sizes / precision</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="fu">## 4. Artifact pipeline</span></span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>PyTorch -&gt; ONNX -&gt; validation -&gt; TensorRT -&gt; Triton repo</span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5. Correctness validation</span></span>
-<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Check <span class="pp">|</span> Result <span class="pp">|</span></span>
-<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> ONNX checker / PyTorch vs ONNX / ONNX vs TRT / offline accuracy <span class="pp">|</span> pass/fail <span class="pp">|</span></span>
-<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6. Performance results</span></span>
-<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>Tables + latency-throughput curve</span>
-<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a><span class="fu">## 7. Bottleneck analysis</span></span>
-<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>Evidence + what you changed</span>
-<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a><span class="fu">## 8. Serving configuration</span></span>
-<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>config.pbtxt, dynamic batching, instance_group, max_batch_size, versioning</span>
-<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a><span class="fu">## 9. Operations</span></span>
-<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>metrics, alerts, dashboards, health checks, autoscaling</span>
-<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a><span class="fu">## 10. Rollout and rollback</span></span>
-<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a>shadow, canary, full rollout, rollback triggers</span>
-<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a><span class="fu">## 11. Cost estimate</span></span>
-<span id="cb24-33"><a href="#cb24-33" aria-hidden="true" tabindex="-1"></a>cost per 1M requests (operating point đạt SLO)</span>
-<span id="cb24-34"><a href="#cb24-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-35"><a href="#cb24-35" aria-hidden="true" tabindex="-1"></a><span class="fu">## 12. Risks and limitations</span></span>
-<span id="cb24-36"><a href="#cb24-36" aria-hidden="true" tabindex="-1"></a>Honest about unsolved gaps</span>
-<span id="cb24-37"><a href="#cb24-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-38"><a href="#cb24-38" aria-hidden="true" tabindex="-1"></a><span class="fu">## 13. Final decision</span></span>
-<span id="cb24-39"><a href="#cb24-39" aria-hidden="true" tabindex="-1"></a>local demo / staging / limited production / full production</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong><code>reports/production_readiness_review.md</code></strong></p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 47%">
-<col style="width: 52%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Section</th>
-<th style="text-align: left;">Nội dung</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">1 Service overview</td>
-<td style="text-align: left;">name, model, runtime, serving, owner, on-call, deps</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">2 Model artifact</td>
-<td style="text-align: left;">training run, ONNX, plan, precision, I/O contract</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">3 Validation</td>
-<td style="text-align: left;">checker, PyTorch↔︎ONNX, ONNX↔︎TRT, offline, regression</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">4 Performance</td>
-<td style="text-align: left;">p50/p95/p99, throughput, GPU util/mem, capacity, knee</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">5 SLO</td>
-<td style="text-align: left;">availability, latency, error, quality, error budget</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">6 Observability</td>
-<td style="text-align: left;">metrics, logs, traces, dashboards, alerts</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">7 Rollout</td>
-<td style="text-align: left;">shadow, canary, A/B, rollback</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">8 Risks</td>
-<td style="text-align: left;">OOM / accuracy / spike / bad artifact + mitigation</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">9 Decision</td>
-<td style="text-align: left;">Approved / Limited / Blocked + reviewer notes</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Rubric tự chấm</strong></p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Level</th>
-<th style="text-align: left;">Mô tả</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">Export ONNX + infer local</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">2</td>
-<td style="text-align: left;">TRT + <code>trtexec</code></td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">3</td>
-<td style="text-align: left;">Serve ORT + TRT trên Triton</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">4</td>
-<td style="text-align: left;">Perf Analyzer + report</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">5</td>
-<td style="text-align: left;">Monitoring + SLO + alerts + runbook</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">6</td>
-<td style="text-align: left;">Rollout/rollback plan</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">7</td>
-<td style="text-align: left;">Production readiness review</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">8</td>
-<td style="text-align: left;">INT8 và/hoặc LLM extension</td>
-</tr>
-</tbody>
-</table>
-<p>Tối thiểu Level 6; 7–8 = portfolio mạnh.</p>
-<p><strong>LLM optional (Lesson 9):</strong></p>
-<pre class="text"><code>client → OpenAI-compatible API → vLLM or TensorRT-LLM
-      → streaming tokens → Prometheus</code></pre>
-<p>Metrics: TTFT, ITL/TPOT, output tokens/s, RPS, KV util, GPU mem, prefix hit. Risks: quality/latency/cost/streaming/long-tail. Track A vẫn là deliverable chính.</p>
-<p><strong>Portfolio README gợi ý:</strong> Overview (ONNX+TRT+Triton); Architecture diagram; Results table Backend×Precision×p99×Throughput; Key learnings với số; How to run (export→TRT→Triton→client→bench); Production readiness (SLO/monitor/rollout/runbook).</p>
-</div>
-</div>
-</div>
-</section>
-<section id="sec-failures-models" class="level2" data-number="10.7">
-<h2 data-number="10.7" class="anchored" data-anchor-id="sec-failures-models"><span class="header-section-number">10.7</span> Failure modes và mental models cả khóa</h2>
-<blockquote class="blockquote">
-<p>Khi capstone “gãy”, bạn debug theo giả thuyết nào — và nhớ lại mantra gì từ Lesson 1–9?</p>
-</blockquote>
-<div class="callout callout-style-default callout-important no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Quan trọng</span>Ý chính
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Hầu hết failure modes là <strong>mismatch</strong> (export/eval, config vs artifact, <code>trtexec</code> vs Triton, mean vs p99) chứ không phải “TensorRT hỏng”. Mental model xuyên suốt: <strong>artifact ≠ service</strong>; tối ưu phải validate correctness; <code>config.pbtxt</code> là production code; benchmark phải trả lời quyết định SLO.</p>
-</div>
-</div>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 21%">
-<col style="width: 23%">
-<col style="width: 42%">
-<col style="width: 11%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Failure</th>
-<th style="text-align: left;">Symptoms</th>
-<th style="text-align: left;">Causes điển hình</th>
-<th style="text-align: left;">Fix</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">ONNX “OK” nhưng sai</td>
-<td style="text-align: left;">Checker pass, pred lệch PyTorch</td>
-<td style="text-align: left;"><code>train</code> mode, opset, preprocess</td>
-<td style="text-align: left;"><code>eval()</code>, compare, đổi opset</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">TRT build fail</td>
-<td style="text-align: left;">Unsupported op, shape/profile</td>
-<td style="text-align: left;">Dynamic unbounded, plugin</td>
-<td style="text-align: left;">Simplify, replace op, ORT fallback</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Triton load fail</td>
-<td style="text-align: left;">Unavailable, config/backend error</td>
-<td style="text-align: left;">Sai name/dims, engine GPU mismatch</td>
-<td style="text-align: left;">Logs, metadata, rebuild cùng env</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><code>trtexec</code> nhanh, Triton chậm</td>
-<td style="text-align: left;">p99 xấu</td>
-<td style="text-align: left;">Queue, batch delay, gateway, instances</td>
-<td style="text-align: left;">Perf Analyzer + tune queue/instances</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">p99 ≫ p50</td>
-<td style="text-align: left;">10 ms vs 200 ms</td>
-<td style="text-align: left;">Burst, contention, cold, autoscale lag</td>
-<td style="text-align: left;">Buffer capacity, đừng chạy max throughput</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Mental models mang theo sau khóa:</strong></p>
-<pre class="text"><code>model artifact ≠ inference service ≠ monitored ≠ reliable
-mean latency tốt vẫn có thể phá UX nếu p99 xấu
-TensorRT phải verify: correctness, accuracy, latency, throughput, memory, compatibility
-config.pbtxt đổi batching / shapes / instances / backend / version_policy → coi như code
-Benchmark hỏi: "Concurrency nào đạt p99 &lt; 100 ms và RPS an toàn?" — không chỉ "model nhanh bao nhiêu?"
-Ops trước deploy: no metrics → no diagnosis; no rollback → risky; no SLO → no reliability</code></pre>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-20-contents" aria-controls="callout-20" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Production-grade checklist đầy đủ
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-20" class="callout-20-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<p><strong>Model correctness:</strong> export <code>eval</code>; I/O documented; checker; PyTorch↔︎ONNX; ONNX↔︎TRT; preprocess/postprocess tests; labels versioned.</p>
-<p><strong>Performance:</strong> baselines; TRT; Perf Analyzer; latency-throughput curve; knee; p99 đo thật; batching + instances tuned; GPU util đo.</p>
-<p><strong>Serving:</strong> repo valid; config khớp artifact; health; metadata; versioning; rollback artifact.</p>
-<p><strong>Observability:</strong> Prometheus; dashboard; alerts; logs; traces planned; SLO dashboard.</p>
-<p><strong>Operations:</strong> rollout written; rollback tested; runbook; owner/on-call; capacity + cost estimate.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="mini-lab" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="mini-lab">Mini-lab</h2>
-<div class="callout callout-style-default callout-note no-icon callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Ghi chú</span>Thực hành — Capstone end-to-end (Track A)
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Làm theo phase. Mỗi milestone tick được mới sang bước sau. Templates dài nằm trong tip phía dưới.</p>
-</div>
-</div>
-<section id="phase-0-repo-contract" class="level3 unnumbered">
-<h3 class="unnumbered anchored" data-anchor-id="phase-0-repo-contract">Phase 0 — Repo + contract</h3>
-<p>Tạo layout <code>inference-capstone/</code>. Viết <code>reports/model_contract.md</code> và bảng SLO. Chọn ResNet-50 hoặc MobileNetV3.</p>
-</section>
-<section id="phase-1-export-validate" class="level3 unnumbered">
-<h3 class="unnumbered anchored" data-anchor-id="phase-1-export-validate">Phase 1 — Export + validate</h3>
-<p>Chạy <code>01_export</code> → <code>02_validate</code> → <code>03_compare</code>. Fail compare thì dừng. Optional <code>onnxsim</code> + re-validate.</p>
-</section>
-<section id="phase-2-optimize" class="level3 unnumbered">
-<h3 class="unnumbered anchored" data-anchor-id="phase-2-optimize">Phase 2 — Optimize</h3>
-<p>ORT baseline CPU/CUDA → <code>05_build_engine_trtexec.sh</code> FP16 → <code>trtexec --loadEngine</code> batch 1 và 8. Ghi số vào <code>benchmark_report.md</code>.</p>
-</section>
-<section id="phase-3-serve" class="level3 unnumbered">
-<h3 class="unnumbered anchored" data-anchor-id="phase-3-serve">Phase 3 — Serve</h3>
-<p>Viết hai <code>config.pbtxt</code>. <code>06_run_triton.sh</code>. Health + metadata. <code>07_client.py</code> gọi cả hai model.</p>
-</section>
-<section id="phase-4-benchmark-bottleneck" class="level3 unnumbered">
-<h3 class="unnumbered anchored" data-anchor-id="phase-4-benchmark-bottleneck">Phase 4 — Benchmark + bottleneck</h3>
-<p>Perf Analyzer concurrency 1…32 cả hai backend. Vẽ knee. Phân rã queue vs compute. Optional gateway + E2E bench. Viết <code>bottleneck_analysis.md</code>.</p>
-</section>
-<section id="phase-5-ops-rollout" class="level3 unnumbered">
-<h3 class="unnumbered anchored" data-anchor-id="phase-5-ops-rollout">Phase 5 — Ops + rollout</h3>
-<p>Prometheus/alerts (+ Compose). Rollout plan shadow→canary. Runbook 3 sự cố. Optional K8s probes + HPA design.</p>
-</section>
-<section id="phase-6-report-tự-chấm" class="level3 unnumbered">
-<h3 class="unnumbered anchored" data-anchor-id="phase-6-report-tự-chấm">Phase 6 — Report + tự chấm</h3>
-<p>Final report 13 mục + PRR decision. Tự chấm Level 1–8. Optional INT8 hoặc LLM nhánh.</p>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-22-contents" aria-controls="callout-22" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Study tasks 20 bước + timeline 7 ngày
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-22" class="callout-22-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<ol type="1">
-<li>Repo layout<br>
-</li>
-<li>Export ResNet-50 ONNX<br>
-</li>
-<li>Validate ONNX<br>
-</li>
-<li>Compare PyTorch vs ORT<br>
-</li>
-<li>Bench ORT CPU/CUDA<br>
-</li>
-<li>Build TRT FP16<br>
-</li>
-<li>Bench <code>trtexec</code><br>
-</li>
-<li>Triton model repository<br>
-</li>
-<li>Serve ONNX<br>
-</li>
-<li>Serve TRT<br>
-</li>
-<li>Triton client<br>
-</li>
-<li>Perf Analyzer<br>
-</li>
-<li>Collect metrics<br>
-</li>
-<li>Benchmark report<br>
-</li>
-<li>Tune dynamic batching<br>
-</li>
-<li>Tune <code>instance_group</code><br>
-</li>
-<li>Rollout plan<br>
-</li>
-<li>Incident runbook<br>
-</li>
-<li>Production readiness review<br>
-</li>
-<li>Present final report</li>
-</ol>
-<p><strong>Timeline part-time:</strong> D1 export/validate → D2 ORT+TRT → D3 Triton+client → D4 Perf+bottleneck → D5 tune batch/instances → D6 monitoring → D7 rollout+runbook+report. GPU sẵn: nén 2–3 ngày tập trung.</p>
-</div>
-</div>
-</div>
-</section>
-</section>
-<section id="checkpoint-questions" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="checkpoint-questions">Checkpoint questions</h2>
-<ol type="1">
-<li>Vì sao so sánh PyTorch vs ONNX trước khi build TensorRT?</li>
-<li>Vì sao TensorRT cần <code>min/opt/max</code> shapes?</li>
-<li><code>trtexec</code> latency khác Triton latency ở điểm nào?</li>
-<li>Dynamic batching tăng throughput nhưng có thể làm xấu p99 — vì sao?</li>
-<li>Queue duration Triton cao thường nghĩa là gì?</li>
-<li>Vì sao p99 quan trọng hơn mean cho online inference?</li>
-<li>Canary khác A/B testing thế nào?</li>
-<li>Vì sao phải rebuild engine khi đổi GPU/TensorRT version?</li>
-<li>Readiness probe dùng để làm gì?</li>
-<li>Điều gì nên trigger rollback?</li>
-<li>Ước lượng cost per 1M requests thế nào?</li>
-<li>Evidence nào cho thấy bottleneck là preprocessing, không phải compute?</li>
-<li>Deliverable nào chứng minh “reproducibility”?</li>
-<li>Dual backend ORT+TRT trên Triton giúp quyết định gì?</li>
-<li>Knee point trên latency-throughput curve là gì?</li>
-<li>Gateway latency gồm những thành phần nào ngoài model?</li>
-<li>Shadow traffic đo được gì và không đo được gì?</li>
-<li>Startup probe quan trọng với TensorRT engine lớn vì sao?</li>
-<li>INT8 được accept khi nào trong capstone?</li>
-<li>Level tối thiểu nên aim trên rubric là gì — và Level 8 thêm gì?</li>
-</ol>
-<div class="callout callout-style-default callout-tip no-icon callout-titled">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-23-contents" aria-controls="callout-23" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon no-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Mẹo</span>Tự kiểm — đáp án ngắn
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-23" class="callout-23-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
-<ol type="1">
-<li>Bắt bug export/semantic trước; TRT che lỗi bằng tối ưu số học khác.</li>
-<li>TRT tối ưu theo profile cụ thể; range quá rộng chọn kernel kém / tốn mem.</li>
-<li><code>trtexec</code> ≈ engine thuần; Triton thêm queue, batching, client, multi-model.</li>
-<li>Chờ gom batch → queue delay tăng tail latency.</li>
-<li>Request đến nhanh hơn xử lý — thiếu capacity hoặc batch delay cao.</li>
-<li>UX/SLO phụ thuộc đuôi phân phối, không phải trung bình.</li>
-<li>Canary = an toàn/rollback; A/B = đo impact sản phẩm, cần thiết kế thống kê.</li>
-<li>Engine gắn với GPU arch + TRT version; lệch → load fail / chậm.</li>
-<li>Pod chỉ nhận traffic khi model ready — tránh 5xx lúc load.</li>
-<li>Error↑, p99↑, OOM, quality↓, crash loop, queue↑, incident user-visible.</li>
-<li>(GPU $/h) / (sustained req/h đạt SLO) × 1e6; cộng buffer/HA/ops.</li>
-<li>GPU util thấp + compute infer thấp + gateway/preprocess time cao / H2D cao.</li>
-<li>Scripts đánh số rebuild artifacts + pinned versions + report.</li>
-<li>So sánh công bằng cùng serving stack — chọn backend production.</li>
-<li>Điểm throughput gần bão hòa và p99 bắt đầu phá SLO.</li>
-<li>Upload, decode, preprocess, client overhead, postprocess, network.</li>
-<li>Đo latency/error/schema/GPU trên traffic thật; không đo conversion/CTR user.</li>
-<li>Load engine chậm — tránh liveness giết container trước khi ready.</li>
-<li>Latency/throughput cải thiện, accuracy delta chấp nhận, ổn định.</li>
-<li>Level 6 tối thiểu; Level 8 = INT8 và/hoặc LLM extension.</li>
-</ol>
-</div>
-</div>
-</div>
-</section>
-<section id="glossary" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="glossary">Glossary</h2>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 47%">
-<col style="width: 52%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Thuật ngữ</th>
-<th style="text-align: left;">Định nghĩa</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;"><strong>Canary</strong></td>
-<td style="text-align: left;">Rollout dần traffic sang candidate với gate và rollback</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Dynamic batching</strong></td>
-<td style="text-align: left;">Triton gom request trong cửa sổ delay để tăng throughput</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Knee point</strong></td>
-<td style="text-align: left;">Điểm trên curve concurrency khi throughput bão hòa và p99 xấu đi</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Model contract</strong></td>
-<td style="text-align: left;">Đặc tả I/O, dtype, shape, preprocess/postprocess đã version</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Optimization profile</strong></td>
-<td style="text-align: left;"><code>min/opt/max</code> shapes TensorRT dùng khi build dynamic engine</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Perf Analyzer</strong></td>
-<td style="text-align: left;">Tool load-test Triton (concurrency, percentile, CSV)</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Production readiness review (PRR)</strong></td>
-<td style="text-align: left;">Tài liệu quyết định go/no-go production</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>p99 latency</strong></td>
-<td style="text-align: left;">Latency tại percentile 99 — tail latency</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Rollback</strong></td>
-<td style="text-align: left;">Quay traffic/artifact về version ổn định trước</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>Shadow traffic</strong></td>
-<td style="text-align: left;">Copy request tới candidate; không trả response cho user</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>SLO</strong></td>
-<td style="text-align: left;">Mục tiêu định lượng (latency, error, availability, quality)</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>TensorRT plan</strong></td>
-<td style="text-align: left;">Engine đã serialize (<code>.plan</code> / <code>.engine</code>)</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Triton model repository</strong></td>
-<td style="text-align: left;">Cây thư mục model + <code>config.pbtxt</code> + versions</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><strong>trtexec</strong></td>
-<td style="text-align: left;">CLI build/bench TensorRT</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><strong>Warmup</strong></td>
-<td style="text-align: left;">Synthetic requests trước traffic thật để tránh cold start</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="summary" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
-<ul>
-<li>Capstone = full loop: export → validate → optimize → serve → bench → monitor → canary → cost/report — không dừng ở “infer local”.</li>
-<li>Track A (CNN + Triton) là deliverable chính; LLM là extension sau Level 6.</li>
-<li>Gates cứng: equivalence trước TRT; config khớp artifact; dual-backend so sánh; hai lớp benchmark; knee trước khi chọn concurrency.</li>
-<li>Ops là một nửa điểm: metrics/alerts, shadow/canary, runbook, probes, cost tại operating point đạt SLO.</li>
-<li>Rubric Level 6+; PRR biến engineering thành quyết định vận hành.</li>
-</ul>
-<pre class="text"><code>Serve under SLO, with evidence — not just maximize throughput on a quiet GPU.</code></pre>
-</section>
-<section id="closing" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="closing">Closing</h2>
-<p>Lesson 10 chuyển bạn từ “biết từng tool” sang <strong>tư duy hệ thống</strong>. Inference engineer giỏi trả lời được:</p>
-<pre class="text"><code>Service đúng chưa? Nhanh hơn bao nhiêu, trong điều kiện nào?
-p99 ổn không? Bottleneck ở đâu?
-Rollback thế nào? Traffic ×2 thì sao?
-Accuracy giảm — phát hiện ra sao? Cost / 1M request?</code></pre>
-<p>Hoàn thành capstone = blueprint production inference — không chỉ kiến thức ONNX / TensorRT / Triton rời rạc.</p>
-</section>
-<section id="references" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
-<ol type="1">
-<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/">NVIDIA TensorRT Documentation</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/benchmarking.html">TensorRT Performance Benchmarking with <code>trtexec</code></a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/">NVIDIA Triton Inference Server Documentation</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_repository.html">Triton Model Repository</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_configuration.html">Triton Model Configuration</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/perf_analyzer/README.html">Triton Perf Analyzer</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_analyzer.html">Triton Model Analyzer</a><br>
-</li>
-<li><a href="https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/metrics.html">Triton Metrics</a><br>
-</li>
-<li><a href="https://onnxruntime.ai/docs/performance/tune-performance/">ONNX Runtime Performance Tuning</a><br>
-</li>
-<li><a href="https://onnxruntime.ai/docs/performance/model-optimizations/graph-optimizations.html">ONNX Runtime Graph Optimizations</a><br>
-</li>
-<li><a href="https://onnxruntime.ai/docs/performance/tune-performance/iobinding.html">ONNX Runtime I/O Binding</a><br>
-</li>
-<li><a href="https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/">Kubernetes Probes</a><br>
-</li>
-<li><a href="https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/">Kubernetes Horizontal Pod Autoscaling</a><br>
-</li>
-<li><a href="https://sre.google/sre-book/service-level-objectives/">Google SRE Book — Service Level Objectives</a><br>
-</li>
-<li><a href="https://sre.google/workbook/error-budget-policy/">Google SRE Workbook — Error Budget Policy</a><br>
-</li>
-<li><a href="https://prometheus.io/docs/prometheus/configuration/alerting_rules/">Prometheus Alerting Rules</a><br>
-</li>
-<li><a href="https://opentelemetry.io/docs/">OpenTelemetry Documentation</a></li>
-</ol>
-
-
-</section>
+    └── test_regression_predictions.py
 ```
+
+Đừng để project chỉ là một notebook. Production project cần scripts, configs, reproducible artifacts và report.
+
+
+
+## Environment setup
+
+### Python dependencies
+
+`requirements.txt`:
+
+```text
+numpy
+pillow
+torch
+torchvision
+onnx
+onnxruntime
+onnxsim
+tritonclient[http,grpc]
+fastapi
+uvicorn
+prometheus-client
+```
+
+Nếu dùng GPU local, bạn cần cài bản ONNX Runtime GPU phù hợp với CUDA/cuDNN của môi trường:
+
+```bash
+pip install onnxruntime-gpu
+```
+
+Nếu chỉ chạy CPU để học workflow, bạn vẫn làm được phần export/validate/ORT CPU, nhưng không benchmark TensorRT được.
+
+### Docker image cho Triton
+
+Bạn có thể chạy Triton bằng container chính thức của NVIDIA.
+
+Ví dụ:
+
+```bash
+docker run --rm --gpus all \
+  -p 8000:8000 \
+  -p 8001:8001 \
+  -p 8002:8002 \
+  -v "$PWD/models:/models" \
+  nvcr.io/nvidia/tritonserver:<version>-py3 \
+  tritonserver --model-repository=/models
+```
+
+Các port mặc định thường dùng:
+
+```text
+8000: HTTP/REST
+8001: gRPC
+8002: metrics
+```
+
+Trong production, hãy pin version thay vì dùng tag quá chung chung.
+
+
+
+## Step 1 — Select model and define contract
+
+### Model selection
+
+Ta dùng ResNet-50 pretrained từ `torchvision`.
+
+Input contract:
+
+```text
+name: input
+shape: [batch, 3, 224, 224]
+dtype: FP32
+layout: NCHW
+preprocessing:
+    resize -> center crop -> normalize
+output:
+    logits
+shape: [batch, 1000]
+dtype: FP32
+postprocessing:
+    softmax optional
+    top-k labels
+```
+
+Điều quan trọng là contract phải rõ ràng. Rất nhiều bug production không nằm ở model mà nằm ở preprocessing/postprocessing.
+
+### Model contract template
+
+Tạo `reports/model_contract.md`:
+
+```markdown
+# Model Contract
+
+## Model
+
+- Name: resnet50
+- Task: image classification
+- Framework source: PyTorch torchvision
+- Export format: ONNX
+- Optimized format: TensorRT plan
+
+## Input
+
+- Name: input
+- Type: FP32
+- Shape: [N, 3, 224, 224]
+- Layout: NCHW
+- Range: normalized ImageNet tensor
+
+## Output
+
+- Name: logits
+- Type: FP32
+- Shape: [N, 1000]
+
+## Preprocessing
+
+1. Decode image as RGB
+2. Resize short side to 256
+3. Center crop 224x224
+4. Convert to float32
+5. Normalize with ImageNet mean/std
+6. Convert NHWC to NCHW
+7. Add batch dimension
+
+## Postprocessing
+
+1. Compute softmax if probability is needed
+2. Take top-k classes
+3. Map class id to label
+```
+
+
+
+## Step 2 — Export PyTorch model to ONNX
+
+Create `scripts/01_export_to_onnx.py`:
+
+```python
+import argparse
+from pathlib import Path
+
+import torch
+import torchvision.models as models
+
+
+def export_resnet50(output_path: str, dynamic_batch: bool = True) -> None:
+    model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+    model.eval()
+
+    dummy_input = torch.randn(1, 3, 224, 224)
+
+    input_names = ["input"]
+    output_names = ["logits"]
+
+    dynamic_axes = None
+    if dynamic_batch:
+        dynamic_axes = {
+            "input": {0: "batch"},
+            "logits": {0: "batch"},
+        }
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        output_path,
+        export_params=True,
+        opset_version=17,
+        do_constant_folding=True,
+        input_names=input_names,
+        output_names=output_names,
+        dynamic_axes=dynamic_axes,
+    )
+
+    print(f"Exported ONNX model to: {output_path}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", default="models/resnet50_onnx/1/model.onnx")
+    parser.add_argument("--static-batch", action="store_true")
+    args = parser.parse_args()
+
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    export_resnet50(args.output, dynamic_batch=not args.static_batch)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Run:
+
+```bash
+python scripts/01_export_to_onnx.py \
+  --output models/resnet50_onnx/1/model.onnx
+```
+
+### Why dynamic batch?
+
+Dynamic batch cho phép một model artifact xử lý batch size khác nhau:
+
+```text
+[1, 3, 224, 224]
+[8, 3, 224, 224]
+[32, 3, 224, 224]
+```
+
+Tuy nhiên, dynamic shape cũng khiến TensorRT cần optimization profile.
+
+Với bài này, dynamic dimension chỉ nằm ở batch dimension. Height/width giữ cố định để giảm độ phức tạp.
+
+
+
+## Step 3 — Validate ONNX model
+
+Create `scripts/02_validate_onnx.py`:
+
+```python
+import argparse
+
+import onnx
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", required=True)
+    args = parser.parse_args()
+
+    model = onnx.load(args.model)
+    onnx.checker.check_model(model)
+
+    print("ONNX checker: OK")
+    print(f"IR version: {model.ir_version}")
+    print("Opset imports:")
+    for opset in model.opset_import:
+        print(f"  domain={opset.domain!r}, version={opset.version}")
+
+    graph = model.graph
+    print(f"Graph name: {graph.name}")
+    print(f"Inputs: {[x.name for x in graph.input]}")
+    print(f"Outputs: {[x.name for x in graph.output]}")
+    print(f"Initializers: {len(graph.initializer)}")
+    print(f"Nodes: {len(graph.node)}")
+
+    print("\nFirst 20 nodes:")
+    for node in graph.node[:20]:
+        print(f"  {node.op_type}: {list(node.input)} -> {list(node.output)}")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Run:
+
+```bash
+python scripts/02_validate_onnx.py \
+  --model models/resnet50_onnx/1/model.onnx
+```
+
+Expected result:
+
+```text
+ONNX checker: OK
+Opset imports:
+  domain='', version=17
+Inputs: ['input']
+Outputs: ['logits']
+```
+
+Validation ở đây chưa đủ để đảm bảo model đúng về semantic, nhưng là bước đầu bắt buộc.
+
+
+
+## Step 4 — Compare PyTorch and ONNX Runtime outputs
+
+Create `scripts/03_compare_outputs.py`:
+
+```python
+import argparse
+
+import numpy as np
+import onnxruntime as ort
+import torch
+import torchvision.models as models
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--onnx", required=True)
+    parser.add_argument("--atol", type=float, default=1e-4)
+    parser.add_argument("--rtol", type=float, default=1e-3)
+    args = parser.parse_args()
+
+    torch.manual_seed(0)
+    x = torch.randn(2, 3, 224, 224, dtype=torch.float32)
+
+    model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+    model.eval()
+
+    with torch.no_grad():
+        y_torch = model(x).detach().cpu().numpy()
+
+    session = ort.InferenceSession(
+        args.onnx,
+        providers=["CPUExecutionProvider"],
+    )
+    y_onnx = session.run(["logits"], {"input": x.numpy()})[0]
+
+    abs_diff = np.max(np.abs(y_torch - y_onnx))
+    rel_diff = np.max(np.abs(y_torch - y_onnx) / (np.abs(y_torch) + 1e-8))
+
+    print(f"max_abs_diff: {abs_diff:.8f}")
+    print(f"max_rel_diff: {rel_diff:.8f}")
+
+    np.testing.assert_allclose(y_torch, y_onnx, atol=args.atol, rtol=args.rtol)
+    print("PyTorch vs ONNX Runtime: OK")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Run:
+
+```bash
+python scripts/03_compare_outputs.py \
+  --onnx models/resnet50_onnx/1/model.onnx
+```
+
+Nếu test fail, đừng đi tiếp sang TensorRT. Hãy fix export trước.
+
+
+
+## Step 5 — Simplify ONNX graph
+
+Optional nhưng nên làm:
+
+```bash
+python -m onnxsim \
+  models/resnet50_onnx/1/model.onnx \
+  models/resnet50_onnx/1/model_simplified.onnx
+```
+
+Sau đó validate lại:
+
+```bash
+python scripts/02_validate_onnx.py \
+  --model models/resnet50_onnx/1/model_simplified.onnx
+```
+
+Nếu simplified model đúng, bạn có thể replace:
+
+```bash
+mv models/resnet50_onnx/1/model_simplified.onnx \
+   models/resnet50_onnx/1/model.onnx
+```
+
+Trong production, mọi transform graph đều phải được validate lại.
+
+
+
+## Step 6 — Build ONNX Runtime baseline benchmark
+
+Create `scripts/04_benchmark_onnxruntime.py`:
+
+```python
+import argparse
+import statistics
+import time
+
+import numpy as np
+import onnxruntime as ort
+
+
+def percentile(values, p):
+    values = sorted(values)
+    k = int(round((len(values) - 1) * p / 100.0))
+    return values[k]
+
+
+def benchmark(model_path, provider, batch_size, warmup, iterations):
+    providers = [provider]
+    session = ort.InferenceSession(model_path, providers=providers)
+
+    input_name = session.get_inputs()[0].name
+    output_name = session.get_outputs()[0].name
+
+    x = np.random.randn(batch_size, 3, 224, 224).astype(np.float32)
+
+    for _ in range(warmup):
+        session.run([output_name], {input_name: x})
+
+    latencies_ms = []
+    start_total = time.perf_counter()
+
+    for _ in range(iterations):
+        start = time.perf_counter()
+        session.run([output_name], {input_name: x})
+        end = time.perf_counter()
+        latencies_ms.append((end - start) * 1000.0)
+
+    end_total = time.perf_counter()
+    total_s = end_total - start_total
+
+    total_images = iterations * batch_size
+    throughput = total_images / total_s
+
+    print(f"Provider: {provider}")
+    print(f"Batch size: {batch_size}")
+    print(f"Iterations: {iterations}")
+    print(f"Throughput: {throughput:.2f} images/s")
+    print(f"Latency mean: {statistics.mean(latencies_ms):.3f} ms")
+    print(f"Latency p50: {percentile(latencies_ms, 50):.3f} ms")
+    print(f"Latency p95: {percentile(latencies_ms, 95):.3f} ms")
+    print(f"Latency p99: {percentile(latencies_ms, 99):.3f} ms")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", required=True)
+    parser.add_argument("--provider", default="CPUExecutionProvider")
+    parser.add_argument("--batch-size", type=int, default=1)
+    parser.add_argument("--warmup", type=int, default=10)
+    parser.add_argument("--iterations", type=int, default=100)
+    args = parser.parse_args()
+
+    benchmark(
+        model_path=args.model,
+        provider=args.provider,
+        batch_size=args.batch_size,
+        warmup=args.warmup,
+        iterations=args.iterations,
+    )
+
+
+if __name__ == "__main__":
+    main()
+```
+
+CPU baseline:
+
+```bash
+python scripts/04_benchmark_onnxruntime.py \
+  --model models/resnet50_onnx/1/model.onnx \
+  --provider CPUExecutionProvider \
+  --batch-size 1 \
+  --iterations 100
+```
+
+GPU baseline:
+
+```bash
+python scripts/04_benchmark_onnxruntime.py \
+  --model models/resnet50_onnx/1/model.onnx \
+  --provider CUDAExecutionProvider \
+  --batch-size 1 \
+  --iterations 100
+```
+
+Record results in `reports/benchmark_report.md`.
+
+Example table:
+
+```markdown
+# Benchmark Report
+
+## Baseline
+```
+| Runtime           | Precision | Batch | Mean ms | p95 ms | p99 ms  | Throughput img/s |
+|-------------------|:----------|:------|:--------|:-------|:--------|:-----------------|
+| PyTorch           | FP32      | 1     | TBD     | TBD    | TBD     | TBD              |
+| ONNX Runtime CPU  | FP32      | 1     | TBD     | TBD    | TBD     | TBD              |
+| ONNX Runtime CUDA | FP32      | 1     | TBD     | TBD    | TBD     | TBD              |
+
+
+
+
+## Step 7 — Build TensorRT engine with trtexec
+
+Create `scripts/05_build_engine_trtexec.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+ONNX_MODEL="${1:-models/resnet50_onnx/1/model.onnx}"
+ENGINE_OUTPUT="${2:-models/resnet50_trt/1/model.plan}"
+
+mkdir -p "$(dirname "$ENGINE_OUTPUT")"
+
+trtexec \
+  --onnx="$ONNX_MODEL" \
+  --saveEngine="$ENGINE_OUTPUT" \
+  --minShapes=input:1x3x224x224 \
+  --optShapes=input:8x3x224x224 \
+  --maxShapes=input:32x3x224x224 \
+  --fp16 \
+  --workspace=4096 \
+  --profilingVerbosity=detailed \
+  --dumpLayerInfo \
+  --dumpProfile
+```
+
+Run:
+
+```bash
+chmod +x scripts/05_build_engine_trtexec.sh
+
+scripts/05_build_engine_trtexec.sh \
+  models/resnet50_onnx/1/model.onnx \
+  models/resnet50_trt/1/model.plan
+```
+
+Key flags:
+
+```text
+--onnx
+    input ONNX model
+
+--saveEngine
+    output serialized TensorRT engine
+
+--minShapes / --optShapes / --maxShapes
+    dynamic shape optimization profile
+
+--fp16
+    allow FP16 kernels where beneficial
+
+--workspace
+    maximum workspace memory for tactic selection
+
+--profilingVerbosity=detailed
+    enable detailed layer metadata
+
+--dumpLayerInfo
+    print layer information
+
+--dumpProfile
+    print per-layer runtime profile
+```
+
+### Why min/opt/max shapes matter
+
+TensorRT does not optimize dynamic shapes in an abstract way. It needs concrete ranges:
+
+```text
+min: smallest shape allowed at runtime
+opt: shape most optimized during build
+max: largest shape allowed at runtime
+```
+
+For this capstone:
+
+```text
+min batch = 1
+opt batch = 8
+max batch = 32
+```
+
+If production usually receives batch size 1, opt should be 1.  
+If dynamic batching usually forms batches around 8, opt should be 8.
+
+Bad profile:
+
+```text
+min=1, opt=1, max=1024
+```
+
+This may force TensorRT to choose kernels valid across a huge range, and memory requirement can increase.
+
+Good profile:
+
+```text
+min=1, opt=8, max=32
+```
+
+This matches expected serving behavior.
+
+
+
+## Step 8 — Validate TensorRT engine with trtexec
+
+Benchmark the engine:
+
+```bash
+trtexec \
+  --loadEngine=models/resnet50_trt/1/model.plan \
+  --shapes=input:1x3x224x224 \
+  --warmUp=500 \
+  --duration=30 \
+  --iterations=1000 \
+  --dumpProfile
+```
+
+Test a larger batch:
+
+```bash
+trtexec \
+  --loadEngine=models/resnet50_trt/1/model.plan \
+  --shapes=input:8x3x224x224 \
+  --warmUp=500 \
+  --duration=30
+```
+
+Record:
+
+```text
+Throughput
+Latency
+Enqueue Time
+H2D Latency
+GPU Compute Time
+D2H Latency
+```
+
+Important interpretation:
+
+| Symptom                        | Likely meaning                                             |
+|--------------------------------|------------------------------------------------------------|
+| GPU Compute Time high          | model compute is bottleneck                                |
+| H2D high                       | input transfer/preprocessing bottleneck                    |
+| D2H high                       | output transfer bottleneck                                 |
+| Enqueue Time high              | CPU scheduling overhead or too many small launches         |
+| Throughput low but latency low | concurrency/batching too low                               |
+| p99 much higher than p50       | queueing, resource contention, cold path, or unstable load |
+
+
+
+## Step 9 — Create Triton model repository
+
+### ONNX model config
+
+Create `models/resnet50_onnx/config.pbtxt`:
+
+```protobuf
+name: "resnet50_onnx"
+backend: "onnxruntime"
+max_batch_size: 32
+
+input [
+  {
+    name: "input"
+    data_type: TYPE_FP32
+    dims: [3, 224, 224]
+  }
+]
+
+output [
+  {
+    name: "logits"
+    data_type: TYPE_FP32
+    dims: [1000]
+  }
+]
+
+dynamic_batching {
+  max_queue_delay_microseconds: 1000
+}
+
+instance_group [
+  {
+    count: 1
+    kind: KIND_GPU
+  }
+]
+```
+
+### TensorRT model config
+
+Create `models/resnet50_trt/config.pbtxt`:
+
+```protobuf
+name: "resnet50_trt"
+platform: "tensorrt_plan"
+max_batch_size: 32
+
+input [
+  {
+    name: "input"
+    data_type: TYPE_FP32
+    dims: [3, 224, 224]
+  }
+]
+
+output [
+  {
+    name: "logits"
+    data_type: TYPE_FP32
+    dims: [1000]
+  }
+]
+
+dynamic_batching {
+  max_queue_delay_microseconds: 1000
+}
+
+instance_group [
+  {
+    count: 1
+    kind: KIND_GPU
+  }
+]
+```
+
+Triton model repository should look like:
+
+```text
+models/
+├── resnet50_onnx/
+│   ├── config.pbtxt
+│   └── 1/
+│       └── model.onnx
+└── resnet50_trt/
+    ├── config.pbtxt
+    └── 1/
+        └── model.plan
+```
+
+### Common config mistakes
+
+| Mistake                                        | Result                         |
+|------------------------------------------------|--------------------------------|
+| wrong input name                               | request fails                  |
+| wrong output name                              | request fails                  |
+| wrong dims                                     | shape mismatch                 |
+| `max_batch_size` mismatch                      | batching behavior wrong        |
+| TensorRT profile max batch < Triton max batch  | runtime error for large batch  |
+| backend/platform wrong                         | model load fails               |
+
+A key rule:
+
+```text
+Triton config must match the actual model artifact.
+```
+
+Never guess input/output names. Inspect the ONNX model and TensorRT engine.
+
+
+
+## Step 10 — Run Triton locally
+
+Create `scripts/06_run_triton.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+MODEL_REPOSITORY="${1:-$PWD/models}"
+TRITON_IMAGE="${TRITON_IMAGE:-nvcr.io/nvidia/tritonserver:<version>-py3}"
+
+docker run --rm --gpus all \
+  --name triton-capstone \
+  -p 8000:8000 \
+  -p 8001:8001 \
+  -p 8002:8002 \
+  -v "${MODEL_REPOSITORY}:/models" \
+  "${TRITON_IMAGE}" \
+  tritonserver \
+    --model-repository=/models \
+    --strict-model-config=true \
+    --log-verbose=1
+```
+
+Replace `<version>` with a real Triton container tag.
+
+Run:
+
+```bash
+chmod +x scripts/06_run_triton.sh
+scripts/06_run_triton.sh
+```
+
+Check health:
+
+```bash
+curl -v localhost:8000/v2/health/live
+curl -v localhost:8000/v2/health/ready
+```
+
+Check models:
+
+```bash
+curl localhost:8000/v2/models/resnet50_onnx
+curl localhost:8000/v2/models/resnet50_trt
+```
+
+Check metrics:
+
+```bash
+curl localhost:8002/metrics
+```
+
+
+
+## Step 11 — Write Triton client
+
+Create `scripts/07_client.py`:
+
+```python
+import argparse
+import time
+
+import numpy as np
+import tritonclient.http as httpclient
+from tritonclient.utils import np_to_triton_dtype
+
+
+def preprocess_random(batch_size: int) -> np.ndarray:
+    return np.random.randn(batch_size, 3, 224, 224).astype(np.float32)
+
+
+def infer(url: str, model_name: str, batch_size: int):
+    client = httpclient.InferenceServerClient(url=url)
+
+    x = preprocess_random(batch_size)
+
+    inputs = [
+        httpclient.InferInput(
+            "input",
+            x.shape,
+            np_to_triton_dtype(x.dtype),
+        )
+    ]
+    inputs[0].set_data_from_numpy(x)
+
+    outputs = [
+        httpclient.InferRequestedOutput("logits")
+    ]
+
+    start = time.perf_counter()
+    result = client.infer(
+        model_name=model_name,
+        inputs=inputs,
+        outputs=outputs,
+    )
+    end = time.perf_counter()
+
+    logits = result.as_numpy("logits")
+
+    print(f"Model: {model_name}")
+    print(f"Input shape: {x.shape}")
+    print(f"Output shape: {logits.shape}")
+    print(f"Client observed latency: {(end - start) * 1000:.3f} ms")
+    print(f"Top-5 classes for first item: {np.argsort(logits[0])[-5:][::-1]}")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--url", default="localhost:8000")
+    parser.add_argument("--model", default="resnet50_trt")
+    parser.add_argument("--batch-size", type=int, default=1)
+    args = parser.parse_args()
+
+    infer(args.url, args.model, args.batch_size)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Run:
+
+```bash
+python scripts/07_client.py \
+  --model resnet50_onnx \
+  --batch-size 1
+```
+
+Run optimized model:
+
+```bash
+python scripts/07_client.py \
+  --model resnet50_trt \
+  --batch-size 1
+```
+
+
+
+## Step 12 — Benchmark Triton with Perf Analyzer
+
+Create `scripts/08_run_perf_analyzer.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+MODEL="${1:-resnet50_trt}"
+BATCH_SIZE="${2:-1}"
+
+perf_analyzer \
+  -m "$MODEL" \
+  -i http \
+  -u localhost:8000 \
+  -b "$BATCH_SIZE" \
+  --concurrency-range 1:32:2 \
+  --measurement-interval 5000 \
+  --percentile=99 \
+  --input-data random \
+  -f "reports/${MODEL}_batch${BATCH_SIZE}_perf.csv"
+```
+
+Run:
+
+```bash
+chmod +x scripts/08_run_perf_analyzer.sh
+
+scripts/08_run_perf_analyzer.sh resnet50_onnx 1
+scripts/08_run_perf_analyzer.sh resnet50_trt 1
+```
+
+Compare:
+
+```text
+resnet50_onnx:
+    concurrency 1, 2, 4, 8, 16, 32
+
+resnet50_trt:
+    concurrency 1, 2, 4, 8, 16, 32
+```
+
+Your goal is to find the knee point:
+
+```text
+Before knee:
+    throughput increases as concurrency increases
+    p99 latency remains acceptable
+
+After knee:
+    throughput barely increases
+    p99 latency grows sharply
+```
+
+The production concurrency target should usually be before or near the knee, not far after it.
+
+
+
+##  Step 13 — Build latency-throughput curve
+
+Use the CSV output from Perf Analyzer.
+
+Create `reports/benchmark_report.md`:
+
+```markdown
+# Benchmark Report
+
+## Environment
+
+- GPU:
+- CPU:
+- RAM:
+- CUDA:
+- TensorRT:
+- Triton:
+- Driver:
+- Model:
+- Input shape:
+- Precision:
+
+## SLO
+
+- p99 latency target:
+- throughput target:
+- max error rate:
+
+## ONNX Runtime backend results
+```
+
+| Concurrency | Throughput infer/s | Avg latency ms | p95 ms | p99 ms |
+|:------------|:-------------------|:---------------|:-------|:-------|
+| 1           | TBD                | TBD            | TBD    | TBD    |
+| 2           | TBD                | TBD            | TBD    | TBD    |
+| 4           | TBD                | TBD            | TBD    | TBD    |
+| 8           | TBD                | TBD            | TBD    | TBD    |
+| 16          | TBD                | TBD            | TBD    | TBD    |
+| 32          | TBD                | TBD            | TBD    | TBD    |
+
+```markdown
+## TensorRT backend results
+```
+
+| Concurrency   | Throughput infer/s | Avg latency ms | p95 ms | p99 ms |
+|:--------------|:-------------------|:---------------|:-------|:-------|
+| 1             | TBD                | TBD            | TBD    | TBD    |
+| 2             | TBD                | TBD            | TBD    | TBD    |
+| 4             | TBD                | TBD            | TBD    | TBD    |
+| 8             | TBD                | TBD            | TBD    | TBD    |
+| 16            | TBD                | TBD            | TBD    | TBD    |
+| 32            | TBD                | TBD            | TBD    | TBD    |
+
+```markdown
+## Interpretation
+
+- Best backend:
+- Best concurrency range:
+- Knee point:
+- Production recommendation:
+- Remaining bottleneck:
+```
+
+A benchmark report is not just numbers. It must include interpretation.
+
+
+
+## Step 14 — Analyze Triton server-side metrics
+
+Triton exposes metrics on port `8002`.
+
+Inspect:
+
+```bash
+curl localhost:8002/metrics | head
+```
+
+Useful metric families include request count, request duration, queue duration, compute input, compute infer, compute output, and GPU utilization/memory metrics depending on Triton version and configuration.
+
+The important latency decomposition is:
+
+```text
+client latency
+    = network time
+    + server queue time
+    + input processing
+    + inference compute
+    + output processing
+    + response transfer
+```
+
+If p99 is bad, do not immediately blame TensorRT. Look at:
+
+```text
+queue duration
+compute infer duration
+input/output duration
+client-side overhead
+GPU utilization
+CPU utilization
+```
+
+### Symptoms and interpretation
+
+| Symptom                            | Likely bottleneck                    | Action                                           |
+|------------------------------------|--------------------------------------|--------------------------------------------------|
+| queue time high                    | overloaded service or batching delay | reduce concurrency, add instances, tune batching |
+| compute infer high                 | model/GPU compute                    | TensorRT, precision, smaller model, stronger GPU |
+| compute input high                 | input transfer/preprocessing         | optimize preprocessing, pin memory, avoid copies |
+| compute output high                | output copy/postprocessing           | reduce output size, move postprocessing          |
+| GPU utilization low, latency high  | CPU/client bottleneck                | profile client/gateway                           |
+| GPU utilization high, p99 high     | saturation                           | scale out, lower batch delay                     |
+| p50 good, p99 bad                  | queueing or noisy neighbor           | isolate, tune scheduler, capacity buffer         |
+
+
+
+## Step 15 — Add optional FastAPI gateway
+
+Triton can be called directly, but production systems often have an API gateway for:
+
+```text
+authentication
+request validation
+image decoding
+preprocessing
+postprocessing
+business logic
+routing
+logging
+tracing
+```
+
+Create `scripts/gateway_fastapi.py`:
+
+```python
+import io
+import time
+from typing import List
+
+import numpy as np
+from fastapi import FastAPI, File, UploadFile
+from PIL import Image
+import torchvision.transforms as T
+import tritonclient.http as httpclient
+from tritonclient.utils import np_to_triton_dtype
+
+app = FastAPI(title="Inference Capstone Gateway")
+
+TRITON_URL = "localhost:8000"
+MODEL_NAME = "resnet50_trt"
+
+client = httpclient.InferenceServerClient(url=TRITON_URL)
+
+transform = T.Compose([
+    T.Resize(256),
+    T.CenterCrop(224),
+    T.ToTensor(),
+    T.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225],
+    ),
+])
+
+
+def preprocess_image(data: bytes) -> np.ndarray:
+    image = Image.open(io.BytesIO(data)).convert("RGB")
+    tensor = transform(image).numpy().astype(np.float32)
+    return tensor
+
+
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}
+
+
+@app.post("/predict")
+async def predict(files: List[UploadFile] = File(...)):
+    start = time.perf_counter()
+
+    batch = []
+    for file in files:
+        data = await file.read()
+        batch.append(preprocess_image(data))
+
+    x = np.stack(batch, axis=0)
+
+    inputs = [
+        httpclient.InferInput(
+            "input",
+            x.shape,
+            np_to_triton_dtype(x.dtype),
+        )
+    ]
+    inputs[0].set_data_from_numpy(x)
+
+    outputs = [httpclient.InferRequestedOutput("logits")]
+
+    result = client.infer(
+        model_name=MODEL_NAME,
+        inputs=inputs,
+        outputs=outputs,
+    )
+    logits = result.as_numpy("logits")
+    top5 = np.argsort(logits, axis=1)[:, -5:][:, ::-1].tolist()
+
+    end = time.perf_counter()
+
+    return {
+        "model": MODEL_NAME,
+        "batch_size": len(files),
+        "top5": top5,
+        "latency_ms": (end - start) * 1000.0,
+    }
+```
+
+Run:
+
+```bash
+uvicorn scripts.gateway_fastapi:app \
+  --host 0.0.0.0 \
+  --port 8080
+```
+
+Important note:
+
+```text
+Gateway latency != model latency.
+```
+
+Gateway includes image upload, decoding, preprocessing, Triton client overhead and postprocessing.
+
+Measure both.
+
+
+
+## Step 16 — Separate model benchmark from API benchmark
+
+You need two benchmark layers:
+
+```text
+1. Model/server benchmark:
+    perf_analyzer -> Triton directly
+
+2. End-to-end API benchmark:
+    load test -> FastAPI gateway -> Triton -> GPU
+```
+
+Why both?
+
+```text
+Triton direct benchmark answers:
+    Is the model backend fast?
+
+Gateway benchmark answers:
+    Is the user-facing API fast?
+```
+
+Common result:
+
+```text
+Triton TensorRT model latency: 5 ms
+End-to-end API p99: 90 ms
+```
+
+This means the bottleneck is likely outside TensorRT: image decoding, network, Python gateway, postprocessing, request serialization, or queueing.
+
+
+
+## Step 17 — Add Prometheus config
+
+Create `ops/prometheus.yml`:
+
+```yaml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "triton"
+    static_configs:
+      - targets: ["localhost:8002"]
+
+  - job_name: "gateway"
+    static_configs:
+      - targets: ["localhost:8080"]
+```
+
+If using Docker Compose, use service names instead of localhost:
+
+```yaml
+static_configs:
+  - targets: ["triton:8002"]
+```
+
+Metrics to dashboard:
+
+```text
+Request rate
+Error rate
+p50/p95/p99 latency
+Queue duration
+Compute infer duration
+GPU utilization
+GPU memory usage
+Model version
+Model name
+Instance count
+```
+
+
+
+## Step 18 — Define alert rules
+
+Create `ops/alert_rules.yml`:
+
+```yaml
+groups:
+  - name: inference-service-alerts
+    rules:
+      - alert: InferenceHighErrorRate
+        expr: rate(nv_inference_request_failure[5m]) / rate(nv_inference_request_success[5m]) > 0.01
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: "High inference error rate"
+          description: "Inference error rate is above 1% for 10 minutes."
+
+      - alert: InferenceHighQueueTime
+        expr: rate(nv_inference_queue_duration_us[5m]) / rate(nv_inference_request_success[5m]) > 50000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High inference queue duration"
+          description: "Average queue duration is above 50 ms for 10 minutes."
+
+      - alert: InferenceHighComputeLatency
+        expr: rate(nv_inference_compute_infer_duration_us[5m]) / rate(nv_inference_request_success[5m]) > 50000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High inference compute latency"
+          description: "Average compute infer duration is above 50 ms for 10 minutes."
+```
+
+Metric names can vary by Triton version. Always verify with:
+
+```bash
+curl localhost:8002/metrics | grep nv_inference
+```
+
+A good alert is actionable. Avoid alerting on every small metric movement.
+
+
+
+## Step 19 — Add Docker Compose
+
+Create `docker/docker-compose.yml`:
+
+```yaml
+services:
+  triton:
+    image: nvcr.io/nvidia/tritonserver:<version>-py3
+    command:
+      - tritonserver
+      - --model-repository=/models
+      - --strict-model-config=true
+      - --log-verbose=1
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+      - "8002:8002"
+    volumes:
+      - ../models:/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: ["gpu"]
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ../ops/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ../ops/alert_rules.yml:/etc/prometheus/alert_rules.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+```
+
+Run:
+
+```bash
+cd docker
+docker compose up
+```
+
+Note: GPU support in Docker Compose requires NVIDIA Container Toolkit and a compatible compose/runtime setup.
+
+
+
+## Step 20 — Kubernetes deployment
+
+Production often runs inference services on Kubernetes.
+
+Create `ops/k8s/triton-deployment.yaml`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: triton-resnet50
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: triton-resnet50
+  template:
+    metadata:
+      labels:
+        app: triton-resnet50
+    spec:
+      containers:
+        - name: triton
+          image: nvcr.io/nvidia/tritonserver:<version>-py3
+          args:
+            - "tritonserver"
+            - "--model-repository=/models"
+            - "--strict-model-config=true"
+          ports:
+            - containerPort: 8000
+              name: http
+            - containerPort: 8001
+              name: grpc
+            - containerPort: 8002
+              name: metrics
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+          readinessProbe:
+            httpGet:
+              path: /v2/health/ready
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /v2/health/live
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /v2/health/ready
+              port: 8000
+            periodSeconds: 10
+            failureThreshold: 30
+          volumeMounts:
+            - name: model-repository
+              mountPath: /models
+      volumes:
+        - name: model-repository
+          persistentVolumeClaim:
+            claimName: triton-models-pvc
+```
+
+Create `ops/k8s/triton-service.yaml`:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: triton-resnet50
+spec:
+  selector:
+    app: triton-resnet50
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+    - name: grpc
+      port: 8001
+      targetPort: 8001
+    - name: metrics
+      port: 8002
+      targetPort: 8002
+```
+
+Important:
+
+```text
+readinessProbe controls whether the pod receives traffic.
+livenessProbe controls whether the container should be restarted.
+startupProbe gives slow-starting services time to initialize.
+```
+
+For large TensorRT engines, startup can be slow. Use startup probe to avoid killing the container before it loads.
+
+
+
+## Step 21 — Autoscaling strategy
+
+Create `ops/k8s/hpa.yaml`:
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: triton-resnet50-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: triton-resnet50
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+```
+
+CPU-based HPA is often not enough for GPU inference. Better metrics:
+
+```text
+request rate per replica
+p95/p99 latency
+queue duration
+GPU utilization
+GPU memory usage
+in-flight requests
+```
+
+For production, use custom metrics adapter or KEDA-like patterns.
+
+Autoscaling rules should avoid oscillation:
+
+```text
+Scale out:
+    when queue duration or request rate is high for several minutes
+
+Scale in:
+    slowly, only after sustained low load
+
+Capacity buffer:
+    keep enough spare capacity to absorb traffic spikes
+```
+
+
+
+## Step 22 — Safe rollout plan
+
+Create `ops/rollout_plan.md`:
+
+```markdown
+# Rollout Plan
+
+## Objective
+
+Roll out resnet50_trt v2 to production with minimal risk.
+
+## Pre-rollout checks
+
+- [ ] ONNX validation passed
+- [ ] TensorRT engine build succeeded
+- [ ] PyTorch vs ONNX output comparison passed
+- [ ] ONNX vs TensorRT output comparison passed
+- [ ] Offline accuracy regression passed
+- [ ] Perf Analyzer benchmark passed
+- [ ] p99 latency within SLO
+- [ ] metrics dashboard available
+- [ ] rollback artifact available
+
+## Rollout stages
+
+### Stage 0 — Shadow
+
+- Route production-like traffic to v2 without affecting user responses.
+- Compare top-k predictions against v1.
+- Monitor latency, errors, GPU memory, queue duration.
+
+Promotion criteria:
+- error rate does not increase
+- prediction mismatch within accepted threshold
+- no GPU OOM
+- p99 within SLO
+
+### Stage 1 — Canary 1%
+
+- Send 1% live traffic to v2.
+- Monitor for at least one full traffic cycle.
+
+Promotion criteria:
+- no SLO violation
+- no alert firing
+- no quality regression
+
+### Stage 2 — Canary 10%
+
+Same checks.
+
+### Stage 3 — Canary 50%
+
+Same checks.
+
+### Stage 4 — Full rollout
+
+Send 100% traffic to v2.
+
+## Rollback triggers
+
+- error rate > threshold
+- p99 latency > threshold
+- GPU OOM
+- accuracy/quality regression
+- crash loop
+- elevated queue duration
+- user-visible incident
+
+## Rollback procedure
+
+1. Stop routing traffic to v2.
+2. Route 100% traffic to v1.
+3. Verify p99/error rate recover.
+4. Freeze rollout.
+5. Open incident review.
+```
+
+Safe rollout is not a deployment command. It is a risk management process.
+
+
+
+##Step 23 — Shadow traffic design
+
+Shadow traffic means:
+
+```text
+production request
+    -> v1 produces real response
+    -> v2 receives copied request
+    -> v2 response is logged/compared, not returned
+```
+
+Comparison metrics:
+
+```text
+top-1 match rate
+top-5 overlap
+KL divergence of probability distribution
+latency v1 vs v2
+error rate v1 vs v2
+```
+
+For classification, a simple comparator:
+
+```python
+def compare_topk(logits_v1, logits_v2, k=5):
+    top_v1 = set(logits_v1.argsort()[-k:])
+    top_v2 = set(logits_v2.argsort()[-k:])
+    overlap = len(top_v1.intersection(top_v2)) / k
+    return overlap
+```
+
+For production, do not log raw user data unless privacy policy allows it. Log metadata and sampled outputs.
+
+
+
+# Step 24 — A/B testing design
+
+A/B testing is not the same as canary.
+
+```text
+Canary:
+    safety-focused
+    goal: detect regressions
+
+A/B test:
+    product/quality-focused
+    goal: measure user/business impact
+```
+
+For image classification API, A/B may be less relevant unless the model affects user experience. For recommendation, ranking, search, OCR, LLM assistant or moderation systems, A/B is central.
+
+A/B test requirements:
+
+```text
+stable user bucketing
+clear success metric
+guardrail metrics
+statistical power
+experiment duration
+rollback triggers
+```
+
+Example:
+
+```text
+Treatment:
+    TensorRT INT8 model
+
+Control:
+    TensorRT FP16 model
+
+Primary metric:
+    successful classification completion rate
+
+Guardrails:
+    p99 latency
+    error rate
+    human-reviewed accuracy sample
+```
+
+
+
+## Step 25 — Incident runbook
+
+Create `ops/incident_runbook.md`:
+
+```markdown
+# Incident Runbook — Inference Service
+
+## 1. High latency incident
+
+### Symptoms
+
+- p99 latency above SLO
+- queue duration rising
+- user-facing timeout increase
+
+### Immediate checks
+
+- Check request rate
+- Check Triton queue duration
+- Check compute infer duration
+- Check GPU utilization
+- Check GPU memory
+- Check recent deployment/change
+- Check downstream dependencies
+
+### Mitigation
+
+- Roll back recent model/config
+- Reduce traffic to affected version
+- Scale replicas if capacity-related
+- Disable expensive postprocessing
+- Increase timeout only as temporary mitigation
+- Disable canary if canary version is affected
+
+### Root cause candidates
+
+- traffic spike
+- dynamic batching delay too high
+- insufficient instances
+- GPU saturation
+- CPU preprocessing bottleneck
+- model version slower than expected
+- noisy neighbor
+```
+
+Add runbook for error spike:
+
+```markdown
+## 2. Error spike incident
+
+### Symptoms
+
+- request failure rate elevated
+- Triton model unavailable
+- HTTP 5xx increase
+
+### Immediate checks
+
+- model load status
+- container logs
+- GPU OOM
+- shape mismatch errors
+- input dtype mismatch
+- recent artifact/config change
+
+### Mitigation
+
+- rollback to previous model version
+- route traffic away from failing pod
+- disable problematic canary
+- restart if safe and root cause is transient
+
+### Root cause candidates
+
+- bad config.pbtxt
+- incompatible TensorRT engine and GPU
+- wrong input shape
+- model artifact corrupted
+- version mismatch
+```
+
+Add runbook for quality regression:
+
+```markdown
+## 3. Quality regression incident
+
+### Symptoms
+
+- shadow comparison mismatch
+- customer/user complaints
+- offline validation passed but production quality degraded
+
+### Immediate checks
+
+- preprocessing differences
+- label mapping differences
+- model version
+- input distribution shift
+- quantization accuracy drop
+- image decoding/crop changes
+
+### Mitigation
+
+- rollback model
+- disable INT8 path
+- route to FP16/ONNX baseline
+- collect sampled examples for analysis
+
+### Root cause candidates
+
+- changed preprocessing
+- wrong labels file
+- calibration dataset mismatch
+- dynamic input distribution
+- silent output mapping bug
+```
+
+
+
+## Step 26 — Build production readiness review
+
+Create `reports/production_readiness_review.md`:
+
+```markdown
+# Production Readiness Review
+
+## 1. Service overview
+
+- Service name:
+- Model:
+- Runtime:
+- Serving system:
+- Owner:
+- On-call:
+- Dependencies:
+
+## 2. Model artifact
+
+- Source training run:
+- ONNX artifact:
+- TensorRT engine:
+- Precision:
+- Input contract:
+- Output contract:
+
+## 3. Validation
+
+- ONNX checker:
+- PyTorch vs ONNX:
+- ONNX vs TensorRT:
+- Offline accuracy:
+- Regression test:
+
+## 4. Performance
+
+- p50 latency:
+- p95 latency:
+- p99 latency:
+- throughput:
+- GPU utilization:
+- memory:
+- capacity limit:
+- knee point:
+
+## 5. SLO
+
+- Availability:
+- Latency:
+- Error rate:
+- Quality:
+- Error budget:
+
+## 6. Observability
+
+- Metrics:
+- Logs:
+- Traces:
+- Dashboards:
+- Alerts:
+
+## 7. Rollout
+
+- Shadow plan:
+- Canary plan:
+- A/B plan:
+- Rollback plan:
+
+## 8. Risks
+```
+
+| Risk            | Impact           | Mitigation                 |
+|-----------------|------------------|----------------------------|
+| GPU OOM         | service failure  | max batch, memory test     |
+| accuracy drop   | poor predictions | validation, shadow         |
+| traffic spike   | high latency     | autoscale, capacity buffer |
+| bad artifact    | model load fail  | artifact validation        |
+
+```markdown
+## 9. Decision
+
+- [ ] Approved for production
+- [ ] Approved for limited rollout
+- [ ] Blocked
+
+Reviewer notes:
+```
+
+This document is a professional artifact. It turns engineering work into an operational decision.
+
+
+
+## Step 27 — CI/CD pipeline design
+
+A minimal CI/CD pipeline:
+
+```text
+Pull request:
+    lint scripts
+    run unit tests
+    validate ONNX export on CPU
+    compare PyTorch vs ONNX outputs
+
+Model build job:
+    export ONNX
+    simplify ONNX
+    validate ONNX
+    build TensorRT engine
+    run trtexec sanity benchmark
+    upload artifacts
+
+Staging deployment:
+    deploy Triton staging
+    run integration tests
+    run Perf Analyzer smoke benchmark
+    run shadow comparison on sample data
+
+Production rollout:
+    canary 1%
+    monitor
+    canary 10%
+    monitor
+    canary 50%
+    monitor
+    full rollout
+```
+
+Example GitHub Actions skeleton:
+
+```yaml
+name: inference-capstone-ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate-onnx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Export ONNX
+        run: python scripts/01_export_to_onnx.py --output /tmp/model.onnx
+      - name: Validate ONNX
+        run: python scripts/02_validate_onnx.py --model /tmp/model.onnx
+      - name: Compare outputs
+        run: python scripts/03_compare_outputs.py --onnx /tmp/model.onnx
+```
+
+TensorRT engine build usually needs a GPU runner with compatible NVIDIA driver, CUDA and TensorRT. CPU-only CI should not pretend to validate TensorRT performance.
+
+
+
+## Step 28 — Accuracy and regression testing
+
+For classification:
+
+```text
+unit test:
+    input preprocessing shape/dtype is correct
+
+regression test:
+    known images produce expected top-k labels
+
+equivalence test:
+    PyTorch vs ONNX vs TensorRT are close enough
+
+accuracy test:
+    validation dataset accuracy drop within threshold
+```
+
+Create `tests/test_output_schema.py`:
+
+```python
+import numpy as np
+
+
+def test_output_schema():
+    logits = np.random.randn(2, 1000).astype(np.float32)
+    assert logits.shape == (2, 1000)
+    assert logits.dtype == np.float32
+```
+
+Create `tests/test_preprocessing.py`:
+
+```python
+import numpy as np
+
+
+def test_preprocessed_image_shape():
+    x = np.random.randn(1, 3, 224, 224).astype(np.float32)
+    assert x.shape == (1, 3, 224, 224)
+    assert x.dtype == np.float32
+```
+
+These tests look simple, but they catch many production bugs caused by wrong shape, dtype or layout.
+
+
+
+## Step 29 — Bottleneck analysis framework
+
+Use this table for your final report:
+
+| Observation                            | Evidence       | Likely bottleneck                      | Next action                              |
+|----------------------------------------|----------------|----------------------------------------|------------------------------------------|
+| p99 grows sharply after concurrency 16 | Perf Analyzer  | queueing/saturation                    | choose concurrency target <= 16 or scale |
+| GPU utilization low but latency high   | Triton metrics | CPU/client bottleneck                  | profile gateway                          |
+| H2D high in `trtexec`                  | trtexec output | data transfer                          | optimize input placement                 |
+| TensorRT not faster than ONNX          | benchmark      | unsupported op/fallback or small model | inspect engine/layers                    |
+| INT8 accuracy poor                     | validation     | bad calibration                        | improve calibration set                  |
+| first request slow                     | trace          | cold start/model load                  | warmup                                   |
+
+A good inference engineer does not just optimize blindly. They form hypotheses and test them.
+
+
+
+## Step 30 — Cost planning
+
+Even for a small image model, learn to estimate cost.
+
+Basic formula:
+
+```text
+cost per 1M inferences
+    = hourly GPU node cost / sustained inferences per hour * 1,000,000
+```
+
+Example:
+
+```text
+GPU node cost: $2/hour
+Sustained throughput: 500 requests/s
+
+Requests per hour:
+    500 * 3600 = 1,800,000
+
+Cost per 1M requests:
+    2 / 1,800,000 * 1,000,000 = $1.11
+```
+
+But production cost also includes:
+
+```text
+idle capacity buffer
+replication for availability
+gateway nodes
+monitoring/logging
+storage
+network egress
+engineering/on-call cost
+```
+
+Cost optimization options:
+
+| Lever               | Effect                   | Risk                        |
+|---------------------|--------------------------|-----------------------------|
+| FP16                | faster, lower memory     | small numerical differences |
+| INT8                | faster/lower cost        | accuracy drop               |
+| dynamic batching    | higher throughput        | higher latency              |
+| smaller model       | lower cost               | quality drop                |
+| autoscaling         | lower idle cost          | cold starts                 |
+| multi-model sharing | better utilization       | contention                  |
+| CPU serving         | cheaper for small models | may not meet latency        |
+
+
+
+## Step 31 — Optional INT8 extension
+
+After FP16 capstone works, add INT8.
+
+INT8 path:
+
+```text
+collect calibration dataset
+    -> build calibration cache or Q/DQ model
+    -> build TensorRT INT8 engine
+    -> validate accuracy
+    -> benchmark
+    -> compare cost/performance
+```
+
+Do not enable INT8 just because it is available. Use it only if:
+
+```text
+latency improves
+throughput improves
+accuracy drop is acceptable
+stability is good
+```
+
+Add this to benchmark report:
+
+## Precision comparison
+
+| Runtime  | Precision | p99 ms | Throughput | Accuracy delta | Decision      |
+|----------|-----------|:-------|:-----------|:---------------|---------------|
+| TensorRT | FP16      | TBD    | TBD        | 0              | baseline      |
+| TensorRT | INT8      | TBD    | TBD        | TBD            | accept/reject |
+
+
+
+
+## Step 32 — Optional LLM extension
+
+To connect Lesson 9, you can create a second capstone branch for LLM serving.
+
+LLM capstone architecture:
+
+```text
+client
+  -> OpenAI-compatible API
+  -> vLLM or TensorRT-LLM
+  -> streaming tokens
+  -> Prometheus metrics
+```
+
+Metrics:
+
+```text
+TTFT
+ITL / TPOT
+output tokens per second
+request throughput
+KV cache utilization
+GPU memory
+prefix cache hit rate
+```
+
+Rollout risk:
+
+```text
+quality regression
+latency regression
+cost per 1M tokens increase
+streaming instability
+long-tail prompts
+```
+
+For this Lesson 10, image classification is the main deliverable. LLM extension is optional because it requires larger GPU memory and different benchmarking methods.
+
+
+
+## Step 33 — Final capstone report template
+
+Create `reports/final_capstone_report.md`:
+
+```markdown
+# Final Capstone Report
+
+## 1. Executive summary
+
+Describe what service you built, what model you used, what runtime performed best, and whether it meets the target SLO.
+
+## 2. Architecture
+
+Include a diagram:
+
+client -> gateway -> Triton -> TensorRT -> GPU -> metrics
+
+## 3. Model contract
+
+- Input:
+- Output:
+- Preprocessing:
+- Postprocessing:
+- Supported batch sizes:
+- Supported precision:
+
+## 4. Artifact pipeline
+
+Explain:
+
+PyTorch -> ONNX -> validation -> TensorRT engine -> Triton model repository
+
+## 5. Correctness validation
+```
+
+| Check            | Result    |
+|------------------|-----------|
+| ONNX checker     | pass/fail |
+| PyTorch vs ONNX  | pass/fail |
+| ONNX vs TensorRT | pass/fail |
+| offline accuracy | pass/fail |
+
+```markdown
+## 6. Performance results
+
+Include tables and latency-throughput curve.
+
+## 7. Bottleneck analysis
+
+Explain the bottleneck evidence and what you changed.
+
+## 8. Serving configuration
+
+Document:
+
+- config.pbtxt
+- dynamic batching
+- instance_group
+- max_batch_size
+- model versioning
+
+## 9. Operations
+
+Document:
+
+- metrics
+- alerts
+- dashboards
+- health checks
+- autoscaling strategy
+
+## 10. Rollout and rollback
+
+Document:
+
+- shadow
+- canary
+- full rollout
+- rollback triggers
+
+## 11. Cost estimate
+
+Include cost per 1M requests.
+
+## 12. Risks and limitations
+
+Be honest about what is not solved.
+
+## 13. Final decision
+
+State whether this system is ready for:
+
+- local demo
+- staging
+- limited production
+- full production
+```
+
+The final report is what distinguishes a serious capstone from a tutorial.
+
+
+
+## Common failure modes
+
+### ONNX export succeeds but model is wrong
+
+Symptoms:
+
+```text
+ONNX checker passes
+but predictions differ from PyTorch
+```
+
+Causes:
+
+```text
+unsupported export behavior
+training/eval mode mismatch
+dynamic control flow
+wrong preprocessing
+opset issue
+```
+
+Fix:
+
+```text
+set model.eval()
+compare outputs
+inspect graph
+try different opset
+avoid unsupported Python-side logic
+```
+
+###  TensorRT build fails
+
+Symptoms:
+
+```text
+unsupported operator
+shape inference error
+profile error
+```
+
+Causes:
+
+```text
+unsupported ONNX op
+dynamic shape not bounded
+plugin required
+bad graph simplification
+```
+
+Fix:
+
+```text
+simplify graph
+change opset
+replace op
+write plugin
+use ONNX Runtime backend fallback
+```
+
+### Triton model fails to load
+
+Symptoms:
+
+```text
+model unavailable
+config error
+backend error
+```
+
+Causes:
+
+```text
+wrong config.pbtxt
+wrong input/output names
+wrong dims
+TensorRT engine incompatible with GPU/TensorRT version
+bad repository layout
+```
+
+Fix:
+
+```text
+check logs
+inspect model metadata
+verify repository layout
+rebuild engine in matching environment
+```
+
+### TensorRT is faster in trtexec but not in Triton
+
+Symptoms:
+
+```text
+trtexec latency excellent
+Triton p99 poor
+```
+
+Causes:
+
+```text
+queueing
+dynamic batching delay
+client overhead
+Triton config mismatch
+gateway bottleneck
+insufficient model instances
+```
+
+Fix:
+
+```text
+benchmark direct Triton with Perf Analyzer
+inspect queue duration
+reduce max_queue_delay_microseconds
+tune instance_group
+separate gateway benchmark from model benchmark
+```
+
+### p99 is much worse than p50
+
+Symptoms:
+
+```text
+p50 = 10 ms
+p99 = 200 ms
+```
+
+Causes:
+
+```text
+queueing
+traffic bursts
+CPU pauses
+GPU contention
+cold path
+autoscaling delay
+```
+
+Fix:
+
+```text
+add capacity buffer
+reduce saturation
+tune batching
+profile gateway
+avoid running at max throughput
+```
+
+
+
+## Production-grade checklist
+
+### Model correctness
+
+- [ ] model exported from eval mode
+- [ ] input/output names documented
+- [ ] ONNX checker passes
+- [ ] PyTorch vs ONNX comparison passes
+- [ ] ONNX vs TensorRT comparison passes
+- [ ] preprocessing is tested
+- [ ] postprocessing is tested
+- [ ] label mapping is versioned
+
+### Performance
+
+- [ ] baseline benchmark recorded
+- [ ] TensorRT benchmark recorded
+- [ ] Triton Perf Analyzer benchmark recorded
+- [ ] latency-throughput curve created
+- [ ] knee point identified
+- [ ] p99 measured, not guessed
+- [ ] dynamic batching tuned
+- [ ] instance count tuned
+- [ ] GPU utilization measured
+
+### Serving
+
+- [ ] Triton model repository valid
+- [ ] config.pbtxt matches artifact
+- [ ] health endpoints working
+- [ ] model metadata available
+- [ ] versioning strategy defined
+- [ ] rollback artifact available
+
+### Observability
+
+- [ ] Prometheus scraping metrics
+- [ ] dashboard created
+- [ ] alerts defined
+- [ ] logs accessible
+- [ ] traces optional but planned
+- [ ] SLO dashboard available
+
+### Operations
+
+- [ ] rollout plan written
+- [ ] rollback plan tested
+- [ ] incident runbook written
+- [ ] owner/on-call documented
+- [ ] capacity estimate available
+- [ ] cost estimate available
+
+
+
+## Rubric for self-evaluation
+
+| Level     | Description                                               |
+|-----------|-----------------------------------------------------------|
+| Level 1   | Exported ONNX and ran inference locally                   |
+| Level 2   | Built TensorRT engine and benchmarked with trtexec        |
+| Level 3   | Served ONNX and TensorRT models with Triton               |
+| Level 4   | Benchmarked Triton with Perf Analyzer and produced report |
+| Level 5   | Added monitoring, SLO, alerts and runbook                 |
+| Level 6   | Designed rollout/rollback plan                            |
+| Level 7   | Demonstrated production readiness review                  |
+| Level 8   | Extended project with INT8 or LLM serving                 |
+
+Aim for Level 6 minimum. Level 7-8 is strong portfolio quality.
+
+
+
+## Study tasks
+
+Complete these tasks in order:
+
+1. Create project repository layout.
+2. Export ResNet-50 to ONNX.
+3. Validate ONNX.
+4. Compare PyTorch vs ONNX Runtime output.
+5. Benchmark ONNX Runtime CPU/CUDA.
+6. Build TensorRT FP16 engine.
+7. Benchmark TensorRT engine with `trtexec`.
+8. Create Triton model repository.
+9. Serve ONNX model with Triton.
+10. Serve TensorRT model with Triton.
+11. Write Triton client.
+12. Benchmark with Perf Analyzer.
+13. Collect Triton metrics.
+14. Create benchmark report.
+15. Tune dynamic batching.
+16. Tune instance group.
+17. Write rollout plan.
+18. Write incident runbook.
+19. Write production readiness review.
+20. Present final capstone report.
+
+
+
+##  What to present in a portfolio
+
+A strong GitHub README should include:
+
+```markdown
+# Production Inference Service Capstone
+
+## Overview
+
+This project demonstrates an end-to-end optimized inference service using ONNX, TensorRT and NVIDIA Triton.
+
+## Architecture
+
+Include diagram.
+
+## Results
+```
+
+| Backend       | Precision | p99 latency | Throughput |
+|---------------|-----------|:------------|:-----------|
+| ONNX Runtime  | FP32      | ...         | ...        |
+| TensorRT      | FP16      | ...         | ...        |
+
+```markdown
+## Key learnings
+
+- TensorRT reduced compute latency by ...
+- Dynamic batching improved throughput by ...
+- p99 increased after concurrency ...
+- The production configuration uses ...
+
+## How to run
+
+1. Export ONNX
+2. Build TensorRT
+3. Start Triton
+4. Run client
+5. Run benchmark
+
+## Production readiness
+
+- SLO
+- monitoring
+- rollout plan
+- runbook
+```
+
+This makes the project useful not only as learning material but also as career evidence.
+
+
+
+## Key mental models
+
+### Artifact is not a service
+
+A model file is not production.
+
+```text
+model artifact
+    != inference service
+    != monitored service
+    != reliable service
+```
+
+You need serving, monitoring, rollout, rollback and ownership.
+
+### Faster average latency is not enough
+
+Production systems care about tail latency.
+
+```text
+mean latency can look good
+while p99 breaks the user experience
+```
+
+Always report p95/p99.
+
+### TensorRT optimization must be validated
+
+TensorRT can improve speed, but you must verify:
+
+```text
+correctness
+accuracy
+latency
+throughput
+memory
+compatibility
+```
+
+### Triton configuration is part of the model
+
+`config.pbtxt` is not just boilerplate. It changes runtime behavior:
+
+```text
+batching
+shape handling
+instance count
+backend selection
+version policy
+```
+
+Treat it as production code.
+
+### Benchmarks must answer a decision
+
+Bad benchmark question:
+
+```text
+How fast is the model?
+```
+
+Good benchmark question:
+
+```text
+At what concurrency can this service meet p99 < 100 ms, and how many requests per second can it safely serve?
+```
+
+### Operations design starts before deployment
+
+Monitoring, alerts and runbooks should not be added after incidents.
+
+```text
+No metrics -> no diagnosis
+No rollback -> risky deployment
+No SLO -> no definition of reliability
+```
+
+
+
+## Final exam questions
+
+Answer these without looking:
+
+1. Why do you compare PyTorch output with ONNX output before building TensorRT?
+2. Why does TensorRT need `min/opt/max` shapes for dynamic input?
+3. What is the difference between `trtexec` latency and Triton latency?
+4. Why can dynamic batching improve throughput but hurt p99?
+5. What does high Triton queue duration usually mean?
+6. Why is p99 more important than mean latency for online inference?
+7. What is the difference between canary and A/B testing?
+8. Why should a TensorRT engine be rebuilt when the deployment GPU/TensorRT version changes?
+9. What is the purpose of readiness probe?
+10. What should trigger rollback during rollout?
+11. How do you estimate cost per 1M requests?
+12. What evidence would convince you that the bottleneck is preprocessing, not model compute?
+
+
+
+## Recommended final architecture diagram
+
+You can include this in the final report:
+
+```text
+                           ┌─────────────────────────────┐
+                           │ External Client / Load Test │
+                           └──────────────┬──────────────┘
+                                          │
+                                          ▼
+                           ┌─────────────────────────────┐
+                           │ API Gateway                  │
+                           │ - auth                       │
+                           │ - validation                 │
+                           │ - preprocessing              │
+                           │ - tracing                    │
+                           └──────────────┬──────────────┘
+                                          │
+                                          ▼
+                           ┌─────────────────────────────┐
+                           │ Triton Inference Server      │
+                           │ - model repository           │
+                           │ - scheduler                  │
+                           │ - dynamic batching           │
+                           │ - backend runtime            │
+                           └──────────────┬──────────────┘
+                                          │
+                       ┌──────────────────┴──────────────────┐
+                       ▼                                     ▼
+        ┌─────────────────────────────┐       ┌─────────────────────────────┐
+        │ resnet50_onnx                │       │ resnet50_trt                 │
+        │ ONNX Runtime Backend         │       │ TensorRT Backend             │
+        └─────────────────────────────┘       └─────────────────────────────┘
+                                          │
+                                          ▼
+                           ┌─────────────────────────────┐
+                           │ NVIDIA GPU                   │
+                           └──────────────┬──────────────┘
+                                          │
+                                          ▼
+                           ┌─────────────────────────────┐
+                           │ Observability                │
+                           │ - Prometheus                 │
+                           │ - Grafana                    │
+                           │ - logs                       │
+                           │ - traces                     │
+                           └─────────────────────────────┘
+```
+
+
+
+## Suggested timeline
+
+If you study part-time:
+
+```text
+Day 1:
+    repo layout, ONNX export, validation
+
+Day 2:
+    ONNX Runtime benchmark, TensorRT engine build
+
+Day 3:
+    Triton model repository, Triton client
+
+Day 4:
+    Perf Analyzer benchmark, bottleneck analysis
+
+Day 5:
+    dynamic batching tuning, instance tuning
+
+Day 6:
+    monitoring, Prometheus, alert rules
+
+Day 7:
+    rollout plan, incident runbook, final report
+```
+
+If you already have GPU environment ready, you can compress this into 2-3 focused days.
+
+
+
+## References
+
+Official references you should keep nearby while doing the capstone:
+
+1. NVIDIA TensorRT Documentation  
+   https://docs.nvidia.com/deeplearning/tensorrt/latest/
+
+2. TensorRT Performance Benchmarking with `trtexec`  
+   https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/benchmarking.html
+
+3. NVIDIA Triton Inference Server Documentation  
+   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/
+
+4. Triton Model Repository  
+   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_repository.html
+
+5. Triton Model Configuration  
+   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_configuration.html
+
+6. Triton Perf Analyzer  
+   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/perf_analyzer/README.html
+
+7. Triton Model Analyzer  
+   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_analyzer.html
+
+8. Triton Metrics  
+   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/metrics.html
+
+9. ONNX Runtime Performance Tuning  
+   https://onnxruntime.ai/docs/performance/tune-performance/
+
+10. ONNX Runtime Graph Optimizations  
+    https://onnxruntime.ai/docs/performance/model-optimizations/graph-optimizations.html
+
+11. ONNX Runtime I/O Binding  
+    https://onnxruntime.ai/docs/performance/tune-performance/iobinding.html
+
+12. Kubernetes Probes  
+    https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/
+
+13. Kubernetes Horizontal Pod Autoscaling  
+    https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/
+
+14. Google SRE Book — Service Level Objectives  
+    https://sre.google/sre-book/service-level-objectives/
+
+15. Google SRE Workbook — Error Budget Policy  
+    https://sre.google/workbook/error-budget-policy/
+
+16. Prometheus Alerting Rules  
+    https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
+
+17. OpenTelemetry Documentation  
+    https://opentelemetry.io/docs/
+
+
+
+## Closing note
+
+Lesson 10 là nơi bạn chuyển từ học từng công cụ sang tư duy hệ thống.
+
+Một inference engineer giỏi không chỉ biết:
+
+```text
+export ONNX
+build TensorRT
+start Triton
+```
+
+mà còn biết trả lời:
+
+```text
+Service này có đúng không?
+Nhanh hơn bao nhiêu?
+Nhanh trong điều kiện nào?
+p99 có ổn không?
+Bottleneck nằm ở đâu?
+Nếu deploy version mới bị lỗi thì rollback thế nào?
+Nếu traffic tăng gấp đôi thì hệ thống phản ứng ra sao?
+Nếu accuracy giảm thì phát hiện bằng cách nào?
+Chi phí mỗi 1M request là bao nhiêu?
+```
+
+Khi bạn hoàn thành capstone này, bạn không chỉ có kiến thức về ONNX, TensorRT và Triton. Bạn có một blueprint đầy đủ cho production inference systems.
+
+::: {.callout-note icon=false}
+## Bạn đã hoàn thành chuỗi AI Optimization
+Capstone khép lộ trình từ artifact đến production service. Để ôn kiến trúc phía sau các model được serve, quay lại [Architecture Models](../architecture-models/index.qmd) — đặc biệt [Transformer](../architecture-models/Transformer/index.qmd) và [DDPM](../architecture-models/Denoising-Diffusion-Probabilistic-Models/index.qmd).
+:::

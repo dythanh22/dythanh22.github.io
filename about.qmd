@@ -9,10 +9,10 @@ Trang cá nhân của **dythanh22** — đăng **chuỗi bài học** để đ�
 
 Hiện có hai chuỗi:
 
-- [Architecture Models](bai-hoc/architecture-models/index.qmd) — CNN, RNN/LSTM/GRU, VAE/GAN, Word2Vec, Transformer/BERT/ViT, U-Net
+- [Architecture Models](bai-hoc/architecture-models/index.qmd) — CNN, RNN/LSTM/GRU, VAE/GAN/DDPM, Word2Vec, Transformer/BERT/ViT, U-Net
 - [AI Optimization for Inference Systems](bai-hoc/ai-optimize/index.qmd) — 10 bài từ artifact đến production serving
 
-Viết bằng **Quarto** (`.qmd` / `.md`) hoặc HTML đã xuất, deploy qua GitHub Actions lên [dythanh22.github.io](https://dythanh22.github.io).
+Viết bằng **Quarto** (`.qmd` / `.md`), deploy qua GitHub Actions lên [dythanh22.github.io](https://dythanh22.github.io).
 
 ## Công nghệ
 

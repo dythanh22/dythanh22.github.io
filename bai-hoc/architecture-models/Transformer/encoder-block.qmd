@@ -213,6 +213,11 @@ Encoder đầy đủ gồm $N = 6$ khối giống hệt xếp chồng tuần t�
 
 **Tại sao 6 khối?** $N = 6$ cân bằng dung lượng và chi phí huấn luyện cho dịch máy. BERT-Base dùng 12, BERT-Large dùng 24. Mỗi khối thêm khoảng $4 d_{\text{model}}^2 + 2 d_{\text{model}} d_{ff}$ tham số cộng tham số LayerNorm.
 
+::: {.callout-tip}
+## Học tiếp: serving LLM
+Khi Multi-Head Attention chạy ở production scale (KV cache, continuous batching, vLLM), xem [Lesson 9 — LLM Inference Systems](../../ai-optimize/lesson-09-llm-inference-systems.qmd).
+:::
+
 ## Các lỗi thường gặp
 
 Khi implement **encoder block**, một số sai lầm thường gặp:

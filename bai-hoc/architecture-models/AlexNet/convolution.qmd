@@ -252,6 +252,15 @@ MobileNet (Howard et al., 2017) phân rã tích chập tiêu chuẩn thành dept
 * **Nhầm lẫn stride với dilation.** Stride = khoảng cách kernel di chuyển. Dilation = khoảng cách giữa các phần tử kernel. AlexNet không dùng dilation, nhưng các kiến trúc hiện đại (DeepLab) có dùng. Một kernel $3 \times 3$ có dilation với rate 2 có kích thước hiệu dụng $2(3-1)+1 = 5$, làm thay đổi công thức để sử dụng $k_{\text{eff}}$.
 * **Áp dụng công thức chiều rộng với giá trị chiều cao trên đầu vào không vuông.** Với đầu vào vuông $224 \times 224$ của AlexNet, $H_{out} = W_{out}$. Với đầu vào không vuông, mỗi trục phải được tính độc lập.
 
+::: {.callout-note}
+## Kiểm tra nhanh
+
+<details>
+<summary>Vì sao AlexNet dùng stride 4 ở Conv1?</summary>
+Để giảm mạnh kích thước không gian ngay từ đầu ($224 \to 55$), phù hợp giới hạn bộ nhớ GPU năm 2012; đổi lại là mất chi tiết cục bộ mịn hơn các thiết kế stride nhỏ sau này.
+</details>
+:::
+
 
 ## Code
 ```python

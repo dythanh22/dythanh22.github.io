@@ -28,6 +28,7 @@ listing:
     categories: true
     sort-ui: true
     filter-ui: true
+    feed: true
     fields: [order, title, date, description, categories]
     field-display-names:
       order: "#"

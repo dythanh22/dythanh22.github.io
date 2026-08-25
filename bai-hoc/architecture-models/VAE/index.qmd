@@ -62,3 +62,8 @@ p_{\theta}(x \mid z) &:\ \text{decoder (mô hình likelihood)}, \\
 \mathcal{L}_{\mathrm{ELBO}} &:\ \text{mục tiêu huấn luyện VAE}.
 \end{aligned}
 $$
+
+::: {.callout-tip}
+## Model sinh tiếp theo
+Sau VAE và GAN, chuỗi generative tiếp tục với [DDPM](../Denoising-Diffusion-Probabilistic-Models/index.qmd) (forward/reverse diffusion).
+:::

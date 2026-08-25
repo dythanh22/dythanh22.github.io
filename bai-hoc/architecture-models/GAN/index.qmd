@@ -62,3 +62,8 @@ p_{\mathrm{data}} &:\ \text{phân phối dữ liệu thật}, \\
 p_z &:\ \text{phân phối prior latent}.
 \end{aligned}
 $$
+
+::: {.callout-tip}
+## Model sinh tiếp theo
+GAN đối lập với likelihood-based generators. Bước kế trong lộ trình generative: [DDPM](../Denoising-Diffusion-Probabilistic-Models/index.qmd).
+:::

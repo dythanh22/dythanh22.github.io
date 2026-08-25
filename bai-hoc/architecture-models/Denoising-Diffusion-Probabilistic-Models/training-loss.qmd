@@ -1,4 +1,16 @@
-# DDPM Training Loss
+---
+title: "DDPM Training Loss"
+date: 2026-08-22
+order: 4
+categories: [architecture-models, architecture, ddpm, generative, diffusion]
+series: architecture-models
+group: "DDPM"
+role: "L_simple = MSE nhiễu"
+description: "Loss L_simple: MSE giữa nhiễu thật và ε_θ(x_t, t)."
+aliases:
+  - /bai-hoc/architecture-models/Denoising-Diffusion-Probabilistic-Models/4-DDPM_Training_Loss.md
+  - /bai-hoc/architecture-models/Denoising-Diffusion-Probabilistic-Models/4-DDPM_Training_Loss.html
+---
 
 Denoising Diffusion Probabilistic Models (DDPM) học sinh dữ liệu bằng cách đảo ngược quá trình thêm nhiễu dần. Mục tiêu huấn luyện Ho et al. (2020) đề xuất đáng chú ý ở sự đơn giản: dự đoán nhiễu đã được thêm vào mẫu dữ liệu. Loss là mean squared error (MSE) thuần giữa nhiễu thật và dự đoán của mô hình. Mục tiêu đơn giản hóa này thay thế variational lower bound phức tạp bằng một công thức gọn, cho chất lượng mẫu vượt trội.
 

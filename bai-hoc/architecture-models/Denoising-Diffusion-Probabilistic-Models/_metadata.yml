@@ -1,0 +1,7 @@
+group: "DDPM"
+categories: [architecture-models, architecture, ddpm, generative, diffusion]
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    fig-align: center

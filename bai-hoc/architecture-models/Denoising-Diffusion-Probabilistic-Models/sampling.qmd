@@ -1,4 +1,16 @@
-# DDPM Sampling
+---
+title: "DDPM Sampling"
+date: 2026-08-22
+order: 5
+categories: [architecture-models, architecture, ddpm, generative, diffusion]
+series: architecture-models
+group: "DDPM"
+role: "x_T → ⋯ → x_0"
+description: "Sampling: lặp reverse từ noise thuần đến mẫu sạch."
+aliases:
+  - /bai-hoc/architecture-models/Denoising-Diffusion-Probabilistic-Models/5-DDPM_Sampling.md
+  - /bai-hoc/architecture-models/Denoising-Diffusion-Probabilistic-Models/5-DDPM_Sampling.html
+---
 
 **Sampling** là hành vi generative của diffusion model: bắt đầu từ nhiễu Gaussian thuần và gỡ dần để tạo mẫu dữ liệu sạch. Trong khung Denoising Diffusion Probabilistic Model (DDPM) Ho, Jain, và Abbeel (2020) giới thiệu, **sampling** chạy Markov chain **reverse** học được từ **timestep** $T$ xuống **timestep** $1$, đảo ngược **forward process** đã phá dần cấu trúc dữ liệu.
 

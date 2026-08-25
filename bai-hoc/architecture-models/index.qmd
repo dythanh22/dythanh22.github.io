@@ -1,13 +1,13 @@
 ---
 short-title: "Tổng quan chuỗi"
 title: "Architecture Models"
-subtitle: "CNN → sequence → generative → embeddings → attention → U-Net"
+subtitle: "CNN → sequence → generative (VAE/GAN/DDPM) → embeddings → attention → U-Net"
 date: 2026-08-22
 order: 0
 categories: [architecture-models, architecture]
 series: architecture-models
 role: "Tổng quan chuỗi Architecture Models"
-description: "Lộ trình kiến trúc: CNN, RNN/LSTM/GRU, VAE/GAN, Word2Vec, Transformer/BERT/ViT, U-Net."
+description: "Lộ trình kiến trúc: CNN, RNN/LSTM/GRU, VAE/GAN/DDPM, Word2Vec, Transformer/BERT/ViT, U-Net."
 toc: true
 listing:
   - id: roadmap-alexnet
@@ -145,6 +145,21 @@ listing:
       role: "Vai trò"
     max-description-length: 200
 
+  - id: roadmap-ddpm
+    contents:
+      - "Denoising-Diffusion-Probabilistic-Models/*.qmd"
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, role]
+    field-display-names:
+      order: "#"
+      title: "Chương"
+      role: "Vai trò"
+    max-description-length: 200
+
   - id: roadmap-word2vec
     contents:
       - "Word2Vec/*.qmd"
@@ -221,13 +236,15 @@ listing:
     max-description-length: 200
 ---
 
-Chuỗi này đọc **kiến trúc** theo lộ trình sư phạm — từ thị giác CNN, qua sequence và generative, tới embedding/attention, rồi dense prediction.
+Chuỗi này đọc **kiến trúc** theo lộ trình sư phạm — từ thị giác CNN, qua sequence và generative (VAE → GAN → DDPM), tới embedding/attention, rồi dense prediction.
+
+{{< include /_partials/reading-modes.md >}}
 
 <p class="series-part">Phần 1 · CNN</p>
 
 :::: {.series-grid}
 ::: {.series-card}
-<p class="eyebrow">2012 · Baseline</p>
+<p class="eyebrow">1 · 2012</p>
 ### [AlexNet](AlexNet/index.qmd)
 
 Input → Conv1–5 → Flatten → FC. Đọc trước VGG.
@@ -236,7 +253,7 @@ Input → Conv1–5 → Flatten → FC. Đọc trước VGG.
 :::
 
 ::: {.series-card}
-<p class="eyebrow">2014 · Độ sâu đều</p>
+<p class="eyebrow">2 · 2014</p>
 ### [VGG](VGG/index.qmd)
 
 Conv $3\times3$ xếp chồng, max pool $2\times2$, VGG-16.
@@ -245,7 +262,7 @@ Conv $3\times3$ xếp chồng, max pool $2\times2$, VGG-16.
 :::
 
 ::: {.series-card}
-<p class="eyebrow">2015 · Residual</p>
+<p class="eyebrow">3 · 2015</p>
 ### [ResNet](ResNet/index.qmd)
 
 $y = F(x)+x$: identity, projection, bottleneck.
@@ -254,7 +271,7 @@ $y = F(x)+x$: identity, projection, bottleneck.
 :::
 
 ::: {.series-card}
-<p class="eyebrow">2017 · Dense concat</p>
+<p class="eyebrow">4 · 2017</p>
 ### [DenseNet](DenseNet/index.qmd)
 
 Growth rate $k$, concat skip, transition $\theta$. Đọc sau ResNet.
@@ -267,7 +284,7 @@ Growth rate $k$, concat skip, transition $\theta$. Đọc sau ResNet.
 
 :::: {.series-grid}
 ::: {.series-card}
-<p class="eyebrow">4 · RNN</p>
+<p class="eyebrow">5 · RNN</p>
 ### [RNN](RNN/index.qmd)
 
 Cell, unroll, BPTT, vanishing gradient. Nền sequence.
@@ -276,7 +293,7 @@ Cell, unroll, BPTT, vanishing gradient. Nền sequence.
 :::
 
 ::: {.series-card}
-<p class="eyebrow">5 · LSTM</p>
+<p class="eyebrow">6 · LSTM</p>
 ### [LSTM](LSTM/index.qmd)
 
 Forget / input / cell / output — CEC cho phụ thuộc dài.
@@ -285,7 +302,7 @@ Forget / input / cell / output — CEC cho phụ thuộc dài.
 :::
 
 ::: {.series-card}
-<p class="eyebrow">6 · GRU</p>
+<p class="eyebrow">7 · GRU</p>
 ### [GRU](GRU/index.qmd)
 
 Reset + update, encoder–decoder seq2seq. Đọc sau LSTM.
@@ -298,7 +315,7 @@ Reset + update, encoder–decoder seq2seq. Đọc sau LSTM.
 
 :::: {.series-grid}
 ::: {.series-card}
-<p class="eyebrow">7 · VAE</p>
+<p class="eyebrow">8 · VAE</p>
 ### [VAE](VAE/index.qmd)
 
 Encoder, reparam, decoder, KL, ELBO.
@@ -307,12 +324,21 @@ Encoder, reparam, decoder, KL, ELBO.
 :::
 
 ::: {.series-card}
-<p class="eyebrow">8 · GAN</p>
+<p class="eyebrow">9 · GAN</p>
 ### [GAN](GAN/index.qmd)
 
 $G(z)$ vs $D(x)$, train xen kẽ, mode collapse.
 
 [Bắt đầu GAN →](GAN/index.qmd)
+:::
+
+::: {.series-card}
+<p class="eyebrow">10 · DDPM</p>
+### [DDPM](Denoising-Diffusion-Probabilistic-Models/index.qmd)
+
+Forward → reverse → schedule → $L_{\mathrm{simple}}$ → sampling. Đọc sau GAN.
+
+[Bắt đầu DDPM →](Denoising-Diffusion-Probabilistic-Models/index.qmd)
 :::
 ::::
 
@@ -320,7 +346,7 @@ $G(z)$ vs $D(x)$, train xen kẽ, mode collapse.
 
 :::: {.series-grid}
 ::: {.series-card}
-<p class="eyebrow">Word2Vec</p>
+<p class="eyebrow">11 · Word2Vec</p>
 ### [Word2Vec](Word2Vec/index.qmd)
 
 Skip-gram / CBOW, negative sampling, embedding tĩnh. Cầu trước Transformer.
@@ -333,7 +359,7 @@ Skip-gram / CBOW, negative sampling, embedding tĩnh. Cầu trước Transformer
 
 :::: {.series-grid}
 ::: {.series-card}
-<p class="eyebrow">9 · Transformer</p>
+<p class="eyebrow">12 · Transformer</p>
 ### [Transformer](Transformer/index.qmd)
 
 Scaled attention, MHA, FFN, encoder block.
@@ -342,7 +368,7 @@ Scaled attention, MHA, FFN, encoder block.
 :::
 
 ::: {.series-card}
-<p class="eyebrow">10 · BERT</p>
+<p class="eyebrow">13 · BERT</p>
 ### [BERT](BERT/index.qmd)
 
 WordPiece, MLM, NSP, pooler, fine-tune. Đọc sau Transformer.
@@ -351,7 +377,7 @@ WordPiece, MLM, NSP, pooler, fine-tune. Đọc sau Transformer.
 :::
 
 ::: {.series-card}
-<p class="eyebrow">11 · ViT</p>
+<p class="eyebrow">14 · ViT</p>
 ### [Vision Transformer](Vision-Transformer/index.qmd)
 
 Patch embed, [CLS], Pre-LN encoder. Transformer cho ảnh.
@@ -364,7 +390,7 @@ Patch embed, [CLS], Pre-LN encoder. Transformer cho ảnh.
 
 :::: {.series-grid}
 ::: {.series-card}
-<p class="eyebrow">12 · U-Net</p>
+<p class="eyebrow">15 · U-Net</p>
 ### [U-Net](UNet/index.qmd)
 
 Encoder–decoder, crop+concat skip, mask pixel-level.
@@ -417,6 +443,10 @@ Encoder–decoder, crop+concat skip, mask pixel-level.
 ::: {#roadmap-gan}
 :::
 
+#### DDPM
+::: {#roadmap-ddpm}
+:::
+
 ### Embeddings
 
 #### Word2Vec
@@ -446,5 +476,11 @@ Encoder–decoder, crop+concat skip, mask pixel-level.
 ::: {.callout-note}
 ## Cách đọc
 
-Đi hết **một model** (tổng quan → các khối → mạng đầy đủ) rồi mới sang model kế. Sequence: RNN trước LSTM trước GRU. Attention: Transformer trước BERT và ViT. DenseNet nên sau ResNet (add vs concat).
+Đi hết **một model** (tổng quan → các khối → mạng đầy đủ) rồi mới sang model kế. Sequence: RNN trước LSTM trước GRU. Generative: VAE trước GAN trước DDPM. Attention: Transformer trước BERT và ViT. DenseNet nên sau ResNet (add vs concat).
+:::
+
+::: {.callout-tip}
+## Sau chuỗi này
+
+Khi đã hiểu kiến trúc, [AI Optimization](../ai-optimize/index.qmd) đi từ model artifact đến production serving. Nếu vừa xong Transformer, Lesson 9 (LLM inference) là bước tiếp tự nhiên.
 :::

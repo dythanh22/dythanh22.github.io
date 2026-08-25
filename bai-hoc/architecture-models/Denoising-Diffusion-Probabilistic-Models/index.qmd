@@ -1,4 +1,17 @@
-# Tổng quan về DDPM
+---
+title: "DDPM"
+subtitle: "Tổng quan forward, reverse, schedule, loss, sampling"
+date: 2026-08-22
+order: 0
+categories: [architecture-models, architecture, ddpm, generative, diffusion]
+series: architecture-models
+group: "DDPM"
+role: "Mental model cả pipeline"
+description: "DDPM: forward diffusion, reverse denoising, noise schedule, L_simple và sampling."
+aliases:
+  - /bai-hoc/architecture-models/Denoising-Diffusion-Probabilistic-Models/index.md
+  - /bai-hoc/architecture-models/Denoising-Diffusion-Probabilistic-Models/index.html
+---
 
 Denoising Diffusion Probabilistic Models (DDPM) là mô hình sinh học phân phối dữ liệu bằng cách đảo ngược một quá trình làm nhiễu dần. Forward diffusion process dần làm hỏng dữ liệu bằng Gaussian noise qua nhiều timestep, trong khi reverse process đã học khử nhiễu từng bước để tổng hợp mẫu realistic từ pure noise.
 
@@ -48,3 +61,8 @@ x_t &:\ \text{mẫu nhiễu tại bước diffusion } t, \\
 T &:\ \text{tổng số bước diffusion}.
 \end{aligned}
 $$
+
+::: {.callout-tip}
+## Backbone densenet thường gặp
+Nhiều diffusion model dùng U-Net làm denoiser $\epsilon_\theta$. Xem [U-Net](../UNet/index.qmd) nếu cần ôn encoder–decoder + skip.
+:::

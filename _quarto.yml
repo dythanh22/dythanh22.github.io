@@ -71,6 +71,7 @@ website:
           contents:
             - auto: bai-hoc/architecture-models/VAE
             - auto: bai-hoc/architecture-models/GAN
+            - auto: bai-hoc/architecture-models/Denoising-Diffusion-Probabilistic-Models
         - section: "4. Embeddings"
           contents:
             - auto: bai-hoc/architecture-models/Word2Vec
@@ -89,7 +90,17 @@ website:
       search: true
       collapse-level: 2
       contents:
-        - auto: "bai-hoc/ai-optimize"
+        - bai-hoc/ai-optimize/index.qmd
+        - bai-hoc/ai-optimize/lesson-01-modern-gpu-inference-architecture.qmd
+        - bai-hoc/ai-optimize/lesson-02-onnx-fundamentals.qmd
+        - bai-hoc/ai-optimize/lesson-03-onnx-runtime-deep-dive.qmd
+        - bai-hoc/ai-optimize/lesson-04-tensorrt-internals.qmd
+        - bai-hoc/ai-optimize/lesson-05-quantization-deep-dive.qmd
+        - bai-hoc/ai-optimize/lesson-06-nvidia-triton-inference-server.qmd
+        - bai-hoc/ai-optimize/lesson-07-profiling-and-benchmarking.qmd
+        - bai-hoc/ai-optimize/lesson-08-safe-model-rollouts.qmd
+        - bai-hoc/ai-optimize/lesson-09-llm-inference-systems.qmd
+        - bai-hoc/ai-optimize/lesson-10-end-to-end-capstone.qmd
 
   page-footer:
     left: "© 2026 dythanh22 · Học tập & ghi chú"
@@ -98,6 +109,8 @@ website:
         text: Bài học
       - href: about.qmd
         text: Giới thiệu
+      - href: bai-hoc/index.xml
+        text: RSS
     right:
       - icon: github
         href: https://github.com/dythanh22/dythanh22.github.io

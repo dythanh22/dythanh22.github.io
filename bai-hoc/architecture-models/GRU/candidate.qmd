@@ -5,7 +5,7 @@ order: 3
 categories: [architecture-models, architecture, gru, sequence]
 series: architecture-models
 group: "GRU"
-role: "h̃t sau reset"
+role: "candidate h̃t sau reset"
 description: "Candidate hidden state GRU từ input và reset memory."
 aliases:
   - /bai-hoc/architecture-models/RNN-Encoder-Decoder-(GRU)/3-Candidate_Hidden_State.md

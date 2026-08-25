@@ -1,0 +1,24 @@
+# Optional: Lighthouse against production (manual / scheduled)
+# Does not block Pages deploy.
+
+name: Lighthouse CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            https://dythanh22.github.io/
+            https://dythanh22.github.io/bai-hoc/
+            https://dythanh22.github.io/bai-hoc/architecture-models/
+            https://dythanh22.github.io/bai-hoc/ai-optimize/
+          uploadArtifacts: true
+          temporaryPublicStorage: true

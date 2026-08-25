@@ -1,4 +1,16 @@
-# Noise Schedule
+---
+title: "Noise Schedule"
+date: 2026-08-22
+order: 3
+categories: [architecture-models, architecture, ddpm, generative, diffusion]
+series: architecture-models
+group: "DDPM"
+role: "β_t, ᾱ_t, SNR"
+description: "Noise schedule: β_t, ᾱ_t và ảnh hưởng SNR xuyên suốt timestep."
+aliases:
+  - /bai-hoc/architecture-models/Denoising-Diffusion-Probabilistic-Models/3-Noise_Schedule.md
+  - /bai-hoc/architecture-models/Denoising-Diffusion-Probabilistic-Models/3-Noise_Schedule.html
+---
 
 **Noise schedule** là dãy các giá trị phương sai $\beta_1, \beta_2, \dots, \beta_T$ điều khiển lượng nhiễu Gaussian được inject vào mỗi **timestep** của **forward process**. Trong Denoising Diffusion Probabilistic Models (Ho, Gulrajani, và Abbeel, 2020), schedule này là xương sống của khung generative. Mọi đại lượng downstream — mẫu huấn luyện nhiễu, signal-to-noise ratio (SNR), và target dự đoán của mạng — đều suy ra từ dãy scalar này.
 
