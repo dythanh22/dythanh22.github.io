@@ -7,479 +7,268 @@ series: ai-optimize
 order: 6
 description: "Model repository, backends, dynamic batching và production serving."
 role: "Model repository, backends, dynamic batching và production serving"
+aliases:
+  - /bai-hoc/ai-optimize/lesson_6_nvidia_triton_inference_server.html
 ---
 
 ::: {.callout-note icon=false}
 ## Mục tiêu bài học
-Mục tiêu của bài này là giúp bạn hiểu **NVIDIA Triton Inference Server** như một inference serving system thật sự, không chỉ như một Docker container để chạy model. Sau bài này, bạn cần biết cách đóng gói model vào Triton model repository, viết `config.pbtxt`, chọn backend phù hợp, bật dynamic batching, cấu hình nhiều model instances, benchmark bằng Perf Analyzer, quan sát metrics, và thiết kế một deployment có thể vận hành trong production.
+Hiểu **NVIDIA Triton** như inference **serving system** thật — không chỉ Docker chạy model. Sau bài: đóng gói model repository, viết `config.pbtxt`, chọn backend, dynamic batching, `instance_group`, Perf Analyzer, metrics/health, model control modes, và checklist production. Bài **không** thay Lesson 4 (build engine) hay Lesson 7 (profiling sâu).
 :::
 
-## Vị trí của Lesson 6 trong chuỗi học
+::: {.callout-note icon=false}
+## Lộ trình bài học
 
-Ở các bài trước, bạn đã đi từ model artifact tới optimized inference artifact:
+| # | Phần | Trả lời câu hỏi | Thời lượng |
+|:--|:-----|:----------------|:-----------|
+| 1 | Vì sao Triton / mental model | Khác TRT, ORT, FastAPI thế nào? | 15 phút |
+| 2 | Repository + `config.pbtxt` | Layout, `max_batch_size`, I/O dims? | 20 phút |
+| 3 | Backends + protocols | TRT vs ONNX vs Python; HTTP/gRPC? | 15 phút |
+| 4 | Scheduler + dynamic batching | Throughput↑ nhưng p99↓ khi nào? | 25 phút |
+| 5 | Instances, ensemble, rollout | `instance_group`, poll vs explicit? | 20 phút |
+| 6 | Metrics + Perf Analyzer + labs | Đo đúng, debug, deploy checklist | 60–90 phút |
 
-```text
-Lesson 1: Modern GPU Inference Architecture
-    request -> preprocessing -> batching -> runtime -> GPU execution -> response
+Đọc tối thiểu: phần 1–4. Lab GPU/Docker optional nếu chưa có GPU — vẫn học config và methodology.
+:::
 
-Lesson 2: ONNX Fundamentals
-    PyTorch / TensorFlow -> ONNX graph -> operators -> opset -> shape
+::: {.reading-modes}
+**Đọc nhanh:** callout *Ý chính* + bảng + sơ đồ xương sống.  
+**Đọc đủ:** tip đào sâu, labs, checkpoint, checklist production.
+:::
 
-Lesson 3: ONNX Runtime Deep Dive
-    ONNX model -> graph optimization -> Execution Providers -> kernels
 
-Lesson 4: TensorRT Internals
-    ONNX -> TensorRT builder -> optimized engine -> execution context
+## Bối cảnh {.unnumbered}
 
-Lesson 5: Quantization Deep Dive
-    FP32/FP16 -> PTQ/QAT -> Q/DQ graph -> INT8/FP8 execution
-```
-
-Lesson 6 đặt những artifact đó vào một **serving system**:
-
-```text
-optimized model artifact
-    |
-    | package into model repository
-    | write config.pbtxt
-    | choose backend
-    | configure scheduler / batching / instances
-    v
-NVIDIA Triton Inference Server
-    |
-    | HTTP / gRPC / C API
-    | metrics / health / model management
-    v
-production inference endpoint
-```
-
-Tư duy quan trọng nhất của bài này:
+Lesson 1–5: kiến trúc → ONNX → ORT → TensorRT → quantization. Lesson 6 đặt artifact vào **serving**:
 
 ```text
-TensorRT optimizes one model execution.
-Triton optimizes how many requests, models, versions, queues, and backends are served together.
+optimized model → model repository + config.pbtxt → Triton
+  → HTTP/gRPC + metrics/health → production endpoint
 ```
 
-Một model nhanh chưa chắc là một service nhanh. Một engine TensorRT chạy tốt bằng `trtexec` chưa chắc đã đạt p99 tốt khi có 200 concurrent clients. Triton là nơi bạn phải suy nghĩ về queueing, batching, model instances, request protocols, monitoring, versioning và rollout.
+```{mermaid}
+%%| label: fig-l6-spine
+%%| fig-cap: "Sơ đồ xương sống Lesson 6: Client → Frontend → Scheduler → Backend → Model instances."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  C([Client]) -->|"HTTP/gRPC"| F([Frontend])
+  F --> S([Per-model scheduler])
+  S -->|"batch / queue"| B([Backend])
+  B --> I([Model instances])
+  I --> R([Response])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class C,R soft
+  class F,S hot
+  class B,I ok
+```
 
-
-
-## Learning outcomes
-
-Sau bài này, bạn cần giải thích và thực hành được:
-
-1. Triton Inference Server giải quyết vấn đề gì trong production inference.
-2. Triton khác gì với TensorRT, ONNX Runtime, Flask/FastAPI và Kubernetes.
-3. Model repository là gì và vì sao nó là deployment interface quan trọng nhất của Triton.
-4. Cấu trúc thư mục chuẩn của một Triton model repository.
-5. Vai trò của `config.pbtxt`.
-6. Cách khai báo `backend`, `platform`, `max_batch_size`, `input`, `output`, `instance_group`, `dynamic_batching`.
-7. Sự khác nhau giữa backend TensorRT, ONNX Runtime, PyTorch, Python backend, DALI, FIL, vLLM và TensorRT-LLM ở mức khái niệm.
-8. Khi nào nên serve ONNX trực tiếp, khi nào nên serve TensorRT plan file.
-9. Cách Triton nhận request qua HTTP/gRPC rồi chuyển request tới per-model scheduler.
-10. Dynamic batching hoạt động như thế nào.
-11. Vì sao dynamic batching tăng throughput nhưng có thể làm p99 latency xấu đi.
-12. `preferred_batch_size` và `max_queue_delay_microseconds` có ý nghĩa gì.
-13. Vì sao `preferred_batch_size` không nên dùng bừa bãi.
-14. Cách cấu hình `instance_group` để chạy nhiều execution instances.
-15. Sự khác nhau giữa client concurrency, model batch size, dynamic batch size và instance count.
-16. Cách benchmark Triton bằng `perf_analyzer`.
-17. Khi nào dùng `model_analyzer`.
-18. Cách đọc Triton metrics ở endpoint `/metrics`.
-19. Model control modes `none`, `explicit`, `poll` khác nhau thế nào.
-20. Vì sao `poll` mode thường không nên là lựa chọn production mặc định.
-21. Cách dùng version directory và `version_policy` để quản lý model versions.
-22. Cách debug lỗi model không load, shape mismatch, batching không hoạt động, throughput thấp, GPU utilization thấp, memory tăng cao.
-23. Cách thiết kế một deployment Triton an toàn hơn: health checks, model warmup, version pinning, performance baseline, rollback.
-24. Cách xây mini project end-to-end: ONNX/TensorRT model -> Triton repository -> dynamic batching -> benchmark -> metrics.
-
-
-
-## Prerequisites
-
-Bạn nên đã nắm:
-
-- Tensor shape và batch dimension.
-- ONNX graph, input/output names, dynamic axes.
-- ONNX Runtime session và Execution Providers.
-- TensorRT engine / plan file.
-- Quantization cơ bản.
-- Docker cơ bản.
-- Python, NumPy.
-- Linux command line.
-- NVIDIA GPU + driver + Docker NVIDIA Container Toolkit nếu muốn chạy GPU labs.
-
-Các lab trong bài chia thành hai nhóm:
-
-1. **Triton generic labs**: có thể đọc và chuẩn bị trên bất kỳ máy nào.
-2. **GPU-serving labs**: cần NVIDIA GPU, Docker, NVIDIA Container Toolkit và Triton container.
-
-Nếu bạn chưa có GPU, vẫn nên học toàn bộ bài này. Bạn có thể hiểu repository layout, config, client, benchmark methodology và production checklist trước; khi có GPU thì chạy lại các lab.
-
-
-
-## Vì sao cần Triton?
-
-Một cách đơn giản, Triton giúp bạn biến nhiều loại model artifact thành một inference service có khả năng vận hành.
-
-Model artifact có thể là:
+Tư duy cốt lõi:
 
 ```text
-model.onnx
-model.plan
-model.pt
-model.py
-model.savedmodel
-model.dali
+TensorRT tối ưu một lần execute model.
+Triton tối ưu cách phục vụ nhiều request, model, version, queue và backend cùng lúc.
 ```
 
-Nhưng production service cần nhiều thứ hơn:
+Engine nhanh với `trtexec` chưa đảm bảo p99 tốt với 200 concurrent clients.
+
+
+## Learning outcomes {.unnumbered}
+
+1. Triton giải quyết gì; khác TRT / ORT / FastAPI / K8s  
+2. Model repository layout và `config.pbtxt`  
+3. `backend`/`platform`, `max_batch_size`, input/output dims  
+4. Backends: TensorRT, ONNX Runtime, PyTorch, Python, LLM-related  
+5. Dynamic batching: delay, preferred batch, shape, p99 trade-off  
+6. `instance_group` vs batch vs client concurrency  
+7. Ensemble, model control modes, versioning  
+8. Health/metrics, Perf Analyzer, Model Analyzer  
+9. Debug load/shape/batching/throughput/memory; production checklist  
+
+
+## Prerequisites {.unnumbered}
+
+- Shape, ONNX I/O names, ORT, TensorRT plan, quantization cơ bản (Lesson 2–5)  
+- Docker + Python/NumPy; GPU labs cần NVIDIA Container Toolkit  
+
+::: {.callout-tip icon=false collapse="true"}
+## Hai nhóm lab
+**Generic:** repository, config, client, methodology — học được không GPU.  
+**GPU-serving:** Docker Triton, dynamic batch, Perf Analyzer, TensorRT plan — chạy khi có GPU.
+:::
+
+
+## Vì sao cần Triton — và không phải gì? {#sec-why-triton}
+
+> FastAPI + `session.run()` đã đủ production chưa — Triton thêm gì?
+
+::: {.callout-important icon=false}
+## Ý chính
+Triton biến nhiều artifact (`onnx`/`plan`/`pt`/`py`…) thành service có **HTTP/gRPC, validation, batching, concurrency, multi-model, versioning, health, metrics**. Nó **không thay** TensorRT hay ORT — nó **serve** chúng. `frontend ≠ scheduler ≠ backend ≠ model instance`.
+:::
+
+Production cần thêm ngoài “chạy model”: endpoint, request validation, batching, concurrency, multi-model, versioning, health, metrics, rollout, GPU tuning.
+
+Tự viết FastAPI thường phải tự lo parse → preprocess → H2D → runtime → batch thủ công → concurrent → versions → metrics → readiness → rollback.
+
+Triton flow:
 
 ```text
-HTTP/gRPC endpoint
-request validation
-batching
-concurrency
-multi-model serving
-model versioning
-health checks
-metrics
-rolling update
-resource isolation
-GPU utilization tuning
+client → HTTP/gRPC → frontend → per-model scheduler
+  → backend runtime → model instance → response
 ```
 
-Nếu tự viết bằng Flask/FastAPI, bạn phải tự xử lý rất nhiều thứ:
+| Công cụ | Vai trò | Liên quan Triton |
+|:--------|:--------|:-----------------|
+| ONNX | IR / interchange | Serve qua ORT backend |
+| ONNX Runtime | Chạy ONNX | Có ORT backend |
+| TensorRT | Compiler/runtime NVIDIA | Serve `.plan` |
+| Triton | Inference serving server | Queue, batch, versions, metrics |
+| Kubernetes | Orchestration | Deploy Triton pod |
+| FastAPI | Web generic | Thiếu inference scheduler/batching chuyên dụng |
+| vLLM / TRT-LLM | LLM serving | Có thể gắn như backend |
 
 ```text
-client request
-  -> parse JSON / bytes
-  -> preprocess
-  -> copy CPU to GPU
-  -> call runtime
-  -> batch manually?
-  -> handle concurrent requests?
-  -> manage model versions?
-  -> expose metrics?
-  -> handle readiness/liveness?
-  -> rollback?
+ONNX/TensorRT: how to execute efficiently.
+Triton: how to serve that execution to many clients.
 ```
 
-Triton cung cấp một serving layer chuẩn:
+::: {.callout-tip icon=false collapse="true"}
+## Mental model 5 khối + multi-model
+Client → Frontend → **Model repository** (`model` + `config.pbtxt`) → **Per-model scheduler** (batch/queue) → **Backend** → **Model instances** (GPU/CPU).
+
+Mỗi model có scheduler/config/backend/instances **riêng**. Một server có thể đồng thời: `image_classifier_trt` (GPU0 + dynamic batch), `text_embedding_onnx` (GPU1), `preprocess_python` (CPU), `llm_vllm` (GPU2/3).
+:::
+
+
+## Architecture và request path {#sec-architecture}
+
+> Request đi qua những lớp nào trước khi chạm GPU?
+
+::: {.callout-important icon=false}
+## Ý chính
+Path: client → frontend (parse/validate) → **scheduler** (default / dynamic / sequence / ensemble) → gán **model instance** → **backend** execute → validate output → metrics → response. Nhầm lẫn lớp sẽ debug sai chỗ (protocol vs queue vs kernel).
+:::
+
+```{mermaid}
+%%| label: fig-l6-request
+%%| fig-cap: "Request path: Frontend (tô sáng) validate protocol trước khi vào scheduler."
+%%| fig-width: 6.5
+%%| fig-align: "center"
+flowchart TB
+  C([Client HTTP/gRPC]) --> F([Frontend validate])
+  F --> S([Scheduler])
+  S --> I([Instance])
+  I --> B([Backend execute])
+  B --> O([Response + metrics])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class C,S,I,O soft
+  class F hot
+  class B ok
+```
+
+| Lớp | Việc |
+|:----|:-----|
+| Frontend | Protocol, model name/version, tensor metadata |
+| Scheduler | Khi nào chạy; có batch với request khác không |
+| Backend | Gọi TRT / ORT / PyTorch / Python / custom |
+| Instance | Execution slot thật trên CPU/GPU |
+
+::: {.callout-tip icon=false collapse="true"}
+## Scheduler types (tóm tắt đủ dùng)
+**Default:** một request → một execution (không gom batch). Dùng khi không batch / traffic thấp / ultra-low lat / client đã batch / debug correctness.  
+**Dynamic batching:** gom nhiều request thành batch server-side (@sec-dynbatch).  
+**Sequence batching:** stateful / sequence (ASR, một số RNN).  
+**Ensemble:** pipeline nhiều model steps — ensemble **không** có compute instance riêng; child models mới có.  
+**Custom batching:** khi cần logic gom riêng (ít dùng ở mức bài này).
+:::
+
+
+## Model repository {#sec-repository}
+
+> Vì sao repository là deployment interface quan trọng nhất của Triton?
+
+::: {.callout-important icon=false}
+## Ý chính
+**Model repository** = filesystem chứa artifact + `config.pbtxt` + version dirs. Layout sai → model không load. Tên thư mục = model name (trừ khi config set `name`). Production: package repository từ CI → container/artifact → deploy.
+:::
+
+Layout chuẩn:
 
 ```text
-client
-  -> HTTP/gRPC/KServe protocol
-  -> Triton frontend
-  -> per-model scheduler
-  -> dynamic/sequence/ensemble scheduler
-  -> backend runtime
-  -> model instance
-  -> response
+<model-repository-path>/
+  <model-name>/
+    config.pbtxt
+    <version>/          # số nguyên: 1, 2, 3…
+      <model-definition-file>
 ```
-
-Điểm quan trọng:
-
-```text
-Triton does not replace TensorRT.
-Triton can serve TensorRT engines.
-
-Triton does not replace ONNX Runtime.
-Triton can use ONNX Runtime backend.
-
-Triton does not replace your model.
-Triton wraps your model into a production serving system.
-```
-
-
-
-## Mental model tổng quan
-
-Triton có thể được hiểu bằng 5 khối chính:
-
-```text
-              +-+
-Client  -> | HTTP / gRPC frontend |
-              +-+--+
-                         |
-                         v
-              +-+
-              |   Model repository   |
-              | model + config.pbtxt |
-              +-+--+
-                         |
-                         v
-              +-+
-              |  Per-model scheduler |
-              | batching / queues    |
-              +-+--+
-                         |
-                         v
-              +-+
-              |       Backend        |
-              | TensorRT / ONNX /... |
-              +-+--+
-                         |
-                         v
-              +-+
-              |   Model instances    |
-              | GPU / CPU execution  |
-              +-+
-```
-
-Triton không có một scheduler duy nhất cho toàn bộ server. Mỗi model có scheduler riêng, config riêng, backend riêng và instance group riêng.
-
-Ví dụ một server Triton có thể chạy cùng lúc:
-
-```text
-model_repository/
-  image_classifier_trt/      -> TensorRT backend, GPU 0, dynamic batching
-  text_embedding_onnx/       -> ONNX Runtime backend, GPU 1
-  preprocess_python/         -> Python backend, CPU
-  fraud_model_fil/           -> FIL backend, GPU 0
-  llm_vllm/                  -> vLLM backend, GPU 2/3
-```
-
-Điều này làm Triton rất phù hợp với production environments có nhiều model, nhiều framework và nhiều yêu cầu latency/throughput khác nhau.
-
-
-
-## Triton không phải là gì?
-
-Để học đúng, cần phân biệt Triton với các công cụ khác.
-
-| Công cụ               |                                     Vai trò chính |                                                     Triton liên quan thế nào |
-|-----------------------|--------------------------------------------------:|-----------------------------------------------------------------------------:|
-| ONNX                  |               Model interchange format / graph IR |                            Triton có thể serve ONNX qua ONNX Runtime backend |
-| ONNX Runtime          |                           Runtime chạy ONNX model |                                               Triton có ONNX Runtime backend |
-| TensorRT              | Compiler/runtime tối ưu inference trên NVIDIA GPU |                           Triton có TensorRT backend để serve `.plan` engine |
-| Triton                |                          Inference serving server |       Quản lý request, scheduler, backend, batching, model versions, metrics |
-| Kubernetes            |                           Container orchestration |                             Có thể deploy Triton pod/service trên Kubernetes |
-| Flask/FastAPI         |                             Generic web framework | Có thể dùng cho đơn giản, nhưng thiếu inference-specific scheduling/batching |
-| vLLM / TensorRT-LLM   |                              LLM serving/backends |                     Có thể tích hợp vào Triton như backend cho LLM use cases |
-
-Một câu ngắn gọn:
-
-```text
-ONNX/TensorRT answer: how to execute a model efficiently.
-Triton answers: how to serve model execution efficiently to many clients.
-```
-
-
-
-## Triton architecture chi tiết
-
-Khi một request vào Triton, flow thường là:
-
-```text
-1. Client sends request
-   - HTTP/REST
-   - gRPC
-   - C API / in-process API
-
-2. Triton frontend receives request
-   - parse protocol
-   - validate model name/version
-   - validate input tensor metadata
-
-3. Request goes to model scheduler
-   - default scheduler
-   - dynamic batcher
-   - sequence batcher
-   - ensemble scheduler
-
-4. Scheduler assigns work to a model instance
-   - one or more instances
-   - CPU or GPU
-   - selected backend
-
-5. Backend executes model
-   - TensorRT engine
-   - ONNX Runtime session
-   - PyTorch runtime
-   - Python execute function
-   - custom backend
-
-6. Triton collects outputs
-   - shape/type validation
-   - response creation
-   - metrics update
-
-7. Response returned to client
-```
-
-Khái niệm cần nhớ:
-
-```text
-frontend != scheduler != backend != model instance
-```
-
-- **Frontend** xử lý protocol.
-- **Scheduler** quyết định request nào được chạy khi nào và có được batch với request khác không.
-- **Backend** biết cách gọi runtime cụ thể.
-- **Model instance** là execution slot thực sự.
-
-Một lỗi thường gặp là nghĩ `dynamic_batching {}` nghĩa là backend tự biết batch. Không đúng. Triton scheduler tạo batch rồi backend nhận một tensor đã có batch dimension.
-
-
-
-## Model repository
-
-### Model repository là gì?
-
-Model repository là một thư mục filesystem chứa model artifacts và config để Triton load.
 
 Ví dụ:
 
 ```text
 model_repository/
-  resnet50_onnx/
+  tiny_classifier_onnx/
     config.pbtxt
-    1/
-      model.onnx
-  resnet50_trt/
+    1/model.onnx
+  tiny_classifier_trt/
     config.pbtxt
-    1/
-      model.plan
-  preprocess_python/
+    1/model.plan
+  normalize_python/
     config.pbtxt
-    1/
-      model.py
+    1/model.py
 ```
-
-Bạn start Triton bằng cách chỉ vào repository:
 
 ```bash
 tritonserver --model-repository=/models
-```
 
-Với Docker:
-
-```bash
-export RELEASE=26.04
-
+export RELEASE=26.04   # chỉnh theo NGC tag bạn dùng
 docker run --gpus all --rm -it --net host \
   -v $PWD/model_repository:/models \
   nvcr.io/nvidia/tritonserver:${RELEASE}-py3 \
   tritonserver --model-repository=/models
 ```
 
-Trong production, model repository thường được build từ CI/CD pipeline:
+**Version directories:** số nguyên tăng dần. `version_policy` quyết định version nào serve. Client có thể request version cụ thể.
 
-```text
-train/export pipeline
-  -> validate model
-  -> benchmark model
-  -> package model repository
-  -> push artifact/container
-  -> deploy Triton
-```
+::: {.callout-tip icon=false collapse="true"}
+## `version_policy` — protobuf cụ thể
 
-### Required layout
-
-Layout cơ bản:
-
-```text
-<model-repository-path>/
-  <model-name>/
-    config.pbtxt
-    <version>/
-      <model-definition-file>
-    <version>/
-      <model-definition-file>
-```
-
-Ví dụ ONNX:
-
-```text
-model_repository/
-  tiny_classifier_onnx/
-    config.pbtxt
-    1/
-      model.onnx
-```
-
-Ví dụ TensorRT:
-
-```text
-model_repository/
-  tiny_classifier_trt/
-    config.pbtxt
-    1/
-      model.plan
-```
-
-Ví dụ Python backend:
-
-```text
-model_repository/
-  normalize_python/
-    config.pbtxt
-    1/
-      model.py
-```
-
-Quy tắc quan trọng:
-
-```text
-model directory name = model name, unless config.pbtxt explicitly sets name.
-version directory must be numeric, e.g. 1, 2, 42.
-```
-
-### Version directories
-
-Triton dùng thư mục version để quản lý nhiều phiên bản model:
-
-```text
-model_repository/
-  fraud_detector/
-    config.pbtxt
-    1/
-      model.onnx
-    2/
-      model.onnx
-    3/
-      model.onnx
-```
-
-Nếu không khai báo `version_policy`, Triton mặc định chỉ serve version mới nhất theo số version lớn nhất.
-
-Ví dụ serve 2 version mới nhất:
+Nếu **bỏ** `version_policy`, mặc định thường chỉ serve **version số cao nhất**.
 
 ```protobuf
-version_policy: {
-  latest: { num_versions: 2 }
-}
-```
+# Chỉ giữ 2 version mới nhất
+version_policy: { latest: { num_versions: 2 } }
 
-Ví dụ chỉ serve version cụ thể:
+# Chỉ serve các version chỉ định
+version_policy: { specific: { versions: [ 1, 3 ] } }
 
-```protobuf
-version_policy: {
-  specific: { versions: [1, 3] }
-}
-```
-
-Ví dụ serve tất cả version:
-
-```protobuf
+# Load mọi version có trong repo
 version_policy: { all: {} }
 ```
 
-Production recommendation:
+Production rule: **không dựa vào “latest ngẫu nhiên”** cho rollout quan trọng — khai báo `version_policy` rõ khi cần canary / giữ bản cũ để rollback.
+:::
 
-```text
-Do not rely on accidental latest behavior for critical rollout.
-Make version_policy explicit when rollout behavior matters.
-```
+::: {.callout-tip icon=false collapse="true"}
+## CI/CD package flow
+`train/export → validate → benchmark → package repository → push artifact/container → deploy Triton`. Không sửa file “live” lung tung trên production filesystem (đặc biệt với poll mode — @sec-rollout).
+:::
 
 
+## `config.pbtxt`: trái tim deployment {#sec-config}
 
-## `config.pbtxt`: trái tim của Triton deployment
+> `max_batch_size > 0` thì `dims` có gồm batch dimension không?
 
-`config.pbtxt` mô tả model sẽ được Triton load và serve như thế nào.
+::: {.callout-important icon=false}
+## Ý chính
+`config.pbtxt` mô tả cách Triton load/serve model. Khi **`max_batch_size > 0`**, `dims` **không** gồm batch — request shape = `[B] + dims`. Khi **`max_batch_size: 0`**, `dims` = full shape (không batch ẩn). Tên I/O phải khớp artifact.
+:::
 
-Một cấu hình tối thiểu thường gồm:
+Config tối thiểu (ONNX):
 
 ```protobuf
 name: "tiny_classifier_onnx"
@@ -503,1756 +292,675 @@ output [
 ]
 ```
 
-### `name`
+| Field | Ý nghĩa |
+|:------|:--------|
+| `name` | Nên trùng tên thư mục; set rõ cho đọc được |
+| `backend` / `platform` | Loại runtime; hiện đại đọc docs backend |
+| `max_batch_size` | Batch tối đa Triton được tạo; `0` = không batching |
+| `input`/`output` | `name`, `data_type`, `dims` khớp model |
 
-```protobuf
-name: "tiny_classifier_onnx"
-```
-
-Nếu không ghi `name`, Triton giả định tên model là tên thư mục.
-
-Best practice:
-
-```text
-Set name explicitly for readability, but keep it identical to directory name.
-```
-
-### `backend` vs `platform`
-
-Có hai cách khai báo loại model:
-
-```protobuf
-backend: "onnxruntime"
-```
-
-hoặc:
-
-```protobuf
-platform: "tensorrt_plan"
-```
-
-Trong thực tế hiện đại, bạn nên ưu tiên đọc documentation backend tương ứng, vì mỗi backend có convention riêng về filename, config và options.
-
-Ví dụ thường gặp:
-
-| Artifact            | Backend/platform thường gặp | File thường gặp  |
-|---------------------|-----------------------------|------------------|
-| ONNX                | `backend: "onnxruntime"`    | `model.onnx`     |
-| TensorRT engine     | `platform: "tensorrt_plan"` | `model.plan`     |
-| Python backend      | `backend: "python"`         | `model.py`       |
-| PyTorch TorchScript | `backend: "pytorch"`        | `model.pt`       |
-
-### `max_batch_size`
-
-`max_batch_size` là một trong những field dễ gây nhầm nhất.
-
-Nếu model hỗ trợ batching ở dimension đầu tiên:
-
-```protobuf
-max_batch_size: 8
-input [
-  {
-    name: "input"
-    data_type: TYPE_FP32
-    dims: [ 3, 224, 224 ]
-  }
-]
-```
-
-Điều này có nghĩa là request tensor shape sẽ là:
+| Artifact | Khai báo thường gặp | File |
+|:---------|:--------------------|:-----|
+| ONNX | `backend: "onnxruntime"` | `model.onnx` |
+| TensorRT | `platform: "tensorrt_plan"` | `model.plan` |
+| Python | `backend: "python"` | `model.py` |
+| TorchScript | `backend: "pytorch"` | `model.pt` |
 
 ```text
-[batch, 3, 224, 224]
+max_batch_size > 0:  request shape = [B] + config dims
+max_batch_size = 0:  request shape = config dims
 ```
 
-Không phải:
-
-```text
-[3, 224, 224]
-```
-
-Trong `config.pbtxt`, khi `max_batch_size > 0`, `dims` **không bao gồm batch dimension**.
-
-Nếu model không hỗ trợ batching:
+Ví dụ không batch:
 
 ```protobuf
 max_batch_size: 0
-input [
-  {
-    name: "input"
-    data_type: TYPE_FP32
-    dims: [ 1, 3, 224, 224 ]
-  }
-]
+input [{ name: "input" data_type: TYPE_FP32 dims: [ 1, 3, 224, 224 ] }]
 ```
 
-Khi `max_batch_size: 0`, `dims` mô tả toàn bộ shape, không có batch dimension ẩn.
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Export ONNX không đặt `input_names`/`output_names` → tên kiểu `input.1`, `onnx::Gemm_23` → config dễ sai. Export nên đặt tên rõ + `dynamic_axes` cho batch.
+:::
 
-Mental model:
-
-```text
-max_batch_size > 0:
-    request shape = [B] + config dims
-
-max_batch_size = 0:
-    request shape = config dims
-```
-
-###  `input` và `output`
-
-Mỗi input/output cần:
-
-```protobuf
-name: "..."
-data_type: TYPE_FP32
-dims: [ ... ]
-```
-
-Tên input/output phải khớp với model artifact.
-
-Ví dụ ONNX model có input name là `images`, output name là `probabilities`:
-
-```protobuf
-input [
-  {
-    name: "images"
-    data_type: TYPE_FP32
-    dims: [ 3, 224, 224 ]
-  }
-]
-
-output [
-  {
-    name: "probabilities"
-    data_type: TYPE_FP32
-    dims: [ 1000 ]
-  }
-]
-```
-
-Nếu bạn export ONNX mà không đặt `input_names` và `output_names`, tên có thể thành dạng khó đọc như `input.1`, `output`, `onnx::Gemm_23`. Điều này làm config dễ sai.
-
-Best practice khi export ONNX:
+::: {.callout-tip icon=false collapse="true"}
+## Export ONNX thân thiện Triton
 
 ```python
 torch.onnx.export(
-    model,
-    example_input,
-    "model.onnx",
-    input_names=["input"],
-    output_names=["logits"],
+    model, example_input, "model.onnx",
+    input_names=["input"], output_names=["logits"],
     dynamic_axes={"input": {0: "batch"}, "logits": {0: "batch"}},
     opset_version=17,
 )
 ```
+:::
 
 
+## Backends: TensorRT, ONNX, Python và khác {#sec-backends}
 
-## Backends trong Triton
+> Khi nào serve `.plan`, khi nào serve `.onnx`, khi nào Python backend?
 
-Backend là lớp biết cách execute model artifact.
+::: {.callout-important icon=false}
+## Ý chính
+**Backend** = lớp biết execute artifact. TRT: perf cao, phụ thuộc GPU/version/profile. ORT: dễ/portable hơn. Python: preprocess/postprocess linh hoạt nhưng dễ bottleneck. LLM: vLLM / TensorRT-LLM như backend riêng (Lesson 9).
+:::
 
-```text
-Triton scheduler -> backend -> runtime/library -> model execution
-```
+| Backend | Artifact | Ưu | Nhược |
+|:--------|:---------|:---|:------|
+| TensorRT | `model.plan` | Latency/throughput tốt; fusion/tactics/precision | Portability; profiles; build phức tạp |
+| ONNX Runtime | `model.onnx` | Dễ deploy; CPU/GPU | Có thể chậm hơn TRT; fallback EP |
+| PyTorch | `model.pt` | Gần training stack | Thường không tối ưu bằng TRT |
+| Python | `model.py` | Pre/post, glue logic | GIL/CPU; dễ thành bottleneck pipeline |
+| DALI / FIL / vLLM / TRT-LLM | theo docs | Pipeline data / tabular / LLM | Cần hiểu workload riêng |
 
-### TensorRT backend
-
-Dùng khi bạn đã có `.plan` engine:
-
-```text
-model.plan
-```
-
-Ưu điểm:
-
-- Latency/throughput thường tốt nhất trên NVIDIA GPU.
-- Tận dụng TensorRT optimizations: fusion, tactics, precision, memory planning.
-- Phù hợp production high-performance inference.
-
-Nhược điểm:
-
-- Engine thường phụ thuộc GPU architecture, TensorRT version, CUDA version.
-- Dynamic shape cần optimization profiles đúng.
-- Build/deploy phức tạp hơn ONNX.
-
-Repository:
-
-```text
-model_repository/
-  resnet50_trt/
-    config.pbtxt
-    1/
-      model.plan
-```
-
-Config tối thiểu:
+TensorRT config tối thiểu:
 
 ```protobuf
 name: "resnet50_trt"
 platform: "tensorrt_plan"
 max_batch_size: 32
-
-input [
-  {
-    name: "input"
-    data_type: TYPE_FP32
-    dims: [ 3, 224, 224 ]
-  }
-]
-
-output [
-  {
-    name: "logits"
-    data_type: TYPE_FP32
-    dims: [ 1000 ]
-  }
-]
+input [{ name: "input" data_type: TYPE_FP32 dims: [ 3, 224, 224 ] }]
+output [{ name: "logits" data_type: TYPE_FP32 dims: [ 1000 ] }]
 ```
 
-### ONNX Runtime backend
+**Plan compatibility:** build trên đúng GPU arch + TensorRT/CUDA của môi trường deploy (Lesson 4). Dynamic batching phải khớp **optimization profiles** — `max_batch_size` Triton không được vượt `max` profile.
 
-Dùng khi bạn có `.onnx` model:
+**Python backend khi nào:** preprocess/postprocess, feature engineering nhẹ, glue không có backend native. Tránh logic nặng trên critical path nếu GPU model đã nhanh.
 
-```text
-model.onnx
-```
+::: {.callout-tip icon=false collapse="true"}
+## Protocols và client
 
-Ưu điểm:
-
-- Dễ deploy hơn TensorRT plan.
-- Portable hơn.
-- Phù hợp nhiều model khi chưa cần maximum performance.
-- Có thể chạy CPU hoặc GPU tùy environment/backend options.
-
-Nhược điểm:
-
-- Không luôn nhanh bằng TensorRT engine đã tối ưu tốt.
-- Có thể gặp vấn đề với unsupported ops hoặc provider fallback.
-
-Repository:
-
-```text
-model_repository/
-  resnet50_onnx/
-    config.pbtxt
-    1/
-      model.onnx
-```
-
-Config:
-
-```protobuf
-name: "resnet50_onnx"
-backend: "onnxruntime"
-max_batch_size: 32
-
-input [
-  {
-    name: "input"
-    data_type: TYPE_FP32
-    dims: [ 3, 224, 224 ]
-  }
-]
-
-output [
-  {
-    name: "logits"
-    data_type: TYPE_FP32
-    dims: [ 1000 ]
-  }
-]
-```
-
-### PyTorch backend
-
-Dùng cho TorchScript model:
-
-```text
-model.pt
-```
-
-Ưu điểm:
-
-- Dễ nếu pipeline PyTorch đã có sẵn.
-- Ít cần conversion hơn so với ONNX/TensorRT.
-
-Nhược điểm:
-
-- Performance có thể không tối ưu bằng TensorRT.
-- Naming convention input/output cần cẩn thận.
-- Không nên xem là lựa chọn tối ưu mặc định cho GPU inference latency-sensitive.
-
-### Python backend
-
-Python backend cho phép viết logic tùy chỉnh bằng Python:
-
-```text
-model.py
-```
-
-Use cases:
-
-- Preprocessing.
-- Postprocessing.
-- Lightweight business logic.
-- Wrapping custom Python runtime.
-- Calling another model through Business Logic Scripting.
-
-Không nên lạm dụng Python backend cho compute nặng nếu mục tiêu là latency thấp, vì Python overhead và GIL/interpreter behavior có thể trở thành bottleneck.
-
-Python backend skeleton:
-
-```python
-import numpy as np
-import triton_python_backend_utils as pb_utils
-
-
-class TritonPythonModel:
-    def initialize(self, args):
-        # Called once when the model is loaded.
-        pass
-
-    def execute(self, requests):
-        responses = []
-        for request in requests:
-            input_tensor = pb_utils.get_input_tensor_by_name(request, "INPUT")
-            x = input_tensor.as_numpy()
-
-            y = x.astype(np.float32) / 255.0
-
-            output_tensor = pb_utils.Tensor("OUTPUT", y)
-            response = pb_utils.InferenceResponse(output_tensors=[output_tensor])
-            responses.append(response)
-
-        return responses
-
-    def finalize(self):
-        # Called once when model is unloaded.
-        pass
-```
-
-Important rule:
-
-```text
-execute() receives a list of requests and must return a list of responses with matching length for standard coupled models.
-```
-
-### DALI, FIL, vLLM, TensorRT-LLM và custom backend
-
-Triton không chỉ phục vụ CNN/Transformer thông thường.
-
-Một số backend phổ biến:
-
-| Backend        | Use case                                                |
-|----------------|---------------------------------------------------------|
-| DALI           | GPU-accelerated data loading / preprocessing pipelines  |
-| FIL            | Forest Inference Library, tree-based models             |
-| vLLM           | LLM serving backend                                     |
-| TensorRT-LLM   | Optimized NVIDIA LLM inference                          |
-| Custom backend | Runtime hoặc logic riêng bằng C/C++                     |
-
-Trong chuỗi học này, trọng tâm của Lesson 6 là serving foundation. LLM serving với vLLM/TensorRT-LLM nên học sau khi đã nắm dynamic batching, sequence batching, decoupled models và metrics.
-
-
-
-## Request protocols và client
-
-Triton hỗ trợ nhiều cách gọi inference:
-
-```text
-HTTP/REST
-gRPC
-C API
-in-process API
-```
-
-Trong lab, ta thường dùng:
-
-- HTTP client cho dễ debug bằng `curl`.
-- Python `tritonclient` cho inference thực tế.
-- gRPC khi cần performance và streaming tốt hơn.
-
-Các port mặc định thường gặp:
-
-```text
-8000: HTTP/REST
-8001: gRPC
-8002: metrics
-```
-
-Health check:
-
-```bash
-curl -v localhost:8000/v2/health/live
-curl -v localhost:8000/v2/health/ready
-```
-
-Model metadata:
-
-```bash
-curl localhost:8000/v2/models/tiny_classifier_onnx
-```
-
-Server metadata:
+| Port (mặc định) | Vai trò |
+|:----------------|:--------|
+| `:8000` | HTTP inference / health / model metadata |
+| `:8001` | gRPC |
+| `:8002` | Prometheus metrics |
 
 ```bash
 curl localhost:8000/v2
+curl localhost:8000/v2/models/tiny_classifier_onnx
 ```
 
-Metrics:
-
-```bash
-curl localhost:8002/metrics
-```
-
-Python client example:
-
-```python
-import numpy as np
-import tritonclient.http as httpclient
-
-client = httpclient.InferenceServerClient(url="localhost:8000")
-
-x = np.random.randn(1, 1, 28, 28).astype(np.float32)
-
-inputs = [httpclient.InferInput("input", x.shape, "FP32")]
-inputs[0].set_data_from_numpy(x)
-
-outputs = [httpclient.InferRequestedOutput("logits")]
-
-response = client.infer(
-    model_name="tiny_classifier_onnx",
-    inputs=inputs,
-    outputs=outputs,
-)
-
-logits = response.as_numpy("logits")
-print(logits.shape)
-print(logits)
-```
+Client: `tritonclient` Python (HTTP/gRPC), Perf Analyzer; còn C API / in-process cho embedding. **HTTP** tiện debug; **gRPC** thường tốt hơn binary tensor / throughput / streaming. KServe/V2 inference protocol là chuẩn API.
+:::
 
 
+## Dynamic batching deep dive {#sec-dynbatch}
 
-## Scheduler trong Triton
+> Vì sao throughput tăng nhưng p99 có thể xấu — và `preferred_batch_size` khi nào dùng?
 
-Scheduler quyết định request được chạy khi nào.
+::: {.callout-important icon=false}
+## Ý chính
+Dynamic batching gom nhiều request (thường batch-1) thành batch lớn hơn server-side. Có ích khi traffic dày, model batchable, GPU chưa saturate ở batch 1, SLO cho phép queue delay. Tune theo **SLO (p99)**, không chỉ throughput. Bắt đầu `dynamic_batching { }` — **không** set `preferred_batch_size` mặc định nếu chưa có bằng chứng benchmark.
+:::
 
-Triton có nhiều loại scheduling/batching:
-
-| Scheduler/batcher   | Use case                                                        |
-|---------------------|-----------------------------------------------------------------|
-| Default scheduler   | Stateless model, không cần dynamic batching                     |
-| Dynamic batcher     | Stateless model, muốn tăng throughput bằng batching server-side |
-| Sequence batcher    | Stateful model, request theo chuỗi cần cùng model instance      |
-| Ensemble scheduler  | Pipeline nhiều model/preprocess/postprocess                     |
-| Custom batching     | Logic batching đặc biệt                                         |
-
-### Default scheduler
-
-Nếu không bật dynamic batching hoặc sequence batching, request được đưa vào default scheduler.
-
-Dùng khi:
-
-- Model không support batching.
-- Low traffic.
-- Latency cực nhạy và không muốn queue delay.
-- Model đã được client batch sẵn.
-- Bạn đang debug correctness.
-
-### Dynamic batching
-
-Dynamic batching cho phép Triton gom nhiều request riêng lẻ thành một batch lớn hơn.
-
-Ví dụ 4 client gửi request batch 1:
+Ví dụ số:
 
 ```text
-client A: [1, 3, 224, 224]
-client B: [1, 3, 224, 224]
-client C: [1, 3, 224, 224]
-client D: [1, 3, 224, 224]
+Batch 1 latency: 3 ms  →  8 request riêng: 8×3 = 24 ms GPU time
+Batch 8 latency: 8 ms  →  1 batch: 8 ms GPU time
 ```
 
-Triton có thể gom thành:
+Throughput tăng; mỗi request có thể thêm queue delay.
+
+Trực giác gom batch:
 
 ```text
-backend input: [4, 3, 224, 224]
+4 clients gửi [1,3,224,224]
+  → Triton gom → backend nhận [4,3,224,224]
 ```
 
-Điều này thường tăng throughput vì GPU xử lý batch lớn hiệu quả hơn.
+`dynamic_batching { }` = bước đầu: **không chờ mãi** đến khi đầy `max_batch_size`. Delay dài hơn → batch lớn hơn → thr↑, rủi ro p99↑.
 
-Bật dynamic batching:
-
-```protobuf
-dynamic_batching { }
-```
-
-Cấu hình thêm:
-
-```protobuf
-dynamic_batching {
-  preferred_batch_size: [ 4, 8 ]
-  max_queue_delay_microseconds: 100
-}
-```
-
-Nhưng hãy nhớ:
-
-```text
-Dynamic batching trades queueing latency for better compute efficiency.
-```
-
-### Sequence batching
-
-Sequence batching dành cho stateful models, ví dụ:
-
-- Streaming ASR.
-- Stateful RNN.
-- Conversation/session state.
-- Iterative generation patterns.
-
-Nó đảm bảo các request trong cùng một sequence được route đúng tới model instance cần giữ state.
-
-Mental model:
-
-```text
-Dynamic batching:
-    stateless requests can be mixed freely.
-
-Sequence batching:
-    requests have correlation ID and sequence boundaries.
-```
-
-Bài này chỉ giới thiệu sequence batching ở mức khái niệm. Khi học LLM serving hoặc streaming speech, bạn sẽ quay lại phần này sâu hơn.
-
-### Ensemble scheduler
-
-Ensemble model cho phép định nghĩa pipeline gồm nhiều model:
-
-```text
-raw image
-   -> preprocess_python
-   -> classifier_trt
-   -> postprocess_python
-   -> final result
-```
-
-Client chỉ gọi một endpoint:
-
-```text
-image_classifier_pipeline
-```
-
-Triton điều phối data flow giữa các model nội bộ.
-
-Điều quan trọng:
-
-```text
-Ensemble itself does not execute compute.
-The composing models execute compute.
-```
-
-Vì vậy ensemble model không có `instance_group`; instance groups nằm ở các model con.
-
-
-
-## Dynamic batching deep dive
-
-Dynamic batching là feature quan trọng nhất để cải thiện GPU utilization trong nhiều inference services.
-
-### Khi nào dynamic batching có ích?
-
-Dynamic batching thường có ích khi:
-
-- Requests đến nhiều và đều.
-- Mỗi request batch nhỏ, thường batch 1.
-- Model support batch dimension.
-- GPU chưa saturate ở batch 1.
-- SLO latency cho phép queue delay nhỏ.
-- Compute time giảm tương đối khi batch lớn hơn.
-
-Ví dụ:
-
-```text
-Batch 1 latency: 3 ms
-Batch 8 latency: 8 ms
-```
-
-Nếu chạy 8 request riêng lẻ:
-
-```text
-8 * 3 ms = 24 ms GPU time
-```
-
-Nếu batch lại:
-
-```text
-1 * 8 ms = 8 ms GPU time
-```
-
-Throughput tăng đáng kể, dù từng request có thể thêm queue delay.
-
-### Khi nào dynamic batching không giúp nhiều?
-
-Dynamic batching có thể không giúp khi:
-
-- Traffic thấp, không có request để gom.
-- Model không support batching.
-- Input shapes khác nhau quá nhiều.
-- Preprocessing/postprocessing mới là bottleneck.
-- Model đã saturate GPU ở batch 1.
-- p99 latency budget quá chặt.
-- Client đã gửi batch lớn sẵn.
-- Model là autoregressive LLM cần continuous batching riêng.
-
-###  `max_batch_size`
-
-`max_batch_size` là batch size lớn nhất Triton được phép tạo.
+| Có ích khi | Ít ích khi |
+|:-----------|:-----------|
+| Nhiều request batch-1 | Traffic thấp |
+| GPU chưa saturate | Model không batch / shape lệch nhiều |
+| SLO cho phép delay nhỏ | Pre/post là bottleneck; p99 quá chặt |
+| Compute giảm tương đối khi batch↑ | Client đã gửi batch lớn; LLM cần continuous batching |
 
 ```protobuf
 max_batch_size: 32
-```
 
-Nếu `max_batch_size: 32`, Triton có thể tạo batch tối đa 32 request elements.
-
-Nhưng không nên đặt quá cao tùy tiện:
-
-- Batch quá lớn có thể tăng latency.
-- Batch quá lớn có thể vượt TensorRT optimization profile.
-- Batch quá lớn có thể tăng memory.
-- Batch quá lớn có thể gây p99 spike.
-
-###  `dynamic_batching {}` default
-
-Cấu hình tối thiểu:
-
-```protobuf
 dynamic_batching { }
-```
 
-Với default, dynamic batcher cố tạo batch lớn nhất có thể tới `max_batch_size`, nhưng không cố tình chờ lâu để đủ batch nếu chưa có request phù hợp.
-
-Đây là cấu hình nên thử đầu tiên.
-
-###  `max_queue_delay_microseconds`
-
-Ví dụ:
-
-```protobuf
+# hoặc có delay:
 dynamic_batching {
   max_queue_delay_microseconds: 100
 }
-```
 
-Ý nghĩa:
-
-```text
-Scheduler có thể giữ request trong queue tối đa 100 microseconds để chờ thêm request khác vào batch.
-```
-
-Tác động:
-
-```text
-Longer delay -> bigger batches -> higher throughput -> worse latency/p99 risk
-Shorter delay -> smaller batches -> lower throughput -> better latency
-```
-
-Bạn không thể chọn bằng cảm tính. Phải benchmark.
-
-###  `preferred_batch_size`
-
-Ví dụ:
-
-```protobuf
+# chỉ khi benchmark chứng minh batch 4/8/16 đặc biệt tốt:
 dynamic_batching {
   preferred_batch_size: [ 4, 8, 16 ]
 }
 ```
 
-Ý nghĩa:
+| Tham số | Ý nghĩa |
+|:--------|:--------|
+| `max_batch_size` | Batch tối đa; quá lớn → latency/memory/profile spike |
+| `max_queue_delay_microseconds` | Giữ request chờ thêm peer; dài hơn → batch lớn hơn, p99 rủi ro hơn |
+| `preferred_batch_size` | Ưu tiên các batch “ngon”; không đặt mặc định |
+
+**Shape compatibility:** `[1,3,224,224]`×N có thể batch; `224` vs `256` vs `384` khó. Chiến lược:
 
 ```text
-Dynamic batcher sẽ cố tạo batch size trong danh sách preferred nếu có thể.
+resize / pad về shape cố định
+bucket theo độ phân giải
+tách endpoint theo shape family
+kiểm soát dynamic shape / optimization profile
+ragged batch chỉ khi hiểu rõ backend
 ```
 
-Nhưng best practice quan trọng:
+Trade-off p99 (ví dụ):
 
 ```text
-Do not set preferred_batch_size by default.
+Without batching:  p50=8ms  p99=20ms   thr=300 rps
+With dyn batch:    p50=12ms p99=80ms   thr=1100 rps
 ```
 
-Chỉ nên dùng khi bạn biết một vài batch sizes có performance đặc biệt tốt. Ví dụ TensorRT engine có optimization profiles mà batch 8/16 nhanh hơn rõ rệt.
+SLO `p99 < 100ms` → có thể OK. SLO `p99 < 30ms` → thất bại dù thr cao.
 
-Nếu không có bằng chứng benchmark, hãy bắt đầu bằng:
+```{mermaid}
+%%| label: fig-l6-batch
+%%| fig-cap: "Dynamic batching: queue delay đổi throughput ↔ p99."
+%%| fig-width: 5.5
+%%| fig-align: "center"
+flowchart LR
+  Q([Queue]) -->|"delay"| B([Bigger batch])
+  B -->|"throughput ↑"| T([Throughput])
+  B -->|"p99 risk ↑"| P([Latency tail])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#E8F5E9,stroke:#43A047,stroke-width:1.5px,color:#1B5E20
+  class Q soft
+  class B,P hot
+  class T ok
+```
+
+::: {.callout-tip icon=false collapse="true"}
+## Bốn khái niệm dễ nhầm + tuning recipe
+
+1. **Client concurrency** — số client đồng thời  
+2. **Client batch size** — batch mỗi request client gửi  
+3. **Dynamic batch size** — batch Triton gom server-side  
+4. **Instance count** — số execution slot song song  
+
+Ví dụ: concurrency=32, client batch=1, max_batch=8, instances=2 → nhiều batch size-8 chạy song song trên 2 instances. Đừng nhầm “client gửi batch=8” với “dynamic batching đang hoạt động”.
+
+**Tuning recipe (9 bước):**
+
+1. Một instance, chưa bật dyn batch → baseline  
+2. Ghi thr / p50 / p95 / p99 / GPU util / mem  
+3. Thêm `dynamic_batching { }`  
+4. Quét concurrency range  
+5. Tune `max_batch_size`  
+6. Chỉ tăng `max_queue_delay` nếu SLO còn cho phép  
+7. Thử `count: 2`  
+8. So bảng thr / lat / mem / util  
+9. Chọn config **đơn giản nhất** vẫn đạt SLO
+:::
+
+
+## `instance_group` và concurrent execution {#sec-instances}
+
+> Tăng `count` khi nào giúp — khi nào hại?
+
+::: {.callout-important icon=false}
+## Ý chính
+**Model instance** = execution slot. Dynamic batching gom request; **nhiều instances** chạy song song. Tăng `count` hữu ích khi một instance chưa saturate GPU / nhiều concurrent / model nhỏ. Hại khi model lớn (VRAM), GPU đã full, hoặc contention.
+:::
 
 ```protobuf
-dynamic_batching { }
+instance_group [
+  { count: 2 kind: KIND_GPU }
+]
+
+# chỉ định GPU:
+instance_group [
+  { count: 1 kind: KIND_GPU gpus: [ 0 ] },
+  { count: 2 kind: KIND_GPU gpus: [ 1 ] }
+]
+
+instance_group [
+  { count: 2 kind: KIND_CPU }
+]
 ```
-
-Sau đó benchmark.
-
-###  Shape compatibility
-
-Dynamic batching thường yêu cầu requests có shape compatible.
-
-Ví dụ có thể batch:
-
-```text
-[1, 3, 224, 224]
-[1, 3, 224, 224]
-[1, 3, 224, 224]
-```
-
-Khó batch nếu shapes khác:
-
-```text
-[1, 3, 224, 224]
-[1, 3, 256, 256]
-[1, 3, 384, 384]
-```
-
-Nếu use case có variable shapes, bạn cần chiến lược:
-
-- Resize/pad về fixed shape.
-- Bucket theo shape.
-- Tách thành nhiều model endpoints.
-- Dùng dynamic shapes nhưng kiểm soát range.
-- Chỉ dùng ragged batching nếu hiểu rõ backend và config hỗ trợ.
-
-###  Dynamic batching và p99 latency
-
-Dynamic batching có thể làm average latency đẹp nhưng p99 xấu.
-
-Ví dụ:
-
-```text
-Without batching:
-  p50 = 8 ms
-  p99 = 20 ms
-  throughput = 300 req/s
-
-With dynamic batching:
-  p50 = 12 ms
-  p99 = 80 ms
-  throughput = 1100 req/s
-```
-
-Nếu SLO là:
-
-```text
-p99 < 100 ms
-```
-
-batching này có thể chấp nhận.
-
-Nếu SLO là:
-
-```text
-p99 < 30 ms
-```
-
-batching này thất bại dù throughput cao.
-
-Rule:
-
-```text
-Tune dynamic batching against SLO, not against throughput alone.
-```
-
-
-
-## Concurrent model execution và `instance_group`
-
-Dynamic batching tăng hiệu quả bằng cách gom request thành batch lớn hơn. Concurrent model execution tăng khả năng xử lý bằng cách cho nhiều model instances chạy song song.
-
-### Model instance là gì?
-
-Một model instance là một execution slot cho model.
 
 ```text
 model: resnet50_trt
-  instance 0 -> GPU 0
-  instance 1 -> GPU 0
-  instance 2 -> GPU 1
+  instance 0 → GPU 0
+  instance 1 → GPU 0
+  instance 2 → GPU 1
 ```
 
-Cấu hình:
+Tune cùng dynamic batching: benchmark matrix (batch delay × instance count × concurrency) — không chỉnh một nút theo cảm tính.
 
-```protobuf
-instance_group [
-  {
-    count: 2
-    kind: KIND_GPU
-  }
-]
-```
-
-Ý nghĩa:
+### Python backend (preprocess) {.unnumbered}
 
 ```text
-Tạo 2 execution instances trên mỗi GPU được dùng cho model này.
+model_repository/normalize_python/config.pbtxt + 1/model.py
 ```
-
-Chỉ định GPU:
-
-```protobuf
-instance_group [
-  {
-    count: 1
-    kind: KIND_GPU
-    gpus: [ 0 ]
-  },
-  {
-    count: 2
-    kind: KIND_GPU
-    gpus: [ 1 ]
-  }
-]
-```
-
-CPU instance:
-
-```protobuf
-instance_group [
-  {
-    count: 2
-    kind: KIND_CPU
-  }
-]
-```
-
-###  Khi nào tăng instance count?
-
-Tăng instance count có ích khi:
-
-- Một instance không saturate GPU.
-- Model nhỏ, mỗi inference ngắn.
-- Có nhiều request concurrent.
-- Có nhiều CPU/GPU idle gaps do preprocessing/copy/scheduling.
-- Backend/runtime có thể chạy song song tốt.
-
-Có thể hại khi:
-
-- Model lớn, mỗi instance tốn nhiều memory.
-- GPU đã saturate.
-- Kernel contention làm latency tăng.
-- L2/cache/memory bandwidth bị tranh chấp.
-- TensorRT contexts/workspace làm VRAM tăng cao.
-
-Rule:
-
-```text
-Increase instance count only after measuring GPU utilization, latency, throughput and memory.
-```
-
-###  Bốn khái niệm dễ nhầm
-
-| Khái niệm          | Ý nghĩa                                  | Ví dụ                           |
-|--------------------|------------------------------------------|---------------------------------|
-| Client concurrency | Số request in-flight từ client           | 32 concurrent requests          |
-| Request batch size | Batch size client gửi trong một request  | input shape `[4, 3, 224, 224]`  |
-| Dynamic batch size | Batch Triton gom từ nhiều requests       | 8 requests batch 1 -> batch 8   |
-| Instance count     | Số execution slots của model             | 2 instances trên GPU 0          |
-
-Chúng độc lập nhưng ảnh hưởng lẫn nhau.
-
-Ví dụ:
-
-```text
-client concurrency = 32
-request batch size = 1
-max_batch_size = 8
-instance_group count = 2
-```
-
-Triton có thể tạo nhiều dynamic batches size 8 và phân phối tới 2 model instances.
-
-### Tuning dynamic batching + instance group
-
-Quy trình thực tế:
-
-```text
-1. Start with one model instance, no dynamic batching.
-2. Benchmark baseline.
-3. Enable dynamic_batching { }.
-4. Benchmark concurrency range.
-5. Tune max_batch_size.
-6. Tune max_queue_delay_microseconds only if latency budget allows.
-7. Try instance_group count 2.
-8. Compare throughput, p50, p95, p99, GPU memory and GPU utilization.
-9. Keep the simplest config that satisfies SLO.
-```
-
-Không nên bắt đầu bằng config phức tạp.
-
-
-
-## Serving TensorRT engines trong Triton
-
-### Build engine trước
-
-Từ ONNX:
-
-```bash
-trtexec \
-  --onnx=model.onnx \
-  --saveEngine=model.plan \
-  --fp16 \
-  --minShapes=input:1x3x224x224 \
-  --optShapes=input:8x3x224x224 \
-  --maxShapes=input:32x3x224x224
-```
-
-Repository:
-
-```bash
-mkdir -p model_repository/resnet50_trt/1
-cp model.plan model_repository/resnet50_trt/1/model.plan
-```
-
-Config:
-
-```protobuf
-name: "resnet50_trt"
-platform: "tensorrt_plan"
-max_batch_size: 32
-
-input [
-  {
-    name: "input"
-    data_type: TYPE_FP32
-    dims: [ 3, 224, 224 ]
-  }
-]
-
-output [
-  {
-    name: "logits"
-    data_type: TYPE_FP32
-    dims: [ 1000 ]
-  }
-]
-
-dynamic_batching { }
-
-instance_group [
-  {
-    count: 1
-    kind: KIND_GPU
-  }
-]
-```
-
-### TensorRT plan compatibility
-
-TensorRT plan files are not fully portable artifacts.
-
-Cần kiểm tra:
-
-- GPU architecture / compute capability.
-- TensorRT version.
-- CUDA version.
-- Precision support.
-- Dynamic shape profiles.
-- Plugin libraries.
-
-Production recommendation:
-
-```text
-Build TensorRT engines in an environment that matches the deployment target.
-Pin Triton container version, CUDA/TensorRT stack and GPU class.
-```
-
-Nếu deploy nhiều GPU architectures, có thể cần nhiều plan files.
-
-Triton hỗ trợ mapping engine theo compute capability bằng config nâng cao như `cc_model_filenames`, nhưng hãy chỉ dùng khi bạn thật sự cần multi-architecture deployment.
-
-### Dynamic batching và TensorRT optimization profiles
-
-Nếu TensorRT engine được build với:
-
-```text
-min = batch 1
-opt = batch 8
-max = batch 32
-```
-
-thì dynamic batching nên tạo batch trong range 1..32.
-
-Nếu Triton cố chạy batch ngoài profile, engine có thể fail.
-
-Nếu batch 8 hoặc 16 nhanh hơn rõ rệt do optimization profile, bạn có thể cân nhắc:
-
-```protobuf
-dynamic_batching {
-  preferred_batch_size: [ 8, 16 ]
-}
-```
-
-Nhưng nhớ:
-
-```text
-preferred_batch_size should be benchmark-driven.
-```
-
-
-
-## Serving ONNX Runtime trong Triton
-
-ONNX Runtime backend giúp serve `.onnx` model trực tiếp.
-
-Repository:
-
-```text
-model_repository/
-  tiny_classifier_onnx/
-    config.pbtxt
-    1/
-      model.onnx
-```
-
-Config:
-
-```protobuf
-name: "tiny_classifier_onnx"
-backend: "onnxruntime"
-max_batch_size: 8
-
-input [
-  {
-    name: "input"
-    data_type: TYPE_FP32
-    dims: [ 1, 28, 28 ]
-  }
-]
-
-output [
-  {
-    name: "logits"
-    data_type: TYPE_FP32
-    dims: [ 10 ]
-  }
-]
-```
-
-ONNX Runtime backend phù hợp khi:
-
-- Bạn muốn deploy nhanh.
-- Model ONNX đã pass validation.
-- Performance đạt yêu cầu mà chưa cần TensorRT plan.
-- Bạn muốn portability tốt hơn.
-- Bạn đang trong giai đoạn development/experimentation.
-
-TensorRT backend phù hợp hơn khi:
-
-- GPU latency/throughput là critical.
-- Model architecture support TensorRT tốt.
-- Bạn đã benchmark thấy lợi ích rõ.
-- Bạn có CI/CD để build engine đúng target.
-
-Decision rule:
-
-```text
-Start with ONNX Runtime for correctness and portability.
-Move to TensorRT when profiling proves ONNX Runtime is not enough.
-```
-
-
-
-## Python backend và preprocessing/postprocessing
-
-Python backend rất hữu ích nhưng cần dùng đúng.
-
-### Repository layout
-
-```text
-model_repository/
-  normalize_python/
-    config.pbtxt
-    1/
-      model.py
-```
-
-Config:
 
 ```protobuf
 name: "normalize_python"
 backend: "python"
 max_batch_size: 8
-
-input [
-  {
-    name: "INPUT"
-    data_type: TYPE_UINT8
-    dims: [ 3, 224, 224 ]
-  }
-]
-
-output [
-  {
-    name: "OUTPUT"
-    data_type: TYPE_FP32
-    dims: [ 3, 224, 224 ]
-  }
-]
+input [{ name: "INPUT" data_type: TYPE_UINT8 dims: [ 3, 224, 224 ] }]
+output [{ name: "OUTPUT" data_type: TYPE_FP32 dims: [ 3, 224, 224 ] }]
 ```
-
-`model.py`:
 
 ```python
 import numpy as np
 import triton_python_backend_utils as pb_utils
 
-
 class TritonPythonModel:
     def initialize(self, args):
-        self.mean = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(1, 3, 1, 1)
-        self.std = np.array([0.229, 0.224, 0.225], dtype=np.float32).reshape(1, 3, 1, 1)
+        self.mean = np.array([0.485, 0.456, 0.406], np.float32).reshape(1, 3, 1, 1)
+        self.std = np.array([0.229, 0.224, 0.225], np.float32).reshape(1, 3, 1, 1)
 
     def execute(self, requests):
         responses = []
-
         for request in requests:
-            tensor = pb_utils.get_input_tensor_by_name(request, "INPUT")
-            x = tensor.as_numpy().astype(np.float32) / 255.0
+            x = pb_utils.get_input_tensor_by_name(request, "INPUT").as_numpy()
+            x = x.astype(np.float32) / 255.0
             y = (x - self.mean) / self.std
-
-            out = pb_utils.Tensor("OUTPUT", y.astype(np.float32))
-            responses.append(pb_utils.InferenceResponse(output_tensors=[out]))
-
+            responses.append(
+                pb_utils.InferenceResponse(
+                    output_tensors=[pb_utils.Tensor("OUTPUT", y.astype(np.float32))]
+                )
+            )
         return responses
 ```
 
-### Performance warning
+Python dễ bottleneck nếu: loop thay NumPy, copy nhiều, decode image nặng trên critical path. Cân nhắc DALI, client-side preprocess, hoặc fuse vào graph. Dùng khi logic nhẹ / prototype; tránh khi p99 cực thấp hoặc thr rất cao.
 
-Python backend dễ trở thành bottleneck nếu:
-
-- Preprocessing quá nặng.
-- Dùng Python loops thay vì vectorized NumPy.
-- Copy dữ liệu nhiều lần.
-- Convert dtype/format không cần thiết.
-- Decode image/video trong Python ở throughput cao.
-
-Nếu preprocessing nặng, cân nhắc:
-
-- DALI backend.
-- C++ custom backend.
-- Move preprocessing to client.
-- Fuse preprocessing into model graph.
-- GPU preprocessing.
-
-### Khi nào dùng Python backend?
-
-Nên dùng khi:
-
-- Logic đơn giản.
-- Need quick integration.
-- Pre/postprocessing nhẹ.
-- Prototyping.
-- Business logic khó biểu diễn bằng ONNX.
-
-Không nên dùng khi:
-
-- Mục tiêu p99 cực thấp.
-- Throughput rất cao.
-- CPU-bound preprocessing chiếm phần lớn latency.
-- Logic có thể move vào ONNX/TensorRT/DALI.
-
-
-
-## Ensemble models
-
-Ensemble model cho phép một endpoint đại diện cho pipeline nhiều bước.
-
-Ví dụ:
+### Ensemble pipeline {.unnumbered}
 
 ```text
-client raw image
-  -> preprocess_python
-  -> classifier_trt
-  -> postprocess_python
-  -> class label
+RAW_IMAGE → preprocess_python → classifier_trt → postprocess_python → LABEL
 ```
 
-Repository:
+Ensemble **không** có compute instance — child models mới có. Cẩn shape/name mapping và Python bottleneck.
 
-```text
-model_repository/
-  preprocess_python/
-    config.pbtxt
-    1/model.py
-  classifier_trt/
-    config.pbtxt
-    1/model.plan
-  postprocess_python/
-    config.pbtxt
-    1/model.py
-  image_classifier_pipeline/
-    config.pbtxt
-    1/
-      empty.txt
-```
+**Dùng ensemble khi:** một client endpoint; quan sát từng bước; deploy pre/post cùng model; tránh client tự orchestration. **Cẩn thận:** shape/name mapping; Python bottleneck; batching khác nhau giữa các step. Repo cần đủ model dirs + version placeholder (vd. `1/empty.txt` cho ensemble).
 
-Ensemble config concept:
+::: {.callout-tip icon=false collapse="true"}
+## Ensemble `config.pbtxt` đầy đủ (concept)
 
 ```protobuf
 name: "image_classifier_pipeline"
 platform: "ensemble"
 max_batch_size: 8
-
-input [
-  {
-    name: "RAW_IMAGE"
-    data_type: TYPE_UINT8
-    dims: [ 3, 224, 224 ]
-  }
-]
-
-output [
-  {
-    name: "LABEL"
-    data_type: TYPE_STRING
-    dims: [ 1 ]
-  }
-]
-
+input [{ name: "RAW_IMAGE" data_type: TYPE_UINT8 dims: [ 3, 224, 224 ] }]
+output [{ name: "LABEL" data_type: TYPE_STRING dims: [ 1 ] }]
 ensemble_scheduling {
   step [
     {
       model_name: "preprocess_python"
       model_version: -1
-      input_map {
-        key: "INPUT"
-        value: "RAW_IMAGE"
-      }
-      output_map {
-        key: "OUTPUT"
-        value: "PREPROCESSED"
-      }
+      input_map { key: "INPUT" value: "RAW_IMAGE" }
+      output_map { key: "OUTPUT" value: "PREPROCESSED" }
     },
     {
       model_name: "classifier_trt"
       model_version: -1
-      input_map {
-        key: "input"
-        value: "PREPROCESSED"
-      }
-      output_map {
-        key: "logits"
-        value: "LOGITS"
-      }
+      input_map { key: "input" value: "PREPROCESSED" }
+      output_map { key: "logits" value: "LOGITS" }
     },
     {
       model_name: "postprocess_python"
       model_version: -1
-      input_map {
-        key: "LOGITS"
-        value: "LOGITS"
-      }
-      output_map {
-        key: "LABEL"
-        value: "LABEL"
-      }
+      input_map { key: "LOGITS" value: "LOGITS" }
+      output_map { key: "LABEL" value: "LABEL" }
     }
   ]
 }
 ```
 
-Important:
+Repo cần đủ 4 model dirs; ensemble version dir có thể có file placeholder.
+:::
+
+
+## Serving ONNX vs TensorRT trong Triton {#sec-serve-artifacts}
+
+> Bắt đầu ORT hay TRT — và plan phải khớp profile thế nào?
+
+::: {.callout-important icon=false}
+## Ý chính
+**Bắt đầu ORT** cho correctness/portability; **chuyển TRT** khi profiling chứng minh ORT không đủ. Plan phải build trên target GPU/TRT/CUDA. `max_batch_size` Triton ≤ `max` của optimization profile. Engine không portable tuyệt đối (Lesson 4).
+:::
+
+| Chọn ORT khi | Chọn TRT khi |
+|:-------------|:-------------|
+| Deploy nhanh, đang experiment | Latency/throughput GPU critical |
+| ONNX đã validate | Architecture hỗ trợ TRT tốt |
+| Perf đã đủ SLO | Benchmark thấy lợi rõ + CI build engine |
 
 ```text
-The ensemble has no physical compute instance.
-The child models do.
+Start with ONNX Runtime → Move to TensorRT when profiling proves need.
 ```
 
-Use ensemble when:
+::: {.callout-tip icon=false collapse="true"}
+## TRT + dynamic batching + compatibility
 
-- You want one client endpoint for multi-step pipeline.
-- You want model-level observability for each step.
-- Pre/postprocessing should be deployed with model.
-- You want to avoid client-side orchestration.
-
-Be careful:
-
-- Debugging shape/name mapping can be tricky.
-- Python steps can bottleneck whole pipeline.
-- Batching behavior across ensemble steps must be understood.
-
-
-
-## Model management và rollout
-
-Triton có model management APIs và model control modes.
-
-### Model control mode: `none`
-
-Default mode.
+Build (ví dụ teaching 224; lab TinyCNN dùng 28×28):
 
 ```bash
+trtexec --onnx=model.onnx --fp16 \
+  --minShapes=images:1x3x224x224 \
+  --optShapes=images:8x3x224x224 \
+  --maxShapes=images:32x3x224x224 \
+  --saveEngine=model.plan
+```
+
+Đặt Triton `max_batch_size` trong range profile. `preferred_batch_size: [8, 16]` chỉ khi profile + benchmark chứng minh.
+
+**Checklist tương thích plan:** GPU arch · TensorRT version · CUDA · precision · optimization profiles · plugins · container pin. Multi-arch có thể cần nhiều `.plan` (xem `cc_model_filenames` trong docs). Sai profile → runtime shape error dù `trtexec` local OK trên máy khác.
+:::
+
+
+## Model management, observability và rollout {#sec-rollout}
+
+> `poll` mode có nên là mặc định production không?
+
+::: {.callout-important icon=false}
+## Ý chính
+Control modes: **`none`** (load hết lúc start, immutable — thường tốt production đơn giản), **`explicit`** (load có chọn + API), **`poll`** (theo dõi filesystem — rủi ro partial update). Health: `/v2/health/live` vs `/ready`. Metrics `:8002/metrics` — tách **queue duration** vs **compute infer duration**. Prefer immutable deploy hoặc explicit; tránh poll mặc định.
+:::
+
+| Mode | Hành vi | Khi dùng |
+|:-----|:--------|:---------|
+| `none` | Load all lúc start; ignore FS changes | Prod đơn giản, immutable repo/pod |
+| `explicit` | Load theo `--load-model` + API | Nhiều model, on-demand, controlled reload |
+| `poll` | Poll repo định kỳ | Chỉ khi atomic update được kiểm soát chặt |
+
+::: {.callout-tip icon=false collapse="true"}
+## Model control mode — lệnh `tritonserver`
+
+```bash
+# none — immutable, thường tốt production đơn giản
 tritonserver --model-repository=/models --model-control-mode=none
-```
 
-Behavior:
-
-- Load all models at startup.
-- Changes in repository while running are ignored.
-- Load/unload API requests are not effective.
-
-Good for:
-
-- Simple production deployment.
-- Immutable container/repository.
-- Kubernetes rollout where new pod = new model set.
-
-### Model control mode: `explicit`
-
-```bash
+# explicit — load theo tên + API load/unload
 tritonserver \
   --model-repository=/models \
   --model-control-mode=explicit \
   --load-model=resnet50_trt
-```
 
-Behavior:
-
-- Load only explicitly specified models at startup.
-- Later load/unload via model repository control API.
-
-Good for:
-
-- Multi-model serving with many models.
-- Load models on demand.
-- Controlled rollout/reload.
-
-### Model control mode: `poll`
-
-```bash
+# poll — rủi ro partial update nếu copy file chưa atomic
 tritonserver \
   --model-repository=/models \
   --model-control-mode=poll \
   --repository-poll-secs=30
 ```
 
-Behavior:
+Prefer **immutable deploy** hoặc **explicit**; tránh poll mặc định.
+:::
 
-- Triton periodically polls repository changes.
-- Adds/removes/reloads models based on filesystem changes.
+**Safer rollout (11 bước):**
 
-Caution:
-
-```text
-Poll mode can observe partial repository updates if files are modified non-atomically.
-```
-
-Production recommendation:
-
-```text
-Avoid poll mode as default production rollout strategy unless you control atomic repository updates very carefully.
-Prefer immutable deployments or explicit model control.
-```
-
-### Safer rollout pattern
-
-A safer high-level rollout:
-
-```text
-1. Build model artifact.
-2. Validate shape/dtype/schema.
-3. Run correctness tests.
-4. Run Triton model load test.
-5. Run perf baseline.
-6. Package repository immutably.
-7. Deploy new Triton pod or container version.
-8. Check readiness.
-9. Shift traffic gradually using load balancer/Kubernetes/service mesh.
-10. Monitor p99, error rate, GPU memory, queue duration.
-11. Rollback if SLO violated.
-```
-
-
-
-## Observability: metrics, tracing và health
-
-### Health endpoints
+1. Build artifact  
+2. Validate schema (checker / I/O)  
+3. Correctness vs reference  
+4. Triton load test  
+5. Perf baseline  
+6. Package immutable (image/repo)  
+7. Deploy pod/container mới  
+8. Readiness pass  
+9. Shift traffic dần (canary)  
+10. Monitor p99 / error / GPU mem / queue  
+11. Rollback nếu SLO vỡ  
 
 ```bash
 curl localhost:8000/v2/health/live
 curl localhost:8000/v2/health/ready
-```
-
-Interpretation:
-
-- **Live**: server process is alive.
-- **Ready**: server is ready to accept inference requests.
-
-In Kubernetes:
-
-```yaml
-livenessProbe:
-  httpGet:
-    path: /v2/health/live
-    port: 8000
-
-readinessProbe:
-  httpGet:
-    path: /v2/health/ready
-    port: 8000
-```
-
-### Metrics endpoint
-
-```bash
 curl localhost:8002/metrics
 ```
 
-Metrics bạn nên quan sát:
+| Metric group | Đọc gì |
+|:-------------|:-------|
+| Request success/fail | Error rate |
+| Queue duration | Serving/scheduler bottleneck |
+| Compute input duration | Copy / data movement vào compute |
+| Compute infer duration | Model/backend time |
+| Compute output duration | Copy kết quả ra |
+| Pending request count | Backlog hàng đợi |
+| GPU util / memory | Saturation vs OOM risk |
+| Batch size / response cache | Dyn batch có gom không; cache hit |
 
-| Metric group              | Ý nghĩa                          |
-|---------------------------|----------------------------------|
-| Request count             | số request thành công/thất bại   |
-| Queue duration            | thời gian request chờ scheduler  |
-| Compute input duration    | thời gian chuẩn bị/copy input    |
-| Compute infer duration    | thời gian model execution        |
-| Compute output duration   | thời gian xử lý output           |
-| GPU utilization           | mức sử dụng GPU                  |
-| GPU memory                | VRAM used/total                  |
-| Pending request count     | số request đang pending/queue    |
-| Response cache metrics    | nếu bật response cache           |
-| Custom backend metrics    | nếu backend publish metric riêng |
-
-Một cách đọc bottleneck:
+**Cách đọc bottleneck:**
 
 ```text
-High queue duration:
-    Scheduler/model instances không theo kịp load.
-    Có thể cần dynamic batching, instance count, scale out, hoặc giảm traffic.
-
-High compute infer duration:
-    Model execution chậm.
-    Cần TensorRT, FP16/INT8, optimize model, batch tuning.
-
-High compute input/output duration:
-    Copy/serialization/pre-postprocessing overhead cao.
-    Cần shared memory, binary tensor, giảm data movement.
-
-Low GPU utilization + high latency:
-    Có thể bottleneck ở CPU/client/network/scheduler/copy.
-
-High GPU utilization + high latency:
-    GPU compute đang là bottleneck.
+High queue          → batching / instances / scale-out / giảm traffic
+High compute infer  → TRT / precision / model / batch tune
+High compute I/O    → shared memory, binary tensor, ít data movement
+Low GPU + high lat  → CPU / client / network / scheduler / copy
+High GPU + high lat → GPU compute bottleneck
 ```
 
-### Prometheus/Grafana
+::: {.callout-tip icon=false collapse="true"}
+## K8s probes + dashboard gợi ý
 
-Trong production, thường scrape `/metrics` bằng Prometheus và visualize bằng Grafana.
+```yaml
+livenessProbe:
+  httpGet: { path: /v2/health/live, port: 8000 }
+readinessProbe:
+  httpGet: { path: /v2/health/ready, port: 8000 }
+```
 
-Dashboard nên có:
-
-- Request rate per model.
-- Error rate per model.
-- p50/p95/p99 latency.
-- Queue duration.
-- Compute infer duration.
-- Dynamic batch size distribution nếu có.
-- GPU utilization.
-- GPU memory.
-- Model load/unload events.
-- Container restarts.
-
-### 19.4 Tracing
-
-Khi latency khó debug, có thể bật tracing để xem request đi qua các giai đoạn nào. Tracing thường hữu ích hơn metrics aggregate khi bạn cần xem một request cụ thể bị chậm ở đâu.
+Prometheus scrape `:8002/metrics`. Dashboard tối thiểu: RPS/error per model; p50/p95/p99; queue; compute infer; batch size dist; GPU util/mem; load/unload; container restarts. Tracing (OpenTelemetry) khi cần timeline request qua ensemble (không chỉ aggregate).
+:::
 
 
+## Perf Analyzer, Model Analyzer và debug {#sec-perf-debug}
 
-## Benchmarking với Perf Analyzer
+> Perf Analyzer khác Model Analyzer — và debug batching “không chạy” bắt đầu từ đâu?
 
-### Vì sao cần Perf Analyzer?
+::: {.callout-important icon=false}
+## Ý chính
+**Perf Analyzer** = load có kiểm soát để đo thr/latency/p99. **Model Analyzer** = explore config (instance, batch…) tự động hơn. Benchmark matrix: concurrency × batch × config. Đừng tối ưu thr mà bỏ p99/queue/GPU mem. Hầu hết lỗi thuộc: load fail, shape mismatch, batching off, p99 xấu sau batch, util thấp, VRAM cao, plan không tương thích.
+:::
 
-Dùng `curl` hoặc một script Python loop đơn giản không đủ để đo production serving performance.
-
-Bạn cần kiểm soát:
-
-- Concurrency.
-- Request rate.
-- Measurement window.
-- Input data.
-- Protocol HTTP/gRPC.
-- Warmup.
-- Stability.
-- Latency percentiles.
-
-Perf Analyzer giúp benchmark Triton server bằng cách tạo load có kiểm soát.
-
-### Basic commands
-
-Benchmark model:
+Với TinyCNN (`dims: [1,28,28]`, `max_batch_size > 0`), shape Perf Analyzer **không** gồm batch dimension:
 
 ```bash
+# Baseline
 perf_analyzer -m tiny_classifier_onnx
+
+# Quét concurrency (step 4)
+perf_analyzer -m tiny_classifier_onnx --concurrency-range 1:64:4
+
+# HTTP vs gRPC
+perf_analyzer -m tiny_classifier_onnx -i http --concurrency-range 1:64:4
+perf_analyzer -m tiny_classifier_onnx -i grpc --concurrency-range 1:64:4
+
+# Shape đúng (KHÔNG dùng input:1,1,28,28)
+perf_analyzer -m tiny_classifier_onnx \
+  --shape input:1,28,28 --concurrency-range 1:64:4
+
+# Client batch (-b) ≠ dynamic batch
+perf_analyzer -m tiny_classifier_onnx -b 4 --concurrency-range 1:64:4
 ```
 
-Benchmark với concurrency range:
+**Scenarios so sánh:**
 
-```bash
-perf_analyzer \
-  -m tiny_classifier_onnx \
-  --concurrency-range 1:64:4
-```
+| Scenario | Client batch | Dyn batch |
+|:---------|:------------:|:---------:|
+| A | 1 | bật |
+| B | 4 | tắt |
+| C | 4 | bật |
 
-Dùng HTTP:
+**Matrix config gợi ý:** `baseline` (off, inst1, b1) · `dyn-default` · `dyn-delay-100us` · `inst-2` · `client-batch-4`.
 
-```bash
-perf_analyzer \
-  -m tiny_classifier_onnx \
-  -i http \
-  --concurrency-range 1:64:4
-```
+**Chấp nhận config chỉ khi:** p99 ≤ SLO · error OK · thr ≥ target · GPU mem vừa · ổn định qua nhiều lần chạy.
 
-Dùng gRPC:
+**Throughput curve:** concurrency thấp → lat/thr thấp; trung bình → thr↑ lat còn OK; cao → thr plateau, lat cliff. **Không vận hành sát cliff** — để headroom.
 
-```bash
-perf_analyzer \
-  -m tiny_classifier_onnx \
-  -i grpc \
-  --concurrency-range 1:64:4
-```
+Perf Analyzer cần: concurrency, request rate, measurement window, input data, protocol, warmup, stability, percentiles — không đủ bằng curl/loop đơn giản.
 
-Specify input shape:
-
-```bash
-perf_analyzer \
-  -m tiny_classifier_onnx \
-  --shape input:1,28,28 \
-  --concurrency-range 1:64:4
-```
-
-Specify batch size client gửi:
-
-```bash
-perf_analyzer \
-  -m tiny_classifier_onnx \
-  -b 4 \
-  --concurrency-range 1:64:4
-```
-
-### Đừng nhầm client batch với dynamic batch
-
-```bash
-perf_analyzer -b 4
-```
-
-nghĩa là mỗi request client gửi batch size 4.
-
-Trong khi:
-
-```protobuf
-dynamic_batching { }
-```
-
-nghĩa là Triton có thể gom nhiều request lại.
-
-Bạn cần benchmark cả hai kiểu:
+::: {.callout-tip icon=false collapse="true"}
+## Model Analyzer vs Perf Analyzer
 
 ```text
-Scenario A: client batch 1 + dynamic batching
-Scenario B: client batch 4 + no dynamic batching
-Scenario C: client batch 4 + dynamic batching
+Perf Analyzer  = performance của MỘT config cụ thể
+Model Analyzer = tìm config dưới ràng buộc memory/perf
 ```
 
-### Benchmark matrix
+Workflow: định nghĩa candidates → chạy Model Analyzer → so thr vs lat vs mem → chọn candidate đạt SLO → validate lại bằng Perf Analyzer độc lập → load production-like.
+:::
 
-Một matrix tốt:
+| Triệu chứng | Kiểm tra đầu |
+|:------------|:-------------|
+| Model không load | Log Triton; path file; `config.pbtxt`; backend; I/O names; plan/CUDA version |
+| Shape mismatch | `max_batch_size` vs dims; client gửi `[B]+dims` đúng chưa |
+| Dyn batch “không chạy” | `max_batch_size>0`? có `dynamic_batching`? shapes compatible? traffic đủ? |
+| p99 xấu sau batch | Giảm delay / max batch; tăng instances; so SLO |
+| Thr thấp + GPU util thấp | Pre/post CPU? copy? concurrency thấp? Python bottleneck? shared memory? |
+| GPU memory cao | Giảm instances / max batch; engine profile; multi-version; response cache |
+| Plan fail trong Triton nhưng `trtexec` OK | GPU/TRT/CUDA/plugins/profiles/container khác; filename `model.plan` |
 
-| Config          | Dynamic batching | Instance count | Client batch | Concurrency | Metrics                   |
-|-----------------|-----------------:|---------------:|-------------:|------------:|---------------------------|
-| baseline        |              off |              1 |            1 |       1..64 | latency/throughput        |
-| dyn-default     |               on |              1 |            1 |       1..64 | latency/throughput        |
-| dyn-delay-100us |               on |              1 |            1 |       1..64 | latency/throughput        |
-| inst-2          |               on |              2 |            1 |       1..64 | latency/throughput/memory |
-| client-batch-4  |              off |              1 |            4 |       1..64 | latency/throughput        |
+### Debug checklists đầy đủ {.unnumbered}
 
-Bạn chọn config dựa trên SLO:
+**Model không load:** layout → version là số nguyên → filename convention → `config.pbtxt` syntax → backend/platform → I/O names/dtypes/dims → TRT compatibility → plugins. Triệu chứng hay gặp: `UNAVAILABLE`, model failed to load trong log.
+
+**Shape mismatch** (hay nhất): quên rằng khi `max_batch_size > 0`, dims **không** gồm batch. Đúng: `max_batch_size:32` + `dims:[3,224,224]`. Sai: `dims:[1,3,224,224]` cùng `max_batch_size:32`.
+
+**Dyn batch không chạy:** `max_batch_size>0`? có block `dynamic_batching`? concurrency đủ? shapes compatible? model batchable? client đã gửi batch lớn + concurrency thấp? traffic thấp? quá nhiều instances “nuốt” request trước khi batch lớn? `preferred_batch_size` quá hẹp? delay quá nhỏ? Metrics thấy batch≈1 dù kỳ vọng gom.
+
+**p99 xấu sau batch:** queue duration↑? delay/max batch cao? preferred gây chờ? → hạ delay/max batch, bỏ preferred, thêm instance, hoặc tắt dyn batch cho endpoint latency-critical.
+
+**Thr thấp + GPU util thấp:** concurrency thấp, network/JSON overhead, pre/post CPU, Python backend, H2D/D2H, gRPC vs HTTP, binary tensor / **shared memory**, chuyển preprocess ra khỏi critical path.
+
+**VRAM cao:** giảm instances / max batch; kiểm profile engine / workspace; multi-version đang load; response cache; fragmentation → explicit load, tách GPU, Model Analyzer.
+
+::: {.callout-tip icon=false collapse="true"}
+## Design patterns và anti-patterns
+
+**Patterns:**
+
+1. **Single-model GPU:** ONNX→TRT plan→dyn batch→metrics — tốt khi một model, SLO rõ  
+2. **Multi-model:** gán GPU/instance theo SLO + memory plan + Model Analyzer  
+3. **Pipeline ensemble:** Python→TRT→Python — một endpoint, quan sát từng bước  
+4. **Low-latency:** delay≈0, max batch nhỏ, TRT FP16/INT8, protocol nhanh, pre tối thiểu  
+5. **High-throughput:** max batch lớn hơn, delay cao hơn (trong SLO), client batch OK, nhiều instance nếu VRAM cho phép  
+
+**Anti-patterns (vì sao hại):**
+
+- Copy config internet mù — shape/`max_batch_size` sai ngay  
+- `preferred_batch_size` không benchmark — chờ batch “ngon” làm p99 xấu  
+- Tăng instance đến đầy VRAM — thr không tăng, OOM risk  
+- Python backend cho mọi thứ — linh hoạt nhưng không miễn phí latency  
+- Chỉ đo mean — user cảm nhận p95/p99  
+- Bỏ qua queue duration — bottleneck serving thường ở queue, không phải compute  
+- Poll + sửa file không atomic — partial model load  
+- Giả định plan portable mọi GPU — TRT version/arch mismatch
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Production checklist đầy đủ
+
+**Artifact**
 
 ```text
-Accept config only if:
-    p99 latency <= SLO
-    error rate acceptable
-    throughput >= target
-    GPU memory fits budget
-    behavior stable across runs
+[ ] Artifact versioned; export config lưu lại
+[ ] ONNX checker / schema OK
+[ ] TRT plan build trên target GPU/TRT/CUDA
+[ ] I/O names, dtype, shape documented
+[ ] Test data + accuracy regression
+[ ] Perf baseline (thr, p50/p95/p99)
 ```
 
-### Throughput curve
-
-Bạn nên vẽ throughput và latency theo concurrency.
-
-Thông thường:
+**Repository**
 
 ```text
-low concurrency:
-    low latency, low throughput, GPU underutilized
-
-medium concurrency:
-    throughput grows, latency acceptable
-
-high concurrency:
-    throughput plateaus, latency rises sharply
+[ ] Layout hợp lệ; version dirs là số nguyên
+[ ] config.pbtxt explicit; max_batch_size đúng
+[ ] dims không gồm batch khi max_batch_size > 0
+[ ] Backend/platform đúng; I/O khớp artifact
+[ ] Dyn batch + instances đã benchmark
+[ ] version_policy explicit khi rollout-sensitive
 ```
 
-Điểm vận hành tốt thường nằm trước khi latency curve bẻ gãy.
+**Runtime**
 
 ```text
-Do not operate at the cliff.
-Leave headroom for traffic bursts.
+[ ] Triton image pinned; driver/CUDA/TRT documented
+[ ] /live + /ready; metrics scraped
+[ ] Logs; GPU mem; queue duration
+[ ] Alerts: error rate / p99 / model load fail
 ```
 
-
-
-## Model Analyzer
-
-Perf Analyzer đo latency/throughput dưới config cụ thể.
-
-Model Analyzer giúp search nhiều config và đo GPU memory/compute utilization.
-
-Dùng khi:
-
-- Bạn cần chọn `instance_group` count.
-- Bạn cần chọn dynamic batching configs.
-- Bạn cần phục vụ nhiều model trên cùng GPU.
-- Bạn cần biết memory footprint theo config.
-- Bạn muốn automated config search.
-
-Mental model:
+**Deploy**
 
 ```text
-Perf Analyzer:
-    What is performance of this config?
-
-Model Analyzer:
-    Which config should I choose under memory/performance constraints?
+[ ] Immutable image/repo hoặc controlled mode
+[ ] Không mutate in-place không kiểm soát
+[ ] Canary / staged + rollback đã test
+[ ] Load test trước traffic; warmup
+[ ] Capacity headroom; autoscaling trên metric có nghĩa
 ```
-
-Example workflow:
-
-```text
-1. Define candidate model configs.
-2. Run Model Analyzer.
-3. Analyze throughput vs latency vs GPU memory.
-4. Pick candidate satisfying SLO.
-5. Validate with independent Perf Analyzer run.
-6. Run production-like load test.
-```
+:::
 
 
+## Mini-lab {.unnumbered}
 
-## End-to-end Lab 1 — Export ONNX model
+::: {.callout-note icon=false}
+## Thực hành — Triton end-to-end (ONNX → serve → batch → optional TRT)
+Cần Docker + (GPU labs) NVIDIA runtime. `RELEASE` chỉnh theo NGC tag có sẵn. Chi tiết lệnh/quan sát nằm trong tip collapse dưới từng nhóm lab.
+:::
 
-Lab này tạo một model nhỏ để serve bằng Triton.
-
-###  Create project
+### Lab 1–2: Export TinyCNN + repository {.unnumbered}
 
 ```bash
-mkdir -p triton_lesson_6
-cd triton_lesson_6
+mkdir -p triton_lesson_6 && cd triton_lesson_6
 ```
-
-### Export tiny CNN to ONNX
-
-Create `export_tiny_cnn.py`:
 
 ```python
-import torch
-import torch.nn as nn
-
+# export_tiny_cnn.py
+import torch, torch.nn as nn
 
 class TinyCNN(nn.Module):
     def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Conv2d(1, 8, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.AdaptiveAvgPool2d((1, 1)),
-            nn.Flatten(),
-            nn.Linear(8, 10),
+            nn.Conv2d(1, 8, 3, padding=1), nn.ReLU(),
+            nn.AdaptiveAvgPool2d((1, 1)), nn.Flatten(), nn.Linear(8, 10),
         )
-
     def forward(self, x):
         return self.net(x)
 
-
 model = TinyCNN().eval()
-x = torch.randn(1, 1, 28, 28)
-
 torch.onnx.export(
-    model,
-    x,
-    "model.onnx",
-    input_names=["input"],
-    output_names=["logits"],
-    dynamic_axes={
-        "input": {0: "batch"},
-        "logits": {0: "batch"},
-    },
+    model, torch.randn(1, 1, 28, 28), "model.onnx",
+    input_names=["input"], output_names=["logits"],
+    dynamic_axes={"input": {0: "batch"}, "logits": {0: "batch"}},
     opset_version=17,
 )
-
-print("Exported model.onnx")
 ```
-
-Run:
 
 ```bash
 python export_tiny_cnn.py
-```
 
-### Validate ONNX quickly
-
-```python
-import onnx
-
-model = onnx.load("model.onnx")
-onnx.checker.check_model(model)
-
-print("Inputs:")
-for i in model.graph.input:
-    print(i.name)
-
-print("Outputs:")
-for o in model.graph.output:
-    print(o.name)
-```
-
-Expected:
-
-```text
-input
-logits
-```
-
-
-
-## End-to-end Lab 2 — Create Triton model repository
-
-###  Directory layout
-
-```bash
 mkdir -p model_repository/tiny_classifier_onnx/1
 cp model.onnx model_repository/tiny_classifier_onnx/1/model.onnx
 ```
 
-Expected:
+::: {.callout-tip icon=false collapse="true"}
+## Lab 1–2 chi tiết: validate ONNX + `config.pbtxt` đầy đủ
 
-```text
-model_repository/
-  tiny_classifier_onnx/
-    1/
-      model.onnx
+```python
+import onnx
+model = onnx.load("model.onnx")
+onnx.checker.check_model(model)
+for i in model.graph.input:
+    print("IN ", i.name)
+for o in model.graph.output:
+    print("OUT", o.name)
+# Kỳ vọng: input / logits
 ```
 
-### Add config
-
-Create `model_repository/tiny_classifier_onnx/config.pbtxt`:
+`config.pbtxt` (ONNX `[B,1,28,28]` → Triton `dims: [1,28,28]`, `max_batch_size: 8`):
 
 ```protobuf
 name: "tiny_classifier_onnx"
@@ -2260,1120 +968,285 @@ backend: "onnxruntime"
 max_batch_size: 8
 
 input [
-  {
-    name: "input"
-    data_type: TYPE_FP32
-    dims: [ 1, 28, 28 ]
-  }
+  { name: "input" data_type: TYPE_FP32 dims: [ 1, 28, 28 ] }
 ]
-
 output [
-  {
-    name: "logits"
-    data_type: TYPE_FP32
-    dims: [ 10 ]
-  }
+  { name: "logits" data_type: TYPE_FP32 dims: [ 10 ] }
 ]
 ```
+:::
 
-Remember:
-
-```text
-ONNX input shape: [batch, 1, 28, 28]
-Triton config dims: [1, 28, 28]
-max_batch_size: 8
-```
-
-
-
-## End-to-end Lab 3 — Start Triton
-
-Use Triton container:
+### Lab 3–4: Start Triton + Python client {.unnumbered}
 
 ```bash
 export RELEASE=26.04
-
 docker run --gpus all --rm -it --net host \
   -v $PWD/model_repository:/models \
   nvcr.io/nvidia/tritonserver:${RELEASE}-py3 \
   tritonserver --model-repository=/models
 ```
 
-If you are running CPU-only ONNX model and your container supports it, you can omit GPU flags:
+CPU-only (không GPU): bỏ `--gpus all`.
 
-```bash
-docker run --rm -it --net host \
-  -v $PWD/model_repository:/models \
-  nvcr.io/nvidia/tritonserver:${RELEASE}-py3 \
-  tritonserver --model-repository=/models
+```python
+# client_infer.py — pip install "tritonclient[http]" numpy
+import numpy as np
+import tritonclient.http as httpclient
+
+client = httpclient.InferenceServerClient(url="localhost:8000")
+x = np.random.randn(1, 1, 28, 28).astype(np.float32)
+inp = httpclient.InferInput("input", x.shape, "FP32")
+inp.set_data_from_numpy(x)
+out = httpclient.InferRequestedOutput("logits")
+result = client.infer("tiny_classifier_onnx", inputs=[inp], outputs=[out])
+print(result.as_numpy("logits").shape)  # kỳ vọng (1, 10)
 ```
 
-Check health from another terminal:
+::: {.callout-tip icon=false collapse="true"}
+## Lab 3–4 chi tiết: health + batch boundary
 
 ```bash
 curl localhost:8000/v2/health/live
 curl localhost:8000/v2/health/ready
-```
-
-Check model metadata:
-
-```bash
 curl localhost:8000/v2/models/tiny_classifier_onnx
-```
-
-Check metrics:
-
-```bash
 curl localhost:8002/metrics | head
 ```
 
+Thử batch `4` → shape `(4, 10)`. Batch `9` **phải fail** vì `max_batch_size: 8`.
+:::
 
+### Lab 5–6: Dynamic batching + instance_group {.unnumbered}
 
-## End-to-end Lab 4 — Run inference with Python client
-
-Install client outside the Triton server container or inside a client environment:
-
-```bash
-pip install "tritonclient[http]" numpy
-```
-
-Create `client_infer.py`:
-
-```python
-import numpy as np
-import tritonclient.http as httpclient
-
-MODEL_NAME = "tiny_classifier_onnx"
-
-client = httpclient.InferenceServerClient(url="localhost:8000")
-
-x = np.random.randn(1, 1, 28, 28).astype(np.float32)
-
-infer_input = httpclient.InferInput("input", x.shape, "FP32")
-infer_input.set_data_from_numpy(x)
-
-infer_output = httpclient.InferRequestedOutput("logits")
-
-response = client.infer(
-    model_name=MODEL_NAME,
-    inputs=[infer_input],
-    outputs=[infer_output],
-)
-
-logits = response.as_numpy("logits")
-print("logits shape:", logits.shape)
-print(logits)
-```
-
-Run:
-
-```bash
-python client_infer.py
-```
-
-Expected shape:
-
-```text
-(1, 10)
-```
-
-Try batch 4:
-
-```python
-x = np.random.randn(4, 1, 28, 28).astype(np.float32)
-```
-
-Expected shape:
-
-```text
-(4, 10)
-```
-
-If batch 9 fails, that is expected because `max_batch_size: 8`.
-
-
-
-## End-to-end Lab 5 — Enable dynamic batching
-
-Update `config.pbtxt`:
+Baseline (Lab 2) chưa có batcher. Thêm lần lượt và đo:
 
 ```protobuf
 name: "tiny_classifier_onnx"
 backend: "onnxruntime"
 max_batch_size: 8
 
-input [
-  {
-    name: "input"
-    data_type: TYPE_FP32
-    dims: [ 1, 28, 28 ]
-  }
-]
-
-output [
-  {
-    name: "logits"
-    data_type: TYPE_FP32
-    dims: [ 10 ]
-  }
-]
+input [{ name: "input" data_type: TYPE_FP32 dims: [ 1, 28, 28 ] }]
+output [{ name: "logits" data_type: TYPE_FP32 dims: [ 10 ] }]
 
 dynamic_batching { }
+# rồi thử: max_queue_delay_microseconds: 100
+# rồi thử: max_queue_delay_microseconds: 1000
+
+instance_group [{ count: 1 kind: KIND_GPU }]
+# rồi riêng: count: 2 / count: 4
 ```
-
-Restart Triton.
-
-Run Perf Analyzer:
 
 ```bash
-perf_analyzer \
-  -m tiny_classifier_onnx \
-  --shape input:1,28,28 \
-  --concurrency-range 1:64:4
+perf_analyzer -m tiny_classifier_onnx \
+  --shape input:1,28,28 --concurrency-range 1:64:4
 ```
 
-Record:
+::: {.callout-tip icon=false collapse="true"}
+## Lab 5–6 chi tiết: bảng đo + câu hỏi
 
-```text
-concurrency
-throughput
-average latency
-p95/p99 if available
-server queue time
-server compute infer time
-```
+Ghi bảng: concurrency · thr · avg · p95 · p99 · queue · compute. Chạy riêng delay `100` vs `1000`; instances `1` / `2` / `4`.
 
-Now try delayed batching:
+**Q Lab 5:** thr↑? lat↑? queue↑? SLO (vd. p99 dưới 30ms) còn giữ? config nào chọn?
 
-```protobuf
-dynamic_batching {
-  max_queue_delay_microseconds: 100
-}
-```
+**Q Lab 6:** thr↑ + lat trong SLO = OK; mem↑ + p99↑ mà thr không tăng = instance quá cao. Đừng thêm `preferred_batch_size` nếu chưa đo.
+:::
 
-Then:
-
-```protobuf
-dynamic_batching {
-  max_queue_delay_microseconds: 1000
-}
-```
-
-Compare.
-
-Questions:
-
-1. Throughput tăng hay giảm?
-2. Latency tăng bao nhiêu?
-3. Queue duration có tăng không?
-4. SLO giả định của bạn là gì?
-5. Config nào bạn sẽ chọn?
-
-
-
-## End-to-end Lab 6 — Tune instance group
-
-Add:
-
-```protobuf
-instance_group [
-  {
-    count: 1
-    kind: KIND_GPU
-  }
-]
-```
-
-Benchmark.
-
-Then try:
-
-```protobuf
-instance_group [
-  {
-    count: 2
-    kind: KIND_GPU
-  }
-]
-```
-
-Benchmark again.
-
-Then try:
-
-```protobuf
-instance_group [
-  {
-    count: 4
-    kind: KIND_GPU
-  }
-]
-```
-
-Compare:
-
-|  instance count | throughput |  p50 | p95 | p99 | GPU util | GPU memory |
-|----------------:|-----------:|-----:|----:|----:|---------:|-----------:|
-|               1 |            |      |     |     |          |            |
-|               2 |            |      |     |     |          |            |
-|               4 |            |      |     |     |          |            |
-
-Interpretation:
-
-```text
-If throughput improves and latency remains within SLO, instance count helps.
-If memory grows and p99 worsens without throughput gain, instance count is too high.
-```
-
-
-
-## End-to-end Lab 7 — Serve TensorRT plan
-
-Convert ONNX to TensorRT engine:
+### Lab 7–9: TensorRT plan, Python preprocess, ensemble {.unnumbered}
 
 ```bash
-trtexec \
-  --onnx=model.onnx \
-  --saveEngine=model.plan \
-  --fp16 \
-  --minShapes=input:1x1x28x28 \
-  --optShapes=input:4x1x28x28 \
-  --maxShapes=input:8x1x28x28
-```
+trtexec --onnx=model.onnx --saveEngine=model.plan --fp16 \
+  --minShapes=input:1x1x28x28 --optShapes=input:4x1x28x28 --maxShapes=input:8x1x28x28
 
-Create repository:
-
-```bash
 mkdir -p model_repository/tiny_classifier_trt/1
 cp model.plan model_repository/tiny_classifier_trt/1/model.plan
 ```
 
-Create `model_repository/tiny_classifier_trt/config.pbtxt`:
-
-```protobuf
-name: "tiny_classifier_trt"
-platform: "tensorrt_plan"
-max_batch_size: 8
-
-input [
-  {
-    name: "input"
-    data_type: TYPE_FP32
-    dims: [ 1, 28, 28 ]
-  }
-]
-
-output [
-  {
-    name: "logits"
-    data_type: TYPE_FP32
-    dims: [ 10 ]
-  }
-]
-
-dynamic_batching { }
-```
-
-Start Triton and benchmark both:
+Config TRT: `platform: "tensorrt_plan"`, `max_batch_size: 8`, dims `[1,28,28]`, `dynamic_batching {}`. So cả hai model:
 
 ```bash
 perf_analyzer -m tiny_classifier_onnx --shape input:1,28,28 --concurrency-range 1:64:4
 perf_analyzer -m tiny_classifier_trt  --shape input:1,28,28 --concurrency-range 1:64:4
 ```
 
-Compare:
+Model nhỏ có thể **không** thấy TRT thắng rõ — đó là bài học hợp lệ.
 
-| Model                 | backend      | throughput | p50 | p95 | p99 | notes |
-|-----------------------|--------------|-----------:|----:|----:|----:|-------|
-| tiny_classifier_onnx  | ONNX Runtime |            |     |     |     |       |
-| tiny_classifier_trt   | TensorRT     |            |     |     |     |       |
+::: {.callout-tip icon=false collapse="true"}
+## Lab 8–9 chi tiết: Python preprocess + `tiny_pipeline`
 
-Important:
+Python preprocess (UINT8 → FP32 `/255.0`): repo `normalize_python/` + `model.py` skeleton @sec-instances; dims `[1,28,28]` TYPE_UINT8 → TYPE_FP32. Hỏi: lat thêm bao nhiêu? batching? CPU-bound? có nên fuse vào ONNX?
 
-```text
-For very tiny models, TensorRT may not show dramatic gains because overhead dominates.
-Use realistic models for serious conclusions.
-```
-
-
-
-## End-to-end Lab 8 — Python backend preprocessing
-
-Create repository:
-
-```bash
-mkdir -p model_repository/normalize_python/1
-```
-
-Config `model_repository/normalize_python/config.pbtxt`:
-
-```protobuf
-name: "normalize_python"
-backend: "python"
-max_batch_size: 8
-
-input [
-  {
-    name: "INPUT"
-    data_type: TYPE_UINT8
-    dims: [ 1, 28, 28 ]
-  }
-]
-
-output [
-  {
-    name: "OUTPUT"
-    data_type: TYPE_FP32
-    dims: [ 1, 28, 28 ]
-  }
-]
-```
-
-`model_repository/normalize_python/1/model.py`:
-
-```python
-import numpy as np
-import triton_python_backend_utils as pb_utils
-
-
-class TritonPythonModel:
-    def execute(self, requests):
-        responses = []
-        for request in requests:
-            x = pb_utils.get_input_tensor_by_name(request, "INPUT").as_numpy()
-            y = x.astype(np.float32) / 255.0
-            out = pb_utils.Tensor("OUTPUT", y)
-            responses.append(pb_utils.InferenceResponse(output_tensors=[out]))
-        return responses
-```
-
-Test this model directly with a client.
-
-Then ask:
-
-1. How much latency does preprocessing add?
-2. Does Python backend support batching correctly?
-3. Is preprocessing CPU-bound?
-4. Would it be better to move preprocessing into ONNX graph?
-
-
-
-## End-to-end Lab 9 — Build an ensemble
-
-Goal:
-
-```text
-uint8 input -> normalize_python -> tiny_classifier_onnx -> logits
-```
-
-Repository:
-
-```text
-model_repository/
-  normalize_python/
-  tiny_classifier_onnx/
-  tiny_pipeline/
-    config.pbtxt
-    1/
-      empty.txt
-```
-
-Create:
+**Ensemble Lab (`tiny_pipeline`)** — khác tip concept ImageNet:
 
 ```bash
 mkdir -p model_repository/tiny_pipeline/1
 touch model_repository/tiny_pipeline/1/empty.txt
 ```
 
-Config concept:
-
 ```protobuf
 name: "tiny_pipeline"
 platform: "ensemble"
 max_batch_size: 8
-
-input [
-  {
-    name: "RAW_INPUT"
-    data_type: TYPE_UINT8
-    dims: [ 1, 28, 28 ]
-  }
-]
-
-output [
-  {
-    name: "logits"
-    data_type: TYPE_FP32
-    dims: [ 10 ]
-  }
-]
-
+input [{ name: "RAW_INPUT" data_type: TYPE_UINT8 dims: [ 1, 28, 28 ] }]
+output [{ name: "logits" data_type: TYPE_FP32 dims: [ 10 ] }]
 ensemble_scheduling {
   step [
     {
       model_name: "normalize_python"
       model_version: -1
-      input_map {
-        key: "INPUT"
-        value: "RAW_INPUT"
-      }
-      output_map {
-        key: "OUTPUT"
-        value: "NORMALIZED"
-      }
+      input_map { key: "INPUT" value: "RAW_INPUT" }
+      output_map { key: "OUTPUT" value: "NORMALIZED" }
     },
     {
       model_name: "tiny_classifier_onnx"
       model_version: -1
-      input_map {
-        key: "input"
-        value: "NORMALIZED"
-      }
-      output_map {
-        key: "logits"
-        value: "logits"
-      }
+      input_map { key: "input" value: "NORMALIZED" }
+      output_map { key: "logits" value: "logits" }
     }
   ]
 }
 ```
 
-Client calls only:
-
-```text
-tiny_pipeline
+```bash
+perf_analyzer -m tiny_pipeline \
+  --shape RAW_INPUT:1,28,28 --concurrency-range 1:64:4
 ```
 
-Now benchmark:
+Hỏi: overhead ensemble? Python bottleneck? dyn batch qua pipeline? metrics model nào nổi?
+:::
+
+### Lab 10: Metrics {.unnumbered}
 
 ```bash
-perf_analyzer -m tiny_pipeline --shape RAW_INPUT:1,28,28 --concurrency-range 1:64:4
-```
+perf_analyzer -m tiny_classifier_onnx \
+  --shape input:1,28,28 --concurrency-range 32:32
 
-Compare with direct `tiny_classifier_onnx`.
-
-Questions:
-
-1. How much overhead does the ensemble add?
-2. Is Python preprocessing the bottleneck?
-3. Does dynamic batching still help?
-4. Which model's metrics show the bottleneck?
-
-
-
-## End-to-end Lab 10 — Metrics analysis
-
-Run load:
-
-```bash
-perf_analyzer \
-  -m tiny_classifier_onnx \
-  --shape input:1,28,28 \
-  --concurrency-range 32:32
-```
-
-In another terminal:
-
-```bash
-curl localhost:8002/metrics > metrics.txt
-```
-
-Search:
-
-```bash
+curl -s localhost:8002/metrics > metrics.txt
 grep tiny_classifier_onnx metrics.txt | head -50
 ```
 
-Look for:
-
-```text
-request success/failure
-queue duration
-compute input duration
-compute infer duration
-compute output duration
-execution count
-inference count
-```
-
-Write down:
-
-```text
-Where is time spent?
-queue vs compute input vs compute infer vs compute output
-```
-
-Interpretation exercise:
-
-```text
-Case A:
-  queue high, compute infer low
-  -> scheduler/instances/load issue
-
-Case B:
-  compute infer high, GPU util high
-  -> model compute issue
-
-Case C:
-  compute input high
-  -> data movement or input handling issue
-
-Case D:
-  GPU util low but latency high
-  -> CPU/network/client/backend overhead issue
-```
-
-
-
-## Common debugging scenarios
-
-### Model does not load
-
-Symptoms:
-
-```text
-model UNAVAILABLE
-Triton startup error
-repository index shows failed model
-```
-
-Checklist:
-
-1. Directory layout đúng chưa?
-2. Version directory có phải số nguyên không?
-3. Model filename đúng convention backend chưa?
-4. `config.pbtxt` syntax đúng chưa?
-5. `backend`/`platform` đúng chưa?
-6. Input/output names khớp model chưa?
-7. Data type đúng chưa?
-8. Dims đúng chưa?
-9. TensorRT engine có compatible với deployment GPU/TensorRT/CUDA không?
-10. Custom plugin/shared library có load được không?
-
-### Shape mismatch
-
-Symptoms:
-
-```text
-unexpected shape for input
-expected shape ... got ...
-```
-
-Most common cause:
-
-```text
-Bạn quên rằng config dims exclude batch dimension when max_batch_size > 0.
-```
-
-Example:
-
-Model expects:
-
-```text
-[batch, 3, 224, 224]
-```
-
-Correct config:
-
-```protobuf
-max_batch_size: 32
-dims: [ 3, 224, 224 ]
-```
-
-Incorrect config:
-
-```protobuf
-max_batch_size: 32
-dims: [ 1, 3, 224, 224 ]
-```
-
-### Dynamic batching not working
-
-Symptoms:
-
-```text
-throughput unchanged
-batch size metrics stay near 1
-queue time low
-GPU utilization low
-```
-
-Checklist:
-
-1. `max_batch_size > 0`?
-2. `dynamic_batching {}` present?
-3. Client concurrency high enough?
-4. Requests have compatible shapes?
-5. Model supports batch dimension?
-6. Client is not sending already huge batch with low concurrency?
-7. Is traffic too low to form batches?
-8. Are there multiple model instances consuming requests before batches can grow?
-9. Are `preferred_batch_size` settings too restrictive?
-10. Is `max_queue_delay_microseconds` too small for traffic pattern?
-
-### Latency got worse after dynamic batching
-
-This may be expected.
-
-Check:
-
-1. Queue duration increased?
-2. p99 worsened more than p50?
-3. `max_queue_delay_microseconds` too high?
-4. `max_batch_size` too high?
-5. Preferred batch sizes causing wait?
-6. GPU compute improved but queueing dominates?
-7. SLO violated?
-
-Fix:
-
-- Lower queue delay.
-- Lower max batch size.
-- Remove preferred batch size.
-- Use more instances.
-- Use scale-out.
-- Disable dynamic batching for latency-critical endpoint.
-
-### Throughput low and GPU utilization low
-
-Possible causes:
-
-- Client not generating enough concurrency.
-- Network bottleneck.
-- HTTP JSON overhead.
-- Input data too large.
-- CPU preprocessing bottleneck.
-- Python backend bottleneck.
-- Copies CPU/GPU dominate.
-- Model too small, overhead dominates.
-- Dynamic batching not forming large batches.
-
-Fix ideas:
-
-- Increase concurrency in benchmark.
-- Use gRPC.
-- Use binary tensor data.
-- Use shared memory extensions for large tensors.
-- Move preprocessing to GPU/model graph.
-- Use dynamic batching.
-- Use more realistic benchmark data.
-
-### GPU memory too high
-
-Possible causes:
-
-- Too many model instances.
-- Multiple large models loaded.
-- TensorRT workspaces.
-- Large max batch size.
-- Multiple versions loaded.
-- Response cache.
-- Fragmentation.
-
-Fix ideas:
-
-- Lower instance count.
-- Serve fewer versions.
-- Reduce max batch size.
-- Use explicit model loading.
-- Separate models across GPUs.
-- Use Model Analyzer to explore memory/performance tradeoff.
-
-## TensorRT plan fails in Triton but works elsewhere
-
-Checklist:
-
-1. Same TensorRT version?
-2. Same CUDA version?
-3. Same GPU architecture?
-4. Same plugin libraries available?
-5. Engine built with correct optimization profiles?
-6. Input names/dtypes match config?
-7. Triton container has required backend/plugin dependencies?
-8. Engine filename is correct?
-9. Engine built for explicit batch if required by current TensorRT workflow?
-
-
-
-## Production serving checklist
-
-### Artifact checklist
-
-- [ ] Model artifact is versioned.
-- [ ] Export config is stored.
-- [ ] ONNX checker passes if ONNX.
-- [ ] TensorRT engine built in target-compatible environment if TensorRT.
-- [ ] Input/output names are stable.
-- [ ] Input/output dtype and shape are documented.
-- [ ] Test data examples are stored.
-- [ ] Accuracy regression test passes.
-- [ ] Performance baseline exists.
-
-### Triton repository checklist
-
-- [ ] Repository layout is valid.
-- [ ] Version directories are numeric.
-- [ ] `config.pbtxt` is explicit.
-- [ ] `max_batch_size` is correct.
-- [ ] Input/output dims exclude batch dimension only when appropriate.
-- [ ] Backend/platform is correct.
-- [ ] Dynamic batching is benchmarked, not guessed.
-- [ ] Instance group is benchmarked.
-- [ ] Version policy is explicit for rollout-sensitive models.
-
-### Runtime checklist
-
-- [ ] Triton container version is pinned.
-- [ ] Driver/CUDA/TensorRT compatibility is documented.
-- [ ] Health endpoints configured.
-- [ ] Metrics endpoint scraped.
-- [ ] Logs collected.
-- [ ] GPU memory monitored.
-- [ ] Queue duration monitored.
-- [ ] Error rate alert configured.
-- [ ] p99 latency alert configured.
-- [ ] Model load failure alert configured.
-
-### Deployment checklist
-
-- [ ] Immutable artifact or controlled model control mode.
-- [ ] No unsafe in-place repository mutation.
-- [ ] Canary or staged rollout.
-- [ ] Rollback path tested.
-- [ ] Load test performed before full traffic.
-- [ ] Warmup strategy defined.
-- [ ] Capacity headroom defined.
-- [ ] Autoscaling policy based on meaningful metrics.
-
-
-
-## Design patterns
-
-### 34.1 Simple single-model GPU service
-
-```text
-ONNX -> TensorRT plan -> Triton TensorRT backend -> dynamic batching -> metrics
-```
-
-Good for:
-
-- Image classification.
-- Object detection.
-- Embedding model.
-- Ranking model.
-
-### Multi-model GPU service
-
-```text
-model A -> GPU 0, instance count 2
-model B -> GPU 0, instance count 1
-model C -> GPU 1, instance count 2
-```
-
-Need:
-
-- Memory planning.
-- Load isolation.
-- Model Analyzer.
-- Per-model SLO.
-
-### Pipeline service
-
-```text
-Python preprocess -> TensorRT inference -> Python postprocess
-```
-
-Need:
-
-- Ensemble model.
-- Batch compatibility across steps.
-- Avoid Python bottlenecks.
-
-### Low-latency service
-
-```text
-max_queue_delay_microseconds: 0 or very low
-small max_batch_size
-careful instance count
-TensorRT FP16/INT8
-fast protocol
-minimal preprocessing
-```
-
-Optimize for:
-
-```text
-p99 latency
-```
-
-### High-throughput offline/nearline service
-
-```text
-larger max_batch_size
-dynamic batching
-higher queue delay
-client batch allowed
-many instances if memory allows
-```
-
-Optimize for:
-
-```text
-throughput per GPU
-cost per inference
-```
-
-
-
-##  Anti-patterns
-
-### Anti-pattern 1: Copy config from internet blindly
-
-`config.pbtxt` must match your model artifact. Input names, shapes and dtypes are model-specific.
-
-### Anti-pattern 2: Set `preferred_batch_size` without benchmark
-
-Preferred batch sizes are not magic. They can hurt latency and batching behavior.
-
-### Anti-pattern 3: Increase instance count until GPU memory is full
-
-More instances can reduce performance if GPU is already saturated.
-
-### Anti-pattern 4: Use Python backend for everything
-
-Python backend is flexible, not free. Use it deliberately.
-
-### Anti-pattern 5: Benchmark only average latency
-
-Production users feel p95/p99. Always inspect tail latency.
-
-### Anti-pattern 6: Treat TensorRT plan as universally portable
-
-TensorRT plan compatibility matters. Build for target environment.
-
-### Anti-pattern 7: Use poll mode with non-atomic repository updates
-
-Triton can observe partial files. Prefer immutable rollout or explicit control.
-
-### Anti-pattern 8: Ignore queue duration
-
-Queue duration often tells you more about serving bottleneck than model compute time alone.
-
-
-
-## Checkpoint questions
-
-Bạn nên trả lời được các câu sau trước khi sang Lesson 7:
-
-1. Triton khác gì với TensorRT?
-2. Triton khác gì với ONNX Runtime?
-3. Model repository layout chuẩn là gì?
-4. `config.pbtxt` cần những field tối thiểu nào?
-5. Khi `max_batch_size > 0`, `dims` trong config có bao gồm batch dimension không?
-6. Khi nào nên đặt `max_batch_size: 0`?
-7. Dynamic batching hoạt động như thế nào?
-8. Vì sao dynamic batching có thể tăng throughput nhưng làm p99 tệ hơn?
-9. `max_queue_delay_microseconds` ảnh hưởng gì?
-10. Khi nào nên dùng `preferred_batch_size`?
-11. `instance_group count` khác gì với batch size?
-12. Khi nào tăng instance count giúp performance?
-13. Khi nào tăng instance count làm performance xấu hơn?
-14. ONNX Runtime backend và TensorRT backend khác nhau thế nào?
-15. Vì sao TensorRT plan file cần tương thích môi trường deploy?
-16. Python backend phù hợp cho việc gì?
-17. Ensemble model có tự execute compute không?
-18. Model control mode `none`, `explicit`, `poll` khác nhau thế nào?
-19. Vì sao `poll` mode có rủi ro trong production?
-20. Bạn đọc metrics nào để phân biệt queue bottleneck và compute bottleneck?
-21. Perf Analyzer khác gì Model Analyzer?
-22. Một benchmark Triton tốt cần đo những gì?
-23. Nếu dynamic batching không hoạt động, bạn kiểm tra gì đầu tiên?
-24. Nếu GPU utilization thấp nhưng latency cao, bạn nghi ngờ gì?
-25. Nếu p99 tăng mạnh sau khi bật batching, bạn chỉnh gì?
-
-
-
-## Mini project
-
-### Goal
-
-Deploy một image classification service bằng Triton, benchmark và chọn config production candidate.
-
-### Requirements
-
-1. Export PyTorch model sang ONNX.
-2. Validate ONNX model.
-3. Serve ONNX bằng Triton ONNX Runtime backend.
-4. Build TensorRT FP16 engine.
-5. Serve TensorRT plan bằng Triton TensorRT backend.
-6. Enable dynamic batching.
-7. Tune instance group.
-8. Benchmark bằng Perf Analyzer.
-9. Collect metrics từ `/metrics`.
-10. Viết báo cáo chọn config tốt nhất.
-
-### Report template
+::: {.callout-tip icon=false collapse="true"}
+## Lab 10 chi tiết: Case A–D
+
+Tìm: success/fail, queue, compute input/infer/output, execution/inference count.
+
+| Case | Quan sát | Ý nghĩa |
+|:-----|:---------|:--------|
+| A | queue↑ infer↓ | Scheduler / instances / traffic |
+| B | infer↑ GPU↑ | Model/backend compute |
+| C | compute input↑ | Data movement |
+| D | GPU↓ + lat↑ | CPU / network / client |
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Mini project — requirements + report template
+
+**10 yêu cầu:** (1) export ONNX (2) validate (3) serve ORT (4) TRT FP16 (5) serve plan (6) dyn batch (7) tune instances (8) Perf Analyzer (9) `/metrics` (10) report chọn best config.
 
 ```markdown
 # Triton Serving Report
 
 ## Model
-- Architecture:
-- Input shape:
-- Output shape:
-- Precision:
-- Backend candidates:
+- Architecture / input shape / precision / backends
 
 ## Environment
-- GPU:
-- Driver:
-- Triton container:
-- TensorRT version:
-- CUDA version:
+- GPU / driver / Triton image / TensorRT / CUDA
 
 ## Configs tested
-| Config | Backend | Dynamic batching | Instance count | Max batch | Queue delay |
-|----|---|---:|---:|----:|----:|
+| Config | Backend | Dyn batch | Instances | Max batch | Delay |
+|:-------|:--------|:---------:|:---------:|:---------:|------:|
 
 ## Benchmark results
-| Config | Throughput | p50 | p95 | p99 | GPU util | GPU memory |
-|---|---:|---:|---:|---:|---:|---:|
+| Config | thr | p50 | p95 | p99 | GPU util | mem | Notes |
+|:-------|----:|----:|----:|----:|---------:|----:|:------|
 
 ## Analysis
-- Best throughput config:
-- Best latency config:
-- Best production candidate:
-- Bottleneck observed:
-- Risks:
+- Best thr / best lat / production candidate
+- Bottleneck / risks / rollback
 
 ## Final decision
-- Selected config:
-- Reason:
-- Rollback plan:
+- Selected config + reason
 ```
+:::
 
 
+## Checkpoint questions {.unnumbered}
 
-## Glossary
+::: {.callout-tip icon=false collapse="true"}
+## Tự kiểm
 
-**Triton Inference Server**: Server chuyên phục vụ inference cho nhiều loại model/framework/backend.
-
-**Model repository**: Filesystem layout chứa model artifacts, versions và config.
-
-**`config.pbtxt`**: File cấu hình model trong Triton.
-
-**Backend**: Component biết cách chạy một loại model artifact/runtime.
-
-**Platform**: Cách khai báo model type cũ/phổ biến cho một số backend như TensorRT plan.
-
-**Model instance**: Execution slot của một model trên CPU/GPU.
-
-**`instance_group`**: Config quy định số model instances và device placement.
-
-**Dynamic batching**: Triton gom nhiều inference requests thành batch server-side.
-
-**Sequence batching**: Batching cho stateful sequence requests.
-
-**Ensemble model**: Model pipeline trong Triton gồm nhiều model steps.
-
-**Perf Analyzer**: Công cụ benchmark Triton bằng load có kiểm soát.
-
-**Model Analyzer**: Công cụ explore config performance/memory cho Triton models.
-
-**p99 latency**: 99% requests có latency thấp hơn giá trị này.
-
-**Queue duration**: Thời gian request chờ scheduler trước khi execute.
-
-**Compute infer duration**: Thời gian backend/model thực hiện inference.
-
-**Model control mode**: Cách Triton xử lý model load/unload và repository changes.
-
-**Version policy**: Quy định model versions nào được serve.
+1. Triton vs TensorRT? Serving vs compile/execute engine.  
+2. Triton vs ORT? Server đa model/batch/metrics vs runtime.  
+3. Repo layout? `name/config.pbtxt/version/file`.  
+4. Config tối thiểu? name/backend, max_batch_size, input/output.  
+5. `max_batch_size>0` → dims **không** gồm batch.  
+6. `max_batch_size:0` khi không batch / full dims.  
+7. Dyn batch? Gom request server-side thành batch lớn hơn.  
+8. Thr↑ p99↓? Queue delay + batch lớn hơn.  
+9. `max_queue_delay`? Chờ thêm peer → batch↑, latency risk↑.  
+10. `preferred_batch_size`? Chỉ khi benchmark chứng minh.  
+11. Instance count ≠ batch size.  
+12. Tăng instance khi chưa saturate / nhiều concurrent.  
+13. Giảm khi VRAM/contention.  
+14. ORT dễ/portable; TRT nhanh hơn, kém portable.  
+15. Plan phụ thuộc GPU/TRT version.  
+16. Python: pre/post/glue — cẩn bottleneck.  
+17. Ensemble không tự compute.  
+18. none / explicit / poll.  
+19. Poll: partial FS update.  
+20. Queue vs compute metrics.  
+21. Perf Analyzer = load test; Model Analyzer = explore configs.  
+22. thr + p50/p95/p99 + GPU util/mem + queue.  
+23. Batching off: max_batch, config block, shapes, traffic.  
+24. Util thấp + latency cao: CPU pre/post, copy, queue, concurrency.  
+25. p99 sau batch: giảm delay/max batch; thêm instance; đối chiếu SLO.
+:::
 
 
+## Glossary {.unnumbered}
 
-## Summary
-
-Triton là lớp serving đưa model artifact vào production.
-
-Bạn nên nhớ flow:
-
-```text
-model artifact
-  -> model repository
-  -> config.pbtxt
-  -> Triton scheduler
-  -> backend
-  -> model instances
-  -> metrics + benchmark
-  -> production rollout
-```
-
-Các ý quan trọng nhất:
-
-1. `config.pbtxt` là hợp đồng giữa client, Triton và model artifact.
-2. `max_batch_size > 0` nghĩa là `dims` không bao gồm batch dimension.
-3. Dynamic batching có thể tăng throughput nhưng phải kiểm soát p99 latency.
-4. `preferred_batch_size` chỉ nên dùng khi có benchmark chứng minh.
-5. `instance_group` tăng parallel execution nhưng có trade-off memory/contention.
-6. ONNX Runtime backend tốt cho portability; TensorRT backend tốt cho optimized NVIDIA GPU inference.
-7. Python backend linh hoạt nhưng có thể bottleneck.
-8. Perf Analyzer và Model Analyzer là bắt buộc nếu muốn tune nghiêm túc.
-9. Metrics như queue duration, compute infer duration, GPU utilization giúp xác định bottleneck.
-10. Production Triton deployment cần versioning, health checks, metrics, rollback và performance baseline.
-
-Sau Lesson 6, bạn đã có bức tranh end-to-end:
-
-```text
-ONNX / TensorRT / Quantization
-    -> Triton Serving
-    -> Dynamic batching
-    -> Concurrent execution
-    -> Observability
-    -> Production deployment
-```
-
-Bước tiếp theo tự nhiên là profiling và optimization sâu hơn:
-
-```text
-Lesson 7: Profiling and Benchmarking Inference Systems — trtexec, Perf Analyzer, Nsight Systems, GPU Utilization, Tail Latency and Bottleneck Analysis
-```
+| Thuật ngữ | Giải thích ngắn |
+|:----------|:----------------|
+| Triton Inference Server | Server serve inference đa backend/model |
+| Model repository | FS layout: artifact + config + versions |
+| `config.pbtxt` | Cấu hình model Triton |
+| Backend | Runtime execute artifact (ORT, TRT, Python, …) |
+| Platform | Khai báo loại model trong config (vd. `tensorrt_plan`, `ensemble`) |
+| Model instance / `instance_group` | Execution slot; config số lượng + device |
+| Dynamic batching | Gom request server-side thành batch lớn hơn |
+| Sequence batching | Batch stateful / sequence (ASR, RNN…) |
+| Ensemble | Pipeline nhiều model steps (không tự compute) |
+| Perf Analyzer / Model Analyzer | Load benchmark / explore config |
+| Queue / compute duration | Chờ scheduler / thời gian infer (input+infer+output) |
+| Model control mode | none / explicit / poll |
+| Version policy | Version nào được serve (`latest` / `specific` / `all`) |
+| p99 latency | 99% request dưới ngưỡng này |
 
 
+## Summary {.unnumbered}
 
-##  References
+1. Triton = serving layer quanh artifact đã tối ưu (không thay TensorRT/ORT).  
+2. Repository + `config.pbtxt` là hợp đồng deploy — layout/`version_policy`/`max_batch_size` quyết định load.  
+3. `max_batch_size` đổi nghĩa `dims` — đừng nhầm shape.  
+4. Dynamic batching và instances tune theo **SLO (p99)**, không chỉ thr; tránh vận hành sát latency cliff.  
+5. Observable: health + metrics (queue vs compute input/infer/output) + Perf Analyzer matrix.  
+6. Rollout immutable/explicit (11 bước); tránh poll mặc định.  
+7. Flow: artifact → repo → config → backend → batch/instances → metrics → canary/rollback.
 
-Tài liệu nên đọc kèm khi cần tra cứu chi tiết:
 
-1. NVIDIA Triton Inference Server Documentation  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/index.html
+## Preview bài tiếp theo {.unnumbered}
 
-2. Triton Model Repository  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_repository.html
+Lesson 7: **Profiling and Benchmarking Inference Systems** — `trtexec`, Perf Analyzer sâu hơn, Nsight, percentile methodology, tìm bottleneck bằng số liệu.
 
-3. Triton Model Configuration  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_configuration.html
 
-4. Triton Batchers / Dynamic Batcher / Sequence Batcher  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/batcher.html
+## References {.unnumbered}
 
-5. Triton Dynamic Batching and Concurrent Model Execution Tutorial  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/tutorials/Conceptual_Guide/Part_2-improving_resource_utilization/README.html
-
-6. Triton Python Backend  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/python_backend/README.html
-
-7. Triton Performance Analyzer  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/perf_analyzer/README.html
-
-8. Triton Model Analyzer  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_analyzer.html
-
-9. Triton Metrics  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/metrics.html
-
-10. Triton Model Management  
-    https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_management.html
-
-11. Triton Inference Server GitHub repository  
-    https://github.com/triton-inference-server/server
+1. [NVIDIA Triton Inference Server docs](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/index.html)  
+2. [Model repository](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_repository.html)  
+3. [Model configuration](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_configuration.html)  
+4. [Architecture — models and schedulers](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/architecture.html#models-and-schedulers)  
+5. [Batcher](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/batcher.html)  
+6. [Perf Analyzer](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/perf_analyzer.html)  
+7. [Model Analyzer](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_analyzer.html)  
+8. [Metrics](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/metrics.html)  
+9. [Model management](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_management.html)  
+10. [Python backend](https://github.com/triton-inference-server/python_backend)  
+11. [Triton Inference Server (GitHub)](https://github.com/triton-inference-server/server)

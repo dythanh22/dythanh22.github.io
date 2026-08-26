@@ -7,139 +7,112 @@ series: ai-optimize
 order: 2
 description: "ONNX graph, operators, opset và export — IR cho runtime/compiler."
 role: "ONNX graph, operators, opset và export — IR cho runtime/compiler"
+aliases:
+  - /bai-hoc/ai-optimize/lesson_2_onnx_fundamentals.html
 ---
 
 ::: {.callout-note icon=false}
 ## Mục tiêu bài học
-Mục tiêu của bài này là giúp bạn hiểu ONNX như một **intermediate representation (biểu diễn trung gian)** cho mô hình machine learning, không chỉ là một file `.onnx` được export từ PyTorch. Sau bài này, bạn cần có khả năng nhìn vào một ONNX graph và hiểu model đang được biểu diễn bằng các node, tensor, operator, initializer, input/output, opset và shape như thế nào.
+Bài này không dạy tối ưu TensorRT hay serving Triton. Mục tiêu là hiểu ONNX như **intermediate representation**: nhìn vào một graph và đọc được node, tensor, operator, initializer, input/output, opset và shape — rồi mới export, validate và debug có hệ thống.
+:::
+
+::: {.callout-note icon=false}
+## Lộ trình bài học
+
+| # | Phần | Trả lời câu hỏi | Thời lượng |
+|:--|:-----|:----------------|:-----------|
+| 1 | ONNX là / không phải gì | Format khác runtime thế nào? | 10 phút |
+| 2 | Cấu trúc ModelProto & graph | File `.onnx` chứa gì? | 15 phút |
+| 3 | Tensor, node, operator, domain | Ai nối với ai trong graph? | 20 phút |
+| 4 | Opset & versioning | Vì sao backend báo unsupported? | 15 phút |
+| 5 | Shape, dtype, layout | Static vs dynamic, NCHW vs NHWC | 15 phút |
+| 6 | Export pipeline | Capture graph, ORT preview | 20 phút |
+| 7 | Validate & debug | Checker, tolerance, export problems | 20 phút |
+| 8 | Mini-lab | Lab 2A–2D + exercises | 45–60 phút |
+
+Đọc tối thiểu: phần 1, 2, 4. Làm Lab 2A–2B trước khi sang Lesson 3.
+:::
+
+::: {.reading-modes}
+**Đọc nhanh:** callout *Ý chính* + bảng so sánh + sơ đồ xương sống.  
+**Đọc đủ:** mở tip đào sâu, chạy toàn bộ Mini-lab và Checkpoint.
 :::
 
 
-## Vị trí của Lesson 2 trong chuỗi học {.unnumbered}
- 
-Ở Lesson 1, bạn đã xây mental model về inference system:
+## Bối cảnh {.unnumbered}
 
-```mermaid
-flowchart TB
+Ở Lesson 1 bạn đã có mental model inference system. Lesson 2 đi vào mảnh ghép đầu của pipeline tối ưu: **ONNX graph**.
 
-REQ["Request"]
---> PRE["Preprocessing"]
---> BATCH["Batching"]
---> RUNTIME["Runtime"]
---> GPU["GPU execution"]
---> POST["Postprocessing"]
---> RESP["Response"]
-
-%% Optional annotations
-
-PRE -. "decode / normalize / tensor conversion" .-> BATCH
-
-BATCH -. "dynamic batching / scheduling" .-> RUNTIME
-
-RUNTIME -. "TensorRT / ONNX Runtime / Triton backend" .-> GPU
-
-GPU -. "kernel execution on accelerator" .-> POST
-
-POST -. "softmax / serialization / formatting" .-> RESP
-```
-
-Lesson 2 đi vào mảnh ghép đầu tiên trong pipeline tối ưu inference:
-
-```mermaid
+```{mermaid}
+%%| label: fig-l2-spine
+%%| fig-cap: "Sơ đồ xương sống Lesson 2: từ PyTorch tới graph ONNX sẵn sàng cho runtime/compiler."
+%%| fig-width: 6.5
+%%| fig-align: "center"
 flowchart LR
-
-MODEL["PyTorch / TensorFlow model"]
---> ONNX["ONNX model"]
---> BACKEND["ONNX Runtime / TensorRT / OpenVINO / CoreML / other backends"]
-
-%% Optional annotations
-
-MODEL -. "export / conversion" .-> ONNX
-
-ONNX -. "runtime / compiler" .-> BACKEND
+  PT([PyTorch]) -->|"export"| ONNX([ONNX graph])
+  ONNX -->|"validate / inspect"| VAL([Checker · Netron])
+  VAL -->|"run / compile"| RT([ORT / TensorRT])
+  classDef fmt fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#EAF3FF,stroke:#4A90E2,stroke-width:2px,color:#1F3A5F
+  class PT,RT soft
+  class ONNX fmt
+  class VAL hot
 ```
 
-ONNX không phải là TensorRT, cũng không phải là ONNX Runtime. ONNX là format/specification để biểu diễn computation graph và weights. ONNX Runtime là runtime có thể load và chạy ONNX model. TensorRT có thể parse ONNX model rồi build engine tối ưu cho GPU NVIDIA.
+ONNX là format/specification. ONNX Runtime load và chạy graph. TensorRT có thể parse ONNX rồi build engine NVIDIA. Thứ tự học đúng: hiểu graph → operator/opset → export → validate/inspect/debug → rồi mới ORT/TensorRT. Bỏ qua bước đầu, ONNX trở thành black box khi export lỗi hoặc TensorRT báo unsupported operator.
 
-Cách học đúng là:
-
-```text
-1. Hiểu ONNX graph là gì
-2. Hiểu operator và opset là gì
-3. Hiểu cách export từ framework sang ONNX
-4. Biết validate, inspect, visualize và debug ONNX model
-5. Sau đó mới dùng ONNX Runtime hoặc TensorRT để chạy/tối ưu
-```
-
-Nếu bỏ qua bước 1-4, bạn sẽ dùng ONNX như một black box. Khi export lỗi hoặc TensorRT báo unsupported operator, bạn sẽ rất khó biết lỗi nằm ở framework, exporter, ONNX graph, opset hay backend runtime.
 
 ## Learning outcomes {.unnumbered}
 
-Sau bài này, bạn cần giải thích và thực hành được:
+Sau bài này, bạn giải thích và thực hành được:
 
-1. ONNX là gì và khác gì với ONNX Runtime, TensorRT, TorchScript, SavedModel.
-2. ONNX graph được cấu thành từ `ModelProto`, `GraphProto`, `NodeProto`, `TensorProto`, `ValueInfoProto`.
-3. Sự khác nhau giữa input tensor, output tensor, intermediate tensor và initializer.
-4. Operator là gì, node là gì, attribute là gì, domain là gì.
-5. Opset version là gì và vì sao opset mismatch có thể làm model không chạy được trên backend.
-6. IR version, opset version và model version khác nhau như thế nào.
-7. Export pipeline từ PyTorch sang ONNX hoạt động ở mức khái niệm.
-8. Static shape, dynamic shape và symbolic dimension khác nhau thế nào.
-9. Cách kiểm tra ONNX model bằng `onnx.checker`, `onnx.shape_inference`, Netron và ONNX Runtime.
-10. Các lỗi export phổ biến và cách debug có hệ thống.
+1. ONNX khác gì ONNX Runtime, TensorRT, TorchScript, SavedModel
+2. Cấu trúc `ModelProto`, `GraphProto`, `NodeProto`, `TensorProto`, `ValueInfoProto`
+3. Input / output / intermediate tensor vs **initializer**
+4. Operator, node, attribute, domain
+5. Opset version và vì sao mismatch làm backend fail
+6. IR version vs opset vs model version
+7. Export pipeline PyTorch → ONNX ở mức khái niệm
+8. Static shape, dynamic shape, symbolic dimension
+9. Kiểm tra bằng `onnx.checker`, shape inference, Netron, ONNX Runtime
+10. Lỗi export phổ biến và checklist debug
 
 
 ## Prerequisites {.unnumbered}
 
-Bạn nên đã quen với:
+- Python cơ bản; PyTorch ở mức `nn.Module` và `model(input)`
+- Tensor shape cơ bản, ví dụ `NCHW = [batch, channel, height, width]`
+- Khái niệm inference từ Lesson 1
 
-- Python cơ bản.
-- PyTorch ở mức định nghĩa `nn.Module` và chạy `model(input)`.
-- Tensor shape cơ bản, ví dụ `NCHW = [batch, channel, height, width]`.
-- Khái niệm inference từ Lesson 1.
+Thực hành chạy được trên CPU — chưa cần GPU / CUDA / TensorRT.
 
-Phần thực hành trong bài này chạy được trên CPU. Bạn chưa cần GPU NVIDIA, CUDA hay TensorRT.
-
-
-## Cài đặt môi trường cho bài học {.unnumbered}
-
-Khuyến nghị dùng virtual environment riêng:
+::: {.callout-tip icon=false collapse="true"}
+## Cài đặt môi trường
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install --upgrade torch onnx onnxscript onnxruntime numpy
+pip install netron   # tùy chọn, xem graph trực quan
+netron model.onnx    # hoặc mở file .onnx bằng Netron web/app
 ```
 
-Nếu muốn xem graph trực quan:
-
-```bash
-pip install netron
-```
-
-Chạy Netron local:
-
-```bash
-netron model.onnx
-```
-
-Hoặc mở file `.onnx` bằng Netron web/app.
-
-> Ghi chú: Với PyTorch hiện đại, exporter được khuyến nghị là `torch.onnx.export(..., dynamo=True)`. Cú pháp có thể thay đổi nhẹ theo version PyTorch, nên khi làm project thật bạn luôn cần kiểm tra documentation của version đang dùng.
+Với PyTorch hiện đại, exporter khuyến nghị: `torch.onnx.export(..., dynamo=True)`. Cú pháp có thể đổi theo version — luôn đối chiếu docs của version đang dùng.
+:::
 
 
-## ONNX là gì?
+## ONNX là gì — và không phải gì? {#sec-what-is-onnx}
 
-ONNX là viết tắt của **Open Neural Network Exchange**. Về bản chất, ONNX là một chuẩn mở để biểu diễn model machine learning dưới dạng computation graph cộng với metadata, weights, input/output schema và operator set.
+> ONNX chỉ là file `.onnx` được export, hay là một chuẩn biểu diễn computation graph?
 
-Một cách đơn giản:
+::: {.callout-important icon=false}
+## Ý chính
+**ONNX** (Open Neural Network Exchange) là chuẩn mở: computation graph + metadata + weights + I/O schema + operator set. Nó **không** phải runtime, **không** tự làm model nhanh hơn, và **không** thay evaluation số học.
+:::
 
-```text
-ONNX model = computation graph + weights + input/output schema + operator versioning
-```
-
-Ví dụ, một PyTorch model như sau:
+Một model PyTorch khi export sang ONNX không lưu Python code `forward()`. Chỉ còn graph mà runtime khác đọc được:
 
 ```python
 class MLP(torch.nn.Module):
@@ -153,342 +126,225 @@ class MLP(torch.nn.Module):
         return self.fc2(x)
 ```
 
-Khi export sang ONNX, model có thể trở thành một graph gần giống:
+Sau export, graph trông giống `Input → Gemm → Relu → Gemm → Output`. Code Python biến mất; thứ còn lại là biểu diễn mà runtime khác đọc được.
 
-```mermaid
-flowchart TB
+| ONNX **không** phải | Hệ quả |
+|:--------------------|:-------|
+| Runtime | Cần ORT, TensorRT, OpenVINO, CoreML, TVM, … để chạy |
+| Đảm bảo nhanh hơn | Tốc độ phụ thuộc backend, ops, shape, batch, dtype, transfer |
+| Đảm bảo mọi PyTorch export được | Control flow, custom ops, data-dependent shape dễ fail hoặc bị specialize |
+| Thay evaluation | Schema hợp lệ ≠ tương đương số học với model gốc |
 
-INPUT["Input x"]
---> FC1["Gemm / MatMul + Add"]
---> RELU["ReLU"]
---> FC2["Gemm / MatMul + Add"]
---> OUTPUT["Output logits"]
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: bốn điều ONNX không đảm bảo
 
-%% Optional annotations
+**1. Không phải runtime.** Muốn chạy ONNX model cần runtime/compiler: ONNX Runtime, TensorRT, OpenVINO, CoreML, TVM, hoặc backend riêng của hardware vendor.
 
-FC1 -. "weights fc1" .-> RELU
+**2. Không tự đảm bảo nhanh hơn.** Export PyTorch sang ONNX không tự làm model nhanh hơn. Tốc độ phụ thuộc vào runtime, operator coverage, graph optimization, hardware, static/dynamic shape, batch size, memory transfer, và dtype (FP32/FP16/BF16/INT8).
 
-FC2 -. "weights fc2" .-> OUTPUT
-```
+**3. Không đảm bảo mọi PyTorch model export được.** PyTorch linh hoạt hơn ONNX rất nhiều. Python control flow, custom ops, data-dependent shape logic, tensor-to-Python conversion có thể gây lỗi hoặc bị specialize thành shape cố định.
 
-ONNX không lưu Python code `forward()`. Nó lưu một biểu diễn graph có thể được runtime khác đọc và chạy.
+**4. Không thay evaluation.** ONNX schema hợp lệ chưa chứng minh output đúng. Luôn so sánh output giữa framework gốc và ONNX Runtime với cùng input test.
 
-
-## ONNX không phải là gì?
-
-Đây là phần rất quan trọng để tránh nhầm lẫn.
-
-### ONNX không phải là runtime
-
-ONNX là format/specification. Muốn chạy ONNX model, bạn cần runtime hoặc compiler, ví dụ:
-
-- ONNX Runtime.
-- TensorRT.
-- OpenVINO.
-- CoreML converter/runtime.
-- TVM.
-- Backend riêng của hardware vendor.
-
-### ONNX không tự động đảm bảo model nhanh hơn
-
-Export PyTorch sang ONNX không tự động làm model nhanh hơn. Tốc độ phụ thuộc vào:
-
-- Runtime/backend bạn dùng.
-- Operator coverage của backend.
-- Graph optimization.
-- Hardware.
-- Shape static hay dynamic.
-- Batch size.
-- Memory transfer.
-- Dtype: FP32, FP16, BF16, INT8.
-
-### ONNX không đảm bảo mọi PyTorch model đều export được
-
-PyTorch linh hoạt hơn ONNX rất nhiều. Python control flow, custom ops, dynamic data structures, tensor-to-Python conversion, data-dependent shape logic có thể gây lỗi hoặc bị specialize thành shape cố định.
-
-### ONNX không thay thế evaluation
-
-Một ONNX model hợp lệ về mặt schema chưa chắc tương đương số học với model gốc. Bạn luôn cần so sánh output giữa framework gốc và ONNX Runtime/TensorRT với cùng input test.
+Pipeline tối thiểu để tin một file `.onnx`: (1) `onnx.checker.check_model`, (2) chạy ORT CPU với cùng input, (3) `assert_allclose` với PyTorch. Ba bước này bắt hầu hết lỗi "export OK nhưng sai".
+:::
 
 
-## Big picture: cấu trúc một ONNX model
+## Cấu trúc một ONNX model {#sec-onnx-structure}
 
-Một file `.onnx` thường là serialized Protobuf của một `ModelProto`.
+> File `.onnx` thực chất chứa những lớp protobuf nào?
 
-Cấu trúc khái niệm:
+::: {.callout-important icon=false}
+## Ý chính
+File `.onnx` là `ModelProto` đã serialize. Phần lõi là `GraphProto`: `node[]` + edges (tên tensor) + `initializer[]` (weights) + `input[]` / `output[]`.
+:::
 
 ```text
 ModelProto
-  |
-  |-- ir_version
-  |-- producer_name
-  |-- producer_version
-  |-- domain
-  |-- model_version
-  |-- doc_string
+  |-- ir_version, producer_*, domain, model_version, doc_string
   |-- opset_import[]
-  |
   |-- GraphProto
-        |
-        |-- name
-        |-- input[]
-        |-- output[]
-        |-- initializer[]
-        |-- value_info[]
-        |-- node[]
+        |-- name, input[], output[], initializer[], value_info[], node[]
 ```
 
-Hãy nhớ các thành phần chính:
+| Thành phần | Ý nghĩa |
+|:-----------|:--------|
+| `ModelProto` | Container cấp cao |
+| `GraphProto` | Computation graph chính |
+| `NodeProto` | Một phép tính (`Conv`, `Relu`, `MatMul`, …) |
+| `TensorProto` | Tensor serialize (thường weights/constant) |
+| `ValueInfoProto` | Tên, dtype, shape của value |
+| `opset_import` | Operator set version đang dùng |
+| `initializer` | Named tensors cố định — thường parameters |
 
-| Thành phần       | Ý nghĩa thực tế                                                 |
-|:-----------------|:----------------------------------------------------------------|
-| `ModelProto`     | Container cấp cao nhất của ONNX model                           |
-| `GraphProto`     | Computation graph chính                                         |
-| `NodeProto`      | Một phép tính trong graph, ví dụ `Conv`, `Relu`, `MatMul`       |
-| `TensorProto`    | Tensor được serialize, thường dùng cho weights/constant         |
-| `ValueInfoProto` | Tên, dtype, shape của input/output/intermediate value           |
-| `opset_import`   | Cho biết graph đang dùng operator set version nào               |
-| `initializer`    | Named tensors đã biết trước, thường là model parameters/weights |
+Mental model: `Graph = nodes + edges`; `Node = operator call`; `Edge = named tensor`; `Weights = initializer`.
 
-Mental model:
+**Graph là dataflow, không phải dòng lệnh tuần tự.** ONNX graph biểu diễn computation theo kiểu dataflow có hướng: mỗi node tiêu thụ input tensor và tạo output tensor. Node không có side effect — không biến toàn cục, không đọc/ghi state ngoài tensor. Các node sắp xếp theo topological order: node cần output của node khác sẽ xuất hiện sau. Ví dụ node `Conv`:
 
 ```text
-Graph = nodes + edges
-Node  = operator call
-Edge  = named tensor flowing between nodes
-Weights = initializer tensors
+op_type: Conv
+inputs:  ["images", "conv.weight", "conv.bias"]
+outputs: ["conv_out"]
+attributes: strides=[1,1], pads=[1,1,1,1]
 ```
 
-## Graph: computation không có side effect
-
-ONNX graph biểu diễn computation theo kiểu dataflow:
-
-```mermaid
+```{mermaid}
+%%| label: fig-l2-graph
+%%| fig-cap: "Graph dataflow: edges là tên tensor; weights (xanh lá) đến từ initializer, không phải runtime input."
+%%| fig-width: 5.5
+%%| fig-align: "center"
 flowchart LR
-
-A["Tensor A"]
---> CONV["Node: Conv"]
---> B["Tensor B"]
---> RELU["Node: ReLU"]
---> C["Tensor C"]
-
-%% Optional annotations
-
-CONV -. "convolution operation" .-> B
-
-RELU -. "non-linear activation" .-> C
+  IN([images]) --> CONV([Conv])
+  W([conv.weight]) --> CONV
+  B([conv.bias]) --> CONV
+  CONV --> RELU([Relu])
+  RELU --> OUT([conv_out])
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  classDef op fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef w fill:#E8F5E9,stroke:#43A047,stroke-width:1.5px,color:#1B5E20
+  class IN,OUT io
+  class CONV,RELU op
+  class W,B w
 ```
 
-Một node không nên được hiểu như một dòng Python code. Nó là một lời gọi operator với input tensor, output tensor và attributes.
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: GraphProto fields bạn sẽ inspect
+- `input[]` / `output[]`: public I/O — tên, dtype, shape mà runtime cần cung cấp/nhận
+- `value_info[]`: metadata intermediate tensors — thường đầy hơn sau `onnx.shape_inference.infer_shapes`
+- `initializer[]`: weights/constants — runtime load từ file `.onnx`, user không truyền mỗi request
+- `node[]`: danh sách operator calls theo topological order
 
-Ví dụ:
+Một graph classifier cơ bản (topological dependency rõ hơn chuỗi Conv→Relu ngắn):
 
-```text
-Node
-  op_type: Conv
-  inputs:  ["images", "conv.weight", "conv.bias"]
-  outputs: ["conv_out"]
-  attributes:
-    strides: [1, 1]
-    pads:    [1, 1, 1, 1]
-```
-
-Graph ONNX là graph có hướng dựa trên dependency giữa tensor. Các node thường được sắp xếp theo topological order: node nào cần output của node trước thì xuất hiện sau node đó.
-
-Một graph cơ bản:
-
-```mermaid
+```{mermaid}
+%%| label: fig-l2-cnn-topo
+%%| fig-cap: "CNN tối giản: Images → Conv → Relu → MaxPool → Flatten → Gemm → Logits."
+%%| fig-width: 5.5
+%%| fig-align: "center"
 flowchart TB
-
-IMAGES["Images"]
---> CONV["Conv"]
---> RELU["ReLU"]
---> POOL["MaxPool"]
---> FLATTEN["Flatten"]
---> GEMM["Gemm"]
---> LOGITS["Logits"]
-
-%% Optional annotations
-
-CONV -. "conv.weight / conv.bias are initializers" .-> RELU
-
-GEMM -. "fc.weight / fc.bias are initializers" .-> LOGITS
-
-RELU -. "topological dependency order" .-> POOL
-
-POOL -. "tensor flow through graph" .-> FLATTEN
+  IM([Images]) --> CV([Conv])
+  CV --> RL([Relu])
+  RL --> MP([MaxPool])
+  MP --> FL([Flatten])
+  FL --> GM([Gemm])
+  GM --> LG([Logits])
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  classDef op fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class IM,LG io
+  class CV,RL,MP,FL,GM op
 ```
 
+Weights của Conv/Gemm nằm trong `initializer[]`, không phải runtime input mỗi request.
+:::
 
 
-## Tensor trong ONNX: input, output, intermediate, initializer
+## Tensor, node, operator và domain {#sec-tensors-nodes}
 
-Trong ONNX, tensor được nhận diện bằng **name**. Tên tensor là thứ nối các node lại với nhau.
+> `conv.weight` trong graph là input runtime hay weight đã lưu sẵn?
 
-Ví dụ:
+::: {.callout-important icon=false}
+## Ý chính
+Tensor nối node bằng **name**. **Operator** = định nghĩa phép toán; **node** = một lần dùng operator. **Attribute** là cấu hình tĩnh (strides, pads); **input** là tensor thay đổi theo request. **Initializer** thường là weights — đừng nhầm với runtime input.
+:::
+
+Trong ONNX, tensor được nhận diện bằng tên. Hai node dùng cùng tên tensor nghĩa là chúng được nối với nhau:
 
 ```text
 Node A outputs: ["hidden_1"]
 Node B inputs:  ["hidden_1"]
 ```
 
-Hai node được nối vì cùng dùng tên `hidden_1`.
+**Bốn loại tensor trong graph.**
 
-### Graph input
+| Loại | Vai trò | Ví dụ |
+|:-----|:--------|:------|
+| **Graph input** | User/runtime cung cấp khi infer | `images: float32[batch,3,224,224]` |
+| **Graph output** | Runtime trả về | `logits: float32[batch,1000]` |
+| **Intermediate** | Giữa các node, không public | `conv_out → relu_out → pool_out` |
+| **Initializer** | Giá trị cố định trong model | `conv.weight`, `fc.bias` |
 
-Graph input là tensor runtime phải cung cấp khi chạy inference.
+`Initializer` thường là weights và bias. Runtime load chúng từ file `.onnx` — user không cần (và không nên) truyền vào mỗi request.
 
-Ví dụ:
+::: {.callout-warning icon=false}
+## Bẫy thường gặp: initializer ≠ runtime input
+Thấy `conv.weight` trong graph rồi truyền như runtime input là sai. Nếu tensor nằm trong `initializer[]`, runtime đã load nó từ file `.onnx`. Nhiều bạn mới học nhầm điều này khi viết serving code.
+:::
 
-```text
-images: float32[batch, 3, 224, 224]
-```
-
-### Graph output
-
-Graph output là tensor runtime trả về.
-
-Ví dụ:
-
-```text
-logits: float32[batch, 1000]
-```
-
-### Intermediate tensor
-
-Intermediate tensor là tensor nằm giữa các node. Nó thường không phải input/output public của model.
-
-Ví dụ:
-
-```text
-conv_out -> relu_out -> pool_out
-```
-
-### Initializer
-
-Initializer là tensor có giá trị cố định được lưu trong model, thường là weights và bias.
-
-Ví dụ:
-
-```text
-conv.weight
-conv.bias
-fc.weight
-fc.bias
-```
-
-Initializer thường không cần user truyền vào khi inference. Runtime load chúng từ file `.onnx`.
-
-### Một lỗi hiểu nhầm phổ biến
-
-Nhiều bạn mới học thấy trong graph có tensor tên `conv.weight` rồi nghĩ đó là input runtime. Thực tế nếu nó nằm trong `initializer`, nó là weight được lưu sẵn trong model.
-
-
-## Node và Operator khác nhau thế nào?
-
-Đây là distinction rất quan trọng.
+**Operator vs node** — distinction rất quan trọng.
 
 ```text
 Operator = định nghĩa phép toán
 Node     = một lần sử dụng operator trong graph
+
+Operator Relu: y = max(0, x)
+
+Graph có thể có ba node cùng op_type = "Relu":
+  relu1: Relu(conv1_out) → relu1_out
+  relu2: Relu(conv2_out) → relu2_out
+  relu3: Relu(fc1_out)   → relu3_out
 ```
 
-Ví dụ operator `Relu` định nghĩa công thức:
+Ba node này dùng cùng operator spec, nhưng là ba lần gọi khác nhau với I/O khác nhau.
 
-```text
-y = max(0, x)
-```
-
-Trong graph có thể có nhiều node dùng operator `Relu`:
-
-```text
-relu1: Relu(conv1_out) -> relu1_out
-relu2: Relu(conv2_out) -> relu2_out
-relu3: Relu(fc1_out)   -> relu3_out
-```
-
-Cả ba node đều có `op_type = "Relu"`, nhưng là ba node khác nhau với input/output khác nhau.
-
-### Anatomy của một node
-
-Một `NodeProto` thường có:
+**Anatomy của `NodeProto`.**
 
 | Field | Ý nghĩa |
-|---|---|
-| `op_type` | Tên operator, ví dụ `Conv`, `Relu`, `MatMul` |
-| `domain` | Namespace của operator, ví dụ `ai.onnx` hoặc custom domain |
-| `input[]` | Danh sách tên tensor input |
-| `output[]` | Danh sách tên tensor output |
-| `attribute[]` | Tham số cố định của operator |
-| `name` | Tên node, có thể có hoặc không |
+|:------|:--------|
+| `op_type` | `Conv`, `Relu`, `MatMul`, … |
+| `domain` | Namespace (`ai.onnx`, `ai.onnx.ml`, custom) |
+| `input[]` | Tên tensor đầu vào |
+| `output[]` | Tên tensor đầu ra |
+| `attribute[]` | Tham số tĩnh của operator |
+| `name` | Tên node (tuỳ chọn) |
 
-Ví dụ conceptual:
+Ví dụ khái niệm (giống protobuf bạn sẽ thấy khi inspect):
 
 ```text
 node {
   name: "conv1"
   op_type: "Conv"
-  input: "images"
-  input: "conv1.weight"
-  input: "conv1.bias"
-  output: "conv1_out"
-  attribute: strides = [1, 1]
-  attribute: pads = [1, 1, 1, 1]
+  input:  ["images", "conv.weight", "conv.bias"]
+  output: ["conv_out"]
+  attribute { name: "strides" ints: [1, 1] }
+  attribute { name: "pads"    ints: [1, 1, 1, 1] }
 }
 ```
 
-### Attribute khác input thế nào?
+**Attribute khác input.** Input là tensor thay đổi theo request; attribute là cấu hình tĩnh không đổi giữa các request.
 
-Input là tensor đi vào operator. Attribute là cấu hình tĩnh của operator.
-
-Ví dụ `Conv`:
+Ví dụ với `Conv`:
 
 ```text
-Inputs:
-  X: input feature map
-  W: weight tensor
-  B: optional bias tensor
+Inputs (tensor, thay đổi theo request):
+  X  — input feature map
+  W  — weight tensor
+  B  — optional bias tensor
 
-Attributes:
-  strides
-  pads
-  dilations
-  groups
+Attributes (cấu hình tĩnh):
+  strides, pads, dilations, groups
 ```
 
-Attribute thường không thay đổi theo từng request inference. Input tensor thì thay đổi theo request.
+**Operator domain.** ONNX dùng domain để phân biệt operator sets.
 
-## Operator domain
+| Domain | Ý nghĩa |
+|:-------|:--------|
+| `ai.onnx` / `""` | Standard ops (`Conv`, `Relu`, `MatMul`, …) |
+| `ai.onnx.ml` | Classical ML ops (`LinearRegressor`, …) |
+| Custom | Operator riêng của framework/vendor/user |
 
-ONNX dùng domain để phân biệt operator sets.
+Custom domain gây lỗi phổ biến: `No Op registered for CustomFoo with domain_version of X` (ORT) hoặc `Unsupported operator: CustomFoo` (TensorRT). Production nên ưu tiên standard ONNX ops nếu cần portable qua nhiều backend.
 
-Một số domain thường gặp:
 
-| Domain                      | Ý nghĩa                                  |
-|:----------------------------|:-----------------------------------------|
-| `ai.onnx` hoặc empty string | ONNX standard operators                  |
-| `ai.onnx.ml`                | Classical ML operators                   |
-| Custom domain               | Operator riêng của framework/vendor/user |
+## Opset và các loại version {#sec-opset}
 
-Nếu graph chứa custom domain, backend của bạn phải biết cách chạy operator đó. Đây là nguyên nhân phổ biến của lỗi:
+> Vì sao export opset mới nhất lại làm TensorRT/ORT fail?
 
-```text
-No Op registered for CustomFoo with domain_version of X
-```
+::: {.callout-important icon=false}
+## Ý chính
+**Opset** (operator set) = version của operator specifications. Chọn opset theo **backend target**, không theo "mới nhất". `ir_version` ≠ `opset_import.version` ≠ `model_version` — ba khái niệm hoàn toàn khác nhau.
+:::
 
-hoặc khi build TensorRT:
-
-```text
-Unsupported operator: CustomFoo
-```
-
-Trong production, bạn nên ưu tiên export model thành các standard ONNX ops nếu muốn portable qua nhiều backend.
-
-## Opset version: khái niệm cực quan trọng
-
-Opset là viết tắt của **operator set**. Nó định nghĩa version của các operator mà graph đang dùng.
-
-Ví dụ:
+**Vì sao cần opset?** Operator không bất biến mãi mãi. Theo thời gian, semantics, type support, shape inference rule của operator có thể thay đổi. `Add`, `Resize`, `Slice`, `Gather`, `Softmax` — mỗi operator có thể có spec ở nhiều version. Graph cần khai báo: *"Tôi đang dùng operator theo version nào?"*
 
 ```text
 opset_import:
@@ -496,25 +352,9 @@ opset_import:
   version: 18
 ```
 
-Điều đó nghĩa là graph dùng ONNX standard operator set version 18 cho domain mặc định.
+Nghĩa là domain mặc định (`ai.onnx`) dùng standard opset 18.
 
-### Vì sao cần opset?
-
-Operator không bất biến mãi mãi. Theo thời gian, operator có thể được bổ sung behavior, type support, shape inference rule hoặc semantic mới.
-
-Ví dụ một operator như `Add`, `Resize`, `Slice`, `Gather`, `Softmax` có thể có khác biệt giữa các version opset.
-
-Vì vậy, graph cần khai báo:
-
-```text
-Tôi đang dùng operator theo version nào?
-```
-
-### Quy tắc tư duy
-
-Khi một graph có opset `N`, mỗi operator trong domain đó dùng định nghĩa mới nhất có version nhỏ hơn hoặc bằng `N`.
-
-Ví dụ conceptual:
+**Quy tắc tư duy.** Khi graph có opset `N`, mỗi operator dùng định nghĩa mới nhất có version ≤ N.
 
 ```text
 Graph opset = 15
@@ -522,249 +362,430 @@ Operator Add có spec ở version 7, 13, 14
 => Node Add trong graph dùng Add-14 semantics
 ```
 
-### Không phải opset càng mới càng tốt
-
-Một sai lầm phổ biến là luôn export opset mới nhất.
-
-Trong production, bạn phải chọn opset theo backend target:
+**Không phải opset mới nhất là tốt nhất.** Trong production, phải chọn opset theo backend target:
 
 ```text
-PyTorch exporter supports opset A
-ONNX Runtime version supports opset B
-TensorRT parser supports opset C
-Model uses operators D
-=> chọn opset vừa đủ mới để biểu diễn model, nhưng đủ cũ để backend support ổn định
+PyTorch exporter hỗ trợ opset A
+ORT version đang deploy hỗ trợ opset B
+TensorRT parser đang deploy hỗ trợ opset C
+Model dùng ops D
+=> chọn opset đủ mới để biểu diễn model,
+   đủ cũ để backend stable
 ```
 
-Nếu bạn dùng opset quá mới, runtime/compiler có thể chưa hỗ trợ. Nếu dùng opset quá cũ, exporter có thể không biểu diễn được operator hoặc dynamic behavior mong muốn.
+Nếu opset quá mới: runtime/compiler chưa hỗ trợ. Nếu quá cũ: exporter không biểu diễn được behavior mong muốn.
 
-### IR version khác opset version
-
-ONNX có nhiều loại version khác nhau:
+**Phân biệt các loại version.**
 
 | Version | Ý nghĩa |
-|---|---|
-| IR version | Version của format/cấu trúc biểu diễn model graph |
-| Opset version | Version của operator specifications |
-| Model version | Version do người tạo model đặt, thường phục vụ quản lý artifact |
-| Package version | Version của Python package `onnx`, ví dụ `onnx==1.x` |
+|:--------|:--------|
+| IR version | Format/cấu trúc biểu diễn graph |
+| Opset version | Spec của operators |
+| Model version | Do tác giả đặt (quản lý artifact) |
+| Package `onnx` | Version Python package (`onnx==1.x`) |
 
-Đừng nhầm `ir_version` với `opset_import.version`.
+::: {.callout-tip icon=false collapse="true"}
+## Checklist khi chọn opset cho production
+1. In `model.opset_import` của model đã export
+2. Đối chiếu release notes ORT version đang deploy
+3. Đối chiếu TRT version đang deploy (support matrix chính thức)
+4. Chạy checker + ORT CPU + (nếu có) TRT parse trên **đúng** version đó — không chỉ máy dev mới nhất
+
+Không commit "opset 22 vì đó là mới nhất" nếu TRT phiên bản cũ hơn chưa hỗ trợ đầy đủ.
+:::
 
 
-## Shape trong ONNX
+## Shape, dtype và layout {#sec-shape-dtype-layout}
 
-Shape là một trong những nguồn lỗi lớn nhất khi export và deploy model.
+> Dynamic mọi dimension có phải lúc nào cũng tốt hơn static?
 
-Một tensor có thể có shape static:
+::: {.callout-important icon=false}
+## Ý chính
+Shape/dtype/layout là nguồn lỗi lớn nhất khi export và serve. Dynamic **chỉ** những chiều thật sự cần; layout sai (NCHW vs NHWC) có thể không crash mà cho output sai im lặng.
+:::
+
+**Static vs dynamic shape.**
+
+| | Static | Dynamic |
+|:--|:-------|:--------|
+| Ví dụ | `float32[1,3,224,224]` | `float32[batch,3,224,224]` |
+| Ưu | Tối ưu dễ, TRT build/memory planning đơn giản | Linh hoạt batch/serving |
+| Nhược | Đổi batch/size → fail | Khó tối ưu; TRT cần min/opt/max profile |
+
+**Không phải mọi thứ cần dynamic.** Image classifier phục vụ ảnh đã resize về 224×224 nên dùng `[batch,3,224,224]`, không phải `[batch,channel,height,width]`. Height/width dynamic không cần thiết làm performance và debug tệ hơn. TRT cần profile, ORT khó tối ưu hơn.
+
+**Dtype phổ biến.**
+
+| Dtype | Dùng phổ biến cho |
+|:------|:------------------|
+| `float32` | Inference mặc định |
+| `float16` | GPU inference, TRT FP16 |
+| `bfloat16` | Training, một số inference mới |
+| `int64` | Token IDs, long indices |
+| `int32` | Counters, short indices |
+| `bool` | Masks, attention |
+| `string` | NLP tokenizer output (hiếm trong ONNX) |
+
+Sai dtype (ví dụ `int32` thay `int64` cho `input_ids`) → ORT báo lỗi rõ ràng tại runtime. Với NLP, tokenizer có thể tạo `int64` hoặc `int32` tùy framework — luôn inspect input dtype của ONNX graph trước khi viết serving code.
+
+**NCHW vs NHWC — silent mismatch.**
 
 ```text
-float32[1, 3, 224, 224]
+NCHW = [N, C, H, W]   # PyTorch conv thường dùng
+NHWC = [N, H, W, C]   # hay gặp TF/Keras
 ```
 
-hoặc dynamic/symbolic:
+PyTorch convolution thường dùng NCHW; TensorFlow/Keras thường gặp NHWC. Khi export sang ONNX phải biết model kỳ vọng layout nào.
+
+Lỗi layout rất nguy hiểm vì đôi khi **không crash**, nhưng output sai. Ví dụ:
 
 ```text
-float32[batch, 3, height, width]
+Expected: [1, 3, 224, 224]   # NCHW
+Actual:   [1, 224, 224, 3]   # NHWC
 ```
 
-### Static shape
+Nếu shape không khớp, runtime thường báo lỗi rõ. Nhưng trong vài case shape vẫn “hợp lệ” về số chiều (cùng rank 4, cùng tổng phần tử), runtime chấp nhận tensor — output sai mà không báo lỗi rõ ràng. Đó là **silent mismatch**.
 
-Static shape nghĩa là mọi dimension đã biết cụ thể tại export time.
+Checklist trước serving:
 
-Ví dụ:
-
-```text
-images: float32[1, 3, 224, 224]
-```
-
-Ưu điểm:
-
-- Runtime/compiler tối ưu dễ hơn.
-- TensorRT build engine dễ hơn.
-- Memory planning đơn giản hơn.
-
-Nhược điểm:
-
-- Model chỉ nhận đúng shape đó.
-- Nếu batch size hoặc image size thay đổi, inference có thể fail.
-
-### Dynamic shape
-
-Dynamic shape nghĩa là một hoặc nhiều dimension chưa cố định.
-
-Ví dụ:
-
-```text
-images: float32[batch, 3, 224, 224]
-```
-
-Ở đây `batch` là symbolic dimension. Khi runtime chạy, batch có thể là 1, 4, 8, v.v.
-
-Ưu điểm:
-
-- Linh hoạt hơn.
-- Phù hợp serving với batch size thay đổi.
-
-Nhược điểm:
-
-- Runtime/compiler khó tối ưu hơn.
-- Một số backend yêu cầu profile hoặc min/opt/max shape.
-- Có thể gây lỗi nếu graph có shape logic không export được.
-
-### Dynamic shape không có nghĩa là mọi thứ dynamic
-
-Bạn thường chỉ muốn dynamic ở những dimension thật sự cần dynamic.
-
-Ví dụ image classification production:
-
-```text
-images: [batch, 3, 224, 224]
-```
-
-Chỉ batch dynamic, còn channel/height/width static. Điều này giúp backend tối ưu tốt hơn so với:
-
-```text
-images: [batch, channel, height, width]
-```
-
-Nếu model chỉ phục vụ ảnh đã resize về 224x224, đừng làm height/width dynamic chỉ vì “cho linh hoạt”. Linh hoạt không cần thiết có thể làm performance và debug xấu hơn.
-
-
-## Data type trong ONNX
-
-ONNX tensor có dtype rõ ràng, ví dụ:
-
-- `float32`
-- `float16`
-- `bfloat16`
-- `int64`
-- `int32`
-- `bool`
-- `string`
-
-Một lỗi phổ biến khi chạy ONNX Runtime là truyền input sai dtype.
-
-Ví dụ model yêu cầu:
-
-```text
-input_ids: int64[batch, seq]
-```
-
-nhưng bạn truyền NumPy array `int32`, runtime có thể báo lỗi.
-
-Với model NLP, tokenizer có thể tạo `int64` hoặc `int32` tùy framework/backend. Luôn inspect input dtype của ONNX graph trước khi viết serving code.
-
-## Layout: NCHW, NHWC và vấn đề silent mismatch
-
-ONNX không chỉ là operator và shape; layout cũng rất quan trọng.
-
-Ví dụ ảnh có hai layout phổ biến:
-
-```text
-NCHW = [batch, channel, height, width]
-NHWC = [batch, height, width, channel]
-```
-
-PyTorch convolution thường dùng NCHW. TensorFlow/Keras thường hay gặp NHWC. Khi export sang ONNX, bạn phải biết model đang kỳ vọng layout nào.
-
-Lỗi layout rất nguy hiểm vì đôi khi không crash, nhưng output sai.
-
-Ví dụ:
-
-```text
-Expected: [1, 3, 224, 224]
-Actual:   [1, 224, 224, 3]
-```
-
-Nếu shape không khớp, runtime sẽ báo lỗi. Nhưng trong vài case shape vẫn có thể “hợp lệ” về số chiều, output sẽ sai mà không báo lỗi rõ ràng.
-
-Checklist:
-
-```text
 - Input name là gì?
 - Input dtype là gì?
 - Input shape là gì?
 - Layout là NCHW hay NHWC?
 - Normalization mean/std có đúng không?
 - Channel order là RGB hay BGR?
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: dynamic shape và TensorRT profile
+Dynamic batch thường kèm profile cho TensorRT (Lesson 4 sẽ đi sâu):
+
+```text
+min shape: [1,  3, 32, 32]
+opt shape: [8,  3, 32, 32]
+max shape: [64, 3, 32, 32]
 ```
 
-## Export pipeline từ PyTorch sang ONNX
+TRT tối ưu engine dựa trên khoảng shape này. Shape ngoài profile → inference có thể fail hoặc fallback không tối ưu. Điều này là lý do chỉ dynamic những dimension thật sự cần.
+:::
 
-Với PyTorch hiện đại, pipeline khái niệm có thể hiểu như sau:
 
-```mermaid
-flowchart TB
+## Export pipeline từ PyTorch {#sec-export}
 
-MODULE["PyTorch nn.Module"]
---> INPUTS["Example inputs"]
---> CAPTURE["Capture graph with torch.export"]
---> NORMALIZE["Normalize / decompose PyTorch ops"]
---> TRANSLATE["Translate to ONNX operators"]
---> OPTIMIZE["Optional ONNX graph optimization"]
---> OUTPUT["ONNXProgram / .onnx file"]
+> Export ONNX khác `torch.save(state_dict)` ở điểm nào?
 
-%% Optional annotations
+::: {.callout-important icon=false}
+## Ý chính
+Export = capture/normalize/translate graph + weights, không chỉ lưu weights. Cần example input, `model.eval()`, và luôn numerical validate với runtime sau export.
+:::
 
-MODULE -. "model.eval()" .-> INPUTS
+Pipeline khái niệm khi export (PyTorch hiện đại, `torch.onnx.export` / `dynamo=True`):
 
-INPUTS -. "torch.onnx.export(..., dynamo=True)" .-> CAPTURE
+```{mermaid}
+%%| label: fig-l2-export-stages
+%%| fig-cap: "Các giai đoạn export: Module → capture → normalize → translate ONNX → (optional optimize) → file."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  M([nn.Module\n.eval]) -->|"example\ninputs"| CAP([Capture\ntorch.export])
+  CAP -->|"decompose\nPyTorch ops"| NORM([Normalize])
+  NORM -->|"map sang\nONNX ops"| TR([Translate])
+  TR -->|"optional"| OPT([ONNX\noptimize])
+  OPT --> F([.onnx file])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class M soft
+  class CAP,NORM,TR hot
+  class OPT,F ok
 ```
 
-### Vì sao cần example input?
+| Giai đoạn | Việc xảy ra |
+|:----------|:------------|
+| Capture | Chạy/capture `forward` với example input → graph PyTorch ops |
+| Normalize / decompose | Chuẩn hoá ops PyTorch thành dạng exporter hiểu được |
+| Translate | Map sang ONNX operators + ghi weights / I/O schema |
+| Optional optimize | Folding / rewrite nhẹ trước khi ghi file (tuỳ toolchain) |
 
-PyTorch model là Python program. Exporter cần chạy/capture model với example input để biết computation graph nào được tạo.
+Sau khi có file `.onnx`, pipeline tin cậy tối thiểu:
 
-Ví dụ:
+```{mermaid}
+%%| label: fig-l2-export
+%%| fig-cap: "Sau export: checker → ORT → so khớp số học với framework gốc."
+%%| fig-width: 6.5
+%%| fig-align: "center"
+flowchart LR
+  F([.onnx file]) --> CK([onnx.checker])
+  CK --> ORT([ORT session])
+  ORT --> NUM([assert_allclose])
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#E8F5E9,stroke:#43A047,stroke-width:1.5px,color:#1B5E20
+  class F hot
+  class CK,ORT,NUM ok
+```
+
+**Vì sao cần example input?** PyTorch model là Python program. Exporter cần chạy/capture model với example input để biết computation graph nào được tạo.
 
 ```python
 example_input = torch.randn(1, 3, 224, 224)
 ```
 
-Exporter dùng example input để:
+Example input giúp exporter: biết dtype, biết rank/số chiều tensor, trace/capture tensor operations, suy luận shape constraints, và specialize một số nhánh logic nếu cần.
 
-- Biết dtype.
-- Biết rank/số chiều tensor.
-- Trace/capture tensor operations.
-- Suy luận shape constraints.
-- Specialize một số nhánh logic nếu cần.
-
-### Vì sao cần `model.eval()`?
-
-Một số layer có behavior khác nhau giữa training và inference:
-
-- Dropout.
-- BatchNorm.
-- Một số module có conditional behavior theo `self.training`.
-
-Nếu export khi model đang ở training mode, graph có thể không đúng cho inference.
-
-Quy tắc:
+**Vì sao cần `model.eval()`?** Một số layer có behavior khác nhau giữa training và inference: Dropout (random zeros training, pass-through inference), BatchNorm (batch stats training, running stats inference), và các module có conditional behavior theo `self.training`. Export khi model ở training mode cho graph sai cho inference.
 
 ```python
 model.eval()
 with torch.no_grad():
-    ...
+    ...  # export
 ```
 
-### Export không phải save weights đơn thuần
+**Export ≠ save weights.**
 
-`torch.save(model.state_dict())` chỉ lưu weights. ONNX export lưu computation graph cộng weights.
+| Artifact | Lưu gì? | Chạy ngoài PyTorch? |
+|:---------|:--------|:--------------------|
+| `.pth` state dict | Weights | Không — cần Python class |
+| TorchScript | Graph/module PyTorch | Có, trong ecosystem PyTorch |
+| ONNX | Graph trung lập + weights | Có nếu runtime hỗ trợ ops |
+| TensorRT engine | Engine tối ưu GPU cụ thể | Có, phụ thuộc TRT/GPU/platform |
 
-So sánh:
+::: {.callout-tip icon=false collapse="true"}
+## Preview: ONNX Runtime và graph optimization
 
-| Artifact          | Lưu gì?                           | Chạy độc lập ngoài PyTorch?               |
-|:------------------|:----------------------------------|:------------------------------------------|
-| `.pth` state dict | Weights                           | Không, cần Python model class             |
-| TorchScript       | PyTorch graph/module              | Có, nhưng vẫn PyTorch ecosystem           |
-| ONNX              | Framework-neutral graph + weights | Có, nếu runtime hỗ trợ ops                |
-| TensorRT engine   | Optimized engine cho GPU cụ thể   | Có, nhưng phụ thuộc TensorRT/GPU/platform |
+ONNX Runtime load graph → optimize → gán subgraph cho Execution Provider → execute.
+
+```{mermaid}
+%%| label: fig-l2-ort
+%%| fig-cap: "ONNX Runtime pipeline: parse → optimize → assign EP → execute kernels."
+%%| fig-width: 6.5
+%%| fig-align: "center"
+flowchart LR
+  F([.onnx file]) -->|"load"| LOAD([Parse graph])
+  LOAD -->|"optimize"| OPT([Graph optimization])
+  OPT -->|"partition"| PART([Assign EP])
+  PART -->|"run"| KERN([Execute kernels])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#EAF3FF,stroke:#4A90E2,stroke-width:2px,color:#1F3A5F
+  classDef ok fill:#E8F5E9,stroke:#43A047,stroke-width:1.5px,color:#1B5E20
+  class F soft
+  class LOAD,OPT ok
+  class PART,KERN hot
+```
+
+**Execution Providers (EP):** `CPUExecutionProvider`, `CUDAExecutionProvider`, `TensorrtExecutionProvider`, `OpenVINOExecutionProvider`, `CoreMLExecutionProvider`.
+
+Khi dùng nhiều provider:
+
+```python
+providers = [
+    "TensorrtExecutionProvider",
+    "CUDAExecutionProvider",
+    "CPUExecutionProvider",
+]
+```
+
+Runtime cố gán subgraph cho provider chuyên biệt. Phần không chạy được trên provider đó có thể fallback về provider sau nếu cấu hình cho phép. Chi tiết EP và tuning → Lesson 3.
+
+**Bốn loại graph optimization ORT thực hiện (phải giữ nguyên semantics):**
+
+| Loại | Ví dụ trực giác |
+|:-----|:----------------|
+| Constant folding | `Constant A + Constant B → Constant C` (tính trước) |
+| Dead node elimination | Node tạo output không ai dùng → loại bỏ |
+| Identity elimination | `x → Identity → y` không cần → `x → y` |
+| Operator fusion | `Conv → BatchNorm → Relu` → một kernel tối ưu hơn |
+
+Nếu optimization làm output sai, đó là **bug** hoặc assumption không đúng — không chấp nhận “sai một chút vì đã optimize”.
+:::
 
 
-## Practical Lab 2A — Export một model PyTorch đơn giản sang ONNX
+## Validate, lỗi phổ biến và debug {#sec-validate-debug}
 
-Tạo file `lesson2_export_static.py`:
+> `onnx.checker` pass đã đủ để tin model chưa?
+
+::: {.callout-important icon=false}
+## Ý chính
+Checker chỉ nói schema hợp lệ. Luôn so **PyTorch vs ORT** trên cùng input. ONNX Runtime chạy được **không** đảm bảo TensorRT build được — mỗi backend có operator coverage riêng.
+:::
+
+**Export thành công ≠ output đúng.** `onnx.checker` pass và file load được chỉ nói schema hợp lệ. Luôn so sánh output giữa framework gốc và ONNX Runtime / backend target trên cùng input test.
+
+**Numerical validation — tolerance theo task type.** Khác biệt floating point, fused kernel, backend optimization có thể làm output lệch nhỏ.
+
+| Task | Tolerance gợi ý | Metric thêm |
+|:-----|:----------------|:------------|
+| Classification (FP32) | `rtol=1e-4, atol=1e-5` | Top-1/Top-k, accuracy trên val set |
+| Classification (FP16) | `rtol=1e-2, atol=1e-3` | Top-1/Top-k |
+| Object detection | Metric-level | mAP, NMS output, bbox tolerance |
+| Segmentation | Metric-level | IoU, Dice |
+| NLP embedding | Cosine similarity | Cosine > 0.999 |
+| Translation / summarization | Không chỉ element-wise | Task metric + human eval khi cần |
+| ASR | WER | — |
+| INT8 | Metric-level, không element-wise | Accuracy drop ≤ ngưỡng chấp nhận |
+
+**Lỗi export phổ biến.**
+
+| Vấn đề | Triệu chứng | Hướng xử lý |
+|:-------|:------------|:------------|
+| Shape bị fixed | Muốn batch dynamic nhưng input `[1,3,…]` | Kiểm tra `dynamic_shapes` / key argument `forward` / tránh `x.shape[0]` → Python control flow |
+| Unsupported op | Export hoặc runtime/TRT fail | Tìm op, refactor sang op phổ biến, đổi opset, custom symbolic/plugin |
+| Data-dependent control flow | `if x.sum() > 0` | Refactor tensor ops / `torch.where`; tránh `.item()` / NumPy trong `forward` |
+| Training mode | Output lệch inference | `model.eval()` |
+| Dtype mismatch | `Actual int32, expected int64` | `astype` / sửa tokenizer-preprocess |
+| External data | Model lớn, thiếu `.onnx.data` | Copy đủ graph + external tensors khi deploy |
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: từng loại lỗi export — cách suy nghĩ
+
+**Shape bị fixed ngoài ý muốn.**
+Nguyên nhân thường gặp: không set `dynamic_shapes`, dùng sai key (key là tên argument `forward`, không phải ONNX input name "images"), dùng `x.shape[0]` rồi đưa vào Python control flow, có logic làm exporter chứng minh dimension chỉ có một giá trị.
+Debug: inspect graph input shape bằng Python hoặc Netron, kiểm tra tên argument trong `forward()`, thử chạy ORT với batch size khác.
+
+**Unsupported operator.**
+Tìm operator gây lỗi → kiểm tra có ONNX equivalent không → refactor sang op phổ biến → thử opset khác nếu operator support phụ thuộc opset → cân nhắc custom symbolic/ONNX Script/backend plugin.
+
+**Python control flow phụ thuộc tensor value.**
+
+```python
+# Nguy hiểm — exporter không biểu diễn được tốt
+def forward(self, x):
+    if x.sum() > 0:
+        return x * 2
+    return x - 2
+```
+
+Đây là control flow phụ thuộc data runtime. Exporter có thể fail, **hoặc** emit ONNX control-flow ops như `If` / `Loop` — nhiều backend (đặc biệt TensorRT) không tối ưu tốt hoặc không hỗ trợ đầy đủ các ops đó.
+
+Trong inference production, nếu có thể, refactor thành tensor operations:
+
+```python
+def forward(self, x):
+    return torch.where(x.sum() > 0, x * 2, x - 2)
+```
+
+Tùy case vẫn cần kiểm tra operator support trên backend target.
+
+`.item()`, `.tolist()`, NumPy conversion trong `forward` đưa tensor value sang Python scalar — làm graph capture khó hoặc value bị constant-fold theo example input:
+
+```python
+def forward(self, x):
+    n = x.shape[0]
+    value = x.sum().item()   # ra khỏi graph → Python scalar
+    return x * value
+```
+
+Quy tắc: không dùng tensor value để điều khiển Python logic trong `forward` nếu muốn export portable.
+
+**Training mode khi export.**
+Dropout còn active; BatchNorm dùng batch statistics thay running statistics. Luôn gọi `model.eval()` và so sánh numerical output sau export.
+
+**Dtype mismatch khi chạy runtime.**
+
+```python
+# Sửa numpy input
+inputs = inputs.astype(np.int64)
+# hoặc sửa tokenizer/preprocessing để tạo đúng dtype
+```
+
+**External data cho model lớn.**
+ONNX model vượt giới hạn hoặc cần tách weights → exporter lưu weights ra file ngoài. Khi deploy phải copy đủ `model.onnx` + `model.onnx.data` (hoặc tất cả external tensor files). Thiếu external data → runtime không load được model.
+:::
+
+::: {.callout-warning icon=false}
+## Case study: ORT OK, TensorRT FAIL
+Tình huống rất phổ biến: PyTorch export OK → ORT CPU OK → TensorRT FAIL.
+
+Nguyên nhân có thể: parser không hỗ trợ op/attribute combo; thiếu dynamic profile; dtype không phù hợp; graph chứa `If`/`Loop`; custom op chưa đăng ký; opset quá mới so với TRT version đang dùng.
+
+Debug theo thứ tự:
+
+1. Confirm `onnx.checker.check_model` pass
+2. Confirm ORT CPU pass và numerical match với PyTorch
+3. `Counter(n.op_type for n in model.graph.node)` — list tất cả operators
+4. Tìm operator gần vị trí TRT báo lỗi
+5. Đối chiếu TRT support matrix cho version đang dùng
+6. Nếu dynamic shape: kiểm tra min/opt/max profile
+7. Nếu unsupported op: refactor model hoặc viết plugin
+
+ONNX hợp lệ ≠ mọi backend chạy được. ONNX là chuẩn biểu diễn; backend vẫn có operator coverage riêng.
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Debugging checklist (làm đúng thứ tự)
+
+Đừng đoán — đi theo checklist. Copy-paste từng bước khi debug.
+
+**1. Load được không?**
+
+```python
+import onnx
+model = onnx.load("model.onnx")
+```
+
+Fail → file hỏng, thiếu external data, hoặc version không tương thích.
+
+**2. Checker**
+
+```python
+onnx.checker.check_model(model)
+```
+
+Fail → model không hợp lệ theo ONNX spec.
+
+**3. In opset — đối chiếu backend target**
+
+```python
+for opset in model.opset_import:
+    print(opset.domain, opset.version)
+```
+
+**4. In input/output schema**
+
+```python
+for value in model.graph.input:
+    print(value.name, value.type)
+```
+
+Kiểm tra name, dtype, shape.
+
+**5. List operators** (hữu ích khi TensorRT fail)
+
+```python
+from collections import Counter
+print(Counter(node.op_type for node in model.graph.node))
+```
+
+**6. Chạy ORT CPU trước khi đổ lỗi GPU/TRT**
+
+```python
+import onnxruntime as ort
+session = ort.InferenceSession(
+    "model.onnx", providers=["CPUExecutionProvider"]
+)
+```
+
+**7. So numerical với framework gốc**
+
+```python
+import numpy as np
+np.testing.assert_allclose(reference, actual, rtol=..., atol=...)
+```
+
+**8. Netron** — nhìn graph nhanh, không thay code validation.
+
+Nếu CPU fail: lỗi tại graph/input/export. Nếu CPU pass nhưng TRT fail: lỗi tại TRT operator coverage, dynamic profile, dtype, hoặc parser.
+:::
+
+
+## Mini-lab {.unnumbered}
+
+::: {.callout-note icon=false}
+## Thực hành — export, inspect, dynamic batch, shape inference
+Chạy tuần tự Lab 2A → 2D trên CPU. File mẫu: `tinycnn_static.onnx`, `tinycnn_dynamic_batch.onnx`. Exercises 1–5 và notes template ở collapse cuối.
+:::
+
+### Lab 2A — Export static {.unnumbered}
+
+Tạo `lesson2_export_static.py`:
 
 ```python
 import numpy as np
@@ -778,21 +799,18 @@ import torch.nn.functional as F
 class TinyCNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv = nn.Conv2d(3, 8, kernel_size=3, 
-                              padding=1)
+        self.conv = nn.Conv2d(3, 8, kernel_size=3, padding=1)
         self.fc = nn.Linear(8 * 32 * 32, 10)
 
     def forward(self, x):
         x = self.conv(x)
         x = F.relu(x)
         x = torch.flatten(x, 1)
-        x = self.fc(x)
-        return x
+        return self.fc(x)
 
 
 def main():
     torch.manual_seed(0)
-
     model = TinyCNN().eval()
     example_input = torch.randn(1, 3, 32, 32)
 
@@ -805,7 +823,6 @@ def main():
         opset_version=18,
         dynamo=True,
     )
-
     onnx_program.save("tinycnn_static.onnx")
     print("Saved tinycnn_static.onnx")
 
@@ -816,18 +833,12 @@ def main():
 
     # Run ONNX Runtime and compare with PyTorch.
     session = ort.InferenceSession(
-        "tinycnn_static.onnx",
-        providers=["CPUExecutionProvider"],
+        "tinycnn_static.onnx", providers=["CPUExecutionProvider"]
     )
-
-    ort_inputs = {"images": example_input.numpy()}
-    ort_logits = session.run(["logits"], ort_inputs)[0]
-
+    ort_logits = session.run(["logits"], {"images": example_input.numpy()})[0]
     with torch.no_grad():
         torch_logits = model(example_input).numpy()
-
-    np.testing.assert_allclose(torch_logits, ort_logits, 
-                               rtol=1e-4, atol=1e-5)
+    np.testing.assert_allclose(torch_logits, ort_logits, rtol=1e-4, atol=1e-5)
     print("PyTorch and ONNX Runtime outputs match")
     print("Output shape:", ort_logits.shape)
 
@@ -836,31 +847,15 @@ if __name__ == "__main__":
     main()
 ```
 
-Chạy:
-
 ```bash
 python lesson2_export_static.py
 ```
 
-Kỳ vọng:
+Kỳ vọng: `ONNX checker passed`, `PyTorch and ONNX Runtime outputs match`, output `(1, 10)`. Đây là pipeline tối thiểu: PyTorch model → ONNX file → checker → ORT → numerical validation.
 
-```text
-Saved tinycnn_static.onnx
-ONNX checker passed
-PyTorch and ONNX Runtime outputs match
-Output shape: (1, 10)
-```
+### Lab 2B — Inspect graph {.unnumbered}
 
-Bạn vừa hoàn thành pipeline tối thiểu:
-
-```text
-PyTorch model -> ONNX file -> ONNX checker -> ONNX Runtime -> numerical validation
-```
-
-
-## Practical Lab 2B — Inspect ONNX graph bằng Python
-
-Tạo file `lesson2_inspect_onnx.py`:
+Tạo `lesson2_inspect_onnx.py`:
 
 ```python
 import onnx
@@ -869,7 +864,6 @@ import onnx
 def describe_value_info(value_info):
     tensor_type = value_info.type.tensor_type
     dtype = onnx.TensorProto.DataType.Name(tensor_type.elem_type)
-
     dims = []
     for dim in tensor_type.shape.dim:
         if dim.HasField("dim_value"):
@@ -878,7 +872,6 @@ def describe_value_info(value_info):
             dims.append(dim.dim_param)
         else:
             dims.append("?")
-
     return value_info.name, dtype, dims
 
 
@@ -887,14 +880,11 @@ def main():
     graph = model.graph
 
     print("IR version:", model.ir_version)
-    print("Producer:", model.producer_name, 
-          model.producer_version)
+    print("Producer:", model.producer_name, model.producer_version)
     print("Opset imports:")
     for opset in model.opset_import:
-        domain = opset.domain if opset.domain \
-            else "ai.onnx/default"
-        print(f"  domain={domain}, \
-        version={opset.version}")
+        domain = opset.domain or "ai.onnx/default"
+        print(f"  domain={domain}, version={opset.version}")
 
     print("\nGraph name:", graph.name)
 
@@ -910,8 +900,10 @@ def main():
 
     print("\nInitializers / weights:")
     for tensor in graph.initializer:
-        print(f"  {tensor.name}: \
-        {onnx.TensorProto.DataType.Name(tensor.data_type)}{list(tensor.dims)}")
+        print(
+            f"  {tensor.name}: "
+            f"{onnx.TensorProto.DataType.Name(tensor.data_type)}{list(tensor.dims)}"
+        )
 
     print("\nNodes:")
     for i, node in enumerate(graph.node):
@@ -927,41 +919,15 @@ if __name__ == "__main__":
     main()
 ```
 
-Chạy:
-
 ```bash
 python lesson2_inspect_onnx.py
 ```
 
-Bạn cần nhìn được:
+Từ output, đọc được: IR version, opset version, input name/dtype/shape, output name/dtype/shape, initializer names/dtypes/shapes, danh sách node và attributes. Kỹ năng này bắt buộc trước khi dùng TensorRT — khi TRT fail, bạn cần biết operator nào trong graph gây lỗi.
 
-```text
-- Model dùng IR version nào?
-- Model dùng opset nào?
-- Input name/dtype/shape là gì?
-- Output name/dtype/shape là gì?
-- Weight nào nằm trong initializer?
-- Graph có những operator nào?
-```
+### Lab 2C — Dynamic batch {.unnumbered}
 
-Đây là kỹ năng cực kỳ quan trọng trước khi dùng TensorRT. Khi TensorRT fail, bạn sẽ quay lại graph này để xem operator nào gây lỗi.
-
-
-## Practical Lab 2C — Export dynamic batch
-
-Ở Lab 2A, input shape là static:
-
-```text
-images: float32[1, 3, 32, 32]
-```
-
-Bây giờ ta muốn batch dimension dynamic:
-
-```text
-images: float32[batch, 3, 32, 32]
-```
-
-Tạo file `lesson2_export_dynamic_batch.py`:
+Tạo `lesson2_export_dynamic_batch.py`:
 
 ```python
 import numpy as np
@@ -975,26 +941,21 @@ import torch.nn.functional as F
 class TinyCNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv = nn.Conv2d(3, 8, kernel_size=3, 
-                              padding=1)
+        self.conv = nn.Conv2d(3, 8, kernel_size=3, padding=1)
         self.fc = nn.Linear(8 * 32 * 32, 10)
 
     def forward(self, x):
-        x = self.conv(x)
-        x = F.relu(x)
+        x = F.relu(self.conv(x))
         x = torch.flatten(x, 1)
-        x = self.fc(x)
-        return x
+        return self.fc(x)
 
 
 def main():
     torch.manual_seed(0)
-
     model = TinyCNN().eval()
     example_input = torch.randn(2, 3, 32, 32)
-
-    # The key "x" refers to the argument name in forward(self, x),
-    # not the exported ONNX input name "images".
+    # Key "x" = tên argument trong forward(self, x),
+    # không phải ONNX input name "images".
     batch_dim = torch.export.Dim("batch", min=1, max=64)
 
     onnx_program = torch.onnx.export(
@@ -1006,86 +967,63 @@ def main():
         opset_version=18,
         dynamo=True,
     )
-
     onnx_program.save("tinycnn_dynamic_batch.onnx")
     print("Saved tinycnn_dynamic_batch.onnx")
 
-    onnx_model = onnx.load("tinycnn_dynamic_batch.onnx")
-    onnx.checker.check_model(onnx_model)
+    onnx.checker.check_model(onnx.load("tinycnn_dynamic_batch.onnx"))
     print("ONNX checker passed")
 
     session = ort.InferenceSession(
-        "tinycnn_dynamic_batch.onnx",
-        providers=["CPUExecutionProvider"],
+        "tinycnn_dynamic_batch.onnx", providers=["CPUExecutionProvider"]
     )
-
     for batch_size in [1, 4, 8]:
         x = torch.randn(batch_size, 3, 32, 32)
         ort_logits = session.run(["logits"], {"images": x.numpy()})[0]
         with torch.no_grad():
             torch_logits = model(x).numpy()
-        np.testing.assert_allclose(torch_logits, 
-                                   ort_logits, rtol=1e-4, atol=1e-5)
-        print(f"batch={batch_size}: OK, output shape={ort_logits.shape}")
+        np.testing.assert_allclose(torch_logits, ort_logits, rtol=1e-4, atol=1e-5)
+        print(f"batch={batch_size}: OK {ort_logits.shape}")
 
 
 if __name__ == "__main__":
     main()
 ```
 
-Chạy:
-
 ```bash
 python lesson2_export_dynamic_batch.py
-python lesson2_inspect_onnx.py
 ```
 
-Sửa `lesson2_inspect_onnx.py` để load `tinycnn_dynamic_batch.onnx`, sau đó kiểm tra input shape. Bạn nên thấy dimension đầu tiên là symbolic thay vì `1` hoặc `2`.
-
-### Bài học quan trọng
-
-Dynamic shape không phải là “miễn phí”. Nó cho model linh hoạt hơn, nhưng runtime/compiler có ít thông tin hơn để tối ưu. Khi sang TensorRT, dynamic shape thường cần optimization profile gồm min/opt/max shape.
-
-Ví dụ mental model cho TensorRT sau này:
+Sau đó sửa `lesson2_inspect_onnx.py` để load `tinycnn_dynamic_batch.onnx`. Dimension đầu của input phải là symbolic (`batch`), không phải `2`. Dynamic không miễn phí — TRT sau này cần optimization profile:
 
 ```text
-min shape: [1, 3, 32, 32]
-opt shape: [8, 3, 32, 32]
+min shape: [1,  3, 32, 32]
+opt shape: [8,  3, 32, 32]
 max shape: [64, 3, 32, 32]
 ```
 
-TensorRT sẽ tối ưu engine dựa trên khoảng shape này. Nếu runtime nhận shape ngoài profile, inference có thể fail.
+Shape ngoài profile → inference có thể fail.
 
+### Lab 2D — Shape inference {.unnumbered}
 
-## Practical Lab 2D — Shape inference
-
-Một số intermediate tensors không có shape rõ ràng trong graph. ONNX có shape inference để bổ sung thông tin shape khi có thể.
-
-Tạo file `lesson2_shape_inference.py`:
+Tạo `lesson2_shape_inference.py`:
 
 ```python
 import onnx
 
 
-def count_value_info(model):
-    return len(model.graph.value_info)
-
-
 def main():
     model = onnx.load("tinycnn_static.onnx")
-    print("Value info before:", count_value_info(model))
+    print("value_info before:", len(model.graph.value_info))
 
-    inferred_model = onnx.shape_inference.infer_shapes(model)
-    print("Value info after:", count_value_info(inferred_model))
-
-    onnx.save(inferred_model, "tinycnn_static_inferred.onnx")
+    inferred = onnx.shape_inference.infer_shapes(model)
+    print("value_info after:", len(inferred.graph.value_info))
+    onnx.save(inferred, "tinycnn_static_inferred.onnx")
     print("Saved tinycnn_static_inferred.onnx")
 
     print("\nSome inferred intermediate tensors:")
-    for value in inferred_model.graph.value_info[:10]:
-        tensor_type = value.type.tensor_type
+    for value in inferred.graph.value_info[:10]:
         dims = []
-        for dim in tensor_type.shape.dim:
+        for dim in value.type.tensor_type.shape.dim:
             if dim.HasField("dim_value"):
                 dims.append(str(dim.dim_value))
             elif dim.HasField("dim_param"):
@@ -1099,563 +1037,95 @@ if __name__ == "__main__":
     main()
 ```
 
-Shape inference rất hữu ích khi debug graph, nhưng không phải lúc nào cũng suy luận được mọi shape, đặc biệt với dynamic shape, control flow hoặc custom ops.
+Shape inference bổ sung shape metadata cho `value_info[]` — hữu ích khi debug graph. Không luôn suy luận được mọi shape, đặc biệt với dynamic shape, control flow hoặc custom ops.
 
-## Visualize graph bằng Netron
+**Netron inspection.** Mở `tinycnn_static.onnx` bằng Netron (`netron tinycnn_static.onnx` hoặc web/app). Quan sát:
 
-Sau khi có file:
-
-```text
-tinycnn_static.onnx
-```
-
-Mở bằng Netron.
-
-Bạn nên quan sát:
-
-```text
-- Input node tên gì?
-- Output node tên gì?
+- Input/output node tên gì?
 - Conv có weight/bias không?
 - Graph có Flatten không?
-- Linear được export thành Gemm hay MatMul + Add?
+- Linear được export thành `Gemm` hay `MatMul + Add`?
 - Tensor shape có đúng như bạn kỳ vọng không?
 - Operator list có operator lạ không?
-```
 
-Netron không thay thế validation, nhưng cực kỳ hữu ích để phát hiện nhanh:
+Netron không thay thế validation bằng code. Hữu ích để phát hiện nhanh: sai input name, sai layout, shape bị fixed ngoài ý muốn, operator không mong muốn, graph quá phức tạp do export không tối ưu.
 
-- Sai input name.
-- Sai layout.
-- Shape bị fixed ngoài ý muốn.
-- Operator không mong muốn.
-- Graph quá phức tạp do export không tối ưu.
+::: {.callout-tip icon=false collapse="true"}
+## Exercises 1–5 và Notes template
 
-
-
-## Numerical validation: bước không được bỏ qua
-
-Một export thành công chỉ có nghĩa là exporter tạo được file ONNX hợp lệ. Nó chưa chứng minh output đúng.
-
-Bạn luôn cần so sánh:
-
-```text
-PyTorch output vs ONNX Runtime output
-```
-
-với cùng input.
-
-Ví dụ:
-
-```python
-np.testing.assert_allclose(torch_logits, ort_logits, rtol=1e-4, atol=1e-5)
-```
-
-### Tolerance không nên quá chặt
-
-Do khác biệt implementation, floating point ordering, fused kernels, hoặc backend optimization, output có thể lệch nhỏ.
-
-Gợi ý ban đầu:
-
-```text
-FP32: rtol=1e-4, atol=1e-5
-FP16: rtol=1e-2, atol=1e-3 hoặc tùy model
-INT8: cần metric-level validation, không chỉ element-wise comparison
-```
-
-### Với model classification
-
-Ngoài `assert_allclose`, nên kiểm tra:
-
-```text
-- top-1 class có giống không?
-- top-k overlap có cao không?
-- accuracy trên validation set có giảm không?
-```
-
-### Với model detection/segmentation/NLP
-
-Cần validation theo metric thật:
-
-```text
-- object detection: mAP, NMS output, bbox tolerance
-- segmentation: IoU / Dice
-- embedding: cosine similarity
-- ASR: WER
-- translation/summarization: task metric hoặc human eval
-```
-
-
-## ONNX Runtime chạy graph như thế nào? Preview
-
-ONNX Runtime là runtime để load và execute ONNX model. Conceptual pipeline:
-
-```mermaid
-flowchart TB
-
-ONNX["ONNX file"]
---> LOAD["Load model"]
---> VALIDATE["Validate graph"]
---> OPT["Apply graph optimizations"]
---> PARTITION["Partition graph by Execution Provider"]
---> KERNELS["Run kernels"]
-
-%% Optional annotations
-
-OPT -. "fusion / constant folding / graph rewrite" .-> PARTITION
-
-PARTITION -. "CPU / CUDA / TensorRT assignment" .-> KERNELS
-
-KERNELS -. "execute backend-specific operators" .-> ONNX
-```
-
-Execution Provider là backend thực thi, ví dụ:
-
-```text
-CPUExecutionProvider
-CUDAExecutionProvider
-TensorrtExecutionProvider
-OpenVINOExecutionProvider
-CoreMLExecutionProvider
-```
-
-Nếu bạn dùng nhiều provider:
-
-```python
-providers = ["TensorrtExecutionProvider", 
-             "CUDAExecutionProvider", 
-             "CPUExecutionProvider"]
-```
-
-Runtime sẽ cố gắng gán subgraph cho provider phù hợp. Những phần không chạy được trên provider chuyên biệt có thể fallback về provider khác nếu cấu hình cho phép.
-
-Ta sẽ học sâu hơn trong Lesson 3.
-
-
-##Graph optimization cơ bản
-
-ONNX graph có thể được optimize theo nhiều cách:
-
-**Constant folding**
-
-Nếu một subgraph chỉ phụ thuộc vào constant/initializer, runtime có thể tính trước.
-
-```text
-Constant A + Constant B -> Constant C
-```
-
-**Dead node elimination**
-
-Nếu một node tạo output không được dùng, có thể loại bỏ.
-
-**Identity elimination**
-
-```text
-x -> Identity -> y
-```
-
-Nếu không cần thiết, có thể thay bằng:
-
-```text
-x -> y
-```
-
-**Operator fusion**
-
-Nhiều operator liên tiếp có thể được fuse thành một kernel/operator tối ưu hơn.
-
-Ví dụ:
-
-```text
-Conv -> BatchNorm -> Relu
-```
-
-có thể được runtime/compiler fuse ở mức graph hoặc kernel tùy backend.
-
-Quan trọng: graph optimization phải giữ nguyên semantics. Nếu optimization làm output sai, đó là bug hoặc do assumption không đúng.
-
-## Common export problems và cách suy nghĩ
-
-### Input shape bị fixed ngoài ý muốn
-
-Triệu chứng:
-
-```text
-Bạn muốn batch dynamic, nhưng ONNX input lại là [1, 3, 224, 224]
-```
-
-Nguyên nhân thường gặp:
-
-- Không set `dynamic_shapes`.
-- Dùng sai key trong `dynamic_shapes`.
-- Dùng tensor shape để tạo Python integer, ví dụ `x.shape[0]` rồi đưa vào Python control flow.
-- Có logic làm exporter chứng minh dimension chỉ có một giá trị.
-
-Cách debug:
-
-```text
-1. Inspect graph input shape bằng Python hoặc Netron.
-2. Kiểm tra tên argument trong forward().
-3. Thử chạy ONNX Runtime với batch size khác.
-4. Nếu fail, đọc error message và kiểm tra dynamic_shapes.
-```
-
-### Unsupported operator
-
-Triệu chứng:
-
-```text
-Export failed: unsupported operator
-```
-
-hoặc runtime báo:
-
-```text
-No Op registered for ...
-```
-
-Cách xử lý:
-
-```text
-1. Tìm operator nào gây lỗi.
-2. Kiểm tra operator đó có ONNX equivalent không.
-3. Refactor model để dùng op phổ biến hơn.
-4. Thử opset khác nếu operator support phụ thuộc opset.
-5. Với custom op, cân nhắc custom symbolic / ONNX Script / backend plugin.
-```
-
-### Python control flow phụ thuộc tensor value
-
-Ví dụ nguy hiểm:
-
-```python
-def forward(self, x):
-    if x.sum() > 0:
-        return x * 2
-    return x - 2
-```
-
-Đây là control flow phụ thuộc data runtime. Exporter có thể không biểu diễn được hoặc phải dùng ONNX control-flow ops như `If`, nhưng không phải backend nào cũng tối ưu tốt.
-
-Trong inference production, nếu có thể, hãy refactor thành tensor operations:
-
-```python
-return torch.where(x.sum() > 0, x * 2, x - 2)
-```
-
-Tùy case, cách này vẫn cần kiểm tra operator support.
-
-`.item()`, `.tolist()`, **NumPy conversion trong forward**
-
-Ví dụ:
-
-```python
-def forward(self, x):
-    n = x.shape[0]
-    value = x.sum().item()
-    return x * value
-```
-
-`.item()` đưa tensor value từ graph sang Python scalar. Điều này làm graph capture khó hoặc khiến value bị constant-fold/specialize theo example input.
-
-Quy tắc:
-
-```text
-Không dùng tensor value để điều khiển Python logic trong forward nếu muốn export portable.
-```
-
-### Training mode khi export
-
-Triệu chứng:
-
-```text
-Output ONNX khác PyTorch inference
-```
-
-Nguyên nhân:
-
-- Model vẫn ở training mode.
-- Dropout còn active.
-- BatchNorm dùng batch statistics thay vì running statistics.
-
-Cách xử lý:
-
-```python
-model.eval()
-```
-
-và so sánh numerical output.
-
-### Dtype mismatch khi chạy runtime
-
-Triệu chứng:
-
-```text
-Unexpected input data type. Actual: tensor(int32), expected: tensor(int64)
-```
-
-Cách xử lý:
-
-```python
-inputs = inputs.astype(np.int64)
-```
-
-hoặc sửa preprocessing/tokenizer để tạo dtype đúng.
-
-### External data cho model lớn
-
-ONNX model có thể rất lớn, đặc biệt với LLM hoặc large vision models. Khi file vượt giới hạn hoặc không tiện lưu một file lớn, exporter có thể dùng external data: graph nằm trong `.onnx`, weights nằm ở file ngoài.
-
-Khi deploy, bạn phải copy đủ cả:
-
-```text
-model.onnx
-model.onnx.data hoặc các external tensor files
-```
-
-Nếu thiếu external data, runtime sẽ không load được model.
-
-
-## Debugging checklist cho ONNX model
-
-Khi có lỗi ONNX, đừng đoán. Hãy đi theo checklist.
-
-**Kiểm tra model load được không**
-
-```python
-import onnx
-model = onnx.load("model.onnx")
-```
-
-Nếu load fail, có thể file hỏng, thiếu external data hoặc version không tương thích.
-
-**Kiểm tra ONNX checker**
-
-```python
-onnx.checker.check_model(model)
-```
-
-Nếu checker fail, model không hợp lệ theo ONNX spec.
-
-**In opset**
-
-```python
-for opset in model.opset_import:
-    print(opset.domain, opset.version)
-```
-
-Đối chiếu với runtime/compiler target.
-
-**In input/output schema**
-
-```python
-for value in model.graph.input:
-    print(value.name, value.type)
-```
-
-Kiểm tra name, dtype, shape.
-
-**List operators**
-
-```python
-from collections import Counter
-ops = Counter(node.op_type for node in model.graph.node)
-print(ops)
-```
-
-Nếu TensorRT fail, operator list giúp tìm node khả nghi.
-
-**Chạy ONNX Runtime CPU**
-
-Trước khi đổ lỗi cho GPU/TensorRT, hãy chạy bằng CPUExecutionProvider.
-
-```python
-session = ort.InferenceSession("model.onnx", providers=["CPUExecutionProvider"])
-```
-
-Nếu CPU cũng fail, lỗi có thể nằm ở graph/input/export. Nếu CPU pass nhưng TensorRT fail, lỗi có thể nằm ở TensorRT operator support, dynamic shape profile, dtype, hoặc parser.
-
-**So sánh numerical output**
-
-Luôn so với framework gốc.
-
-```python
-np.testing.assert_allclose(reference, actual, rtol=..., atol=...)
-```
-
-**Visualize bằng Netron**
-
-Dùng Netron để nhìn graph nhanh, nhưng vẫn cần code validation.
-
-
-## Mini case study: vì sao TensorRT build fail dù ONNX Runtime chạy được?
-
-Một tình huống rất phổ biến:
-
-```text
-PyTorch -> ONNX export: OK
-ONNX Runtime CPU: OK
-TensorRT build: FAIL
-```
-
-Có thể do:
-
-1. ONNX graph hợp lệ nhưng TensorRT parser không hỗ trợ một operator.
-2. Operator được hỗ trợ nhưng combination attributes không hỗ trợ.
-3. Dynamic shape chưa có optimization profile đúng.
-4. Dtype không phù hợp.
-5. Graph chứa control-flow op như `If` hoặc `Loop`.
-6. Graph chứa plugin/custom op chưa được đăng ký.
-7. Opset quá mới so với TensorRT version.
-
-Cách debug đúng:
-
-```text
-1. Confirm ONNX checker pass.
-2. Confirm ONNX Runtime CPU pass.
-3. List all operators in graph.
-4. Tìm operator gần vị trí TensorRT báo lỗi.
-5. Kiểm tra TensorRT support matrix cho version đang dùng.
-6. Nếu dynamic shape, kiểm tra min/opt/max profile.
-7. Nếu unsupported op, refactor model hoặc viết plugin.
-```
-
-Bài học: ONNX hợp lệ không đồng nghĩa mọi backend đều chạy được. ONNX là chuẩn biểu diễn; backend vẫn có operator coverage riêng.
-
-
-## Bảng thuật ngữ {.unnumbered}
-
-| Thuật ngữ          | Giải thích ngắn                                               |
-|:-------------------|:--------------------------------------------------------------|
-| ONNX               | Open format/spec để biểu diễn ML model                        |
-| ONNX Runtime       | Runtime chạy ONNX model trên CPU/GPU/accelerators             |
-| TensorRT           | Compiler/runtime tối ưu inference trên NVIDIA GPU             |
-| Graph              | Computation dataflow gồm node và tensor edges                 |
-| Node               | Một lần gọi operator trong graph                              |
-| Operator           | Định nghĩa phép toán, ví dụ `Conv`, `Relu`, `MatMul`          |
-| Opset              | Versioned set của operator specifications                     |
-| IR version         | Version của ONNX intermediate representation format           |
-| Initializer        | Tensor constant lưu trong graph, thường là weights            |
-| ValueInfo          | Metadata về tensor name, dtype, shape                         |
-| Dynamic shape      | Shape có dimension symbolic hoặc runtime-dependent            |
-| Static shape       | Shape có toàn bộ dimension cố định                            |
-| Execution Provider | Backend thực thi trong ONNX Runtime                           |
-| Shape inference    | Quá trình suy luận shape cho intermediate tensors             |
-| Graph optimization | Rewrite graph để chạy hiệu quả hơn nhưng giữ nguyên semantics |
-
-
-## Key takeaways {.unnumbered}
-
-1. ONNX là intermediate representation, không phải runtime.
-2. ONNX model lưu computation graph, weights, input/output schema, metadata và opset imports.
-3. Node là một lần dùng operator; operator là định nghĩa phép toán.
-4. Initializer thường là weights, không phải runtime input.
-5. Opset version quyết định semantics của operator trong graph.
-6. IR version, opset version và model version là ba khái niệm khác nhau.
-7. Export từ PyTorch sang ONNX là quá trình capture/normalize/translate graph, không phải chỉ save weights.
-8. Dynamic shape cần được khai báo có chủ đích, không nên dynamic mọi thứ nếu không cần.
-9. Luôn validate ONNX bằng checker, shape inference, Netron và numerical comparison.
-10. ONNX Runtime chạy được không đảm bảo TensorRT build được, vì mỗi backend có operator coverage và constraints riêng.
-
-
-## Checkpoint questions {.unnumbered}
-
-Tự trả lời các câu hỏi sau trước khi sang Lesson 3:
-
-1. ONNX khác ONNX Runtime ở điểm nào?
-2. Trong ONNX graph, `initializer` thường dùng để lưu gì?
-3. Node và operator khác nhau thế nào?
-4. Opset version ảnh hưởng gì tới backend runtime?
-5. Vì sao không nên luôn chọn opset mới nhất?
-6. Static shape và dynamic shape khác nhau thế nào?
-7. Vì sao `model.eval()` quan trọng trước khi export?
-8. Nếu ONNX Runtime CPU chạy được nhưng TensorRT fail, bạn sẽ debug theo thứ tự nào?
-9. Vì sao numerical validation cần thiết dù `onnx.checker.check_model()` pass?
-10. Làm sao inspect input name, dtype và shape của một ONNX model?
-
-
-## Exercises  {.unnumbered}
-
-### Exercise 1 — Operator inventory
-
-Viết script in ra số lượng mỗi operator trong model:
+**Exercise 1 — Operator inventory**
 
 ```python
 from collections import Counter
 import onnx
 
 model = onnx.load("tinycnn_static.onnx")
-counter = Counter(node.op_type for node in model.graph.node)
-for op, count in counter.most_common():
+for op, count in Counter(n.op_type for n in model.graph.node).most_common():
     print(op, count)
 ```
 
-Trả lời:
+Trả lời: model có bao nhiêu Conv? Relu? Linear được biểu diễn bằng operator nào?
 
-```text
-- Model có bao nhiêu Conv?
-- Có Relu không?
-- Linear được biểu diễn bằng operator nào?
-```
+---
 
-### Exercise 2 — Thử sai dtype
-
-Chạy ONNX Runtime với input `float64` thay vì `float32`:
+**Exercise 2 — Sai dtype**
 
 ```python
 bad_input = example_input.numpy().astype("float64")
 session.run(["logits"], {"images": bad_input})
 ```
 
-Ghi lại error message và giải thích.
+Ghi lại error message. Giải thích vì sao ORT báo lỗi và dtype đúng cần là gì.
 
-### Exercise 3 — Static vs dynamic batch
+---
 
-Với `tinycnn_static.onnx`, thử batch size 4:
+**Exercise 3 — Static vs dynamic với batch=4**
 
 ```python
+import numpy as np
 x = np.random.randn(4, 3, 32, 32).astype("float32")
-session.run(["logits"], {"images": x})
+# Thử với tinycnn_static.onnx:
+session_static = ort.InferenceSession("tinycnn_static.onnx", providers=["CPUExecutionProvider"])
+session_static.run(["logits"], {"images": x})   # fail hay pass?
+# Sau đó thử với tinycnn_dynamic_batch.onnx
 ```
 
-Sau đó thử với `tinycnn_dynamic_batch.onnx`.
+Trả lời: static model fail hay pass? Dynamic model fail hay pass? Vì sao?
 
-Trả lời:
+---
 
-```text
-- Static model fail hay pass?
-- Dynamic model fail hay pass?
-- Vì sao?
-```
+**Exercise 4 — Netron report ngắn**
 
-### Exercise 4 — Netron inspection report
-
-Mở `tinycnn_static.onnx` bằng Netron và viết report ngắn:
+Mở `tinycnn_static.onnx` bằng Netron và điền:
 
 ```text
-Input:
-Output:
+Input:       name / dtype / shape
+Output:      name / dtype / shape
 Opset:
-Operator list:
+Operators:
 Weights/initializers:
-Có shape nào bất ngờ không?
+Shape bất ngờ (nếu có):
 ```
 
-### Exercise 5 — Export một model tự chọn
+---
+
+**Exercise 5 — Model tự chọn ≤ ResNet18**
 
 Chọn một model nhỏ hơn hoặc bằng ResNet18, export sang ONNX, sau đó:
 
 ```text
-1. Run onnx.checker.
-2. Inspect input/output.
-3. List operators.
-4. Run ONNX Runtime CPU.
-5. Compare output với PyTorch.
+1. onnx.checker.check_model
+2. Inspect input/output schema (name, dtype, shape)
+3. Counter operators
+4. ORT CPUExecutionProvider — chạy với example input
+5. np.testing.assert_allclose với PyTorch
 ```
- 
-## Suggested notes template khi debug ONNX {.unnumbered}
- 
-Khi gặp lỗi, ghi theo template này:
+
+---
+
+**Notes template khi debug ONNX**
+
+Khi gặp lỗi, ghi theo template này — debug giống engineer, không debug theo cảm tính:
 
 ```text
 Model:
@@ -1677,46 +1147,81 @@ Error message:
 Hypothesis:
 Next action:
 ```
-
-Template này giúp bạn debug giống engineer, không debug theo cảm tính.
-
-
-## Kết nối sang Lesson 3 {.unnumbered}
-
-Lesson 2 giúp bạn hiểu file `.onnx` bên trong có gì.
-
-Lesson 3 nên là:
-
-```text
-Lesson 3: ONNX Runtime Deep Dive — Execution Providers, Graph Optimizations, I/O Binding and Performance Tuning
-```
-
-Trong Lesson 3, ta sẽ học:
-
-- ONNX Runtime session là gì.
-- Graph optimization levels.
-- Execution Providers.
-- CPU vs CUDA EP.
-- TensorRT EP ở mức khái niệm.
-- Memory allocation.
-- I/O Binding.
-- Benchmark latency.
-- Cách đọc ORT profiling output.
-
-Sau Lesson 3, bạn sẽ có nền tốt để học TensorRT internals ở Lesson 4.
+:::
 
 
-## Nguồn tham khảo chính {.unnumbered}
+## Checkpoint questions {.unnumbered}
 
-Các nguồn dưới đây là tài liệu chính thức hoặc gần chính thức nên dùng khi cần kiểm tra chi tiết version/API:
+::: {.callout-tip icon=false collapse="true"}
+## Tự kiểm (mở khi cần)
 
-1. ONNX Concepts: https://onnx.ai/onnx/intro/concepts.html
-2. ONNX IR Specification: https://onnx.ai/onnx/repo-docs/IR.html
-3. ONNX Versioning: https://onnx.ai/onnx/repo-docs/Versioning.html
-4. ONNX Operators: https://onnx.ai/onnx/operators/
-5. PyTorch `torch.onnx` documentation: https://docs.pytorch.org/docs/main/onnx.html
-6. PyTorch tutorial — Export a PyTorch model to ONNX: https://docs.pytorch.org/tutorials/beginner/onnx/export_simple_model_to_onnx_tutorial.html
-7. PyTorch tutorial — Introduction to ONNX: https://docs.pytorch.org/tutorials/beginner/onnx/intro_onnx.html
-8. ONNX Runtime documentation: https://onnxruntime.ai/docs/
-9. ONNX Runtime graph optimizations: https://onnxruntime.ai/docs/performance/model-optimizations/graph-optimizations.html
-10. ONNX Runtime Execution Providers: https://onnxruntime.ai/docs/execution-providers/
+1. **ONNX khác ONNX Runtime?** Format/spec vs runtime thực thi.
+2. **`initializer` thường lưu gì?** Weights/constants cố định — runtime load sẵn, user không truyền theo request.
+3. **Node vs operator?** Operator = định nghĩa; node = một lần gọi trong graph.
+4. **Opset ảnh hưởng backend thế nào?** Quyết định semantics operator; mismatch → unsupported.
+5. **Vì sao không luôn opset mới nhất?** Backend có thể chưa hỗ trợ; chọn theo target.
+6. **Static vs dynamic shape?** Cố định vs symbolic/runtime; trade-off tối ưu ↔ linh hoạt.
+7. **Vì sao `model.eval()` trước export?** Tránh Dropout/BN behavior training mode.
+8. **ORT CPU OK nhưng TRT fail — debug ra sao?** Checker → ORT CPU → list ops → TRT matrix → dynamic profile → refactor.
+9. **Vì sao cần numerical validation dù checker pass?** Schema hợp lệ ≠ tương đương số học.
+10. **Inspect I/O schema thế nào?** Duyệt `graph.input`/`output` hoặc Netron / script Lab 2B.
+:::
+
+
+## Glossary {.unnumbered}
+
+| Thuật ngữ | Giải thích ngắn |
+|:----------|:----------------|
+| ONNX | Open format/spec biểu diễn ML model |
+| ONNX Runtime | Runtime chạy ONNX trên CPU/GPU/accelerators |
+| TensorRT | Compiler/runtime tối ưu inference NVIDIA GPU |
+| Graph | Dataflow gồm node và tensor edges |
+| Node | Một lần gọi operator trong graph |
+| Operator | Định nghĩa phép toán (`Conv`, `Relu`, …) |
+| Opset | Versioned set of operator specifications |
+| IR version | Version của ONNX IR format |
+| Initializer | Tensor constant trong graph, thường weights |
+| ValueInfo | Metadata name/dtype/shape của tensor |
+| Dynamic shape | Có dimension symbolic/runtime-dependent |
+| Static shape | Mọi dimension cố định |
+| Execution Provider | Backend thực thi trong ORT |
+| Shape inference | Suy luận shape intermediate tensors |
+| Graph optimization | Rewrite graph giữ semantics (folding, fusion, …) |
+| Attribute | Cấu hình tĩnh của operator (strides, pads, …) |
+| NCHW / NHWC | Layout tensor ảnh: channel trước/sau spatial dims |
+
+
+## Summary {.unnumbered}
+
+1. ONNX là IR / format, không phải runtime — cần ORT, TensorRT, …
+2. Model = graph + weights + I/O schema + metadata + opset.
+3. Node = lần dùng operator; initializer = weights đã lưu sẵn, không phải runtime input.
+4. Chọn opset theo backend; đừng nhầm IR version / opset version / model version.
+5. Export = capture → normalize → translate (+ optional optimize), không chỉ save weights; luôn `model.eval()`.
+6. Suite tin cậy tối thiểu: `checker` + shape/I/O inspect + Netron (hỗ trợ) + **numerical** so với framework gốc.
+7. Dynamic shape có chủ đích; layout/dtype sai có thể không crash nhưng output sai im lặng.
+8. ORT chạy được ≠ TensorRT build được — mỗi backend có operator coverage riêng; control-flow ops như `If` thường là điểm gãy.
+
+
+## Preview bài tiếp theo {.unnumbered}
+
+Lesson 3: **ONNX Runtime Deep Dive — Execution Providers, Graph Optimizations, I/O Binding and Performance Tuning**
+
+- Session ORT, graph optimization levels
+- CPU vs CUDA EP, TensorRT EP (khái niệm)
+- Memory allocation, I/O Binding
+- Benchmark latency, đọc ORT profiling
+
+
+## References {.unnumbered}
+
+1. [ONNX Concepts](https://onnx.ai/onnx/intro/concepts.html)
+2. [ONNX IR Specification](https://onnx.ai/onnx/repo-docs/IR.html)
+3. [ONNX Versioning](https://onnx.ai/onnx/repo-docs/Versioning.html)
+4. [ONNX Operators](https://onnx.ai/onnx/operators/)
+5. [PyTorch `torch.onnx`](https://docs.pytorch.org/docs/main/onnx.html)
+6. [Export a PyTorch model to ONNX](https://docs.pytorch.org/tutorials/beginner/onnx/export_simple_model_to_onnx_tutorial.html)
+7. [Introduction to ONNX](https://docs.pytorch.org/tutorials/beginner/onnx/intro_onnx.html)
+8. [ONNX Runtime docs](https://onnxruntime.ai/docs/)
+9. [ORT graph optimizations](https://onnxruntime.ai/docs/performance/model-optimizations/graph-optimizations.html)
+10. [ORT Execution Providers](https://onnxruntime.ai/docs/execution-providers/)

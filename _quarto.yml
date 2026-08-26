@@ -12,6 +12,7 @@ project:
     - "!nghien-cuu/**"
   resources:
     - legacy/**/*
+    - assets/img/**
 
 website:
   title: "dythanh22"
@@ -25,7 +26,7 @@ website:
   back-to-top-navigation: true
 
   navbar:
-    background: primary
+    background: dark
     search: true
     pinned: true
     tools:
@@ -103,7 +104,7 @@ website:
         - bai-hoc/ai-optimize/lesson-10-end-to-end-capstone.qmd
 
   page-footer:
-    left: "© 2026 dythanh22 · Học tập & ghi chú"
+    left: "© 2026 dythanh22 · Ghi chú học tập theo chuỗi"
     center:
       - href: bai-hoc/index.qmd
         text: Bài học
@@ -127,7 +128,7 @@ format:
     toc-title: "Mục lục"
     number-sections: false
     code-copy: true
-    code-overflow: wrap
+    code-overflow: scroll
     highlight-style:
       light: github
       dark: github-dark
@@ -140,9 +141,10 @@ format:
           <meta property="og:site_name" content="dythanh22">
           <link rel="preconnect" href="https://fonts.googleapis.com">
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+          <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     include-after-body:
       - file: assets/js/lesson-progress.html
+      - file: assets/js/home-continue.html
 
 language:
   title-block-author-single: "Tác giả"

@@ -7,11 +7,14 @@ series: ai-optimize
 order: 9
 description: "KV cache, continuous batching, PagedAttention, vLLM, TensorRT-LLM."
 role: "KV cache, continuous batching, PagedAttention, vLLM, TensorRT-LLM"
+aliases:
+  - /bai-hoc/ai-optimize/lesson_9_advanced_inference_systems_for_llms.html
+  - /bai-hoc/ai-optimize/lesson-09-advanced-inference-systems-for-llms.html
 ---
 
 ::: {.callout-note icon=false}
 ## Mục tiêu bài học
-Mục tiêu của bài này là giúp bạn hiểu **LLM inference system** khác gì so với inference service truyền thống, tại sao KV cache là tài nguyên quan trọng nhất khi serve LLM, vì sao static batching không còn đủ, cách các engine như **vLLM** và **TensorRT-LLM** tăng throughput/giảm latency, và cách đo/cost planning một hệ thống sinh token trong production.
+Hiểu **LLM inference** khác classic serving ở đâu: **prefill** / **decode**, **KV cache**, **continuous batching**, **PagedAttention**, engine (**vLLM**, **TensorRT-LLM**), **speculative decoding**, streaming và metric token-level (TTFT / ITL / TPS / goodput), rồi cost planning + debug playbook. Bài **không** dạy train LLM, fine-tune từ đầu, hay thay Lesson 5/8 về quantization nền / canary ops — chỉ áp chúng vào workload sinh token.
 :::
 
 ::: {.callout-tip icon=false}
@@ -19,1133 +22,574 @@ Mục tiêu của bài này là giúp bạn hiểu **LLM inference system** khá
 LLM serving giả định bạn đã quen self-attention và decoder. Ôn [Transformer](../architecture-models/Transformer/index.qmd) trong chuỗi Architecture Models nếu cần.
 :::
 
-## Vị trí của Lesson 9 trong chuỗi học
+::: {.callout-note icon=false}
+## Lộ trình bài học
 
-Ở các bài trước, bạn đã học pipeline high-performance inference cho model truyền thống:
+| # | Phần | Trả lời câu hỏi | Thời lượng |
+|:--|:-----|:----------------|:-----------|
+| 1 | Khác gì classic + metric | Vì sao một request = nhiều forward? Metric nào quan trọng? | 15 phút |
+| 2 | Prefill / decode + KV | Prefill vs decode? KV cache tốn bao nhiêu memory? | 25 phút |
+| 3 | Continuous batching | Static vs continuous? Scheduler ưu tiên gì? | 20 phút |
+| 4 | PagedAttention + prefix | Fragmentation? Prefix caching khi nào hữu ích? | 20 phút |
+| 5 | Spec decode + parallelism | Spec khi nào lợi? TP / PP / EP làm gì? | 20 phút |
+| 6 | Serving stacks + quant | vLLM vs TensorRT-LLM? Quant LLM (FP8/INT4/AWQ…)? | 25 phút |
+| 7 | Production ops | Streaming, SLO token-level, monitoring? | 20 phút |
+| 8 | Playbook + cost | Bottleneck, cost/1M tokens, checklist? | 20 phút + labs |
 
-```text
-Lesson 1: Modern GPU Inference Architecture
-    request -> preprocessing -> batching -> runtime -> GPU execution -> response
+Đọc tối thiểu: phần 1–4. Phần 5–8 và Mini-lab nên hoàn thành trước khi serve LLM production.
+:::
 
-Lesson 2: ONNX Fundamentals
-    graph IR -> nodes -> opset -> export pipeline
+::: {.reading-modes}
+**Đọc nhanh:** callout *Ý chính* + bảng + sơ đồ xương sống.  
+**Đọc đủ:** mở tip đào sâu, làm Mini-lab và Checkpoint.
+:::
 
-Lesson 3: ONNX Runtime Deep Dive
-    session -> execution providers -> graph optimization -> I/O binding
 
-Lesson 4: TensorRT Internals
-    ONNX -> TensorRT builder -> optimized engine -> execution context
+## Bối cảnh {.unnumbered}
 
-Lesson 5: Quantization Deep Dive
-    PTQ/QAT -> Q/DQ -> INT8/FP8 -> accuracy recovery
+Lesson 1–8 tối ưu pipeline classic: một request → một (hoặc vài) forward → một output tensor. Lesson 9 chuyển sang workload **autoregressive**: một prompt → prefill → hàng trăm / nghìn decode step → stream token.
 
-Lesson 6: NVIDIA Triton Inference Server
-    model repository -> backend -> scheduler -> dynamic batching -> serving
-
-Lesson 7: Profiling and Benchmarking
-    trtexec -> Perf Analyzer -> Nsight -> p99 -> bottleneck analysis
-
-Lesson 8: Safe Rollouts and Production Operations
-    canary -> A/B -> shadow -> SLO -> monitoring -> incident response
+```{mermaid}
+%%| label: fig-l9-spine
+%%| fig-cap: "Sơ đồ xương sống Lesson 9: Client → Tokenizer → Prefill → Decode+KV → Stream → Metrics/Cost."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  CL([Client]) -->|"prompt"| TK([Tokenizer])
+  TK -->|"input_ids"| PF([Prefill])
+  PF -->|"KV + first logits"| DC([Decode+KV])
+  DC -->|"tokens"| ST([Stream])
+  ST -->|"TTFT/ITL/TPS"| MT([Metrics/Cost])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2.5px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class CL,MT soft
+  class TK,ST io
+  class PF ok
+  class DC hot
 ```
 
-Lesson 9 chuyển sang một lớp workload mới:
+Mantra của bài:
 
 ```text
-Classic inference:
-    one request -> one forward pass -> one output
-
-LLM inference:
-    one request -> prefill -> many decode steps -> streaming tokens -> final output
+Classic: one request → one forward → one output
+LLM:     one request → prefill → many decode steps → streaming tokens
 ```
 
-Đây là thay đổi rất lớn. Với image classification hoặc object detection, ta thường tối ưu một forward pass. Với LLM, một request có thể cần hàng trăm hoặc hàng nghìn forward pass nhỏ ở giai đoạn decode.
-
-Một inference engineer làm LLM serving không chỉ hỏi:
+Câu hỏi đúng không còn chỉ là “model latency bao nhiêu?” mà:
 
 ```text
-Model latency là bao nhiêu?
-```
-
-mà phải hỏi:
-
-```text
-TTFT là bao nhiêu?
-ITL/TPOT là bao nhiêu?
-Output token throughput là bao nhiêu?
+TTFT? ITL/TPOT? Output token throughput?
 KV cache còn đủ không?
-Batch đang bị nghẽn ở prefill hay decode?
-Scheduler có đang ưu tiên decode để giữ streaming mượt không?
-Cost per 1M tokens là bao nhiêu?
+Batch nghẽn ở prefill hay decode?
+Scheduler có ưu tiên decode để stream mượt không?
+Cost per 1M tokens?
 ```
 
-
-
-## Learning outcomes
-
-Sau bài này, bạn cần giải thích và thực hành được:
-
-1. Vì sao LLM inference khác classic neural network inference.
-2. Prefill phase và decode phase khác nhau như thế nào.
-3. KV cache lưu cái gì, tại sao nó giúp tránh tính toán lặp lại.
-4. Cách ước lượng memory của KV cache.
-5. Static batching, dynamic batching và continuous batching khác nhau như thế nào.
-6. PagedAttention giải quyết vấn đề fragmentation và waste của KV cache ra sao.
-7. vLLM phù hợp với workload nào và có những thành phần nào quan trọng.
-8. TensorRT-LLM khác vLLM ở triết lý tối ưu như thế nào.
-9. Speculative decoding hoạt động như thế nào và khi nào có lợi.
-10. Streaming ảnh hưởng tới UX và metric ra sao.
-11. TTFT, ITL, TPOT, E2E latency, TPS, RPS, goodput khác nhau như thế nào.
-12. Cách xây cost model đơn giản cho một LLM inference service.
-13. Cách chọn hướng tối ưu dựa trên bottleneck: memory, compute, scheduler, network hay tokenizer.
-
-
-
-## Tài liệu nền tảng được dùng trong bài
-
-Bài này được viết dựa trên các nguồn chính thức và paper nền tảng sau:
-
-- vLLM documentation: PagedAttention, OpenAI-compatible server, production metrics, optimization/tuning, speculative decoding.
-- TensorRT-LLM documentation: overview, in-flight batching, paged attention, request scheduling, KV cache system, speculative decoding, benchmarking.
-- NVIDIA NIM LLM benchmarking docs: TTFT, end-to-end latency, ITL/TPOT, TPS, RPS.
-- Paper **Efficient Memory Management for Large Language Model Serving with PagedAttention**.
-
-Các framework này thay đổi nhanh. Vì vậy, bài học tập trung vào **mental model, metric, architecture và debugging workflow** hơn là học thuộc từng flag CLI.
-
-
-
-## Classic inference vs LLM inference
-
-### Classic inference
-
-Với ResNet, BERT classification, YOLO hoặc segmentation model, một request thường có dạng:
+::: {.callout-tip icon=false collapse="true"}
+## Vị trí Lesson 9 trong chuỗi học
 
 ```text
-input tensor -> forward pass -> output tensor
+L1 GPU pipeline → L2 ONNX → L3 ORT → L4 TensorRT → L5 Quantization
+→ L6 Triton → L7 Profiling → L8 Safe rollouts
+→ L9 LLM serving systems → L10 Capstone
 ```
 
-Ví dụ:
+Framework LLM đổi flag nhanh. Bài tập trung **mental model, metric, architecture và debugging workflow** — không học thuộc từng CLI flag.
+:::
+
+
+## Learning outcomes {.unnumbered}
+
+1. Vì sao LLM inference khác classic neural network inference
+2. Prefill và decode khác nhau thế nào; ảnh hưởng TTFT / ITL ra sao
+3. KV cache lưu gì; ước lượng memory; vai trò MQA/GQA
+4. Static vs dynamic vs continuous / in-flight / iteration-level batching
+5. PagedAttention giải quyết fragmentation và waste của KV cache thế nào
+6. Prefix caching / chunked prefill khi nào hữu ích
+7. vLLM phù hợp workload nào; knobs ổn định cần nhớ
+8. TensorRT-LLM khác vLLM ở triết lý tối ưu thế nào
+9. Speculative decoding hoạt động ra sao và khi nào có lợi
+10. Parallelism TP / PP / EP (và khi nào cần)
+11. Streaming ảnh hưởng UX và metric thế nào
+12. TTFT, ITL, TPOT, E2E, TPS, RPS, goodput — phân biệt và dùng đúng
+13. Cost model đơn giản + capacity planning theo SLO và KV memory
+14. Bottleneck playbook: memory, compute, scheduler, network, tokenizer
+
+
+## Prerequisites {.unnumbered}
+
+| Chủ đề | Cần nắm |
+|:-------|:--------|
+| GPU / attention | Transformer decoder-only ở mức khái niệm; memory bandwidth vs compute (Lesson 1) |
+| Quantization | FP16/BF16/FP8/INT8 ý tưởng cơ bản (Lesson 5) |
+| Serving | Dynamic batching, metrics, Triton/NIM ở mức khái niệm (Lesson 6) |
+| Benchmark | p50/p95/p99, latency-throughput curve (Lesson 7) |
+| Production | SLO, monitoring, canary mindset (Lesson 8) |
+
+::: {.callout-tip icon=false collapse="true"}
+## Hai nhóm lab
+**CPU-only:** KV memory calculator, cost calculator, design exercise 3 workload, checklist — làm được trên mọi máy.  
+**GPU labs:** vLLM serve, streaming client, `/metrics`, bench, prefix cache, speculative config, TensorRT-LLM skeleton — cần GPU + runtime đã cài. Không có GPU vẫn học đủ mạch bài qua tip và Checkpoint.
+:::
+
+
+## Vì sao LLM inference khác classic serving? {#sec-why-different}
+
+> Image classifier tối ưu một forward pass — vì sao serve LLM buộc phải nghĩ theo token, KV cache và nhiều bước decode?
+
+::: {.callout-important icon=false}
+## Ý chính
+Classic inference gần như **một request = một forward = một output cố định**. LLM decoder-only là **một request = prefill + vòng decode autoregressive**, output length không biết trước, memory **KV cache** tăng theo context, và UX phụ thuộc **TTFT** cùng **ITL** chứ không chỉ E2E latency trung bình.
+:::
+
+| Chiều | Classic (CNN / classifier) | LLM inference |
+|:------|:---------------------------|:--------------|
+| Forward / request | Thường 1 | Prefill + nhiều decode step |
+| Output size | Cố định / gần cố định | Biến động theo `max_tokens` / EOS |
+| Batching | Gom request dễ hơn | Output length lệch → static batch lãng phí |
+| Memory nóng | Weights + activation tạm | Weights + **KV cache per request** |
+| Bound điển hình | Compute (model lớn) | Prefill: compute-heavy; decode: memory-bandwidth |
+| Metric chính | Latency / RPS | TTFT, ITL/TPOT, tokens/s, goodput |
+| UX | Chờ full response | Streaming từng token |
+
+Ví dụ classic: `image [1,3,224,224] → CNN → logits [1,1000]`.  
+Ví dụ LLM: prompt `"Explain TensorRT in simple terms."` → tokenize → prefill → token₁, token₂, … → stream.
+
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Đo “model latency” như một con số duy nhất cho LLM. Cùng mean E2E, một service có thể TTFT 2 s + ITL giật — UX tệ — trong khi service khác TTFT 300 ms + ITL mượt lại được coi là “chậm hơn” nếu chỉ nhìn average.
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Mental model decoder-only + ba loại memory
+
+Ở mỗi layer:
 
 ```text
-image [1, 3, 224, 224]
-    -> CNN
-    -> logits [1, 1000]
+Q = X Wq;  K = X Wk;  V = X Wv
+Attention(Q, K, V) = softmax(QKᵀ / √d) V
 ```
 
-Đặc điểm:
+Token mới attend tới mọi token trước (`1..t`). Không cache thì mỗi decode step tính lại K/V cho cả prefix — cực kỳ lãng phí.
 
-- số lần forward pass cho mỗi request thường là 1;
-- output size thường cố định hoặc gần cố định;
-- batching tương đối dễ;
-- request dài/ngắn ít biến động hơn;
-- latency thường đo bằng thời gian của một forward pass;
-- GPU compute thường là phần lớn thời gian nếu model lớn.
-
-### LLM inference
-
-Với decoder-only LLM, request không chỉ là một forward pass. Ví dụ user gửi prompt:
+| Loại | Vai trò | Tính chất |
+|:-----|:--------|:----------|
+| **Weights** | “Kiến thức” model | Gần như static sau load |
+| **Activations** | Giá trị tạm một forward | Sống ngắn |
+| **KV cache** | K/V đã tính cho token cũ | Per-request, **mọc theo sequence length** |
 
 ```text
-"Explain TensorRT in simple terms."
+Compute K/V once → store → next step chỉ tính K/V token mới → reuse cache
+```
+:::
+
+
+## Prefill, decode và KV cache {#sec-prefill-decode-kv}
+
+> Prefill tạo gì, decode tốn gì — và làm sao ước lượng KV cache trước khi OOM?
+
+::: {.callout-important icon=false}
+## Ý chính
+**Prefill** xử lý cả prompt một lần: tạo logits token đầu + KV cho prompt — thường **compute-heavy**, quyết định phần lớn **TTFT**. **Decode** mỗi bước gần như input length = 1 nhưng attention length = toàn bộ cache — thường **memory-bandwidth-bound**, quyết định **ITL**. KV cache thường làm capacity “hết chỗ” trước khi weights hết chỗ.
+:::
+
+```{mermaid}
+%%| label: fig-l9-prefill-decode
+%%| fig-cap: "Timeline một request streaming: queue+prefill → first token (TTFT) → decode loop → last token (E2E)."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  CL([Client]) --> TK([Tokenizer])
+  TK --> PF([Prefill])
+  PF -->|"TTFT"| FT([First token])
+  FT --> DC([Decode loop])
+  DC -->|"E2E"| LT([Last token])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:3px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class CL,LT soft
+  class TK,FT io
+  class DC ok
+  class PF hot
 ```
 
-Model phải sinh output từng token:
-
-```text
-Token 1 -> Token 2 -> Token 3 -> ... -> Token N
-```
-
-Vòng lặp inference có dạng:
-
-```text
-1. Tokenize prompt
-2. Prefill: xử lý toàn bộ prompt ban đầu
-3. Decode step 1: sinh token đầu tiên
-4. Decode step 2: dùng token vừa sinh để sinh token tiếp theo
-5. Lặp lại cho tới khi gặp EOS hoặc max_tokens
-6. Detokenize và stream token về client
-```
-
-Sơ đồ tổng quát:
-
-```text
-Client
-  |
-  | prompt
-  v
-Tokenizer
-  |
-  | input_ids
-  v
-LLM Engine
-  |
-  |-- Prefill: process all prompt tokens
-  |       output: first logits + KV cache
-  |
-  |-- Decode loop:
-  |       step 1 -> next token -> update KV cache
-  |       step 2 -> next token -> update KV cache
-  |       step 3 -> next token -> update KV cache
-  |       ...
-  v
-Streaming Response
-```
-
-Đặc điểm:
-
-- mỗi request có thể chạy rất lâu;
-- số output tokens không biết trước tuyệt đối;
-- request có prompt length và output length khác nhau;
-- memory của KV cache tăng theo sequence length;
-- prefill thường compute-heavy hơn;
-- decode thường memory-bandwidth-bound hơn;
-- streaming UX phụ thuộc mạnh vào TTFT và ITL.
-
-
-
-## Decoder-only Transformer inference: mental model
-
-Ta xét một decoder-only Transformer như Llama, Qwen, Gemma hoặc GPT-style model.
-
-Ở mỗi layer, attention cần tính:
-
-```text
-Q = X Wq
-K = X Wk
-V = X Wv
-Attention(Q, K, V) = softmax(QK^T / sqrt(d)) V
-```
-
-Khi sinh token thứ `t`, token mới cần attend tới tất cả token trước đó:
-
-```text
-new token attends to tokens 1..t
-```
-
-Nếu không cache, ở mỗi decode step ta phải tính lại K/V cho toàn bộ prefix:
-
-```text
-Step 1: compute K/V for prompt + token1
-Step 2: compute K/V for prompt + token1 + token2
-Step 3: compute K/V for prompt + token1 + token2 + token3
-...
-```
-
-Điều này cực kỳ lãng phí.
-
-KV cache giải quyết bằng cách:
-
-```text
-Compute K/V once.
-Store K/V.
-At next decode step, only compute K/V for new token.
-Reuse previous K/V from cache.
-```
-
-Mental model:
-
-```text
-Weights:    knowledge of model, mostly static
-Activations: temporary values during one forward pass
-KV cache:   per-request memory that grows with context length
-```
-
-
-
-## Prefill phase vs decode phase
-
-### Prefill
-
-Prefill xử lý toàn bộ prompt ban đầu.
-
-Ví dụ prompt dài 2048 tokens:
-
-```text
-input_ids length = 2048
-```
-
-Prefill sẽ chạy model trên toàn bộ 2048 tokens để:
-
-1. tạo hidden states;
-2. tạo logits cho token tiếp theo;
-3. tạo KV cache cho toàn bộ prompt.
-
-Đặc điểm của prefill:
-
-- xử lý nhiều tokens cùng lúc;
-- matrix multiplication lớn;
-- GPU utilization thường tốt hơn;
-- thường compute-heavy;
-- prompt càng dài thì TTFT càng tăng;
-- prefill tạo phần lớn KV cache ban đầu.
-
-### Decode
-
-Decode sinh từng token mới.
-
-Ở mỗi step:
-
-```text
-input length to model = 1 new token
-attention length = all previous tokens in KV cache
-```
-
-Đặc điểm của decode:
-
-- mỗi step xử lý rất ít token trên mỗi request;
-- cần đọc KV cache ngày càng dài;
-- thường memory-bandwidth-bound;
-- GPU dễ bị underutilized nếu batch nhỏ;
-- ITL/TPOT phụ thuộc rất nhiều vào scheduler và batching.
-
-### Timeline của một request streaming
-
-```text
-request sent
-    |
-    | tokenization + queue + prefill
-    v
-first token received  <- TTFT
-    |
-    | decode step 1
-    | decode step 2
-    | decode step 3
-    v
-last token received   <- end-to-end latency
-```
+| Phase | Input vào model | Việc chính | Bound thường gặp | Metric gắn |
+|:------|:----------------|:-----------|:-----------------|:-----------|
+| Prefill | Toàn bộ prompt (vd. 2048 tokens) | Hidden states, first logits, KV prompt | Compute-heavy | TTFT |
+| Decode | 1 token mới / step | Next token + cập nhật KV | Memory-bandwidth | ITL / TPOT |
 
 Công thức đơn giản:
 
-```text
-E2E latency = TTFT + generation_time
-```
+$$
+\text{E2E} \approx \text{TTFT} + \text{generation\_time}
+$$
 
-Nếu output có `N` tokens, một cách tính ITL/TPOT phổ biến là:
+$$
+\text{ITL} \approx \frac{\text{E2E} - \text{TTFT}}{N - 1}
+$$
 
-```text
-ITL ~= (E2E latency - TTFT) / (N - 1)
-```
+(với $N$ output tokens; tool benchmark có thể định nghĩa hơi khác — luôn ghi rõ công thức khi so sánh.)
 
-Lưu ý: các tool benchmark khác nhau có thể định nghĩa hơi khác. Khi so sánh kết quả, luôn ghi rõ tool và công thức.
+**Ước lượng KV cache** (một request):
 
+$$
+\text{KV bytes} = L \times S \times 2 \times H_{\text{kv}} \times d_{\text{head}} \times b
+$$
 
+| Ký hiệu | Ý nghĩa |
+|:--------|:--------|
+| $L$ | `num_layers` |
+| $S$ | `sequence_length` (prompt + generated đã có) |
+| $2$ | K và V |
+| $H_{\text{kv}}$ | `num_kv_heads` |
+| $d_{\text{head}}$ | `head_dim` |
+| $b$ | bytes/element (FP16/BF16 = 2, FP8 = 1) |
 
-## KV cache là gì?
+Ví dụ: $L{=}32$, $H_{\text{kv}}{=}8$, $d{=}128$, $b{=}2$, $S{=}4096$ → $\approx 512$ MB / request. 64 request đồng thời ≈ **32 GB** chỉ cho KV — đó là lý do serving LLM thường bị giới hạn bởi KV trước weights.
 
-KV cache lưu lại key và value vectors của attention cho các token đã xử lý.
+::: {.callout-tip icon=false collapse="true"}
+## Con số cụ thể: MQA/GQA và checklist TTFT/ITL
 
-Với mỗi layer, mỗi token cần lưu:
+**MQA / GQA** giảm $H_{\text{kv}}$ so với MHA cổ điển (`num_query_heads > num_kv_heads`). Ví dụ MHA 32 KV heads → GQA 8 heads: KV ≈ **1/4** nếu các thông số khác giữ nguyên.
 
-```text
-K: [num_kv_heads, head_dim]
-V: [num_kv_heads, head_dim]
-```
+TTFT tăng khi: prompt dài, queue dài, batch prefill quá lớn, GPU bận, prefix cache miss, tokenizer chậm, TP/PP chưa tốt.
 
-Vì có cả K và V, hệ số `2` xuất hiện trong công thức memory.
-
-### Công thức ước lượng KV cache memory
-
-Với một request:
-
-```text
-KV cache bytes
-= num_layers
-  * sequence_length
-  * 2
-  * num_kv_heads
-  * head_dim
-  * bytes_per_element
-```
-
-Trong đó:
-
-- `num_layers`: số Transformer layers;
-- `sequence_length`: prompt tokens + generated tokens đã có;
-- `2`: K và V;
-- `num_kv_heads`: số KV heads;
-- `head_dim`: kích thước mỗi head;
-- `bytes_per_element`: FP16/BF16 = 2 bytes, FP8 = 1 byte.
-
-### Ví dụ tính nhanh
-
-Giả sử model có:
+ITL xấu khi: decode batch nhỏ, KV dài, memory bandwidth bottleneck, prefill chen decode, scheduler không ưu tiên decode, preemption / network buffer.
 
 ```text
-num_layers = 32
-num_kv_heads = 8
-head_dim = 128
-bytes_per_element = 2   # FP16/BF16 KV cache
-sequence_length = 4096
+request sent
+  | tokenization + queue + prefill
+  v
+first token  ← TTFT
+  | decode steps…
+  v
+last token   ← E2E latency
 ```
+:::
 
-Memory cho một request:
+
+## Continuous batching và scheduling {#sec-continuous-batching}
+
+> Static batching từng “thắng” với CNN — vì sao với LLM decode loop nó không còn đủ?
+
+::: {.callout-important icon=false}
+## Ý chính
+**Continuous batching** (còn gọi **in-flight batching** / **iteration-level batching**) coi batch là **tập sequence đang active ở mỗi iteration**, không phải nhóm cố định chạy tới khi mọi request xong. Request ngắn không bị kẹt chờ request dài; GPU tận dụng decode step vốn nhỏ — đổi lấy scheduler và memory manager phức tạp hơn.
+:::
+
+| Kiểu | Cách hoạt động | Điểm yếu với LLM |
+|:-----|:---------------|:-----------------|
+| **Static batching** | Gom A,B,C,D → chạy tới khi tất cả xong | Request ngắn chờ dài; slot idle; throughput kém khi output lệch |
+| **Dynamic batching** | Chờ ≤ X ms rồi chạy batch | Vẫn hữu ích cho prefill; chưa giải quyết generation length lệch |
+| **Continuous / IFB** | Mỗi step: thêm/bớt sequence khi còn capacity | Cần KV paging + fairness + metric tốt |
 
 ```text
-32 * 4096 * 2 * 8 * 128 * 2 bytes
-= 536,870,912 bytes
-~= 512 MB
+t1: batch [A, B, C]
+t2: A done, add D → [B, C, D]
+t3: add E (prefill) while B/C/D decode → [B, C, D, E]
 ```
 
-Nếu có 64 request đồng thời ở sequence length tương tự:
+Ý tưởng cốt lõi: *Batch is not a fixed group of requests — it is a changing set of active sequences at each iteration.*
+
+| Lợi ích | Trade-off |
+|:--------|:----------|
+| GPU utilization cao hơn | Scheduler phức tạp |
+| Request mới ít chờ hơn | Cấp phát/thu hồi KV liên tục |
+| Phù hợp streaming | Fairness / tail latency khó hơn |
+| Tăng output token throughput | Dễ tối ưu TPS mà phá UX nếu thiếu metric |
+
+**Chunked prefill**: chia prompt dài thành chunk để xen kẽ với decode — tránh “một prefill dài làm ITL toàn batch xấu”.
+
+| Knob liên quan | Hướng ảnh hưởng thường gặp |
+|:---------------|:---------------------------|
+| `max_num_batched_tokens` nhỏ hơn | ITL thường tốt hơn |
+| `max_num_batched_tokens` lớn hơn | TTFT / prefill throughput thường tốt hơn |
+
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Tăng concurrency / batch token budget tối đa để “đầy GPU” rồi tuyên bố thắng vì system TPS cao — trong khi TTFT/ITL p99 và goodput (request thỏa SLO) giảm. Throughput thô ≠ UX.
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: fairness, priority và mental model scheduler
+
+Continuous batching làm **fairness** và **tail latency** khó kiểm soát hơn static batch. Production thường cần:
+
+- admission control / max queue
+- tách pool short-chat vs long-context / long-generation
+- ưu tiên decode để giữ stream mượt (chunked prefill hỗ trợ)
+- quota / rate limit theo tenant hoặc `max_tokens`
 
 ```text
-512 MB * 64 ~= 32 GB
+Scheduler mỗi iteration:
+  chọn prefill jobs + decode sequences trong token budget
+  cấp / thu hồi KV blocks
+  emit tokens → stream
 ```
 
-Đây là lý do LLM serving thường bị giới hạn bởi KV cache trước khi bị giới hạn bởi model weights.
+Không có “priority queue hoàn hảo” trong mọi engine — nhưng nguyên tắc ổn định: **đừng trộn mọi length vào một pool duy nhất nếu p99 là SLO cứng**.
+:::
 
-### MQA/GQA giúp giảm KV cache như thế nào?
 
-Trong Multi-Head Attention truyền thống, số query heads và KV heads thường bằng nhau.
+## PagedAttention và quản lý bộ nhớ KV {#sec-pagedattention}
 
-Với Grouped-Query Attention hoặc Multi-Query Attention:
+> Vì sao reserve một tensor KV liên tục theo `max_seq_len` lại lãng phí — và PagedAttention sửa gì?
+
+::: {.callout-important icon=false}
+## Ý chính
+**PagedAttention** chia KV thành **block/page** cố định (ý tưởng virtual memory): cấp phát theo nhu cầu thật, giảm fragmentation, thu hồi khi request xong, và cho phép **chia sẻ block** khi nhiều request cùng prefix. Đây là **serving-system design** (block table + kernel đọc non-contiguous), không chỉ “struct dữ liệu đẹp”.
+:::
+
+```{mermaid}
+%%| label: fig-l9-paged
+%%| fig-cap: "Logical KV blocks map sang physical blocks không cần liền kề — giảm waste và fragmentation."
+%%| fig-width: 6.5
+%%| fig-align: "center"
+flowchart TB
+  LA([Req A logical]) -->|"blk 0"| P12([phys 12])
+  LA -->|"blk 1"| P88([phys 88])
+  LA -->|"blk 2"| P05([phys 05])
+  LB([Req B logical]) -->|"blk 0"| P31([phys 31])
+  LB -->|"blk 1"| P09([phys 09])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2.5px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class LA,LB soft
+  class P12,P88,P05,P31,P09 ok
+  class P88 hot
+```
+
+| Contiguous reserve | Paged KV |
+|:-------------------|:---------|
+| Đoán trước max length / request | Cấp block khi sequence mọc |
+| Waste nếu output ngắn | Thu hồi block khi xong |
+| Fragmentation vùng trống nhỏ | Physical blocks không cần liền kề |
+| Khó share prefix | Share block khi prefix trùng |
+
+Ví dụ waste: ba request đều reserve 4096 nhưng dùng 512 / 3000 / 128 → phần lớn GPU memory “đứng yên”.
+
+Engine cần: **block table**, map logical position → physical block, kernel layout tối ưu, scheduler ↔ memory manager phối hợp chặt.
+
+::: {.callout-tip icon=false collapse="true"}
+## Prefix caching / KV reuse — lợi ích và checklist miss
+
+Nhiều traffic production chia sẻ **system prompt**, policy, RAG template, few-shot, một phần chat history. Cache hit → giảm prefill compute và **TTFT**; đặc biệt mạnh với prompt hệ thống dài, multi-turn, agent, RAG template.
+
+Trade-off: hit phụ thuộc pattern; cần eviction; multi-tenant cần isolation/salt; prefix phải **match đúng token-level** (chat template / whitespace / special token).
 
 ```text
-num_query_heads > num_kv_heads
-```
-
-Khi `num_kv_heads` nhỏ hơn, KV cache giảm tương ứng.
-
-Ví dụ:
-
-```text
-MHA: num_kv_heads = 32
-GQA: num_kv_heads = 8
-```
-
-KV cache của GQA chỉ bằng khoảng 1/4 so với MHA nếu các thông số khác giữ nguyên.
-
-
-
-## Static batching, dynamic batching và continuous batching
-
-### Static batching
-
-Static batching gom một nhóm request rồi chạy cùng nhau cho tới khi tất cả hoàn thành.
-
-```text
-Batch = [A, B, C, D]
-Run until A, B, C, D all finish
-Then start next batch
-```
-
-Vấn đề:
-
-- request ngắn phải chờ request dài;
-- GPU idle ở các vị trí batch đã hoàn thành;
-- output length không đều làm throughput kém;
-- không phù hợp với streaming traffic biến động.
-
-### Dynamic batching
-
-Dynamic batching gom các request đến gần nhau trong một khoảng queue delay ngắn.
-
-```text
-Wait up to X ms
-Collect requests
-Run batch
-```
-
-Nó rất hữu ích cho classic inference và vẫn có ích cho LLM prefill, nhưng chưa giải quyết triệt để decode loop vì mỗi request có độ dài generation khác nhau.
-
-### Continuous batching / in-flight batching / iteration-level batching
-
-Continuous batching cho phép scheduler thêm request mới vào batch khi request cũ đã hoàn thành hoặc khi còn capacity trong decode iteration.
-
-```text
-Time step 1: batch [A, B, C]
-Time step 2: A finished, add D -> batch [B, C, D]
-Time step 3: add E prefill while B/C/D decode -> batch [B, C, D, E]
-```
-
-Ý tưởng cốt lõi:
-
-```text
-Batch is not a fixed group of requests.
-Batch is a changing set of active sequences at each iteration.
-```
-
-Lợi ích:
-
-- tăng GPU utilization;
-- giảm thời gian chờ của request mới;
-- tận dụng decode steps vốn nhỏ;
-- phù hợp với streaming serving;
-- tăng output token throughput.
-
-Trade-off:
-
-- scheduler phức tạp hơn;
-- memory manager phải cấp phát/thu hồi KV cache liên tục;
-- fairness và tail latency khó kiểm soát hơn;
-- cần metric tốt để tránh tối ưu throughput nhưng phá UX.
-
-
-
-## KV cache fragmentation và vì sao cần PagedAttention
-
-### Vấn đề với contiguous KV cache
-
-Nếu mỗi request cần một vùng KV cache liên tục, engine phải dự đoán trước request sẽ cần bao nhiêu memory.
-
-Ví dụ:
-
-```text
-Request A: reserved 4096 tokens, actually uses 512
-Request B: reserved 4096 tokens, actually uses 3000
-Request C: reserved 4096 tokens, actually uses 128
-```
-
-Memory bị waste vì:
-
-- output length không biết trước;
-- request kết thúc ở thời điểm khác nhau;
-- vùng trống nhỏ bị phân mảnh;
-- prefix giống nhau giữa nhiều request có thể bị duplicate.
-
-### Ý tưởng của PagedAttention
-
-PagedAttention lấy cảm hứng từ virtual memory trong operating systems.
-
-Thay vì lưu KV cache của một sequence trong một vùng liên tục, ta chia KV cache thành các block/page cố định:
-
-```text
-Logical sequence tokens:
-    token 0..15    -> logical block 0
-    token 16..31   -> logical block 1
-    token 32..47   -> logical block 2
-
-Physical KV memory:
-    block 0 -> physical block 104
-    block 1 -> physical block 17
-    block 2 -> physical block 251
-```
-
-Sơ đồ:
-
-```text
-Request A logical blocks
-  [0] -> physical block 12
-  [1] -> physical block 88
-  [2] -> physical block 05
-
-Request B logical blocks
-  [0] -> physical block 31
-  [1] -> physical block 09
-```
-
-Các physical blocks không cần nằm liên tục trong GPU memory.
-
-### Vì sao cách này mạnh?
-
-PagedAttention giúp:
-
-- giảm fragmentation;
-- cấp phát KV cache theo nhu cầu thực tế;
-- thu hồi block khi request kết thúc;
-- chia sẻ block khi requests có cùng prefix;
-- tăng số sequence active trong cùng GPU memory;
-- tăng throughput dưới cùng latency budget.
-
-Mental model:
-
-```text
-Classic KV cache allocation:
-    reserve a long continuous tensor per request
-
-Paged KV cache allocation:
-    allocate small blocks as the sequence grows
-```
-
-### PagedAttention không phải chỉ là memory trick
-
-PagedAttention yêu cầu attention kernel biết cách đọc K/V từ các block không liên tục. Vì vậy engine cần:
-
-- block table;
-- mapping logical token position -> physical block;
-- kernel layout tối ưu;
-- scheduler và memory manager phối hợp chặt.
-
-Đây là lý do PagedAttention là một **serving-system design**, không chỉ là một cấu trúc dữ liệu.
-
-
-
-## Prefix caching / KV cache reuse
-
-Nhiều request trong production có chung prefix:
-
-```text
-system prompt giống nhau
-policy prompt giống nhau
-RAG instruction giống nhau
-chat history một phần giống nhau
-few-shot examples giống nhau
-```
-
-Nếu hai request bắt đầu bằng cùng prefix, ta có thể reuse KV cache của prefix đó.
-
-Ví dụ:
-
-```text
-Shared prefix:
-    "You are a helpful assistant. Follow these policies..."
-
-Request A:
-    shared prefix + user question A
-
-Request B:
-    shared prefix + user question B
-```
-
-Nếu KV cache của shared prefix đã tồn tại, request B không cần prefill lại toàn bộ prefix.
-
-Lợi ích chính:
-
-- giảm TTFT;
-- giảm prefill compute;
-- tăng throughput cho traffic có prefix lặp lại;
-- đặc biệt hữu ích cho system prompts dài, multi-turn chat, agent workflows, RAG templates.
-
-Trade-off:
-
-- cache hit phụ thuộc traffic pattern;
-- cần cơ chế eviction;
-- cần bảo mật nếu nhiều tenant dùng chung server;
-- prefix phải match chính xác theo tokenization và cấu hình liên quan.
-
 Checklist khi prefix caching không hiệu quả:
+[ ] Prefix giống nhau ở token level?
+[ ] Chat template đổi whitespace / special token?
+[ ] Request đầu đã xong trước khi request sau reuse?
+[ ] Cache bị evict vì memory pressure?
+[ ] Multi-tenant isolation/salt chặn share?
+[ ] Block size quá lớn → ít block đủ điều kiện share?
+```
+:::
 
-```text
-[ ] Prefix có thật sự giống nhau ở token level không?
-[ ] Chat template có thay đổi whitespace hoặc special token không?
-[ ] Request đầu tiên đã hoàn thành trước khi request sau cần reuse chưa?
-[ ] KV cache có bị evict do memory pressure không?
-[ ] Có multi-tenant isolation/salt làm cache không share không?
-[ ] Block size có quá lớn khiến ít block đủ điều kiện share không?
+
+## Speculative decoding và parallelism {#sec-spec-parallel}
+
+> Làm sao giảm số forward decode đắt của model lớn — và khi nào phải shard sang nhiều GPU?
+
+::: {.callout-important icon=false}
+## Ý chính
+**Speculative decoding** dùng draft nhẹ đề xuất $k$ token rồi **target model verify** một lần: lợi khi acceptance rate cao và decode đang memory-bound; có thể vô ích hoặc hại khi QPS đã bão hòa GPU, draft đắt, hoặc sampling quá ngẫu nhiên. Multi-GPU: **TP** shard tensor, **PP** chia layer, **EP** phân tán MoE experts — mỗi cái đổi memory/latency/communication trade-off.
+:::
+
+```{mermaid}
+%%| label: fig-l9-spec
+%%| fig-cap: "Speculative decoding: draft đề xuất nhiều token → target verify → emit accepted / sửa rejected."
+%%| fig-width: 6.5
+%%| fig-align: "center"
+flowchart TB
+  PR([Prompt]) --> DR([Draft propose k tokens])
+  DR --> TG([Target verify])
+  TG -->|"accepted"| EM([Emit tokens])
+  TG -->|"rejected"| FX([Target correction])
+  FX --> EM
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2.5px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class PR,EM soft
+  class DR io
+  class TG hot
+  class FX ok
 ```
 
-
-
-## vLLM: mental model và use cases
-
-### vLLM là gì?
-
-vLLM là một LLM inference and serving engine tập trung vào:
-
-- high-throughput serving;
-- PagedAttention;
-- continuous batching;
-- OpenAI-compatible API server;
-- streaming outputs;
-- Hugging Face model integration;
-- quantization options;
-- tensor parallelism và nhiều chiến lược scale khác.
-
-Trong thực tế, vLLM thường được chọn khi bạn cần:
-
-- serve open-source LLM nhanh chóng;
-- API tương thích OpenAI;
-- throughput tốt với effort triển khai thấp;
-- hỗ trợ nhiều model từ Hugging Face;
-- streaming và production metrics;
-- batch nhiều request động.
-
-### Kiến trúc đơn giản của vLLM serving
-
-```text
-Client
-  |
-  | HTTP OpenAI-compatible API
-  v
-vLLM API Server
-  |
-  | requests
-  v
-Scheduler
-  |
-  | active sequences / decode iterations / prefill jobs
-  v
-KV Cache Manager + PagedAttention
-  |
-  v
-GPU kernels
-  |
-  v
-Streaming response
-```
-
-### Các knobs quan trọng trong vLLM
-
-Tên flag có thể thay đổi theo version, nhưng các concept ổn định hơn:
-
-```text
-max_model_len
-    Context length tối đa. Tăng giá trị này làm tăng KV cache demand.
-
-max_num_seqs
-    Số sequence active tối đa. Tăng quá cao có thể gây memory pressure.
-
-max_num_batched_tokens
-    Token budget mỗi scheduler iteration. Ảnh hưởng trade-off TTFT/ITL/throughput.
-
-gpu_memory_utilization
-    Tỷ lệ GPU memory dùng cho engine/KV cache. Để quá cao có thể dễ OOM.
-
-tensor_parallel_size
-    Shard model weights qua nhiều GPU. Giảm memory per GPU nhưng tăng communication.
-
-pipeline_parallel_size
-    Chia layer qua nhiều GPU. Có thể giúp fit model lớn nhưng tăng latency.
-
-enable_prefix_caching
-    Bật reuse prefix KV cache nếu workload có prefix lặp lại.
-
-speculative_config
-    Bật speculative decoding bằng draft model, n-gram, EAGLE/MTP hoặc phương pháp khác.
-```
-
-### Chunked prefill
-
-Chunked prefill chia prompt dài thành các phần nhỏ hơn để scheduler có thể trộn prefill với decode.
-
-Vấn đề ban đầu:
-
-```text
-Prompt rất dài đang prefill -> decode requests khác phải chờ -> ITL xấu
-```
-
-Với chunked prefill:
-
-```text
-Decode requests được ưu tiên.
-Prefill dài được chia thành nhiều chunks.
-Scheduler xen kẽ decode và prefill để giữ streaming mượt hơn.
-```
-
-Trade-off:
-
-- `max_num_batched_tokens` nhỏ hơn thường giúp ITL tốt hơn;
-- `max_num_batched_tokens` lớn hơn thường giúp TTFT/throughput prefill tốt hơn;
-- cần benchmark với prompt/output length thật.
-
-### Khi nào vLLM là lựa chọn tốt?
-
-vLLM thường là lựa chọn tốt khi:
-
-- bạn muốn đưa Hugging Face LLM vào serving nhanh;
-- bạn cần OpenAI-compatible API;
-- traffic có nhiều request concurrent;
-- output length biến động;
-- bạn cần continuous batching và PagedAttention;
-- bạn cần multi-LoRA, structured outputs hoặc tool-calling ecosystem;
-- bạn ưu tiên developer velocity.
-
-Không nên hiểu vLLM là “luôn nhanh nhất”. Với một số workload cực kỳ tối ưu trên NVIDIA GPU cụ thể, TensorRT-LLM có thể cho hiệu năng tốt hơn nhưng cần nhiều tuning/build/deployment discipline hơn.
-
-
-
-## TensorRT-LLM: mental model và use cases
-
-### TensorRT-LLM là gì?
-
-TensorRT-LLM là thư viện của NVIDIA để tối ưu inference cho LLM trên NVIDIA GPUs. Nó tập trung vào:
-
-- custom attention kernels;
-- in-flight batching;
-- paged KV cache;
-- quantization như FP8, FP4, INT4 AWQ, INT8 SmoothQuant;
-- speculative decoding;
-- multi-GPU/multi-node inference;
-- integration với TensorRT/NVIDIA ecosystem.
-
-Mental model:
-
-```text
-vLLM:
-    general-purpose high-throughput LLM serving engine, very friendly with HF ecosystem
-
-TensorRT-LLM:
-    NVIDIA-optimized LLM inference stack, tuned deeply for NVIDIA GPUs and production performance
-```
-
-### Build/runtime mindset
-
-TensorRT-LLM có nhiều mode triển khai, nhưng về tư duy performance, bạn nên nhớ:
-
-```text
-Model + config + precision + parallelism + scheduler options
-    -> optimized runtime / engine behavior
-    -> serving through trtllm-serve or integration layer
-```
-
-Các khái niệm quan trọng:
-
-```text
-Tensor Parallelism (TP)
-    Shard matrix operations across GPUs.
-
-Pipeline Parallelism (PP)
-    Split layers across GPUs.
-
-Expert Parallelism (EP)
-    Distribute MoE experts.
-
-Paged KV cache
-    Block-based KV cache allocation and reuse.
-
-In-flight batching
-    Continuous batching / iteration-level scheduling.
-
-Speculative decoding
-    Draft tokens then verify with target model.
-
-Quantization
-    Reduce weights/KV/activation memory and increase throughput.
-```
-
-### In-flight batching trong TensorRT-LLM
-
-In-flight batching cho phép sequences ở context/prefill phase được xử lý cùng sequences ở generation/decode phase.
-
-Mental model:
-
-```text
-At scheduler iteration k:
-    some requests are doing prefill/context
-    some requests are doing decode/generation
-    engine packs useful tokens together
-    GPU does useful work instead of waiting for fixed batches
-```
-
-Lợi ích:
-
-- GPU utilization tốt hơn;
-- giảm wait time;
-- tăng throughput;
-- phù hợp với request length biến động.
-
-### KV cache system trong TensorRT-LLM
-
-TensorRT-LLM quản lý KV cache theo block pool. Blocks được assign cho requests khi cần và có thể được reuse khi request khác có prefix match.
-
-Điều này có tác dụng tương tự về mặt hệ thống:
-
-```text
-less redundant prefill
-less memory waste
-better active batch capacity
-lower TTFT for repeated prefixes
-```
-
-### Khi nào TensorRT-LLM là lựa chọn tốt?
-
-TensorRT-LLM thường phù hợp khi:
-
-- bạn deploy trên NVIDIA GPUs và muốn tối đa hiệu năng;
-- bạn có team đủ khả năng benchmark/tune sâu;
-- workload ổn định và đủ lớn để justify tuning effort;
-- bạn cần FP8/FP4/INT4/AWQ/SmoothQuant path tối ưu;
-- bạn cần multi-GPU/multi-node performance cao;
-- bạn muốn dùng NVIDIA production stack như Triton, Dynamo, NIM hoặc ecosystem liên quan.
-
-Trade-off:
-
-- setup và tuning có thể phức tạp hơn;
-- version/model support matrix cần kiểm tra kỹ;
-- performance phụ thuộc mạnh vào model, GPU, quantization, sequence length, scheduler config.
-
-
-
-## vLLM vs TensorRT-LLM: so sánh thực dụng
-
-| Tiêu chí            | vLLM                                           | TensorRT-LLM                                           |
-|---------------------|------------------------------------------------|--------------------------------------------------------|
-| Triết lý            | Serving engine linh hoạt, dễ dùng              | NVIDIA-optimized LLM inference stack                   |
-| Model ecosystem     | Rất mạnh với Hugging Face                      | Mạnh với model được hỗ trợ/tối ưu trên NVIDIA stack    |
-| API serving         | OpenAI-compatible server rất phổ biến          | `trtllm-serve`, TensorRT/NVIDIA serving ecosystem      |
-| Scheduler           | Continuous batching, PagedAttention            | In-flight batching, paged attention/request scheduling |
-| KV cache            | PagedAttention, prefix caching                 | Paged KV cache, reuse, offloading/eviction options     |
-| Quantization        | Nhiều backend/phương pháp, tùy model/hardware  | FP8/FP4/INT4/AWQ/SmoothQuant tối ưu sâu cho NVIDIA     |
-| Tuning effort       | Thấp đến trung bình                            | Trung bình đến cao                                     |
-| Performance ceiling | Rất tốt                                        | Có thể rất cao trên NVIDIA GPU nếu tuned đúng          |
-| Developer velocity  | Rất cao                                        | Cao nếu team đã quen NVIDIA stack                      |
-| Best fit            | Rapid production LLM serving                   | Highly optimized NVIDIA production inference           |
-
-Kết luận thực tế:
-
-```text
-Dùng vLLM để học và triển khai nhanh là rất hợp lý.
-Học TensorRT-LLM để hiểu performance ceiling và NVIDIA production path.
-Benchmark cả hai nếu workload đủ quan trọng.
-```
-
-
-
-## Speculative decoding
-
-### Vấn đề cần giải quyết
-
-Trong autoregressive decoding, target model sinh token từng bước:
-
-```text
-target model step 1 -> token A
- target model step 2 -> token B
- target model step 3 -> token C
-```
-
-Mỗi token cần một forward pass. Với model lớn, decode latency cao.
-
-Speculative decoding dùng một model/phương pháp nhẹ hơn để đoán trước nhiều token, sau đó target model xác minh.
-
-### Cách hoạt động cơ bản
-
-```text
-1. Draft model proposes k tokens:
-       d1, d2, d3, d4
-
-2. Target model verifies these tokens in a larger forward pass.
-
-3. Accepted tokens are emitted.
-
-4. Rejected token triggers correction from target model.
-```
-
-Sơ đồ:
-
-```text
-Prompt
-  |
-  v
-Draft model:      propose [t1, t2, t3, t4]
-  |
-  v
-Target model:     verify proposal
-  |
-  | accepted: [t1, t2, t3]
-  | rejected: t4 -> replace with target token
-  v
-Output stream
-```
-
-### Vì sao có thể nhanh hơn?
-
-Nếu draft tokens thường đúng, target model có thể xác nhận nhiều token trong một lần thay vì sinh từng token một.
-
-Lợi ích phụ thuộc vào:
-
-- draft model latency;
-- acceptance rate;
-- sampling settings;
-- target model size;
-- workload QPS;
-- memory pressure;
-- batch size;
-- implementation overhead.
-
-### Khi nào speculative decoding có lợi?
-Thường có lợi khi:
-
-- low-to-medium QPS;
-- decode memory-bound;
-- target model lớn;
-- draft model rẻ và dự đoán tốt;
-- output dài;
-- latency/user quan trọng hơn max throughput tuyệt đối.
-
-Có thể ít lợi hoặc hại khi:
-
-- high QPS đã bão hòa GPU;
-- draft model chiếm thêm memory/compute đáng kể;
-- acceptance rate thấp;
-- output ngắn;
-- sampling quá ngẫu nhiên;
-- scheduler bị phức tạp thêm.
-
-### Các biến thể phổ biến
-
-```text
-Draft model
-    Model nhỏ hơn sinh token nháp.
-
-N-gram speculation
-    Dựa vào pattern lặp trong context; nhẹ, không cần model phụ.
-
-EAGLE / EAGLE3
-    Speculator chuyên dụng cho LLM decoding.
-
-MTP
-    Multi-token prediction; model có khả năng dự đoán nhiều token.
-
-PARD / suffix / custom proposer
-    Các phương án khác tùy engine.
-```
-
-Điểm quan trọng:
+| Điều kiện thường **có lợi** | Điều kiện thường **ít lợi / hại** |
+|:---------------------------|:----------------------------------|
+| Low–medium QPS | High QPS, GPU đã saturated |
+| Target lớn, decode memory-bound | Draft chiếm memory/compute lớn |
+| Draft rẻ + acceptance cao | Acceptance thấp |
+| Output dài, latency/user quan trọng | Output ngắn; sampling rất random |
+| | Overhead scheduler lớn |
+
+| Biến thể | Ý tưởng |
+|:---------|:--------|
+| Draft model | Model nhỏ hơn sinh token nháp |
+| N-gram speculation | Pattern lặp trong context; không cần model phụ |
+| EAGLE / EAGLE3 | Speculator chuyên dụng |
+| MTP | Multi-token prediction |
+| PARD / suffix / custom | Tùy engine |
+
+| Parallelism | Việc làm | Ghi nhớ |
+|:------------|:---------|:--------|
+| **TP** (tensor) | Shard matrix ops qua GPU | Giảm memory/GPU, tăng communication |
+| **PP** (pipeline) | Chia layer qua GPU | Fit model lớn, thường tăng latency |
+| **EP** (expert) | Phân tán MoE experts | Cho MoE; thêm chiều scheduling |
+
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Bật speculative decoding rồi chỉ nhìn mean latency. Phải so **off/on** với cùng workload: TTFT, ITL p95/p99, output TPS, GPU memory, error rate, và chất lượng tương đương — kèm acceptance rate / draft latency.
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: “không phải magic” và checklist khi không nhanh hơn
 
 ```text
 Speculative decoding is not magic.
 It is a latency optimization whose value depends on acceptance rate and workload.
 ```
 
-
-
-## Streaming và user experience
-
-### Vì sao streaming quan trọng?
-
-Với LLM response dài, user không muốn chờ toàn bộ câu trả lời mới thấy output.
-
-Streaming giúp:
-
-- giảm perceived latency;
-- user thấy model đang làm việc;
-- UI có thể render từng token/chunk;
-- cancel request sớm nếu output không cần nữa.
-
-### Metric UX quan trọng
-
 ```text
-TTFT: Time To First Token
-    User phải chờ bao lâu trước khi thấy output đầu tiên.
-
-ITL / TPOT: Inter-token Latency / Time Per Output Token
-    Token/chunk tiếp theo xuất hiện mượt không.
-
-E2E latency:
-    Tổng thời gian tới khi response hoàn tất.
-
-Output tokens/sec per user:
-    Tốc độ sinh token cảm nhận bởi một user.
-
-System tokens/sec:
-    Tổng output throughput của server.
+[ ] Draft quá chậm?
+[ ] Acceptance thấp?
+[ ] High QPS đã saturate GPU?
+[ ] Output quá ngắn?
+[ ] Temperature/top_p làm dự đoán khó?
+[ ] num_speculative_tokens quá nhiều hoặc quá ít?
 ```
 
-Một service có thể có throughput cao nhưng UX tệ nếu:
+Actions: thử nhiều draft length; n-gram/suffix nếu không muốn model phụ; tắt spec trên traffic high-QPS saturated nếu không lợi.
+:::
 
-```text
-TTFT cao
-ITL p99 cao
-stream bị giật từng cụm lớn
+
+## Serving stacks: vLLM, TensorRT-LLM và quantization LLM {#sec-serving-stacks}
+
+> Chọn vLLM để ship nhanh hay TensorRT-LLM để đẩy ceiling trên NVIDIA — tiêu chí thực dụng là gì?
+
+::: {.callout-important icon=false}
+## Ý chính
+**vLLM** tối ưu developer velocity: PagedAttention, continuous batching, OpenAI-compatible API, HF ecosystem, streaming/metrics. **TensorRT-LLM** tối ưu sâu trên NVIDIA GPU (kernel, IFB, paged KV, FP8/FP4/INT4 AWQ/SmoothQuant, multi-GPU). Chúng **overlap** nhưng không thay thế nhau hoàn toàn — workload đủ quan trọng thì **benchmark cả hai**. Quantization LLM (weights + thường cả KV) là đòn bẩy memory/throughput, không miễn phí về quality.
+:::
+
+```{mermaid}
+%%| label: fig-l9-stacks
+%%| fig-cap: "Cùng xương sống serving: API → Scheduler → KV manager → GPU; vLLM và TensorRT-LLM khác tầng tối ưu."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  CL([Client]) --> API([OpenAI-compatible API])
+  API --> SCH([Scheduler])
+  SCH --> KV([KV manager / PagedAttention])
+  KV --> GPU([GPU kernels])
+  GPU --> ST([Stream])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:3px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class CL,ST soft
+  class API io
+  class SCH,GPU ok
+  class KV hot
 ```
 
-### Streaming không miễn phí
+| Tiêu chí | vLLM | TensorRT-LLM |
+|:---------|:-----|:-------------|
+| Triết lý | Serving linh hoạt, dễ dùng | NVIDIA-optimized stack |
+| Model ecosystem | Rất mạnh với Hugging Face | Model được hỗ trợ/tối ưu trên NVIDIA |
+| API | OpenAI-compatible phổ biến | `trtllm-serve` / Triton, Dynamo, NIM… |
+| Scheduler | Continuous batching, PagedAttention | In-flight batching, paged attention |
+| KV | PagedAttention, prefix caching | Paged KV, reuse, offload/eviction |
+| Quant | Nhiều backend tùy model/HW | FP8/FP4/INT4 AWQ/SmoothQuant sâu |
+| Tuning effort | Thấp → trung bình | Trung bình → cao |
+| Best fit | Rapid production LLM serving | Highly optimized NVIDIA production |
 
-Streaming tạo thêm overhead:
+**Knobs ổn định hơn tên flag** (tên có thể đổi theo version):
 
-- network chunks/SSE events;
-- detokenization nhiều lần;
-- HTTP connection giữ lâu;
-- client/server backpressure;
-- logging/tracing nhiều event hơn.
+| Concept | Ảnh hưởng |
+|:--------|:----------|
+| `max_model_len` | Context max → KV demand |
+| `max_num_seqs` | Active sequences; quá cao → memory pressure |
+| `max_num_batched_tokens` | Trade-off TTFT / ITL / throughput |
+| `gpu_memory_utilization` | Quá cao → dễ OOM |
+| `tensor_parallel_size` / `pipeline_parallel_size` | Fit model vs communication/latency |
+| `enable_prefix_caching` | Reuse prefix nếu traffic lặp |
+| `speculative_config` | Draft / n-gram / EAGLE / MTP… |
 
-Tối ưu streaming cần cân bằng:
+Quantization thường gặp trên path LLM:
 
-```text
-small chunks -> responsive but overhead high
-large chunks -> efficient but less smooth UX
-```
+| Kỹ thuật | Mục tiêu chính |
+|:---------|:---------------|
+| FP8 / FP4 (weights, KV, activation tùy path) | Giảm memory, tăng throughput trên NVIDIA |
+| INT8 SmoothQuant | Activation/weight scale cho INT8 |
+| INT4 AWQ / GPTQ-style | Nén weight mạnh; cần đánh giá quality |
+| KV cache quantization | Tăng số sequence active cùng VRAM |
 
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: khi nào chọn gì, multi-LoRA, Triton/NIM path
 
+**Chọn vLLM khi:** cần HF → API nhanh; nhiều concurrent request; output length biến động; continuous batching + PagedAttention; multi-LoRA / structured outputs / tool-calling ecosystem; ưu tiên velocity.
 
-## Token-level metrics
-
-### TTFT
-
-```text
-TTFT = time(first output token received) - time(request sent)
-```
-
-TTFT thường bao gồm:
-
-- network latency;
-- queueing;
-- tokenization;
-- prefill;
-- first decode step;
-- detokenization;
-- streaming overhead.
-
-TTFT tăng khi:
-
-- prompt dài;
-- queue dài;
-- batch prefill quá lớn;
-- GPU bận;
-- prefix cache miss;
-- tokenizer/preprocessing chậm;
-- model quá lớn hoặc TP/PP config chưa tốt.
-
-### ITL / TPOT
+**Chọn TensorRT-LLM khi:** NVIDIA GPU + team sẵn sàng tune; workload ổn định/đủ lớn; cần path FP8/FP4/INT4 tối ưu; multi-GPU/node; muốn NVIDIA production stack (Triton, Dynamo, NIM).
 
 ```text
-ITL ~= average time between output tokens
-TPOT ~= time per output token
+Dùng vLLM để học và triển khai nhanh là hợp lý.
+Học TensorRT-LLM để hiểu performance ceiling và NVIDIA path.
+Benchmark cả hai nếu workload đủ quan trọng.
 ```
 
-ITL phản ánh decode phase.
+**Multi-LoRA / adapters:** vLLM ecosystem hỗ trợ serve nhiều adapter trên cùng base — hữu ích khi nhiều tenant/task dùng chung backbone. Vẫn phải kế hoạch KV + rank memory và isolation.
 
-ITL xấu khi:
+**Triton / NIM:** TensorRT-LLM thường đi vào serving qua ecosystem NVIDIA; bài này không thay Lesson 6 — chỉ nhớ LLM backend vẫn cần metric token-level và rollout an toàn (Lesson 8).
 
-- decode batch nhỏ;
-- KV cache quá dài;
-- memory bandwidth bottleneck;
-- prefill jobs chen vào decode quá nhiều;
-- scheduler không ưu tiên decode;
-- GPU memory pressure/preemption;
-- network streaming bị buffer.
+Hugging Face **TGI** không phải trọng tâm nguồn bài này; trong thực tế team thường so TGI với vLLM theo API/ops preference — nguyên tắc đo (TTFT/ITL/TPS/goodput) giữ nguyên.
+:::
 
-### E2E latency
+
+## Production ops: streaming, metric token-level và quan sát {#sec-production-ops}
+
+> Throughput cao nhưng user thấy chậm — metric nào chứng minh service LLM “ổn”?
+
+::: {.callout-important icon=false}
+## Ý chính
+Streaming giảm **perceived latency** nhưng không miễn phí (chunk/SSE, detokenize lặp, connection dài). Đo LLM bằng **TTFT**, **ITL/TPOT**, **E2E**, **per-user vs system TPS**, kèm phân phối input/output length. **RPS một mình gây hiểu nhầm**. **Goodput** (throughput thỏa SLO) gần production hơn raw TPS.
+:::
+
+| Metric | Định nghĩa ngắn | Dùng để |
+|:-------|:----------------|:--------|
+| **TTFT** | Thời điểm first token − request sent | Cảm nhận “bắt đầu trả lời” |
+| **ITL / TPOT** | Thời gian giữa các output token | Độ mượt stream / decode |
+| **E2E** | Final token − request sent | Tổng thời gian hoàn tất |
+| **Per-user TPS** | Output tokens user / generation_time | UX một phiên |
+| **System TPS** | Tổng output tokens / wall time | Capacity máy chủ |
+| **RPS** | Completed requests / s | Chỉ kèm length distribution |
+| **Goodput** | Request thỏa SLO / s (hoặc tokens thỏa SLO) | Đánh giá production |
+
+TTFT thường gồm: network, queue, tokenize, prefill, first decode, detokenize, streaming overhead.
+
+Streaming trade-off:
 
 ```text
-E2E latency = time(final token received) - time(request sent)
+small chunks → responsive, overhead cao
+large chunks → efficient, UX kém mượt hơn
 ```
 
-Phụ thuộc vào:
+Một service có thể system TPS cao nhưng UX tệ nếu TTFT cao, ITL p99 cao, hoặc stream giật cụm lớn.
 
-- TTFT;
-- output length;
-- ITL;
-- stop condition;
-- client/server network.
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: goodput, báo cáo benchmark tối thiểu, metrics vLLM
 
-### TPS
+Ví dụ good: `TTFT < 1000 ms`, `ITL p95 < 80 ms/token`, `E2E < 20 s`, no error.
 
-Có ít nhất hai loại TPS cần phân biệt:
-
-```text
-Per-user output TPS:
-    output_tokens_for_one_user / generation_time
-
-System output TPS:
-    total_output_tokens_all_requests / benchmark_duration
-```
-
-Một hệ thống có thể:
-
-```text
-System TPS cao nhưng per-user TPS thấp
-```
-
-nếu nó ưu tiên throughput bằng cách batch rất lớn.
-
-### RPS
-
-```text
-RPS = completed_requests / second
-```
-
-RPS dễ gây hiểu nhầm vì request có output length khác nhau.
-
-Ví dụ:
-
-```text
-100 RPS với output 20 tokens
-khác rất xa
-100 RPS với output 1000 tokens
-```
-
-Với LLM serving, luôn báo cáo RPS cùng:
+Luôn báo cáo cùng RPS:
 
 ```text
 input length distribution
@@ -1156,170 +600,156 @@ system TPS
 error rate
 ```
 
-### Goodput
+Nhóm metric vLLM thường xem trên `/metrics`: `prompt_tokens`, `generation_tokens`, `request_success`, `prefix_cache_hits` / `queries`, `num_preemptions`, `e2e_request_latency_seconds`, `time_to_first_token_seconds`, `time_per_output_token_seconds`.
 
-Goodput là throughput của các request thỏa SLO.
+Prometheus scrape tối giản:
 
-Ví dụ:
+```yaml
+scrape_configs:
+  - job_name: "vllm"
+    static_configs:
+      - targets: ["localhost:8000"]
+```
+:::
 
-```text
-Request được tính good nếu:
-    TTFT < 1000 ms
-    ITL p95 < 80 ms/token
-    E2E latency < 20 s
-    no error
+
+## Playbook: bottleneck, cost, checklist và lựa chọn kiến trúc {#sec-playbook}
+
+> Khi TTFT/ITL xấu hoặc OOM — nhìn đâu trước, và cost/1M tokens tính thế nào dưới SLO?
+
+::: {.callout-important icon=false}
+## Ý chính
+Capacity LLM bị ràng buộc bởi **ba thứ cùng lúc**: throughput (tokens/s tại SLO), **KV memory**, và latency SLO (TTFT/ITL). Cost nên theo **tokens** (input và output), không theo RPS. Debug theo triệu chứng → nguyên nhân → kiểm tra → hướng xử lý; checklist trước launch quan trọng hơn “bật thêm flag”.
+:::
+
+```{mermaid}
+%%| label: fig-l9-playbook
+%%| fig-cap: "Xương sống tô sáng Metrics/Cost: bottleneck và cost planning gắn cuối pipeline serving."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  CL([Client]) --> TK([Tokenizer])
+  TK --> PF([Prefill])
+  PF --> DC([Decode+KV])
+  DC --> ST([Stream])
+  ST --> MT([Metrics/Cost])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:3px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class CL,PF,DC soft
+  class TK,ST io
+  class MT hot
 ```
 
-Goodput tốt hơn raw throughput khi đánh giá production vì nó gắn với trải nghiệm thật.
+| Triệu chứng | Nguyên nhân khả dĩ | Kiểm tra | Hướng xử lý |
+|:------------|:-------------------|:---------|:------------|
+| TTFT cao | Prompt dài, prefill, queue | length hist, queue, prefill time | prefix cache, chunked prefill, scale, tune scheduler |
+| ITL cao | Decode BW, batch nhỏ, KV dài | decode time, BW, active seq | continuous batching, concurrency hợp lý, quant KV |
+| OOM | KV lớn, max_len/seqs cao | GPU mem, KV blocks | giảm max_len/seqs, FP8 KV, TP |
+| Throughput thấp | Batch nhỏ, tokenizer/CPU | GPU/CPU util, queue | tăng load, tune batched tokens, optimize tokenizer |
+| p99 xấu | Length outliers, preemption | latency theo length | admission control, length buckets, separate pools |
+| Stream giật | Chunk/network, decode stall | per-token timestamps | flush, scheduler, network |
+| Prefix hit thấp | mismatch token, eviction | hit metrics | normalize prompt, template, salt policy |
+| Spec không nhanh | acceptance thấp, draft đắt | accepted tokens, draft lat | giảm draft len, đổi method, off/on |
 
+**Cost per 1M output tokens** (compute GPU, chưa gồm CPU/network/obs):
 
+$$
+\text{effective\_tps} = \text{measured\_output\_tps} \times \text{safety\_factor}
+$$
 
-## Bottleneck analysis cho LLM serving
+$$
+\text{cost\_per\_1M} = \frac{\text{GPU\_count} \times \text{GPU\_hour\_price}}{\text{effective\_tps} \times 3600} \times 10^{6}
+$$
 
-| Triệu chứng                 | Nguyên nhân khả dĩ                                     | Kiểm tra                                            | Hướng xử lý                                                        |
-|-----------------------------|--------------------------------------------------------|-----------------------------------------------------|--------------------------------------------------------------------|
-| TTFT cao                    | Prompt dài, prefill bottleneck, queue lâu              | prompt length histogram, queue time, prefill time   | prefix caching, chunked prefill, scale replicas, tune scheduler    |
-| ITL cao                     | Decode memory-bound, batch nhỏ, KV cache dài           | decode time, GPU memory bandwidth, active sequences | continuous batching, tăng concurrency hợp lý, quantize KV cache    |
-| OOM                         | KV cache quá lớn, max_model_len/max_num_seqs cao       | GPU memory, KV blocks usage                         | giảm max_model_len, giảm max_num_seqs, FP8 KV, TP                  |
-| Throughput thấp             | Batch không đủ lớn, tokenizer bottleneck, CPU overhead | GPU util, CPU util, queue depth                     | tăng request rate, tune max_num_batched_tokens, optimize tokenizer |
-| p99 xấu                     | Request length outliers, preemption, GC, network       | latency distribution by input/output length         | admission control, length buckets, separate pools                  |
-| Streaming giật              | Chunking/network buffer, decode stalls                 | per-token timestamps                                | tune streaming flush, scheduler, network stack                     |
-| Prefix cache hit thấp       | prefix không match token-level, eviction               | prefix hit metrics                                  | normalize prompts, stabilize chat template, cache salt policy      |
-| Spec decode không nhanh hơn | acceptance thấp, draft overhead cao                    | accepted tokens/request, draft latency              | giảm draft len, đổi method, benchmark off/on                       |
+Ví dụ: 4 GPU × \$3/h, measured 8000 tok/s, safety 0.7 → effective 5600 → ≈ **\$0.595 / 1M output tokens**.
 
+Capacity:
 
+$$
+\text{required\_gpus} = \left\lceil \frac{\text{required\_output\_tps}}{\text{safe\_tps\_per\_gpu}} \right\rceil
+$$
 
-## Cost planning cho LLM inference
+và đồng thời:
 
-### Vì sao cost planning khó hơn classic inference?
+$$
+\text{max\_concurrent} \le \frac{\text{available\_KV\_memory}}{\text{avg\_KV\_per\_sequence}}
+$$
 
-Classic inference thường cost theo:
+::: {.callout-tip icon=false collapse="true"}
+## Production checklist, debug cases, misconceptions, 3 workload
 
+### Before launch {.unnumbered}
 ```text
-requests/sec per GPU
+[ ] Input/output length distribution thật
+[ ] Benchmark nhiều request rates
+[ ] TTFT/ITL/E2E p50/p95/p99
+[ ] Cost per 1M input/output tokens
+[ ] max_model_len hợp lý (không max marketing)
+[ ] Limit max_tokens; timeout; cancellation
+[ ] Health/readiness; /metrics
+[ ] Dashboard: GPU, queue, TTFT, ITL, tokens/s, errors
+[ ] Alert p99 TTFT/ITL và OOM
+[ ] Fallback / rollback plan
 ```
 
-LLM serving nên cost theo tokens:
-
+### Runtime knobs {.unnumbered}
 ```text
-input tokens/sec
-output tokens/sec
-TTFT/ITL SLO
+[ ] max_num_seqs / max_batch_size
+[ ] max_num_batched_tokens / max_num_tokens
+[ ] max_model_len / max_seq_len
+[ ] KV cache dtype; gpu_memory_utilization
+[ ] TP / PP; prefix caching; speculative decoding
+[ ] chunked prefill; admission control
 ```
 
-Vì request có độ dài khác nhau, RPS không đủ để dự báo cost.
-
-### Công thức cost per 1M output tokens
-
-Giả sử:
-
+### Security / multi-tenant {.unnumbered}
 ```text
-GPU_count = số GPU dùng để serve
-GPU_hour_price = chi phí mỗi GPU mỗi giờ
-measured_output_tps = output tokens/sec của toàn service ở mức vẫn đạt SLO
-utilization_safety_factor = hệ số an toàn, ví dụ 0.7
+[ ] Không log prompt/output nhạy cảm nếu không cần
+[ ] Request size limit; auth/rate limit
+[ ] Tenant isolation nếu share prefix/KV
+[ ] Cache salt / policy; app-layer guardrails
 ```
 
-Effective TPS:
+### Debug nhanh {.unnumbered}
+| Case | Check trước | Action |
+|:-----|:------------|:-------|
+| TTFT đột biến | Queue, prompt len, prefix hit, long+short trộn, GPU, tokenizer | Tách pool; prefix cache; chunked prefill; giảm max_len; scale |
+| ITL p99 xấu | Decode batch, prefill chen, preemption, output outliers | Tune batched tokens; concurrency; pool riêng; quant KV; thử spec |
+| GPU OOM | max_len, max_seqs, KV dtype, long-context | Giảm len/seqs/max_tokens; TP; FP8 KV; tách pool |
+| Spec không cải thiện | Acceptance, draft lat, QPS, sampling | Nhiều draft len; n-gram; tắt nếu saturated |
 
-```text
-effective_output_tps = measured_output_tps * utilization_safety_factor
-```
+### Common misconceptions {.unnumbered}
+| Hiểu nhầm | Thực tế |
+|:----------|:--------|
+| Latency = một forward | Gồm queue, tokenize, prefill, decode, KV, detokenize, stream |
+| Batch càng lớn càng tốt | Có thể tăng TPS nhưng phá TTFT/ITL/p99 |
+| RPS là metric chính | Cần token-level + length distribution |
+| Spec luôn tăng tốc | Phụ thuộc acceptance, draft, QPS, sampling |
+| Context càng dài càng tốt | Tăng KV → giảm capacity; đặt theo nhu cầu sản phẩm |
+| vLLM ≡ TensorRT-LLM | Overlap khác trade-off velocity vs NVIDIA ceiling |
 
-Cost per 1M output tokens:
-
-```text
-cost_per_1M_output_tokens
-= GPU_count * GPU_hour_price / (effective_output_tps * 3600) * 1,000,000
-```
-
-Ví dụ:
-
-```text
-GPU_count = 4
-GPU_hour_price = $3.00
-measured_output_tps = 8000 tokens/sec
-utilization_safety_factor = 0.7
-
-effective_output_tps = 5600 tokens/sec
-
-cost_per_1M_output_tokens
-= 4 * 3 / (5600 * 3600) * 1,000,000
-~= $0.595 per 1M output tokens
-```
-
-Đây chỉ là compute cost, chưa gồm:
-
-- CPU host;
-- storage;
-- networking;
-- load balancer;
-- observability;
-- idle capacity;
-- engineering/ops cost;
-- model download/cache cost;
-- multi-region overhead.
-
-### Input tokens cũng có cost
-
-Prefill xử lý input tokens. Prompt dài làm tăng:
-
-- TTFT;
-- compute;
-- KV cache memory;
-- queue time;
-- cost.
-
-Một model cost tốt hơn nên có cả hai metric:
-
-```text
-cost_per_1M_input_tokens
-cost_per_1M_output_tokens
-```
-
-Nếu chưa có mô hình chính xác, có thể dùng normalized token cost:
-
-```text
-normalized_work
-= input_tokens * input_weight + output_tokens * output_weight
-```
-
-Trong nhiều workload decoder-only, output decode thường đắt theo latency vì sinh tuần tự, nhưng prompt dài có thể làm prefill rất nặng. Không nên dùng một hệ số cố định cho mọi model/hardware; hãy fit từ benchmark thực tế.
-
-### Capacity planning theo SLO
-
-Để tính GPU cần dùng:
-
-```text
-required_output_tps = expected_concurrent_users * avg_output_tokens_per_user_per_second
-safe_tps_per_gpu = measured_tps_per_gpu_at_SLO * safety_factor
-required_gpus = ceil(required_output_tps / safe_tps_per_gpu)
-```
-
-Nhưng phải kiểm tra thêm memory:
-
-```text
-max_concurrent_sequences_per_gpu
-<= available_kv_cache_memory / avg_kv_cache_per_sequence
-```
-
-Vì vậy capacity planning cần cả:
-
-```text
-throughput constraint
-memory constraint
-latency SLO constraint
-```
+### Design — 3 workload {.unnumbered}
+| Workload | Shape | Ưu tiên | Gợi ý bắt đầu |
+|:---------|:------|:--------|:--------------|
+| A Chatbot ngắn, traffic cao | in 200–800, out 100–300 | Continuous batching, TPS, quant nếu được, scale theo queue/TTFT/ITL | vLLM + metrics; sau đó bench TRT-LLM |
+| B RAG context dài | in 8K–64K, out 300–1000 | Prefix cache, chunked prefill, tách pool long-context; cân nhắc disagg prefill/decode | Tune context + scheduler |
+| C Code gen output dài | in 1K–4K, out 2K–8K | Decode TPS, thử spec, KV planning, cancel, max_tokens, quota | ITL + memory trước RPS |
+:::
 
 
+## Mini-lab {.unnumbered}
 
-## Practical Lab 1 — KV cache memory calculator
+::: {.callout-note icon=false}
+## Thực hành — từ KV math tới streaming metrics
+Làm Lab 1–2 trên mọi máy (Lab 2 cần endpoint nếu đo thật). Labs GPU và mini-project nằm trong tip thu gọn.
+:::
 
-Tạo file `kv_cache_calculator.py`:
+### Lab 1: KV cache memory calculator {.unnumbered}
 
 ```python
 from dataclasses import dataclass
-
 
 @dataclass
 class ModelKVConfig:
@@ -1327,7 +757,6 @@ class ModelKVConfig:
     num_kv_heads: int
     head_dim: int
     bytes_per_element: int
-
 
 def kv_cache_bytes(config: ModelKVConfig, sequence_length: int, batch_size: int = 1) -> int:
     return (
@@ -1340,20 +769,13 @@ def kv_cache_bytes(config: ModelKVConfig, sequence_length: int, batch_size: int 
         * config.bytes_per_element
     )
 
-
 def gib(num_bytes: int) -> float:
     return num_bytes / (1024 ** 3)
 
-
 if __name__ == "__main__":
-    # Example: GQA-style model configuration
     config = ModelKVConfig(
-        num_layers=32,
-        num_kv_heads=8,
-        head_dim=128,
-        bytes_per_element=2,  # FP16/BF16 KV cache
+        num_layers=32, num_kv_heads=8, head_dim=128, bytes_per_element=2
     )
-
     for seq_len in [1024, 2048, 4096, 8192, 32768]:
         per_request = kv_cache_bytes(config, seq_len)
         batch_32 = kv_cache_bytes(config, seq_len, batch_size=32)
@@ -1364,42 +786,22 @@ if __name__ == "__main__":
         )
 ```
 
-Chạy:
-
 ```bash
 python kv_cache_calculator.py
 ```
 
-Bài tập:
+Bài tập: đổi `num_kv_heads` 8→32 (MHA vs GQA); `bytes_per_element` 2→1 (FP8 KV); tính batch tối đa nếu còn 40 GiB cho KV.
 
-1. Đổi `num_kv_heads` từ 8 sang 32 để thấy MHA tốn KV cache hơn GQA như thế nào.
-2. Đổi `bytes_per_element` từ 2 sang 1 để mô phỏng FP8 KV cache.
-3. Tính batch size tối đa nếu GPU còn 40 GiB cho KV cache.
+### Lab 2: Đo TTFT / ITL với streaming client {.unnumbered}
 
-
-
-## Practical Lab 2 — đo TTFT và ITL với streaming client
-
-Giả sử bạn có một OpenAI-compatible endpoint từ vLLM hoặc TensorRT-LLM:
-
-```text
-http://localhost:8000/v1
-```
-
-Tạo file `streaming_latency_client.py`:
+Giả sử OpenAI-compatible endpoint tại `http://localhost:8000/v1`:
 
 ```python
 import time
 from openai import OpenAI
 
-
-client = OpenAI(
-    base_url="http://localhost:8000/v1",
-    api_key="EMPTY",
-)
-
+client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
 model = "your-model-name"
-
 messages = [
     {"role": "system", "content": "You are a concise technical tutor."},
     {"role": "user", "content": "Explain KV cache in LLM inference in 5 bullet points."},
@@ -1421,9 +823,7 @@ stream = client.chat.completions.create(
 
 for event in stream:
     now = time.perf_counter()
-    delta = event.choices[0].delta
-    token_text = delta.content or ""
-
+    token_text = (event.choices[0].delta.content or "")
     if token_text:
         if first_token_time is None:
             first_token_time = now
@@ -1434,7 +834,6 @@ for event in stream:
 
 end = time.perf_counter()
 print("\n")
-
 if first_token_time is None:
     print("No token received.")
 else:
@@ -1442,348 +841,88 @@ else:
     e2e = end - start
     generation_time = (last_token_time or end) - first_token_time
     avg_itl = generation_time / max(num_chunks - 1, 1)
-
     print(f"TTFT: {ttft:.3f} s")
     print(f"E2E latency: {e2e:.3f} s")
     print(f"Chunks received: {num_chunks}")
     print(f"Approx avg ITL per chunk: {avg_itl:.3f} s")
 ```
 
-Lưu ý:
+Lưu ý: đo theo chunk text, không phải token tuyệt đối; network/client ảnh hưởng kết quả.
 
-- Đây đo theo chunk text, không phải token chính xác tuyệt đối.
-- Để đo token-level chuẩn hơn, bạn cần tokenizer hoặc tool benchmark chuyên dụng.
-- Kết quả chịu ảnh hưởng network/client overhead.
+::: {.callout-tip icon=false collapse="true"}
+## Labs 3–9 (GPU) + cost calculator + mini-project
 
-
-
-## Practical Lab 3 — chạy vLLM OpenAI-compatible server
-
-> Lab này cần GPU phù hợp và môi trường đã cài vLLM. Với model gated trên Hugging Face, cần login/token hợp lệ.
-
-Ví dụ chạy một model nhỏ:
-
+### Lab 3 — vLLM OpenAI-compatible server {.unnumbered}
 ```bash
 vllm serve Qwen/Qwen2.5-1.5B-Instruct \
-  --dtype auto \
-  --host 0.0.0.0 \
-  --port 8000
+  --dtype auto --host 0.0.0.0 --port 8000
 ```
-
-Gửi request:
 
 ```bash
 curl http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "Qwen/Qwen2.5-1.5B-Instruct",
-    "messages": [
-      {"role": "user", "content": "Explain continuous batching in LLM serving."}
-    ],
-    "max_tokens": 256,
-    "temperature": 0.2
+    "messages": [{"role": "user", "content": "Explain continuous batching in LLM serving."}],
+    "max_tokens": 256, "temperature": 0.2
   }'
 ```
 
-Streaming request:
+Thêm `"stream": true` cho streaming. So sánh prompt ngắn/dài (TTFT), tăng `max_tokens` (E2E), gửi song song (throughput/ITL).
 
-```bash
-curl http://localhost:8000/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "Qwen/Qwen2.5-1.5B-Instruct",
-    "messages": [
-      {"role": "user", "content": "Explain PagedAttention in simple terms."}
-    ],
-    "max_tokens": 256,
-    "temperature": 0.2,
-    "stream": true
-  }'
-```
-
-Bài tập:
-
-1. Chạy với prompt ngắn và prompt dài, so sánh TTFT.
-2. Tăng `max_tokens`, quan sát E2E latency.
-3. Gửi nhiều request song song, quan sát throughput và ITL.
-
-
-
-## Practical Lab 4 — quan sát vLLM metrics
-
-vLLM OpenAI-compatible server expose metrics tại:
-
-```text
-/metrics
-```
-
-Chạy:
-
+### Lab 4 — quan sát `/metrics` {.unnumbered}
 ```bash
 curl http://localhost:8000/metrics | head -n 50
 ```
 
-Tìm các nhóm metric như:
+Theo dõi `prompt_tokens`, `generation_tokens`, prefix cache, preemption, TTFT/TPOT histograms.
 
-```text
-vllm:prompt_tokens
-vllm:generation_tokens
-vllm:request_success
-vllm:prefix_cache_hits
-vllm:prefix_cache_queries
-vllm:num_preemptions
-vllm:e2e_request_latency_seconds
-vllm:time_to_first_token_seconds
-vllm:time_per_output_token_seconds
-```
-
-Bài tập:
-
-1. Gửi workload có prompt dài, xem `prompt_tokens` tăng.
-2. Gửi workload sinh output dài, xem `generation_tokens` tăng.
-3. Nếu bật prefix caching, theo dõi cache hit/query.
-4. Theo dõi preemption nếu tăng concurrency quá cao.
-
-Prometheus scrape config tối giản:
-
-```yaml
-scrape_configs:
-  - job_name: "vllm"
-    static_configs:
-      - targets: ["localhost:8000"]
-```
-
-
-
-## Practical Lab 5 — benchmark vLLM serving
-
-Cài extra benchmark nếu cần:
-
+### Lab 5 — `vllm bench serve` {.unnumbered}
 ```bash
 pip install "vllm[bench]"
-```
-
-Start server:
-
-```bash
-vllm serve Qwen/Qwen2.5-1.5B-Instruct \
-  --dtype auto \
-  --host 0.0.0.0 \
-  --port 8000
-```
-
-Chạy benchmark online serving:
-
-```bash
 vllm bench serve \
-  --backend openai \
-  --base-url http://localhost:8000 \
+  --backend openai --base-url http://localhost:8000 \
   --model Qwen/Qwen2.5-1.5B-Instruct \
   --dataset-name random \
-  --random-input-len 512 \
-  --random-output-len 128 \
-  --num-prompts 512 \
-  --request-rate 8
+  --random-input-len 512 --random-output-len 128 \
+  --num-prompts 512 --request-rate 8
 ```
 
-Lặp lại với:
+Lặp `request_rate` ∈ {1,2,4,8,16,32}; input ∈ {128,512,2048}; output ∈ {64,256,1024}. Tìm saturation và chỗ TTFT/ITL gãy.
 
-```text
-request_rate = 1, 2, 4, 8, 16, 32
-random_input_len = 128, 512, 2048
-random_output_len = 64, 256, 1024
-```
-
-Mục tiêu:
-
-- vẽ latency-throughput curve;
-- tìm saturation point;
-- tìm request rate nơi TTFT/ITL bắt đầu xấu nhanh;
-- so sánh prompt-heavy vs decode-heavy workload.
-
-
-
-## Practical Lab 6 — bật/tắt prefix caching
-
-Ví dụ chạy vLLM với prefix caching:
-
+### Lab 6 — prefix caching {.unnumbered}
 ```bash
-vllm serve Qwen/Qwen2.5-1.5B-Instruct \
-  --dtype auto \
-  --enable-prefix-caching
+vllm serve Qwen/Qwen2.5-1.5B-Instruct --dtype auto --enable-prefix-caching
 ```
 
-Tạo workload có shared system prompt dài:
+Workload cùng system prompt dài × nhiều user question; `curl …/metrics | grep prefix_cache`.
 
-```python
-shared_system_prompt = """
-You are an internal technical assistant. Follow these detailed policies:
-1. Be precise.
-2. Use concise examples.
-3. Explain trade-offs.
-4. Prefer systems thinking.
-""" * 100
-```
-
-Gửi nhiều câu hỏi khác nhau với cùng system prompt.
-
-Quan sát:
-
+### Lab 7 — speculative decoding {.unnumbered}
 ```bash
-curl http://localhost:8000/metrics | grep prefix_cache
+vllm serve Qwen/Qwen2.5-1.5B-Instruct --dtype auto \
+  --speculative-config '{"method":"ngram","num_speculative_tokens":4}'
 ```
 
-Kỳ vọng:
+So baseline off vs on: TTFT, ITL, TPS, memory, p95/p99 — không chỉ mean.
 
-- request đầu tiên thường cache miss;
-- request sau có thể hit nếu prefix match và cache chưa bị evict;
-- TTFT có thể giảm nếu prefix dài và cache hit.
+### Lab 8 — TensorRT-LLM skeleton {.unnumbered}
+Workflow tư duy: chọn model/precision → TP/PP/EP → quant → KV/scheduler → build/load → `trtllm-serve` → `trtllm-bench` / GenAI-Perf. Ghi lại version, GPU, CUDA, revision, precision, TP/PP/EP, max batch/seq/tokens, KV dtype, scheduler, length distribution. CLI đổi theo version — kiểm tra docs đúng bản đang dùng.
 
-
-
-##  Practical Lab 7 — thử speculative decoding với vLLM
-
-Ví dụ với n-gram speculation:
-
-```bash
-vllm serve Qwen/Qwen2.5-1.5B-Instruct \
-  --dtype auto \
-  --speculative-config '{
-    "method": "ngram",
-    "num_speculative_tokens": 4
-  }'
-```
-
-Ví dụ với draft model sẽ phụ thuộc model cụ thể:
-
-```bash
-vllm serve <target-model> \
-  --dtype auto \
-  --speculative-config '{
-    "method": "draft_model",
-    "model": "<draft-model>",
-    "num_speculative_tokens": 5
-  }'
-```
-
-Benchmark off/on:
-
-```text
-baseline: no speculative decoding
-experiment: speculative decoding enabled
-```
-
-So sánh:
-
-- TTFT;
-- ITL/TPOT;
-- output TPS;
-- GPU memory;
-- error rate;
-- quality equivalence;
-- p95/p99, không chỉ mean.
-
-Nếu không nhanh hơn, kiểm tra:
-
-```text
-[ ] Draft model có quá chậm không?
-[ ] Acceptance rate có thấp không?
-[ ] Workload có high QPS khiến GPU đã saturated không?
-[ ] Output có quá ngắn không?
-[ ] Sampling temperature/top_p có làm dự đoán khó hơn không?
-[ ] Draft tokens quá nhiều hoặc quá ít không?
-```
-
-
-
-## Practical Lab 8 — TensorRT-LLM serving overview
-
-> TensorRT-LLM thay đổi CLI/config theo version. Phần này là skeleton tư duy; hãy kiểm tra docs đúng version đang dùng.
-
-Một workflow production thường có các bước:
-
-```text
-1. Chọn model và precision.
-2. Chọn parallelism: TP/PP/EP.
-3. Chọn quantization: BF16/FP16/FP8/FP4/INT4.
-4. Cấu hình KV cache và scheduler.
-5. Build hoặc load runtime path phù hợp.
-6. Serve bằng trtllm-serve hoặc tích hợp với serving stack.
-7. Benchmark bằng trtllm-bench/AIPerf/GenAI-Perf.
-```
-
-Ví dụ benchmarking skeleton:
-
-```bash
-# Prepare synthetic dataset
-python benchmarks/cpp/prepare_dataset.py \
-  --stdout \
-  --tokenizer meta-llama/Llama-3.1-8B \
-  token-norm-dist \
-  --input-mean 128 \
-  --output-mean 128 \
-  --input-stdev 0 \
-  --output-stdev 0 \
-  --num-requests 3000 > /tmp/synthetic_128_128.txt
-
-# Build benchmark engine/config with quantization example
-trtllm-bench \
-  --model meta-llama/Llama-3.1-8B \
-  build \
-  --dataset /tmp/synthetic_128_128.txt \
-  --quantization FP8
-
-# Throughput benchmark
-trtllm-bench \
-  --model meta-llama/Llama-3.1-8B \
-  throughput \
-  --dataset /tmp/synthetic_128_128.txt \
-  --engine_dir /tmp/meta-llama/Llama-3.1-8B/tp_1_pp_1
-```
-
-Khi dùng TensorRT-LLM, hãy luôn ghi lại:
-
-```text
-TensorRT-LLM version
-GPU type
-CUDA/NVIDIA driver version
-model revision
-precision/quantization
-TP/PP/EP
-max batch size
-max sequence length
-max number of tokens
-KV cache dtype
-scheduler policy
-input/output length distribution
-```
-
-
-
-## Practical Lab 9 — cost calculator
-
-Tạo file `llm_cost_calculator.py`:
-
+### Lab 9 — cost calculator {.unnumbered}
 ```python
 import math
 
-
 def cost_per_million_output_tokens(
-    gpu_count: int,
-    gpu_hour_price: float,
-    measured_output_tps: float,
-    safety_factor: float = 0.7,
+    gpu_count: int, gpu_hour_price: float,
+    measured_output_tps: float, safety_factor: float = 0.7,
 ) -> float:
     effective_tps = measured_output_tps * safety_factor
     if effective_tps <= 0:
         raise ValueError("effective_tps must be positive")
-    hourly_cost = gpu_count * gpu_hour_price
-    return hourly_cost / (effective_tps * 3600) * 1_000_000
-
+    return gpu_count * gpu_hour_price / (effective_tps * 3600) * 1_000_000
 
 def required_gpus(
-    target_output_tps: float,
-    measured_tps_per_gpu_at_slo: float,
+    target_output_tps: float, measured_tps_per_gpu_at_slo: float,
     safety_factor: float = 0.7,
 ) -> int:
     safe_tps = measured_tps_per_gpu_at_slo * safety_factor
@@ -1791,359 +930,28 @@ def required_gpus(
         raise ValueError("safe_tps must be positive")
     return math.ceil(target_output_tps / safe_tps)
 
-
 if __name__ == "__main__":
-    gpu_count = 4
-    gpu_hour_price = 3.0
-    measured_output_tps = 8000
-    safety_factor = 0.7
-
-    cost = cost_per_million_output_tokens(
-        gpu_count=gpu_count,
-        gpu_hour_price=gpu_hour_price,
-        measured_output_tps=measured_output_tps,
-        safety_factor=safety_factor,
-    )
-    print(f"Cost per 1M output tokens: ${cost:.4f}")
-
-    target_tps = 50000
-    measured_tps_per_gpu = 2000
-    gpus = required_gpus(
-        target_output_tps=target_tps,
-        measured_tps_per_gpu_at_slo=measured_tps_per_gpu,
-        safety_factor=safety_factor,
-    )
-    print(f"Required GPUs: {gpus}")
+    print("Cost per 1M:", cost_per_million_output_tokens(4, 3.0, 8000, 0.7))
+    print("Required GPUs:", required_gpus(50000, 2000, 0.7))
 ```
 
-Bài tập:
+### Mini-project — LLM serving benchmark report {.unnumbered}
+Chạy OpenAI-compatible server (vLLM hoặc TensorRT-LLM). Ba workload: short-chat (≈256/128), rag-medium (≈2048/512), long-generation (≈1024/2048). Nhiều request rate/concurrency. Báo cáo TTFT/ITL/E2E p50/p95/p99, system TPS, RPS, error, GPU mem/util, prefix hit nếu có, cost/1M output tokens; saturation point; config production; SLO + autoscaling signal.
 
-1. Thay `gpu_hour_price` bằng giá cloud bạn đang dùng.
-2. Dùng benchmark thật thay vì số giả định.
-3. Tính cost với safety factor 0.5, 0.7, 0.85.
-4. Tính riêng cho model 7B, 14B, 70B.
-
-
-
-## Design exercise — chọn architecture cho 3 workload
-
-### Workload A: Chatbot ngắn, traffic cao
-
-```text
-Prompt: 200-800 tokens
-Output: 100-300 tokens
-Traffic: cao
-SLO: TTFT < 800 ms, ITL p95 < 80 ms
-```
-
-Ưu tiên:
-
-- continuous batching;
-- high output TPS;
-- scheduler ổn định;
-- quantization nếu quality cho phép;
-- autoscaling theo queue/TTFT/ITL.
-
-Có thể bắt đầu với:
-
-```text
-vLLM + OpenAI-compatible server + Prometheus metrics
-```
-
-Sau đó benchmark TensorRT-LLM nếu cần performance ceiling.
-
-### Workload B: RAG với context dài
-
-```text
-Prompt: 8K-64K tokens
-Output: 300-1000 tokens
-Traffic: trung bình
-SLO: TTFT quan trọng nhưng có thể cao hơn chatbot ngắn
-```
-
-Ưu tiên:
-
-- prefix caching nếu system prompt/template dài;
-- chunked prefill;
-- context length tuning;
-- separate pool cho long-context requests;
-- disaggregated prefill/decode nếu tail ITL bị ảnh hưởng.
-
-### Workload C: Code generation output dài
-
-```text
-Prompt: 1K-4K tokens
-Output: 2K-8K tokens
-Traffic: thấp đến trung bình
-SLO: ITL và total latency quan trọng
-```
-
-Ưu tiên:
-
-- decode throughput;
-- speculative decoding thử nghiệm;
-- KV cache memory planning;
-- request cancellation;
-- max_tokens controls;
-- user-level quota.
-
-
-
-## Production checklist cho LLM inference
-
-### Before launch
-
-```text
-[ ] Biết input length distribution thật.
-[ ] Biết output length distribution thật.
-[ ] Có benchmark theo nhiều request rates.
-[ ] Có TTFT/ITL/E2E p50/p95/p99.
-[ ] Có cost per 1M input/output tokens.
-[ ] Có max_model_len hợp lý, không để quá cao mặc định.
-[ ] Có limit max_tokens per request.
-[ ] Có timeout và cancellation.
-[ ] Có health check và readiness check.
-[ ] Có metrics /metrics hoặc equivalent.
-[ ] Có dashboard cho GPU, queue, TTFT, ITL, tokens/sec, errors.
-[ ] Có alert cho p99 TTFT/ITL và OOM.
-[ ] Có fallback hoặc rollback plan.
-```
-
-###  Runtime knobs
-
-```text
-[ ] max_num_seqs / max_batch_size
-[ ] max_num_batched_tokens / max_num_tokens
-[ ] max_model_len / max_seq_len
-[ ] KV cache dtype
-[ ] GPU memory utilization
-[ ] tensor parallelism
-[ ] pipeline parallelism
-[ ] prefix caching
-[ ] speculative decoding
-[ ] chunked prefill
-[ ] admission control
-```
-
-### Security and multi-tenant concerns
-
-```text
-[ ] Không log prompt/output nhạy cảm nếu không cần.
-[ ] Có request size limit.
-[ ] Có auth/rate limit.
-[ ] Có tenant isolation nếu share prefix/KV cache.
-[ ] Có cache salt hoặc policy tương đương nếu cần.
-[ ] Có guardrails ở layer ứng dụng nếu output rủi ro.
-```
-
-
-
-## Debug checklist
-
-### Case 1: TTFT cao đột biến
-
-```text
-Check:
-[ ] Queue time có tăng không?
-[ ] Prompt length có tăng không?
-[ ] Prefix cache hit có giảm không?
-[ ] Có long-context traffic trộn với short-chat traffic không?
-[ ] GPU đã saturated chưa?
-[ ] Tokenizer CPU có bottleneck không?
-
-Actions:
-[ ] Tách pool long-context và short-context.
-[ ] Bật/tune prefix caching.
-[ ] Tune chunked prefill.
-[ ] Giảm max_model_len nếu quá rộng.
-[ ] Scale replicas.
-```
-
-### Case 2: ITL p99 xấu
-
-```text
-Check:
-[ ] Decode batch size có đủ lớn không?
-[ ] Prefill jobs có chen vào decode quá nhiều không?
-[ ] KV cache memory pressure/preemption có xảy ra không?
-[ ] Output length outliers có kéo p99 không?
-
-Actions:
-[ ] Tune max_num_batched_tokens.
-[ ] Tăng concurrency trong giới hạn memory.
-[ ] Dùng separate pools cho long generation.
-[ ] Thử KV cache quantization.
-[ ] Thử speculative decoding nếu workload phù hợp.
-```
-
-### Case 3: GPU OOM
-
-```text
-Check:
-[ ] max_model_len có quá cao không?
-[ ] max_num_seqs quá cao không?
-[ ] KV cache dtype là gì?
-[ ] Traffic có nhiều long-context requests không?
-[ ] Có memory leak hoặc model replicas quá nhiều không?
-
-Actions:
-[ ] Giảm max_model_len.
-[ ] Giảm max_num_seqs.
-[ ] Giới hạn max_tokens.
-[ ] Tăng tensor parallelism.
-[ ] Dùng FP8 KV cache nếu supported.
-[ ] Tách traffic dài sang pool riêng.
-```
-
-### Case 4: Speculative decoding không cải thiện
-
-```text
-Check:
-[ ] Acceptance rate thấp?
-[ ] Draft model quá chậm?
-[ ] num_speculative_tokens chưa phù hợp?
-[ ] Workload high QPS đã saturated?
-[ ] Sampling settings quá ngẫu nhiên?
-
-Actions:
-[ ] Benchmark với nhiều draft lengths.
-[ ] Thử n-gram/suffix nếu không muốn model phụ.
-[ ] Thử model-based method nếu output dài.
-[ ] Tắt speculative decoding cho high-QPS saturated traffic nếu không lợi.
-```
-
-
-
-## Common misconceptions
-
-### Misconception 1: “LLM latency chỉ là model forward latency.”
-
-Sai. LLM latency gồm queueing, tokenization, prefill, decode loop, KV cache memory, detokenization, streaming/network.
-
-### Misconception 2: “Batch càng lớn càng tốt.”
-
-Không luôn đúng. Batch lớn có thể tăng throughput nhưng làm TTFT/ITL và p99 xấu.
-
-### Misconception 3: “RPS là metric chính của LLM serving.”
-
-RPS không đủ vì request có số input/output tokens khác nhau. Cần token-level metrics.
-
-### Misconception 4: “Speculative decoding luôn tăng tốc.”
-
-Không. Nó phụ thuộc acceptance rate, draft overhead, QPS, sampling và model.
-
-### Misconception 5: “Context length càng cao càng tốt.”
-
-Context length cao làm tăng KV cache memory và có thể giảm capacity. Hãy đặt theo nhu cầu sản phẩm, không theo maximum marketing.
-
-### Misconception 6: “vLLM và TensorRT-LLM thay thế hoàn toàn nhau.”
-
-Không. Chúng có overlap nhưng khác trade-off: developer velocity, model support, NVIDIA-specific optimization, deployment complexity.
-
-
-
-## Mini project cuối bài
-
-Xây một LLM serving benchmark report cho một model nhỏ.
-
-### Yêu cầu
-
-1. Chạy một OpenAI-compatible server bằng vLLM hoặc TensorRT-LLM.
-2. Tạo 3 workload:
-
-```text
-short-chat:
-    input_len ~= 256, output_len ~= 128
-
-rag-medium:
-    input_len ~= 2048, output_len ~= 512
-
-long-generation:
-    input_len ~= 1024, output_len ~= 2048
-```
-
-3. Benchmark mỗi workload với nhiều request rates/concurrency levels.
-4. Báo cáo:
-
-```text
-TTFT p50/p95/p99
-ITL/TPOT p50/p95/p99
-E2E latency p50/p95/p99
-system output TPS
-RPS
-error rate
-GPU memory usage
-GPU utilization
-prefix cache hit rate nếu có
-cost per 1M output tokens
-```
-
-5. Tìm saturation point.
-6. Đề xuất config production.
-7. Đề xuất SLO và autoscaling signal.
-
-### Report template
+Template gợi ý:
 
 ```markdown
 # LLM Serving Benchmark Report
-
 ## Model and Runtime
-
-- Model:
-- Runtime: vLLM / TensorRT-LLM
-- Runtime version:
-- GPU:
-- Precision:
-- KV cache dtype:
-- Parallelism:
-- Max model length:
-- Max active sequences:
-
-## Workload
+- Model / Runtime / version / GPU / Precision / KV dtype / Parallelism / max_model_len / max_num_seqs
+## Workload table + Results table (TTFT/ITL/E2E/TPS/RPS/error)
+## Bottleneck Analysis (prefill / decode / KV / scheduler / network)
+## Cost + Recommendation (runtime, config, SLO, autoscale metric, risks)
 ```
-| Workload        | Input length | Output length | Request rate | Notes |
-|-----------------|--------------|---------------|--------------|-------|
-| short-chat      |              |               |              |       |
-| rag-medium      |              |               |              |       |
-| long-generation |              |               |              |       |
+:::
 
-```markdown
-## Results
-```
 
-| Workload          | TTFT p95 | ITL p95 | E2E p95 | Output TPS | RPS | Error rate |
-|-------------------|---------:|--------:|--------:|-----------:|----:|-----------:|
-| short-chat        |          |         |         |            |     |            |
-| rag-medium        |          |         |         |            |     |            |
-| long-generation   |          |         |         |            |     |            |
-```markdown
-## Bottleneck Analysis
-
-- Prefill bottleneck:
-- Decode bottleneck:
-- KV cache bottleneck:
-- Scheduler bottleneck:
-- Network/client bottleneck:
-
-## Cost
-
-- GPU count:
-- GPU-hour price:
-- Effective output TPS at SLO:
-- Cost per 1M output tokens:
-
-## Recommendation
-
-- Recommended runtime:
-- Recommended config:
-- SLO:
-- Autoscaling metric:
-- Risks:
-```
-
-## Checkpoint questions
-
-Trả lời được các câu này nghĩa là bạn đã nắm core của Lesson 9:
+## Checkpoint questions {.unnumbered}
 
 1. Vì sao decode phase của LLM thường memory-bound?
 2. KV cache lưu gì và công thức memory của nó là gì?
@@ -2155,80 +963,134 @@ Trả lời được các câu này nghĩa là bạn đã nắm core của Lesso
 8. Vì sao RPS không đủ để benchmark LLM serving?
 9. Speculative decoding cần điều kiện gì để có lợi?
 10. Khi nào nên thử TensorRT-LLM thay vì chỉ dùng vLLM?
-11. Tại sao context length tối đa là một quyết định capacity/cost?
+11. Tại sao context length tối đa là quyết định capacity/cost?
 12. Cost per 1M output tokens được tính từ benchmark như thế nào?
+13. MQA/GQA giảm KV cache bằng cách nào?
+14. Chunked prefill giải quyết xung đột prefill–decode ra sao?
+15. Goodput khác raw system TPS thế nào?
+16. `max_num_batched_tokens` ảnh hưởng TTFT vs ITL thế nào?
+17. Ba ràng buộc chính khi capacity planning LLM là gì?
+18. Multi-LoRA hữu ích trong tình huống serving nào?
+19. Streaming “không miễn phí” — overhead nào thường gặp?
+20. Khi TTFT đột biến, bạn kiểm tra những tín hiệu nào trước?
+
+::: {.callout-tip icon=false collapse="true"}
+## Tự kiểm — đáp án ngắn
+1. Mỗi step ít token mới nhưng đọc KV ngày càng dài → thường bị memory bandwidth, GPU dễ underutilized nếu batch nhỏ.
+2. Key/value attention đã tính; $\text{bytes}=L\cdot S\cdot 2\cdot H_{kv}\cdot d\cdot b$.
+3. Prefill xử lý cả prompt → tạo KV + first logits; prompt/queue/prefill nặng → TTFT tăng.
+4. ITL phản ánh khoảng cách giữa token decode; decode chậm/stall → ITL xấu.
+5. Static giữ batch cố định tới khi mọi request xong; continuous đổi tập sequence mỗi iteration.
+6. Virtual memory / paging: logical block → physical block không cần contiguous.
+7. Nhiều request cùng prefix token-level (system prompt, template, RAG) và cache chưa evict.
+8. Request khác nhau về input/output tokens; cùng RPS có thể khác xa công việc GPU.
+9. Acceptance cao, draft rẻ, target lớn/decode memory-bound, QPS chưa saturate, output đủ dài.
+10. Cần ceiling trên NVIDIA, team tune được, quant/multi-GPU path tối ưu, workload đủ lớn justify effort.
+11. Tăng `max_model_len` tăng KV reserve/demand → ít concurrent sequences hơn, cost/capacity đổi.
+12. Đo output TPS tại mức vẫn đạt SLO × safety factor; chia chi phí GPU-giờ cho effective TPS rồi scale về 1M tokens.
+13. Giảm `num_kv_heads` so với số query heads → hệ số $H_{kv}$ trong công thức nhỏ hơn.
+14. Chia prefill dài thành chunk, xen decode → giữ ITL mượt hơn khi có prompt dài.
+15. Goodput chỉ đếm request/tokens thỏa SLO; raw TPS có thể cao nhưng nhiều request “hỏng UX”.
+16. Budget nhỏ hơn thường giúp ITL; lớn hơn thường giúp TTFT/prefill throughput — cần bench workload thật.
+17. Throughput constraint, KV memory constraint, latency SLO (TTFT/ITL) constraint.
+18. Nhiều adapter/task/tenant trên cùng base model — tăng mật độ serve, vẫn phải quản lý memory/isolation.
+19. Nhiều SSE/chunk, detokenize lặp, giữ HTTP lâu, backpressure, logging/tracing nhiều event.
+20. Queue time, prompt length, prefix hit, trộn long/short traffic, GPU saturation, tokenizer CPU.
+:::
 
 
+## Glossary {.unnumbered}
 
-## Glossary
+| Thuật ngữ | Định nghĩa |
+|:----------|:-----------|
+| **Acceptance rate** | Tỷ lệ draft tokens được target model chấp nhận |
+| **Chunked prefill** | Chia prefill dài thành chunks để xen kẽ với decode |
+| **Continuous batching** | Batching động theo từng decode iteration |
+| **Decode** | Phase sinh từng output token autoregressively |
+| **Draft model** | Model/phương pháp nhẹ hơn dùng để đoán token trước |
+| **E2E latency** | Thời gian từ gửi request tới token cuối |
+| **Expert parallelism (EP)** | Phân tán MoE experts qua nhiều GPU |
+| **Goodput** | Throughput của request (hoặc tokens) thỏa SLO |
+| **In-flight batching** | Tên khác của continuous / iteration-level batching |
+| **ITL** | Inter-token Latency — khoảng cách giữa các output token |
+| **KV cache** | Cache key/value để tránh tính lại attention cho token cũ |
+| **KV cache quantization** | Lưu KV ở precision thấp hơn để giảm memory |
+| **Multi-LoRA** | Serve nhiều LoRA adapter trên cùng base model |
+| **PagedAttention** | Attention với KV chia block/page, không cần contiguous |
+| **Pipeline parallelism (PP)** | Chia layers qua nhiều GPU |
+| **Prefill** | Phase xử lý prompt ban đầu và tạo KV cache |
+| **Prefix caching** | Reuse KV cache cho shared prefix |
+| **RPS** | Requests Per Second |
+| **Speculative decoding** | Draft nhiều token rồi target model verify |
+| **Tensor parallelism (TP)** | Chia tensor operations qua nhiều GPU |
+| **TPOT** | Time Per Output Token |
+| **TPS** | Tokens Per Second (per-user hoặc system) |
+| **TTFT** | Time To First Token |
 
-| Term                   | Ý nghĩa                                                            |
-|------------------------|--------------------------------------------------------------------|
-| LLM inference          | Quá trình sinh output từ large language model                      |
-| Prefill                | Phase xử lý prompt ban đầu và tạo KV cache                         |
-| Decode                 | Phase sinh từng output token autoregressively                      |
-| KV cache               | Cache key/value vectors để tránh tính lại attention cho token cũ   |
-| TTFT                   | Time to First Token                                                |
-| ITL                    | Inter-token Latency                                                |
-| TPOT                   | Time Per Output Token                                              |
-| TPS                    | Tokens Per Second                                                  |
-| RPS                    | Requests Per Second                                                |
-| Continuous batching    | Batching động theo từng decode iteration                           |
-| In-flight batching     | Tên khác của continuous/iteration-level batching                   |
-| PagedAttention         | Attention với KV cache chia block/page không cần contiguous memory |
-| Prefix caching         | Reuse KV cache cho shared prefix                                   |
-| Chunked prefill        | Chia prefill dài thành chunks để xen kẽ với decode                 |
-| Speculative decoding   | Draft nhiều token rồi target model verify                          |
-| Draft model            | Model/phương pháp nhẹ hơn dùng để đoán token trước                 |
-| Acceptance rate        | Tỷ lệ draft tokens được target model chấp nhận                     |
-| Tensor parallelism     | Chia tensor operations qua nhiều GPU                               |
-| Pipeline parallelism   | Chia layers qua nhiều GPU                                          |
-| KV cache quantization  | Lưu KV cache ở precision thấp hơn để giảm memory                   |
-| Goodput                | Throughput của request thỏa SLO                                    |
 
+## Summary {.unnumbered}
 
-
-## What comes next
-
-Lesson 9 đã đưa bạn từ classic inference sang LLM/generative inference systems.
-
-Bài tiếp theo nên là:
+- LLM serving = prefill + decode loop + streaming; metric đúng là TTFT / ITL / tokens/s / goodput, không chỉ RPS.
+- KV cache là tài nguyên nóng: ước lượng bằng $L\cdot S\cdot 2\cdot H_{kv}\cdot d\cdot b$; MQA/GQA và quant KV tăng capacity.
+- Continuous / in-flight batching thay static batch khi output length lệch; chunked prefill giữ decode mượt khi prompt dài.
+- PagedAttention + prefix caching giảm waste/fragmentation và TTFT trên traffic lặp prefix.
+- Speculative decoding và TP/PP/EP là tối ưu có điều kiện — đo acceptance, communication và p99.
+- vLLM = velocity + HF/API; TensorRT-LLM = NVIDIA ceiling; quant LLM (FP8/INT4/AWQ…) đổi memory/throughput lấy risk quality.
+- Production: streaming có overhead; dashboard token-level; debug theo bảng triệu chứng; cost theo tokens dưới SLO; checklist trước launch.
 
 ```text
-Lesson 10: End-to-End Capstone Project — Build, Optimize, Benchmark and Operate a Production Inference Service
+Serve tokens under SLO — not just maximize GPU utilization.
 ```
 
-Trong Lesson 10, bạn sẽ ghép toàn bộ chuỗi học:
+::: {.callout-tip icon=false collapse="true"}
+## Mental models mang sang Lesson 10
 
 ```text
-PyTorch model / HF model
-    -> export or serve
-    -> optimize
-    -> quantize
-    -> deploy with Triton/vLLM/TensorRT-LLM
-    -> benchmark
-    -> monitor
-    -> canary rollout
-    -> cost report
+Weights static ≈ knowledge
+KV cache ≈ per-request growing context memory
+Batch ≈ set of active sequences each iteration
+Goodput ≈ throughput that still meets TTFT/ITL SLO
+Cost ≈ $/token at the operating point you can actually sell
+```
+:::
+
+
+## Preview bài tiếp theo {.unnumbered}
+
+**Lesson 10: End-to-End Capstone Project** — ghép toàn bộ chuỗi:
+
+```text
+PyTorch / HF model
+  → export or serve
+  → optimize / quantize
+  → deploy Triton / vLLM / TensorRT-LLM
+  → benchmark
+  → monitor
+  → canary rollout
+  → cost report
 ```
 
-Mục tiêu cuối cùng không phải chỉ “biết ONNX/TensorRT/vLLM”, mà là có khả năng thiết kế và vận hành một inference system có SLO, metric, chi phí và rollout plan rõ ràng.
+SLO, canary, monitoring từ Lesson 8 vẫn áp dụng; với LLM đổi trọng tâm sang tokens/s, TTFT, ITL và KV capacity.
 
 
+## References {.unnumbered}
 
-## References
+1. [vLLM — Paged Attention](https://docs.vllm.ai/en/latest/design/paged_attention/)  
+2. [vLLM — OpenAI-Compatible Server](https://docs.vllm.ai/en/latest/serving/openai_compatible_server/)  
+3. [vLLM — Production Metrics](https://docs.vllm.ai/en/latest/usage/metrics/)  
+4. [vLLM — Speculative Decoding](https://docs.vllm.ai/en/latest/features/speculative_decoding/)  
+5. [vLLM — Optimization and Tuning](https://docs.vllm.ai/en/latest/configuration/optimization/)  
+6. [vLLM — Disaggregated Prefilling](https://docs.vllm.ai/en/latest/features/disagg_prefill/)  
+7. [TensorRT-LLM — Overview](https://nvidia.github.io/TensorRT-LLM/overview.html)  
+8. [TensorRT-LLM — Paged Attention, IFB, and Request Scheduling](https://nvidia.github.io/TensorRT-LLM/features/paged-attention-ifb-scheduler.html)  
+9. [TensorRT-LLM — KV Cache System](https://nvidia.github.io/TensorRT-LLM/latest/features/kvcache.html)  
+10. [TensorRT-LLM — Speculative Decoding](https://nvidia.github.io/TensorRT-LLM/latest/features/speculative-decoding.html)  
+11. [TensorRT-LLM — Benchmarking](https://nvidia.github.io/TensorRT-LLM/performance/perf-benchmarking.html)  
+12. [NVIDIA NIM LLM Benchmarking — Metrics](https://docs.nvidia.com/nim/benchmarking/llm/latest/metrics.html)  
+13. Kwon et al., *Efficient Memory Management for Large Language Model Serving with PagedAttention* — https://arxiv.org/abs/2309.06180  
+14. NVIDIA Developer Blog — LLM Inference Benchmarking: Fundamental Concepts
 
-1. vLLM Documentation — Paged Attention: https://docs.vllm.ai/en/latest/design/paged_attention/
-2. vLLM Documentation — OpenAI-Compatible Server: https://docs.vllm.ai/en/latest/serving/openai_compatible_server/
-3. vLLM Documentation — Production Metrics: https://docs.vllm.ai/en/latest/usage/metrics/
-4. vLLM Documentation — Speculative Decoding: https://docs.vllm.ai/en/latest/features/speculative_decoding/
-5. vLLM Documentation — Optimization and Tuning: https://docs.vllm.ai/en/latest/configuration/optimization/
-6. vLLM Documentation — Disaggregated Prefilling: https://docs.vllm.ai/en/latest/features/disagg_prefill/
-7. TensorRT-LLM Documentation — Overview: https://nvidia.github.io/TensorRT-LLM/overview.html
-8. TensorRT-LLM Documentation — Paged Attention, IFB, and Request Scheduling: https://nvidia.github.io/TensorRT-LLM/features/paged-attention-ifb-scheduler.html
-9. TensorRT-LLM Documentation — KV Cache System: https://nvidia.github.io/TensorRT-LLM/latest/features/kvcache.html
-10. TensorRT-LLM Documentation — Speculative Decoding: https://nvidia.github.io/TensorRT-LLM/latest/features/speculative-decoding.html
-11. TensorRT-LLM Documentation — Benchmarking: https://nvidia.github.io/TensorRT-LLM/performance/perf-benchmarking.html
-12. NVIDIA NIM LLM Benchmarking — Metrics: https://docs.nvidia.com/nim/benchmarking/llm/latest/metrics.html
-13. Kwon et al., Efficient Memory Management for Large Language Model Serving with PagedAttention: https://arxiv.org/abs/2309.06180
-14. NVIDIA Developer Blog — LLM Inference Benchmarking: Fundamental Concepts: https://developer.nvidia.com/blog/llm-benchmarking-fundamental-concepts/
+::: {.callout-tip icon=false}
+## Học tiếp
+Capstone end-to-end: [Lesson 10](lesson-10-end-to-end-capstone.qmd).
+:::

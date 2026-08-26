@@ -7,217 +7,137 @@ series: ai-optimize
 order: 3
 description: "Execution Providers, graph optimization và I/O Binding."
 role: "Execution Providers, graph optimization và I/O Binding"
+aliases:
+  - /bai-hoc/ai-optimize/lesson_3_onnx_runtime_deep_dive.html
 ---
 
 ::: {.callout-note icon=false}
 ## Mục tiêu bài học
-Mục tiêu của bài này là giúp bạn hiểu **ONNX Runtime** như một runtime engine thực sự: nó load graph, tối ưu graph, phân vùng graph cho từng hardware backend, chọn kernel, quản lý memory, copy dữ liệu giữa CPU/GPU, và cung cấp công cụ profiling để bạn biết model đang chậm ở đâu.
+Bài này không dừng ở `session.run()`. Mục tiêu là hiểu **ONNX Runtime** như engine thực sự: load graph, tối ưu, phân vùng cho Execution Provider, quản lý memory/copy CPU↔GPU, profiling — và biết vì sao GPU đôi khi chậm hơn CPU. Bài **không** dạy TensorRT native (Lesson 4) hay Triton serving (Lesson 6).
 :::
 
-## Vị trí của Lesson 3 trong chuỗi học
+::: {.callout-note icon=false}
+## Lộ trình bài học
 
-Ở Lesson 1, bạn đã học inference system ở mức kiến trúc:
+| # | Phần | Trả lời câu hỏi | Thời lượng |
+|:--|:-----|:----------------|:-----------|
+| 1 | ORT là / không phải gì | Format khác runtime thế nào? | 10 phút |
+| 2 | InferenceSession | Vì sao không tạo session mỗi request? | 10 phút |
+| 3 | Execution Providers | Priority, partitioning, fallback, GPU chậm? | 20 phút |
+| 4 | SessionOptions + Graph optimization | Basic / extended / layout; online vs offline | 20 phút |
+| 5 | Threads · CUDA EP · TensorRT EP · I/O Binding | Config, zero-copy, engine cache | 25 phút |
+| 6 | Profiling + Benchmark + Tuning + Debug | Đo đúng, checklist, case studies | 30 phút |
+| 7 | Mini-lab 1–6 | ToyCNN → benchmark → optimize → profile → I/O | 60 phút |
 
-```text
-request -> preprocessing -> batching -> runtime -> GPU execution -> postprocessing -> response
+Đọc tối thiểu: phần 1–4 và mở collapse *Đào sâu*. Lab 1–5 chạy được trên CPU. Lab 6 + TRT EP optional nếu có GPU.
+:::
+
+::: {.reading-modes}
+**Đọc nhanh:** callout *Ý chính* + bảng EP/options/checklist + sơ đồ xương sống.  
+**Đọc đủ:** mở tip đào sâu, chạy Mini-lab, làm Checkpoint.
+:::
+
+
+## Bối cảnh {.unnumbered}
+
+Lesson 1: inference system ở mức kiến trúc. Lesson 2: ONNX là IR. Lesson 3: **engine chạy graph**.
+
+```{mermaid}
+%%| label: fig-l3-spine
+%%| fig-cap: "Sơ đồ xương sống Lesson 3: ONNX model → InferenceSession → optimize → partition → Execution Providers."
+%%| fig-width: 6.5
+%%| fig-align: "center"
+flowchart LR
+  M([ONNX model]) -->|"load"| S([InferenceSession])
+  S -->|"optimize"| G([Optimized graph])
+  G -->|"partition"| EP([CPU / CUDA / TRT EP])
+  EP -->|"kernels + memory"| O([Outputs])
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class M soft
+  class S,G hot
+  class EP,O ok
 ```
 
-Ở Lesson 2, bạn đã học ONNX như một intermediate representation:
-
-```text
-ONNX model = computation graph + weights + input/output schema + operator versioning
-```
-
-Lesson 3 đi vào engine chạy ONNX model:
-
-```text
-ONNX model
-   |
-   | load
-   v
-ONNX Runtime InferenceSession
-   |
-   | graph optimization
-   v
-optimized graph
-   |
-   | graph partitioning
-   v
-Execution Providers: CPU / CUDA / TensorRT / OpenVINO / DirectML / CoreML / ...
-   |
-   | kernel execution + memory management
-   v
-outputs
-```
-
-Sau bài này, bạn không chỉ biết viết:
-
-```python
-session = ort.InferenceSession("model.onnx")
-outputs = session.run(None, inputs)
-```
-
-mà còn hiểu:
-
-- Vì sao model có thể chạy một phần trên GPU và một phần fallback về CPU.
-- Vì sao `CUDAExecutionProvider` không đồng nghĩa với “toàn bộ model chạy trên GPU”.
-- Vì sao `session.run()` đôi khi chậm vì copy dữ liệu chứ không phải vì kernel compute.
-- Vì sao lần chạy đầu tiên thường chậm hơn các lần sau.
-- Vì sao TensorRT EP có thể nhanh hơn CUDA EP nhưng lại có compile/build overhead.
-- Vì sao benchmark inference phải có warmup, percentile latency và kiểm soát provider order.
+Sau bài này bạn giải thích được: CUDA EP ≠ "toàn graph trên GPU"; `session.run()` có thể chậm vì **copy** chứ không phải compute; cold start ≠ steady-state; TensorRT EP nhanh hơn nhưng có build overhead; benchmark cần warmup + percentile + provider order cố định.
 
 
-## Learning outcomes
+## Learning outcomes {.unnumbered}
 
-Sau bài này, bạn cần giải thích và thực hành được:
-
-1. ONNX Runtime khác gì với ONNX, TensorRT và framework gốc như PyTorch.
-2. `InferenceSession` là gì và vì sao không nên tạo session cho từng request.
-3. Execution Provider là gì.
-4. Provider priority order hoạt động như thế nào.
-5. Graph partitioning và fallback sang CPU là gì.
-6. Các mức graph optimization: disable, basic, extended, all.
-7. Online optimization và offline optimization khác nhau thế nào.
-8. Cách lưu optimized ONNX graph ra disk.
-9. Cách cấu hình `SessionOptions`.
-10. Cách benchmark latency đúng cách.
-11. Cách bật profiling và đọc profiling trace ở mức operator.
-12. Vì sao I/O Binding quan trọng khi chạy GPU.
-13. Cách dùng CUDA EP và TensorRT EP ở mức cơ bản.
-14. Debug các lỗi performance thường gặp: GPU chậm hơn CPU, high p99, fallback, memory copy overhead, cold start.
+1. ORT khác ONNX, TensorRT, PyTorch thế nào
+2. `InferenceSession` làm gì; anti-pattern tạo session mỗi request
+3. Execution Provider, provider priority, graph partitioning, CPU fallback
+4. Graph optimization levels: basic / extended / layout; online vs offline
+5. Cấu hình `SessionOptions` — các field quan trọng và ý nghĩa
+6. Thread management: intra-op vs inter-op, khi nào cần chỉnh
+7. CUDA EP / TensorRT EP: config, khi nào dùng, không dùng
+8. I/O Binding và zero-copy mindset
+9. Benchmark latency đúng: warmup, p50/p90/p99, batch sweep, tách E2E
+10. Profiling operator-level và debug case studies
 
 
-## Prerequisites
+## Prerequisites {.unnumbered}
 
-Bạn nên đã nắm:
+- Lesson 1 (latency, GPU, batching) và Lesson 2 (graph, opset, shape)
+- Python, NumPy; PyTorch đủ để export model nhỏ
+- GPU phần: NVIDIA driver + `onnxruntime-gpu` tương thích CUDA/cuDNN — **optional**
 
-- Nội dung Lesson 1 về latency, throughput, GPU execution và batching.
-- Nội dung Lesson 2 về ONNX graph, operator, opset, input/output shape.
-- Python cơ bản.
-- PyTorch cơ bản để export một model nhỏ sang ONNX.
-- Numpy array và tensor shape.
-- Nếu làm phần GPU: máy có NVIDIA GPU, driver phù hợp, CUDA/cuDNN runtime tương thích với ONNX Runtime GPU package.
-
-Phần CPU của bài này chạy được trên laptop bình thường. Phần CUDA/TensorRT là optional nhưng rất quan trọng nếu bạn muốn đi sâu inference engineering trên GPU NVIDIA.
-
+::: {.callout-tip icon=false collapse="true"}
 ## Cài đặt môi trường
 
-Tạo virtual environment:
-
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate
 pip install --upgrade pip
+pip install --upgrade onnx onnxruntime numpy torch          # CPU
+# pip install --upgrade onnx onnxruntime-gpu numpy torch   # GPU
 ```
-
-Cài bản CPU:
-
-```bash
-pip install --upgrade onnx onnxruntime numpy torch
-```
-
-Nếu có NVIDIA GPU:
-
-```bash
-pip install --upgrade onnx onnxruntime-gpu numpy torch
-```
-
-Kiểm tra ONNX Runtime:
 
 ```python
 import onnxruntime as ort
-
-print("ONNX Runtime version:", ort.__version__)
-print("Available providers:", ort.get_available_providers())
+print("version:", ort.__version__)
+print("providers:", ort.get_available_providers())
 ```
 
-Output CPU-only thường giống:
+CPU-only: `['CPUExecutionProvider']`. Có GPU: `['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider']` hoặc tương tự. Provider trong list phụ thuộc package, OS, GPU và cách ORT được build — không thấy CUDA EP thường là dependency/package, không phải "code sai".
+:::
+
+
+## ONNX Runtime là gì — và không phải gì? {#sec-ort-what}
+
+> ORT chỉ "đọc file rồi chạy từng node", hay còn làm gì trước khi inference?
+
+::: {.callout-important icon=false}
+## Ý chính
+**ONNX** = format/spec. **ORT** = engine (optimize + plan + dispatch + memory). **Execution Provider** = backend chạy op/subgraph trên hardware/library cụ thể. ORT ≠ TensorRT — ORT chỉ *dùng* TRT qua TensorRT EP; bản thân ORT không compile engine.
+:::
+
+Pipeline khái niệm khi tạo session và chạy inference:
 
 ```text
-Available providers: ['CPUExecutionProvider']
+1. Load model          5. Partition graph by EP       9. Return outputs
+2. Validate            6. Create execution plan
+3. Resolve graph       7. Allocate/reuse memory
+4. Graph optimizations 8. Dispatch kernels
 ```
 
-Output có GPU có thể giống:
+Mental model: `ORT = graph optimizer + execution planner + provider dispatcher + kernel runtime + memory manager`.
 
-```text
-Available providers: ['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider']
-```
-
-hoặc:
-
-```text
-Available providers: ['CUDAExecutionProvider', 'CPUExecutionProvider']
-```
-
-> Ghi chú thực tế: tên provider có trong `ort.get_available_providers()` phụ thuộc package bạn cài, hệ điều hành, GPU, CUDA/cuDNN/TensorRT runtime và cách ONNX Runtime được build. Không thấy `CUDAExecutionProvider` không có nghĩa là code sai; thường là package hoặc dependency chưa đúng.
+| Không phải | Hệ quả thực tế |
+|:-----------|:---------------|
+| **ONNX** | `model.onnx` = file format; `onnxruntime` = library chạy file đó |
+| **TensorRT** | CUDA EP dùng CUDA/cuDNN; TRT EP build engine cho subgraph hỗ trợ; native TRT = API trực tiếp |
+| **Luôn nhanh hơn PyTorch** | Model rất nhỏ / batch 1 / nhiều copy → PyTorch có thể ngang hoặc thắng nếu benchmark chưa thiết kế đúng |
 
 
-## ONNX Runtime là gì?
+## InferenceSession: đơn vị runtime trung tâm {#sec-session}
 
-ONNX Runtime, thường gọi tắt là **ORT**, là runtime để load và chạy model ở định dạng ONNX hoặc ORT format.
+> Vì sao tạo `InferenceSession` trong mỗi request là anti-pattern nguy hiểm?
 
-Một cách ngắn gọn:
-
-```text
-ONNX = model format / graph specification
-ONNX Runtime = engine chạy model ONNX
-Execution Provider = backend chạy operator/subgraph trên một hardware hoặc library cụ thể
-```
-
-ONNX Runtime không chỉ “đọc file ONNX rồi chạy từng node”. Nó thường làm nhiều bước trước khi inference:
-
-```text
-1. Load model
-2. Validate model
-3. Resolve graph
-4. Apply graph optimizations
-5. Partition graph by Execution Provider capability
-6. Create execution plan
-7. Allocate/reuse memory
-8. Dispatch kernels
-9. Return outputs
-```
-
-Mental model tốt nhất:
-
-```text
-ONNX Runtime = graph optimizer + execution planner + provider dispatcher + kernel runtime + memory manager
-```
-
-## ONNX Runtime không phải là gì?
-
-Để tránh nhầm lẫn:
-
-### ONNX Runtime không phải ONNX
-
-ONNX là format. ONNX Runtime là runtime.
-
-```text
-model.onnx       -> file format
-onnxruntime      -> library chạy file đó
-```
-
-### ONNX Runtime không phải TensorRT
-
-TensorRT là compiler/runtime của NVIDIA để tối ưu model cho GPU NVIDIA. ONNX Runtime có thể dùng TensorRT thông qua `TensorrtExecutionProvider`, nhưng bản thân ORT không phải TensorRT.
-
-```text
-ONNX Runtime + CUDA EP      -> chạy kernels qua CUDA/cuDNN/cuBLAS
-ONNX Runtime + TensorRT EP  -> build TensorRT engine cho subgraph được hỗ trợ
-Native TensorRT             -> dùng TensorRT API trực tiếp
-```
-
-### ONNX Runtime không luôn nhanh hơn PyTorch trong mọi trường hợp
-
-ORT thường nhanh hơn trong inference production vì graph static, optimization và backend kernel tốt. Nhưng với model rất nhỏ, batch nhỏ, hoặc pipeline có nhiều CPU/GPU copies, PyTorch có thể tương đương hoặc nhanh hơn trong một số benchmark chưa được thiết kế đúng.
-
-## `InferenceSession`: đơn vị runtime trung tâm
-
-Trong Python API, object quan trọng nhất là:
-
-```python
-ort.InferenceSession
-```
+::: {.callout-important icon=false}
+## Ý chính
+`InferenceSession` chịu load, optimize, khởi tạo EP, tạo execution plan, allocator và kernels. Chi phí này chỉ trả một lần và rất lớn — đặc biệt TRT EP có thể mất hàng giây đến phút build engine. Trong production: **tạo một lần lúc startup, reuse mãi**.
+:::
 
 Ví dụ tối thiểu:
 
@@ -229,79 +149,344 @@ session = ort.InferenceSession(
     "model.onnx",
     providers=["CPUExecutionProvider"],
 )
-
 input_name = session.get_inputs()[0].name
 x = np.random.randn(1, 3, 224, 224).astype(np.float32)
-
 outputs = session.run(None, {input_name: x})
 ```
 
-`InferenceSession` chịu trách nhiệm:
-
-- Load model.
-- Apply graph optimizations.
-- Khởi tạo Execution Providers.
-- Tạo execution plan.
-- Quản lý memory allocator.
-- Quản lý kernels.
-- Chạy inference.
-
-### Không tạo session cho mỗi request
-
-Sai:
+**Anti-pattern** — tạo session mỗi request:
 
 ```python
-def predict(x):
+def predict(x):                               # ❌ SAI
     session = ort.InferenceSession("model.onnx")
     return session.run(None, {"input": x})
+    # mỗi call: parse ONNX + optimize + load weights + init EP + warmup
 ```
 
-Đúng hơn:
+**Đúng** — session toàn cục, reuse:
 
 ```python
-session = ort.InferenceSession("model.onnx")
+session = ort.InferenceSession("model.onnx")  # ✓ một lần lúc startup
 
 def predict(x):
-    return session.run(None, {"input": x})
+    return session.run(None, {"input": x})    # ✓ chỉ inference
 ```
 
-Vì session creation có thể tốn chi phí lớn:
+`InferenceSession` chịu trách nhiệm: load + validate model, apply graph optimizations, khởi tạo Execution Providers, tạo execution plan, quản lý memory allocator và kernel cache, thực hiện inference.
 
-- Parse ONNX model.
-- Optimize graph.
-- Load weights.
-- Khởi tạo provider.
-- Với TensorRT EP: build engine có thể rất tốn thời gian.
-- Warm up allocator và kernel cache.
+### Inspect input/output metadata {.unnumbered}
 
-Trong production, session thường được tạo một lần khi service startup, sau đó reuse cho nhiều request.
+Luôn inspect trước khi serve để biết đúng input name, shape, dtype:
+
+```python
+print("Providers:", session.get_providers())
+
+print("Inputs:")
+for x in session.get_inputs():
+    print("  name:", x.name, "| shape:", x.shape, "| type:", x.type)
+
+print("Outputs:")
+for y in session.get_outputs():
+    print("  name:", y.name, "| shape:", y.shape, "| type:", y.type)
+```
+
+Output điển hình (static batch):
+
+```text
+Inputs:
+  name: images | shape: [1, 3, 224, 224] | type: tensor(float)
+Outputs:
+  name: logits | shape: [1, 1000]        | type: tensor(float)
+```
+
+Dynamic batch hiện như `['batch', 3, 224, 224]` hoặc `[None, 3, 224, 224]`. Sai input name → `Required inputs are missing from input feed`.
+
+::: {.callout-tip icon=false collapse="true"}
+## Chi phí session creation — con số thực tế
+Session creation gồm: parse ONNX, optimize graph, load weights, init provider, warmup allocator và kernel cache. Với TRT EP: build engine **hàng giây đến phút** tuỳ model và GPU. Đo startup riêng với `time.perf_counter()` bao quanh `InferenceSession(...)` — không được gộp vào p99 serving latency.
+:::
 
 
-## Execution Providers là gì?
+## Execution Providers, priority order và fallback {#sec-ep}
 
-**Execution Provider**, viết tắt là **EP**, là backend mà ONNX Runtime dùng để chạy các node hoặc subgraph.
+> "Bật GPU" có nghĩa toàn bộ graph chạy trên GPU không?
 
-Ví dụ:
+::: {.callout-important icon=false}
+## Ý chính
+EP chạy **node/subgraph** mà nó hỗ trợ — không nhất thiết toàn graph. **Thứ tự providers = ưu tiên phân vùng**. Phần không hỗ trợ **fallback** sang EP tiếp theo. Nhiều lần fallback GPU→CPU→GPU gây copy data, khiến "GPU session" chậm hơn CPU-only.
+:::
 
-|          Execution Provider |                                          Mục tiêu |
-|----------------------------:|--------------------------------------------------:|
-|      `CPUExecutionProvider` |       Chạy trên CPU bằng kernels của ONNX Runtime |
-|     `CUDAExecutionProvider` |        Chạy trên NVIDIA GPU qua CUDA/cuDNN/cuBLAS |
-| `TensorrtExecutionProvider` | Dùng NVIDIA TensorRT để optimize và chạy subgraph |
-| `OpenVINOExecutionProvider` |                           Chạy qua Intel OpenVINO |
-|      `DmlExecutionProvider` |                    Chạy qua DirectML trên Windows |
-|   `CoreMLExecutionProvider` |                           Chạy trên Apple Core ML |
-|     `ROCMExecutionProvider` |                        Chạy trên AMD GPU với ROCm |
+| Execution Provider | Mục tiêu |
+|:-------------------|:---------|
+| `CPUExecutionProvider` | CPU kernels của ORT |
+| `CUDAExecutionProvider` | NVIDIA GPU — CUDA/cuDNN/cuBLAS |
+| `TensorrtExecutionProvider` | NVIDIA TensorRT: compile + chạy subgraph hỗ trợ |
+| `OpenVINOExecutionProvider` | Intel OpenVINO |
+| `DmlExecutionProvider` | DirectML (Windows) |
+| `CoreMLExecutionProvider` | Apple Core ML |
+| `ROCMExecutionProvider` | AMD ROCm |
 
-Bạn xem provider có sẵn bằng:
+**Provider priority order:**
+
+```python
+# Ưu tiên CUDA, fallback CPU
+providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+
+# Đảo lại → CPU ưu tiên dù có GPU — thường là lỗi trong production
+providers = ["CPUExecutionProvider", "CUDAExecutionProvider"]
+
+# TRT → CUDA → CPU (pattern chuẩn có TRT)
+providers = [
+    "TensorrtExecutionProvider",
+    "CUDAExecutionProvider",
+    "CPUExecutionProvider",
+]
+```
+
+Mental model: TRT nhận subgraph TRT hỗ trợ → CUDA nhận phần GPU còn lại → CPU nhận phần còn lại.
+
+**Graph partitioning và fallback:**
+
+ORT hỏi từng EP: *"Bạn hỗ trợ node nào trong graph này?"*. Provider trả lời; ORT phân vùng graph. Ví dụ graph detection:
+
+```text
+Conv + Relu            → TensorRT EP (hoặc CUDA EP)
+NonMaxSuppression      → CUDA EP hoặc CPU EP (không hỗ trợ TRT)
+```
+
+```{mermaid}
+%%| label: fig-l3-fallback
+%%| fig-cap: "Partitioning: Conv+Relu chạy GPU EP; NMS fallback CPU EP — kèm copy H2D/D2H nếu xen kẽ nhiều lần."
+%%| fig-width: 6
+%%| fig-align: "center"
+flowchart TB
+  IN([Input]) --> CONV([Conv+Relu · GPU EP])
+  CONV -->|"H2D/D2H nếu cần"| NMS([NMS · CPU EP])
+  NMS --> OUT([Output])
+  classDef gpu fill:#EAF3FF,stroke:#4A90E2,stroke-width:2px,color:#1F3A5F
+  classDef cpu fill:#FFF4E5,stroke:#E09B3D,stroke-width:2px,color:#5C3B10
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  class CONV gpu
+  class NMS cpu
+  class IN,OUT soft
+```
+
+Nếu fallback xảy ra nhiều lần: `GPU subgraph → copy về CPU → CPU op → copy lại GPU`. Chi phí copy lặp lại có thể nuốt toàn bộ lợi thế GPU.
+
+::: {.callout-warning icon=false}
+## Vì sao GPU đôi khi chậm hơn CPU?
+
+| Nguyên nhân | Hướng debug |
+|:------------|:-----------|
+| Model/batch quá nhỏ — compute không bù overhead | Tăng batch size |
+| `session.run(numpy)` copy CPU→GPU→CPU mỗi lần | Dùng I/O Binding |
+| Nhiều op fallback về CPU | Profiling trace + verbose log |
+| Đo cả session creation (cold start) | Tách startup time |
+| Chưa warmup đủ | Warmup ≥ 30 lần |
+| Provider order sai | Kiểm tra `session.get_providers()` |
+| Preprocess/postprocess CPU dominate | Tách ORT-only vs E2E |
+| Dynamic shape khó reuse memory/engine | Static shape khi có thể |
+
+Benchmark đúng phải tách: `session creation | warmup | steady-state | data transfer | preprocessing | postprocessing`.
+:::
+
+
+## SessionOptions: cấu hình runtime {#sec-session-options}
+
+> Muốn bật profiling, lưu optimized graph hay giới hạn threads — cấu hình ở đâu?
+
+::: {.callout-important icon=false}
+## Ý chính
+`SessionOptions` là nơi cấu hình **trước khi** tạo session. Luôn set `graph_optimization_level = ORT_ENABLE_ALL` cho production. Set `optimized_model_filepath` khi muốn inspect hoặc lưu offline. Set `enable_profiling` khi debug performance.
+:::
 
 ```python
 import onnxruntime as ort
 
-print(ort.get_available_providers())
+sess_options = ort.SessionOptions()
+sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+sess_options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
+sess_options.intra_op_num_threads = 0            # 0 = ORT tự quyết
+sess_options.inter_op_num_threads = 0
+sess_options.enable_profiling = True
+sess_options.profile_file_prefix = "ort_profile"
+sess_options.optimized_model_filepath = "model_optimized.onnx"
+sess_options.enable_cpu_mem_arena = True
+sess_options.enable_mem_pattern = True
+
+session = ort.InferenceSession(
+    "model.onnx",
+    sess_options=sess_options,
+    providers=["CPUExecutionProvider"],
+)
 ```
 
-Bạn chọn provider khi tạo session:
+| Option | Ý nghĩa chi tiết |
+|:-------|:----------------|
+| `graph_optimization_level` | Disable / basic / extended / all — xem @sec-graph-opt |
+| `execution_mode` | `ORT_SEQUENTIAL`: tốt cho latency thấp; `ORT_PARALLEL`: khi graph có nhiều branch độc lập |
+| `intra_op_num_threads` | Thread parallelize **bên trong** một operator (MatMul, Conv); 0 = ORT tự quyết |
+| `inter_op_num_threads` | Thread parallelize **giữa** các operator khi dùng `ORT_PARALLEL` |
+| `enable_profiling` | Ghi JSON trace operator-level; kết hợp với `profile_file_prefix` |
+| `optimized_model_filepath` | Lưu optimized model ra file: inspect, so node count, reuse offline |
+| `enable_cpu_mem_arena` | Bật memory pool để giảm alloc/dealloc overhead |
+| `enable_mem_pattern` | Cho phép reuse memory pattern khi input shape ổn định |
+
+
+## Graph optimization {#sec-graph-opt}
+
+> ORT "optimize graph" nghĩa là biến đổi gì — và có bao nhiêu mức?
+
+::: {.callout-important icon=false}
+## Ý chính
+Graph optimization biến đổi graph để chạy nhanh hơn mà **không đổi output semantics**. Production luôn dùng `ORT_ENABLE_ALL` trừ khi có lý do đặc biệt. Lưu optimized model để inspect (Netron) và giảm startup latency (offline mode).
+:::
+
+Ví dụ kinh điển:
+
+```text
+Conv → BatchNorm → Relu      →  FusedConvBnRelu    (3 node → 1 kernel)
+Constant → Add → Mul         →  SingleConstant      (constant folding)
+```
+
+**Mục tiêu của graph optimization** (giữ nguyên semantics):
+
+- Giảm số node / số kernel launch / memory allocation
+- Loại bỏ node thừa
+- Fuse nhiều op thành một kernel hiệu quả hơn
+- Tận dụng layout/kernel đặc biệt của provider
+
+### Bốn mức optimization {.unnumbered}
+
+| Level | Enum | Bao gồm |
+|:------|:-----|:--------|
+| Tắt | `ORT_DISABLE_ALL` | Không optimize — chỉ dùng khi debug |
+| Basic | `ORT_ENABLE_BASIC` | Fold/fuse an toàn; chạy **trước** partitioning → áp dụng bất kể provider |
+| Extended | `ORT_ENABLE_EXTENDED` | Basic + pattern kiến trúc phụ thuộc provider |
+| All | `ORT_ENABLE_ALL` | Extended + layout optimizations (NCHW→NCHWc, …) |
+
+Mental model nhanh: **Basic** = dọn graph + fold/fuse an toàn; **Extended** = fuse pattern kiến trúc (Transformer/CNN, ví dụ GELU/Attention).
+
+**Basic optimizations** (provider-agnostic, chạy trước partitioning):
+
+- Constant folding, identity elimination, dropout elimination
+- Conv + Add / Conv + BatchNorm fusion
+- Reshape fusion
+
+**Extended optimizations** (fuse pattern kiến trúc, phụ thuộc provider nhiều hơn):
+
+- GELU fusion, LayerNorm fusion
+- Attention fusion, SkipLayerNorm fusion, BiasGELU fusion
+
+**Layout optimizations** (chỉ trong `ORT_ENABLE_ALL`): đổi data layout phù hợp hardware (vd. `NCHW → NCHWc` trên CPU vectorized). **Ít portable hơn** — artifact tối ưu cho một máy có thể không tối ưu trên máy khác.
+
+### Online optimization vs offline optimization {.unnumbered}
+
+**Online** (mặc định): ORT optimize lúc tạo session.
+
+- Ưu: dễ, luôn tối ưu theo environment hiện tại
+- Nhược: tăng startup latency; mỗi restart phải optimize lại; **không tốt nếu service cần cold start rất nhanh**
+
+**Offline**: lưu optimized model ra disk để dùng lại.
+
+```python
+sess_options = ort.SessionOptions()
+sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+sess_options.optimized_model_filepath = "model_optimized.onnx"
+
+# Chạy một lần để tạo file
+session = ort.InferenceSession(
+    "model.onnx",
+    sess_options=sess_options,
+    providers=["CPUExecutionProvider"],
+)
+# => sinh ra model_optimized.onnx
+
+# Lần sau load thẳng, startup nhanh hơn
+session2 = ort.InferenceSession("model_optimized.onnx", providers=["CPUExecutionProvider"])
+```
+
+Ưu: giảm startup overhead; có thể inspect graph; so node count trước/sau. Nhược: artifact phụ thuộc provider/hardware/session options — không portable tự do.
+
+::: {.callout-warning icon=false}
+## Bẫy portability của optimized graph
+GPU-optimized graph không nên assume chạy tốt trên CPU khác. Với TRT EP, engine cache/EP context có cơ chế riêng. Hãy coi optimized graph là **artifact cho deployment cụ thể**, không thay thế ONNX gốc.
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: xem node count trước/sau optimize
+
+```python
+import onnx
+
+def count_nodes(path):
+    return len(onnx.load(path).graph.node)
+
+print("Before:", count_nodes("model.onnx"))
+print("After: ", count_nodes("model_optimized.onnx"))
+```
+
+BatchNorm fold, Conv fusion, identity elimination thường giảm rõ node count. Mở Netron để thấy trực quan pattern nào biến mất hoặc được gộp lại. Có thể thấy node thuộc domain đặc biệt của ORT (`com.microsoft.*`) thay thế pattern gốc.
+:::
+
+
+## Thread management trên CPU {#sec-threads}
+
+> Nhiều sessions song song — mỗi session nên dùng bao nhiêu thread?
+
+::: {.callout-important icon=false}
+## Ý chính
+ORT có hai loại thread parallelism: **intra-op** (bên trong một op) và **inter-op** (giữa các op độc lập). Khi nhiều sessions chạy đồng thời, giảm `intra_op_num_threads` để tránh oversubscription gây p99 biến động.
+:::
+
+**Intra-op parallelism** — parallelize bên trong một operator:
+
+```python
+options = ort.SessionOptions()
+options.intra_op_num_threads = 4   # 4 thread cho một MatMul/Conv lớn
+```
+
+**Inter-op parallelism** — parallelize giữa các op độc lập trong graph:
+
+```python
+options = ort.SessionOptions()
+options.execution_mode = ort.ExecutionMode.ORT_PARALLEL
+options.inter_op_num_threads = 2   # chạy song song branch A và B
+```
+
+Trực giác:
+
+```text
+        → branch A →
+Input                 Concat → Output
+        → branch B →
+```
+
+Hữu ích khi graph có nhiều branch song song (vd. multi-head attention, multi-scale feature pyramid).
+
+| Tình huống | Gợi ý |
+|:-----------|:------|
+| Đơn session, muốn max tốc độ | Default (`intra_op = 0`) |
+| Nhiều session / nhiều model song song | Giảm `intra_op` tránh oversubscription: `total_cores / num_sessions` |
+| Multi-tenant server tranh CPU | Giới hạn thread mỗi session; đo p99 dưới tải thật |
+| CPU utilization quá cao / thrashing | Giảm `intra_op`; cân nhắc `ORT_SEQUENTIAL` |
+| Graph có nhiều branch độc lập | Thử `ORT_PARALLEL` + `inter_op_num_threads` |
+| Container bị giới hạn CPU quota | Set `intra_op` khớp quota |
+| p99 latency biến động cao | Test thread affinity và spinning settings |
+
+Rule of thumb: bắt đầu với default, benchmark, rồi tune. Đừng tăng thread khi đã có nhiều sessions cùng chạy.
+
+
+## CUDA Execution Provider {#sec-cuda-ep}
+
+> CUDA EP cần cấu hình gì — và version mismatch xử lý ra sao?
+
+::: {.callout-important icon=false}
+## Ý chính
+`CUDAExecutionProvider` dùng NVIDIA GPU qua CUDA/cuDNN/cuBLAS. Package `onnxruntime-gpu` phải tương thích **major version** CUDA/cuDNN trong môi trường. Khi EP không load, dùng `ort.print_debug_info()` để chẩn đoán — không đoán mò.
+:::
+
+Tạo session cơ bản:
 
 ```python
 session = ort.InferenceSession(
@@ -310,393 +495,689 @@ session = ort.InferenceSession(
 )
 ```
 
-
-## Provider priority order
-
-Danh sách providers có thứ tự ưu tiên.
-
-Ví dụ:
-
-```python
-providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-```
-
-Có nghĩa là:
-
-```text
-1. Ưu tiên chạy node/subgraph trên CUDA.
-2. Nếu CUDA EP không hỗ trợ một node/subgraph, fallback sang CPU.
-```
-
-Nếu đảo lại:
-
-```python
-providers = ["CPUExecutionProvider", "CUDAExecutionProvider"]
-```
-
-thì CPU có priority cao hơn. Trong nhiều trường hợp, model có thể chạy chủ yếu trên CPU dù GPU có sẵn.
-
-Với TensorRT EP:
+Cấu hình chi tiết:
 
 ```python
 providers = [
-    "TensorrtExecutionProvider",
-    "CUDAExecutionProvider",
+    (
+        "CUDAExecutionProvider",
+        {
+            "device_id": 0,
+            "arena_extend_strategy": "kNextPowerOfTwo",
+            "gpu_mem_limit": 2 * 1024 * 1024 * 1024,  # 2 GB
+            "cudnn_conv_algo_search": "EXHAUSTIVE",
+            "do_copy_in_default_stream": True,
+        },
+    ),
     "CPUExecutionProvider",
 ]
+session = ort.InferenceSession("model.onnx", providers=providers)
 ```
 
-Mental model:
+| Option | Ý nghĩa |
+|:-------|:--------|
+| `device_id` | GPU index (0, 1, …) |
+| `gpu_mem_limit` | Giới hạn memory arena GPU (bytes) |
+| `arena_extend_strategy` | Cách tăng kích thước memory pool |
+| `cudnn_conv_algo_search` | `EXHAUSTIVE`: benchmark nhiều algo, chọn tốt nhất; `DEFAULT`: startup nhanh hơn |
+| `do_copy_in_default_stream` | Copy trên default CUDA stream hay stream riêng |
+| `use_tf32` | TF32 trên Ampere+ cho FP32 matmul/conv |
+| `enable_cuda_graph` | CUDA Graph giảm CPU launch overhead (điều kiện: shape tĩnh, no conditional) |
 
-```text
-TensorRT EP cố nhận các subgraph mà TensorRT hỗ trợ.
-CUDA EP nhận các phần TensorRT không hỗ trợ nhưng CUDA hỗ trợ.
-CPU EP nhận phần còn lại.
-```
-
-Provider order cực kỳ quan trọng khi benchmark.
-
-
-## Graph partitioning và fallback
-
-ONNX Runtime không nhất thiết gửi toàn bộ graph cho một provider.
-
-Nó hỏi từng Execution Provider:
-
-```text
-"Bạn có thể chạy phần nào của graph này?"
-```
-
-Provider trả lời các node/subgraph mà nó hỗ trợ. Sau đó ORT phân vùng graph.
-
-Ví dụ một graph đơn giản:
-
-```text
-Input
-  |
-Conv
-  |
-Relu
-  |
-NonMaxSuppression
-  |
-Output
-```
-
-Với TensorRT EP, có thể xảy ra:
-
-```text
-Conv + Relu              -> TensorRT EP
-NonMaxSuppression        -> CUDA EP hoặc CPU EP
-```
-
-hoặc:
-
-```text
-Conv + Relu              -> CUDA EP
-NonMaxSuppression        -> CPU EP
-```
-
-Điều này tạo ra vấn đề performance:
-
-```text
-GPU subgraph -> copy data về CPU -> CPU op -> copy lại GPU
-```
-
-Nếu việc fallback xảy ra nhiều lần, model có thể chậm hơn rất nhiều dù bạn “đang dùng GPU”.
-
-
-## Vì sao GPU đôi khi chậm hơn CPU?
-
-Đây là câu hỏi rất thực tế.
-
-Một model chạy GPU chậm hơn CPU có thể do:
-
-1. Model quá nhỏ, compute không đủ lớn để bù overhead launch kernel và copy dữ liệu.
-2. Input/output vẫn nằm trên CPU, nên `session.run()` phải copy CPU -> GPU và GPU -> CPU.
-3. Một số operator fallback về CPU.
-4. Batch size quá nhỏ.
-5. Bạn đo cả cold start/session creation.
-6. Chưa warm up.
-7. CUDA/cuDNN/TensorRT version không tương thích hoặc chưa tối ưu.
-8. Provider order sai.
-9. Preprocessing/postprocessing vẫn chạy CPU và dominate latency.
-10. Dynamic shape khiến runtime khó reuse memory/engine/profile.
-
-Một benchmark đúng phải tách:
-
-```text
-session creation time
-warmup time
-steady-state inference latency
-data transfer time
-preprocessing time
-postprocessing time
-```
-
-
-## `SessionOptions`: nơi cấu hình runtime
-
-`SessionOptions` cho phép bạn cấu hình session trước khi load model.
-
-Ví dụ:
+::: {.callout-tip icon=false collapse="true"}
+## CUDA/cuDNN compatibility — checklist debug
+`onnxruntime-gpu` và CUDA/cuDNN phải khớp major version. Khi dùng chung với PyTorch GPU, chú ý PyTorch kéo theo CUDA/cuDNN nào.
 
 ```python
+import torch
+import onnxruntime as ort
+# Import torch trước giúp preload CUDA libs trong môi trường PyTorch
+print("PyTorch:", torch.__version__)
+print("ORT providers:", ort.get_available_providers())
+```
+
+Nếu CUDA EP không xuất hiện:
+```python
+import onnxruntime as ort
+ort.print_debug_info()   # in loading log chi tiết
+```
+
+```bash
+nvidia-smi                            # kiểm tra driver, GPU
+pip show onnxruntime onnxruntime-gpu  # không nên có cả hai trong cùng venv
+```
+
+Không nên cài lẫn `onnxruntime` (CPU) và `onnxruntime-gpu` trong cùng venv. Tạo venv mới sạch thường nhanh hơn debug dependency rối.
+:::
+
+
+## TensorRT Execution Provider {#sec-trt-ep}
+
+> Khi nào TensorRT EP đáng dùng — và engine cache hoạt động như thế nào?
+
+::: {.callout-important icon=false}
+## Ý chính
+TRT EP compile subgraph được hỗ trợ thành TensorRT engine — lần đầu **rất chậm** (build). Bật `trt_engine_cache_enable` để cache engine cho lần sau. TRT EP tiện nhưng **không thay thế** TensorRT native khi cần control sâu về profile, plugin, calibration, tactic.
+:::
+
+```python
+providers = [
+    (
+        "TensorrtExecutionProvider",
+        {
+            "device_id": 0,
+            "trt_fp16_enable": True,
+            "trt_engine_cache_enable": True,
+            "trt_engine_cache_path": "./trt_cache",
+        },
+    ),
+    (
+        "CUDAExecutionProvider",
+        {"device_id": 0},
+    ),
+    "CPUExecutionProvider",
+]
+session = ort.InferenceSession("model.onnx", providers=providers)
+```
+
+Phân vùng graph:
+
+```text
+ORT partition graph
+  ├─ TRT-supported subgraphs   → TensorRT engine
+  ├─ Unsupported GPU subgraphs → CUDA EP
+  └─ Remaining nodes           → CPU EP
+```
+
+**Khi nào dùng TensorRT EP:**
+
+| Điều kiện | Đủ điều kiện? |
+|:----------|:-------------|
+| NVIDIA GPU deployment | ✓ |
+| Model có nhiều op TRT hỗ trợ (Conv, MatMul, Attention…) | ✓ |
+| Chấp nhận engine build time lần đầu | ✓ |
+| Có thể cache và reuse engine | ✓ |
+| Input shape ổn định hoặc có optimization profile | ✓ |
+| Đã có CUDA EP baseline để so sánh | ✓ |
+
+**Khi nào chưa nên dùng TensorRT EP:**
+
+| Tình huống | Lý do |
+|:-----------|:------|
+| ONNX model chưa sạch (shape inference thiếu) | TRT fail hoặc fallback nhiều |
+| Nhiều custom/unsupported ops | Ít subgraph cho TRT, ít speedup |
+| Chưa có CUDA EP baseline | Không có baseline để so sánh |
+| Chưa tách cold start khỏi warm latency | Dễ nhầm engine build time với inference time |
+| Dynamic shape rộng, chưa có profile rõ | Engine rebuild liên tục |
+
+**Engine cache:**
+
+```python
+trt_options = {
+    "trt_engine_cache_enable": True,
+    "trt_engine_cache_path": "./trt_cache",
+    "trt_fp16_enable": True,
+}
+```
+
+Sau lần đầu build, cache giúp startup nhanh hơn nhiều lần. Chú ý: nếu input shape nằm ngoài optimization profile đã cache, engine sẽ **rebuild**.
+
+::: {.callout-warning icon=false}
+## TensorRT EP không thay thế TensorRT native
+Khi cần control sâu — optimization profile, custom plugin, INT8 calibration, memory pool, CUDA stream, tactic selection, engine serialization, debugging tactic — bạn cần TensorRT native API (Lesson 4). TRT EP là convenience wrapper, không phải full TRT workflow.
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: TRT vs CUDA EP — khi nào TRT thắng?
+TRT build engine tối ưu cho GPU/model/precision cụ thể. Thường nhanh hơn CUDA EP **1.2–2.5×** cho CNN/Transformer đủ lớn. Nhưng:
+- Build time: vài giây đến phút (dùng cache)
+- Portability: engine gắn với GPU architecture, TRT version, precision mode
+- Fallback overhead: phần TRT không hỗ trợ → copy sang CUDA/CPU → copy lại
+- Dynamic shape: cần optimization profile, ngoài range → rebuild
+
+Nếu fallback nhiều và speedup thấp, xem xét simplify graph hoặc TRT native workflow.
+:::
+
+
+## I/O Binding và zero-copy mindset {#sec-iobinding}
+
+> `session.run(numpy)` đang copy dữ liệu bao nhiêu lần — và có thể tránh không?
+
+::: {.callout-important icon=false}
+## Ý chính
+Mặc định, `session.run(numpy_input)` copy CPU→GPU trước inference và GPU→CPU sau. Với model nhỏ hoặc output lớn, **copy dominate latency** chứ không phải compute. I/O Binding bind buffer trực tiếp trên device, loại bỏ copy không cần thiết.
+:::
+
+Mental model: **không để ORT tự quyết định copy mỗi lần** — bạn nói rõ input/output nằm ở đâu.
+
+Pipeline mặc định (anti-pattern khi đã preprocess/postprocess trên GPU):
+
+```text
+preprocessing CPU → copy GPU → model GPU → copy CPU → postprocessing CPU
+```
+
+Tương đương với `session.run(numpy)`:
+
+```text
+CPU numpy input  →  copy CPU→GPU  →  GPU compute  →  copy GPU→CPU  →  CPU numpy output
+```
+
+```{mermaid}
+%%| label: fig-l3-iobind
+%%| fig-cap: "Trái: session.run(numpy) copy hai chiều. Phải: I/O Binding giữ tensor trên GPU — copy về CPU chỉ khi cần."
+%%| fig-width: 6.5
+%%| fig-align: "center"
+flowchart LR
+  subgraph A["session.run(numpy)"]
+    C1([CPU in]) --> G1([GPU compute]) --> C2([CPU out])
+  end
+  subgraph B["I/O Binding"]
+    G2([GPU in]) --> G3([GPU compute]) --> G4([GPU out])
+  end
+  classDef cpu fill:#FFF4E5,stroke:#E09B3D,color:#5C3B10
+  classDef gpu fill:#EAF3FF,stroke:#4A90E2,color:#1F3A5F
+  class C1,C2 cpu
+  class G1,G2,G3,G4 gpu
+```
+
+**Zero-copy mindset** — ideal production GPU pipeline:
+
+```text
+preprocessing GPU  →  ORT input GPU  →  GPU compute  →  ORT output GPU  →  postprocess GPU
+                                                              ↓
+                                          copy kết quả gọn (scores, boxes) về CPU
+```
+
+Ví dụ vision serving: `decode CPU → resize/normalize GPU → ORT input GPU → ORT output GPU → NMS GPU → copy compact result về CPU`.
+
+Copy tensor lớn về CPU quá sớm làm mất lợi thế GPU. Copy kết quả cuối cùng về CPU để trả response là bình thường — nhưng không nên copy intermediate tensors.
+
+::: {.callout-tip icon=false collapse="true"}
+## Khi nào I/O Binding đáng?
+- Model nhỏ / batch 1: khác biệt thường không đáng kể
+- Model hoặc output lớn: I/O Binding giảm overhead rõ ràng
+- Downstream cũng chạy GPU (NMS, decode, postprocess): giữ output trên GPU tránh copy thừa
+- Luôn so sánh `session.run()` vs `run_with_iobinding()` sau warmup để biết thực tế với model cụ thể
+:::
+
+
+## Profiling: đo đúng trước khi tối ưu {#sec-profiling}
+
+> Làm thế nào biết latency nằm ở op nào — compute hay copy?
+
+::: {.callout-important icon=false}
+## Ý chính
+Không profiling thì rất dễ tối ưu sai chỗ. Bật `enable_profiling` để lấy JSON trace operator-level. Dùng Perfetto/Chrome tracing để visualize, tìm op dominate latency, copy overhead, hoặc fallback không ngờ.
+:::
+
+Tách latency theo thành phần trước khi profile:
+
+| Thành phần | Ví dụ |
+|:-----------|:------|
+| Session creation | Load, optimize, build TRT engine |
+| Warmup | Lazy init, kernel cache, allocator growth |
+| Input copy | CPU → GPU |
+| Compute | Conv/MatMul/Attention kernels |
+| Output copy | GPU → CPU |
+| Postprocessing | NMS, decode, threshold |
+| Queueing | Request chờ batch hoặc worker |
+
+**Bật profiling trong code:**
+
+```python
+import json
 import onnxruntime as ort
 
-sess_options = ort.SessionOptions()
-sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-sess_options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
-sess_options.intra_op_num_threads = 0
-sess_options.enable_profiling = True
+options = ort.SessionOptions()
+options.enable_profiling = True
+options.profile_file_prefix = "ort_profile"
 
 session = ort.InferenceSession(
     "model.onnx",
-    sess_options=sess_options,
-    providers=["CPUExecutionProvider"],
+    sess_options=options,
+    providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
 )
+
+for _ in range(100):
+    session.run(None, inputs)
+
+profile_file = session.end_profiling()   # trả về path JSON
+print("Profile saved:", profile_file)
 ```
 
-Các option hay dùng:
-
-| Option                     | Ý nghĩa                                                                 |
-|:---------------------------|:------------------------------------------------------------------------|
-| `graph_optimization_level` | Mức tối ưu graph                                                        |
-| `execution_mode`           | Chạy graph sequential hoặc parallel                                     |
-| `intra_op_num_threads`     | Số thread để parallelize bên trong một operator                         |
-| `inter_op_num_threads`     | Số thread để parallelize giữa các operator, khi dùng parallel execution |
-| `enable_profiling`         | Bật profiling trace                                                     |
-| `optimized_model_filepath` | Lưu optimized model ra file                                             |
-| `enable_cpu_mem_arena`     | Bật/tắt CPU memory arena                                                |
-| `enable_mem_pattern`       | Cho phép reuse memory pattern khi shape ổn định                         |
-
-
-## Graph optimization trong ONNX Runtime
-
-Graph optimization là quá trình biến đổi graph để chạy nhanh hơn nhưng vẫn giữ ý nghĩa tính toán.
-
-Ví dụ graph ban đầu:
-
-```text
-Conv -> BatchNorm -> Relu
-```
-
-có thể được fuse thành:
-
-```text
-FusedConvRelu
-```
-
-Hoặc:
-
-```text
-Constant -> Add -> Mul
-```
-
-có thể được constant-folding thành một tensor constant mới.
-
-### Mục tiêu của graph optimization
-
-Graph optimization có thể giúp:
-
-- Giảm số node.
-- Giảm số kernel launch.
-- Giảm memory allocation.
-- Loại bỏ node thừa.
-- Fuse nhiều operator thành một operator hiệu quả hơn.
-- Tận dụng layout hoặc kernel đặc biệt của provider.
-
-### Các mức optimization
-
-ONNX Runtime định nghĩa các mức phổ biến:
+**Đọc trace:**
 
 ```python
-ort.GraphOptimizationLevel.ORT_DISABLE_ALL
-ort.GraphOptimizationLevel.ORT_ENABLE_BASIC
-ort.GraphOptimizationLevel.ORT_ENABLE_EXTENDED
-ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+with open(profile_file, encoding="utf-8") as f:
+    events = json.load(f)
+
+for event in events[:10]:
+    print(event.get("name"), event.get("dur"), event.get("cat"))
 ```
 
-Bảng tóm tắt:
+Trace event có: `name` (op/event), `dur` (microseconds), `cat` (node, kernel, …), `pid`, `tid`, `ts`. Khi đọc, chú ý thêm **provider placement** (op chạy CPU dù session GPU = fallback) và event **kernel timing / memory-copy** (`MemcpyH2D`, `MemcpyD2H`). Mở bằng **Perfetto UI** (perfetto.dev) hoặc `chrome://tracing`.
 
-| Level                 | Ý nghĩa                                        |
-|:----------------------|:-----------------------------------------------|
-| `ORT_DISABLE_ALL`     | Tắt optimization                               |
-| `ORT_ENABLE_BASIC`    | Bật basic optimizations                        |
-| `ORT_ENABLE_EXTENDED` | Bật basic + extended                           |
-| `ORT_ENABLE_ALL`      | Bật tất cả, gồm cả layout optimizations nếu có |
+**Dùng `onnxruntime_perf_test`** (nếu có binary):
 
-### Basic optimizations
+```bash
+onnxruntime_perf_test -e cpu -r 100 toy_cnn.onnx
+onnxruntime_perf_test -e cuda -r 100 toy_cnn.onnx
+onnxruntime_perf_test -e tensorrt -r 10 -i "trt_fp16_enable|true" toy_cnn.onnx
+```
 
-Basic optimizations thường chạy trước graph partitioning, nên có thể áp dụng bất kể provider.
+Hữu ích khi muốn benchmark ngoài application code mà không viết script riêng.
 
-Ví dụ:
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: đọc profiling trace hiệu quả
+Trong trace, tìm:
+- Op có `dur` lớn nhất → bottleneck compute
+- Event tên chứa `MemcpyH2D` / `MemcpyD2H` → copy overhead đáng kể
+- Op chạy trên CPU trong session GPU → fallback không mong đợi
+- Khoảng trống lớn giữa các op → scheduling overhead hoặc stream sync
 
-- Constant folding.
-- Identity elimination.
-- Dropout elimination.
-- Conv + Add fusion.
-- Conv + BatchNorm fusion.
-- Reshape fusion.
+Với CUDA EP, GPU kernel time cần NVIDIA Nsight để đo chính xác — ORT trace chỉ đo từ góc CPU.
+:::
 
-Mental model:
+
+## Benchmark methodology {#sec-benchmark}
+
+> Average latency 3 ms đã đủ để deploy production chưa?
+
+::: {.callout-important icon=false}
+## Ý chính
+Benchmark đúng cần: môi trường cố định, artifact cố định, warmup đủ, **p50/p90/p99** (không chỉ average), batch sweep, và tách ORT-only vs end-to-end. p99 quan trọng hơn average vì trong production, 1% request chậm là điều user cảm nhận.
+:::
+
+**Fixed environment** — ghi lại trước khi benchmark:
 
 ```text
-Basic optimization = dọn graph và fold/fuse những pattern an toàn, phổ biến
+CPU model · GPU model · RAM
+Driver · CUDA · cuDNN · TensorRT version
+ONNX Runtime version · Python version · OS
 ```
 
-### Extended optimizations
-
-Extended optimizations thường phức tạp hơn và có thể phụ thuộc provider.
-
-Ví dụ:
-
-- GELU fusion.
-- LayerNorm fusion.
-- Attention fusion.
-- SkipLayerNorm fusion.
-- BiasGELU fusion.
-
-Mental model:
+**Fixed model artifact** — ghi lại:
 
 ```text
-Extended optimization = fuse pattern cấp model architecture, ví dụ Transformer/CNN blocks
+model name · opset version · input shape
+precision (FP32/FP16/INT8) · dynamic/static shape
+optimization level · provider list và options
 ```
 
-### Layout optimizations
+**Warmup:**
 
-Layout optimizations thay đổi data layout để phù hợp hơn với backend.
+```python
+# Loại bỏ: lazy init, kernel cache, allocator growth, cold kernel selection
+for _ in range(30):
+    session.run(None, inputs)
+```
 
-Ví dụ:
+Không tính warmup vào steady-state. Với TRT EP: lần đầu = engine build — cần warmup riêng sau khi cache đã load.
+
+**Percentile latency:**
+
+```python
+def percentile(values, p):
+    values = sorted(values)
+    k = int(round((len(values) - 1) * p / 100))
+    return values[k]
+
+# Đo: mean, p50, p90, p95, p99, min, max, throughput
+```
+
+Average có thể đẹp nhưng p99 xấu. p99 tệ = user cảm thấy lag 1 trong 100 request.
+
+**Batch size sweep:**
+
+| Batch | Mean ms | p99 ms | Throughput samples/s |
+|------:|--------:|-------:|---------------------:|
+| 1 | — | — | — |
+| 4 | — | — | — |
+| 8 | — | — | — |
+| 16 | — | — | — |
+| 32 | — | — | — |
 
 ```text
-NCHW -> NCHWc
+throughput = batch_size / (mean_ms / 1000)
 ```
 
-Trên một số CPU, layout khác có thể tận dụng vectorization tốt hơn.
+Batch nhỏ → latency thấp, GPU util thấp. Batch lớn → throughput cao, per-request latency tăng.
 
-Nhưng layout optimization thường provider/hardware-specific hơn. Optimized model sinh ra trên một máy có thể không portable hoàn toàn sang máy khác nếu optimization phụ thuộc instruction set hoặc provider.
-
-
-## Online optimization vs offline optimization
-
-### Online optimization
-
-Mặc định, khi bạn tạo `InferenceSession`, ORT có thể optimize graph ngay lúc session initialization.
+**Tách preprocessing / postprocessing:**
 
 ```text
-create session -> optimize graph -> run inference
+ORT-only latency     = session.run() thuần — loại trừ data prep
+end-to-end latency   = preprocess + ORT + postprocess
 ```
 
-Ưu điểm:
+Khi debug, không trộn lẫn. "ORT chậm" đôi khi thực ra là preprocess CPU dominate.
 
-- Dễ dùng.
-- Luôn optimize theo environment hiện tại.
 
-Nhược điểm:
+## Performance tuning checklist {#sec-tuning}
 
-- Tăng startup latency.
-- Mỗi lần tạo session lại phải optimize.
-- Không tốt nếu service cần cold start rất nhanh.
+> Khi model chậm, đi theo thứ tự nào để không bỏ sót?
 
-### Offline optimization
+::: {.callout-important icon=false}
+## Ý chính
+Không bắt đầu bằng TRT hay FP16 khi chưa qua các bước cơ bản. Thứ tự: kiểm tra provider → dtype/shape → optimization level → warmup → profiling → fallback → I/O Binding → threads → batch → TRT-specific options.
+:::
 
-Bạn có thể lưu optimized model ra disk:
+```python
+# 1. Kiểm tra provider đúng chưa
+print(ort.get_available_providers())
+print(session.get_providers())          # phải khớp kỳ vọng
+
+# 2. Kiểm tra input dtype / shape
+for i in session.get_inputs():
+    print(i.name, i.shape, i.type)
+x = np.random.randn(1, 3, 224, 224)    # ❌ float64 mặc định NumPy
+x = x.astype(np.float32)               # ✓
+# NLP / index tensors: int64 vs int32 cũng hay mismatch — luôn khớp i.type
+
+# 3. Bật graph optimization
+options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+# 4. Warmup trước khi đo
+for _ in range(30):
+    session.run(None, inputs)
+
+# 5. Profiling — tìm op dominate latency
+options.enable_profiling = True
+
+# 6. Kiểm tra fallback (nếu GPU)
+# Profiling trace: op nào chạy CPU dù session dùng GPU?
+# Hoặc bật verbose logging của ORT để xem partition/fallback
+
+# 7. I/O Binding nếu copy dominate
+# Bind input/output trên device — xem @sec-iobinding
+
+# 8. Tune threads nếu CPU EP
+options.intra_op_num_threads = 4       # nhiều session: chia cores
+options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL  # ổn định hơn khi tune intra_op
+
+# 9. Tune batch size theo traffic thực tế
+
+# 10. TRT EP: cache + FP16 + hiểu optimization profile khi dynamic shape
+trt_opts = {
+    "trt_engine_cache_enable": True,
+    "trt_fp16_enable": True,
+    # Dynamic shape → cấu hình/hiểu profile; shape ngoài profile có thể rebuild
+}
+```
+
+
+## Debug case studies {#sec-debug}
+
+> Khi inference có vấn đề, chẩn đoán như thế nào?
+
+::: {.callout-important icon=false}
+## Ý chính
+Bốn case study thường gặp nhất: (1) CUDA EP không load, (2) GPU chậm hơn CPU, (3) TRT build cực chậm lần đầu, (4) TRT ít speedup. Mỗi case có checklist riêng — đừng đoán, hãy đo.
+:::
+
+**Case 1 — CPU OK, CUDA lỗi hoặc không xuất hiện**
+
+Triệu chứng: `CPUExecutionProvider` OK; `CUDAExecutionProvider` không có trong `get_available_providers()` hoặc lỗi khi tạo session.
+
+Nguyên nhân phổ biến:
+
+1. Cài `onnxruntime` (CPU) thay vì `onnxruntime-gpu`
+2. CUDA/cuDNN runtime không tương thích version
+3. Driver NVIDIA không đủ mới
+4. Môi trường thiếu shared libraries (`libcudart`, `libcudnn`)
+5. Container không expose GPU (`--gpus all` thiếu)
+6. Dùng sai Python venv
+
+Checklist debug:
 
 ```python
 import onnxruntime as ort
-
-sess_options = ort.SessionOptions()
-sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-sess_options.optimized_model_filepath = "model_optimized.onnx"
-
-session = ort.InferenceSession(
-    "model.onnx",
-    sess_options=sess_options,
-    providers=["CPUExecutionProvider"],
-)
+print(ort.__version__)
+print(ort.get_available_providers())
+ort.print_debug_info()                 # in loading log đầy đủ
 ```
 
-Sau khi chạy đoạn trên, ORT sẽ tạo:
+```bash
+nvidia-smi                             # kiểm tra driver và GPU
+pip show onnxruntime onnxruntime-gpu   # chỉ một trong hai
+```
+
+Không nên cài lẫn cả hai package cùng venv. Tạo venv mới sạch thường nhanh hơn debug dependency rối.
+
+::: {.callout-tip icon=false collapse="true"}
+## Debug thêm: import torch trước
+```python
+import torch
+print("CUDA available:", torch.cuda.is_available())
+import onnxruntime as ort
+print(ort.get_available_providers())
+```
+Trong môi trường có PyTorch GPU, import `torch` trước có thể giúp preload một số CUDA/cuDNN libs mà ORT cần.
+:::
+
+**Case 2 — CUDA chậm hơn CPU**
+
+Triệu chứng:
 
 ```text
-model_optimized.onnx
+CPU: 3 ms
+CUDA: 7 ms
 ```
 
-Ưu điểm:
+| Nguyên nhân | Kiểm tra | Fix |
+|:------------|:---------|:----|
+| Model/batch quá nhỏ (batch = 1 thường chưa đủ) | Thử batch 8/16 | Tăng batch size |
+| Copy CPU→GPU→CPU mỗi `run()` | Profiling trace MemcpyH2D | I/O Binding |
+| Op fallback CPU | Profiling trace provider placement | Simplify graph / shape inference |
+| Đo cả session creation | Tách startup time | Warmup riêng |
+| Chưa warmup | Đo lại sau 30+ warmup | Bắt buộc warmup |
+| Input dtype float64 | `i.type` | `astype(np.float32)` |
+| Output lớn copy về CPU | Profiling MemcpyD2H | I/O Binding output |
+| GPU đang bận (job khác / multi-tenant) | `nvidia-smi` util/memory | Cô lập GPU hoặc giảm contention |
+| Power / GPU clocks chưa ổn định | `nvidia-smi -q -d CLOCK` | Warmup dài hơn; cố định power mode nếu lab |
 
-- Giảm chi phí optimize ở startup.
-- Có thể inspect optimized graph.
-- Hữu ích để so sánh node count trước/sau.
+**Case 3 — TensorRT EP lần đầu cực chậm**
 
-Nhược điểm:
+Triệu chứng:
 
-- Optimized graph có thể phụ thuộc provider/hardware/session options.
-- Không nên assume optimized graph cho GPU chạy đúng/tốt trên CPU khác.
-- Với TensorRT EP, engine cache/EP context có cơ chế riêng cần hiểu thêm.
+```text
+Session creation / first run: hàng giây đến phút
+Steady-state sau đó: nhanh
+```
 
-## Inspect input/output metadata
+Đây là **bình thường** — TensorRT cần build engine. Không nhầm build time với inference latency.
 
-Trước khi run model, luôn inspect input/output:
+Giải pháp:
 
 ```python
-import onnxruntime as ort
+trt_options = {
+    "trt_engine_cache_enable": True,
+    "trt_engine_cache_path": "./trt_cache",
+}
+```
 
+Sau lần đầu build, cache giúp startup nhanh. Chú ý: nếu input shape nằm ngoài optimization profile đã cache, engine có thể rebuild.
+
+**Case 4 — TensorRT EP ít hoặc không speedup**
+
+Triệu chứng:
+
+```text
+Có TRT EP nhưng speedup so CUDA EP thấp
+Profiling: nhiều node chạy CUDA EP hoặc CPU EP
+```
+
+Nguyên nhân:
+
+- Operator không được TRT hỗ trợ (data-dependent shape, custom op)
+- Shape inference thiếu → TRT không partition được nhiều
+- Dynamic shape phức tạp, profile chưa phù hợp
+- Graph có pattern không TRT-friendly (nhiều reshape/topk xen kẽ)
+
+Giải pháp theo thứ tự:
+
+1. Chạy `onnx.shape_inference.infer_shapes()` trước khi dùng TRT EP
+2. Simplify graph bằng `onnx-simplifier` nếu phù hợp
+3. Kiểm tra log unsupported ops
+4. Viết TRT plugin nếu op cụ thể quan trọng
+5. Chấp nhận CUDA fallback cho phần còn lại
+6. Nếu cần control sâu → TensorRT native workflow (Lesson 4)
+
+
+## Common mistakes {#sec-mistakes}
+
+> Những lỗi nào lặp đi lặp lại nhất khi mới làm inference engineering?
+
+::: {.callout-important icon=false}
+## Ý chính
+Tám lỗi phổ biến, đều phòng tránh được bằng thói quen: chỉ định providers rõ, đúng order, reuse session, warmup, đo p99, cast float32, hiểu output copy, tách cold start TRT.
+:::
+
+| # | Lỗi | Hậu quả | Fix |
+|:--|:----|:--------|:----|
+| 1 | Không chỉ định `providers` | Dựa vào default không kiểm soát | Luôn truyền `providers=[…]` rõ ràng |
+| 2 | Provider order sai: `["CPU…", "CUDA…"]` | CPU ưu tiên dù có GPU | GPU provider đứng đầu |
+| 3 | Tạo session trong `predict()` | Mỗi request gánh overhead khởi tạo | Session toàn cục, reuse |
+| 4 | Benchmark không warmup | Cold run không đại diện steady-state | Warmup ≥ 30 lần trước khi đo |
+| 5 | Chỉ đo average latency | p99 có thể xấu dù mean đẹp | Đo mean/p50/p90/p99/min/max |
+| 6 | NumPy dtype float64 | ORT phải convert, overhead và sai kết quả | `.astype(np.float32)` |
+| 7 | Quên output đang copy về CPU | Mất lợi thế GPU khi downstream cũng GPU | I/O Binding hoặc kiểm tra `device_name()` |
+| 8 | So TRT cold start với CUDA warm run | TRT "thua" vì đang build engine | Tách startup vs steady-state |
+
+::: {.callout-tip icon=false collapse="true"}
+## Sai / đúng — ba lỗi hay gặp nhất
+
+```python
+# ❌ Mistake 1–2: default hoặc order sai
+session = ort.InferenceSession("model.onnx")
 session = ort.InferenceSession(
     "model.onnx",
-    providers=["CPUExecutionProvider"],
+    providers=["CPUExecutionProvider", "CUDAExecutionProvider"],
 )
 
-print("Providers:", session.get_providers())
+# ✓ Explicit + GPU trước
+session = ort.InferenceSession(
+    "model.onnx",
+    providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
+)
 
-print("Inputs:")
-for x in session.get_inputs():
-    print("  name:", x.name)
-    print("  shape:", x.shape)
-    print("  type:", x.type)
+# ❌ Mistake 6: float64
+x = np.random.randn(1, 3, 224, 224)
+# ✓
+x = np.random.randn(1, 3, 224, 224).astype(np.float32)
+```
+:::
 
-print("Outputs:")
-for y in session.get_outputs():
-    print("  name:", y.name)
-    print("  shape:", y.shape)
-    print("  type:", y.type)
+
+## Production pattern và checklist {#sec-production}
+
+> Service production tối thiểu trông như thế nào — và deploy cần kiểm gì?
+
+::: {.callout-important icon=false}
+## Ý chính
+Pattern tối thiểu: reuse session, explicit providers, `ORT_ENABLE_ALL`, warmup tại startup, validate dtype. Đã đủ cho phần lớn use case. Thêm I/O Binding và batching khi cần throughput cao hơn.
+:::
+
+```python
+import numpy as np
+import onnxruntime as ort
+
+
+class OrtModel:
+    def __init__(self, model_path: str):
+        options = ort.SessionOptions()
+        options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+        self.session = ort.InferenceSession(
+            model_path,
+            sess_options=options,
+            providers=self._select_providers(),
+        )
+        self.input_name = self.session.get_inputs()[0].name
+        self.output_names = [x.name for x in self.session.get_outputs()]
+        self._warmup()
+
+    def _select_providers(self):
+        avail = ort.get_available_providers()
+        if "TensorrtExecutionProvider" in avail:
+            return [
+                ("TensorrtExecutionProvider", {
+                    "trt_fp16_enable": True,
+                    "trt_engine_cache_enable": True,
+                    "trt_engine_cache_path": "./trt_cache",
+                }),
+                "CUDAExecutionProvider",
+                "CPUExecutionProvider",
+            ]
+        if "CUDAExecutionProvider" in avail:
+            return ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        return ["CPUExecutionProvider"]
+
+    def _warmup(self):
+        # Thay shape theo model thật
+        x = np.random.randn(1, 3, 224, 224).astype(np.float32)
+        for _ in range(10):
+            self.session.run(self.output_names, {self.input_name: x})
+
+    def predict(self, x: np.ndarray) -> list:
+        if x.dtype != np.float32:
+            x = x.astype(np.float32)
+        return self.session.run(self.output_names, {self.input_name: x})
 ```
 
-Output có thể giống:
+Pattern này chưa xử lý batching, concurrency hay I/O Binding — nhưng đúng ở mức căn bản: reuse session, explicit providers, optimization, warmup, validate dtype.
 
-```text
-Inputs:
-  name: images
-  shape: [1, 3, 224, 224]
-  type: tensor(float)
-Outputs:
-  name: logits
-  shape: [1, 1000]
-  type: tensor(float)
-```
+::: {.callout-tip icon=false collapse="true"}
+## Production checklist đầy đủ
 
-Với dynamic batch:
+**Model artifact**
 
-```text
-shape: ['batch', 3, 224, 224]
-```
+- [ ] ONNX model đã validate bằng `onnx.checker.check_model()`
+- [ ] Input/output names rõ ràng, được ghi lại
+- [ ] Static/dynamic shape được hiểu rõ
+- [ ] Opset phù hợp với ORT version target
+- [ ] Accuracy so với framework gốc đã kiểm
 
-hoặc:
+**Runtime configuration**
 
-```text
-shape: [None, 3, 224, 224]
-```
+- [ ] Providers chỉ định rõ ràng trong code
+- [ ] Provider order đúng (GPU trước CPU)
+- [ ] `graph_optimization_level` được set
+- [ ] Thread settings phù hợp nếu chạy CPU
+- [ ] CUDA/TRT options được ghi lại và có lý do
+- [ ] Engine cache bật nếu dùng TRT EP
 
-Nếu input name sai, ORT thường báo lỗi kiểu:
+**Performance**
 
-```text
-Required inputs are missing from input feed
-```
+- [ ] Warmup tại startup
+- [ ] Đã đo p50/p95/p99 (không chỉ average)
+- [ ] Batch size sweep hoàn chỉnh
+- [ ] ORT-only và end-to-end latency được đo tách biệt
+- [ ] Profiling trace đã được xem
+- [ ] Fallback đã được kiểm tra
+- [ ] CPU/GPU memory copy overhead đã được phân tích
+
+**Service**
+
+- [ ] Session tạo một lần tại startup
+- [ ] Input validation: dtype + shape check
+- [ ] Concurrency được kiểm soát
+- [ ] Metrics: p99 latency, throughput, error rate
+- [ ] Logs có provider/session config
+- [ ] Canary hoặc rollback plan
+:::
 
 
-## Mini Lab 1 — Tạo model ONNX nhỏ để benchmark
+## Mini-lab {.unnumbered}
 
-Tạo file `export_toy_cnn.py`:
+::: {.callout-note icon=false}
+## Thực hành — ToyCNN → benchmark → optimize → profile → (GPU) I/O Binding
+Lab 1–5 chạy được trên CPU. Lab 6 cần `CUDAExecutionProvider`. Chạy theo thứ tự; mỗi lab build trên lab trước.
+:::
+
+### Lab 1 — Export ToyCNN {.unnumbered}
+
+Tạo `export_toy_cnn.py`:
 
 ```python
 import torch
@@ -733,26 +1214,17 @@ torch.onnx.export(
     output_names=["logits"],
     opset_version=18,
 )
-
 print("Exported toy_cnn.onnx")
 ```
 
-Chạy:
-
 ```bash
 python export_toy_cnn.py
-```
-
-Kiểm tra file:
-
-```bash
 ls -lh toy_cnn.onnx
 ```
 
+### Lab 2 — Load ORT và inspect metadata {.unnumbered}
 
-## Mini Lab 2 — Load model bằng ONNX Runtime
-
-Tạo file `run_ort_basic.py`:
+Tạo `run_ort_basic.py`:
 
 ```python
 import numpy as np
@@ -784,23 +1256,15 @@ print("Output shape:", y[0].shape)
 print("Output dtype:", y[0].dtype)
 ```
 
-Chạy:
-
 ```bash
 python run_ort_basic.py
 ```
 
-Bạn cần xác nhận:
+Xác nhận: session dùng provider nào, input name là gì, shape/dtype đúng chưa.
 
-- Session dùng provider nào.
-- Input name là gì.
-- Shape đúng chưa.
-- Output có đúng shape không.
+### Lab 3 — Benchmark latency đúng cách {.unnumbered}
 
-
-## Mini Lab 3 — Benchmark latency đúng cách
-
-Tạo file `benchmark_ort.py`:
+Tạo `benchmark_ort.py`:
 
 ```python
 import time
@@ -815,12 +1279,11 @@ def percentile(values, p):
 
 
 def benchmark(session, input_name, x, warmup=30, repeat=200):
-    # Warmup: bỏ qua chi phí lazy init, cache, allocator, kernel selection.
+    # Warmup: bỏ qua lazy init, cache, allocator, kernel selection
     for _ in range(warmup):
         session.run(None, {input_name: x})
 
     latencies_ms = []
-
     for _ in range(repeat):
         start = time.perf_counter()
         session.run(None, {input_name: x})
@@ -829,18 +1292,17 @@ def benchmark(session, input_name, x, warmup=30, repeat=200):
 
     return {
         "mean_ms": sum(latencies_ms) / len(latencies_ms),
-        "p50_ms": percentile(latencies_ms, 50),
-        "p90_ms": percentile(latencies_ms, 90),
-        "p99_ms": percentile(latencies_ms, 99),
-        "min_ms": min(latencies_ms),
-        "max_ms": max(latencies_ms),
+        "p50_ms":  percentile(latencies_ms, 50),
+        "p90_ms":  percentile(latencies_ms, 90),
+        "p99_ms":  percentile(latencies_ms, 99),
+        "min_ms":  min(latencies_ms),
+        "max_ms":  max(latencies_ms),
     }
 
 
 def make_session(model_path, providers):
     options = ort.SessionOptions()
     options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-
     return ort.InferenceSession(
         model_path,
         sess_options=options,
@@ -850,17 +1312,13 @@ def make_session(model_path, providers):
 
 model_path = "toy_cnn.onnx"
 batch_size = 1
-
 x = np.random.randn(batch_size, 3, 224, 224).astype(np.float32)
 
-provider_sets = [
-    ["CPUExecutionProvider"],
-]
+provider_sets = [["CPUExecutionProvider"]]
 
 available = ort.get_available_providers()
 if "CUDAExecutionProvider" in available:
     provider_sets.append(["CUDAExecutionProvider", "CPUExecutionProvider"])
-
 if "TensorrtExecutionProvider" in available:
     provider_sets.append([
         "TensorrtExecutionProvider",
@@ -869,18 +1327,14 @@ if "TensorrtExecutionProvider" in available:
     ])
 
 for providers in provider_sets:
-    print("=" * 80)
+    print("=" * 60)
     print("Providers:", providers)
-
     session = make_session(model_path, providers)
     input_name = session.get_inputs()[0].name
-
     result = benchmark(session, input_name, x)
     for k, v in result.items():
-        print(f"{k}: {v:.3f}")
+        print(f"  {k}: {v:.3f}")
 ```
-
-Chạy:
 
 ```bash
 python benchmark_ort.py
@@ -888,27 +1342,13 @@ python benchmark_ort.py
 
 Điều cần quan sát:
 
-- CPU vs CUDA có khác nhau không?
-- p99 có cao bất thường không?
-- min và max cách xa nhau không?
-- Lần chạy đầu tiên có bị tính vào latency không?
-- Batch size 1 có thể chưa đủ để GPU thắng CPU.
+- Lần chạy đầu tiên có bị tính vào latency không? (warmup đã tách chưa?)
+- CPU vs CUDA có khác không? p99 có cao bất thường không? min và max cách xa nhau không?
+- `batch_size = 1` có thể chưa đủ để GPU thắng CPU — thử `1 / 4 / 8 / 16`
 
-Thử đổi:
+### Lab 4 — So sánh graph trước/sau optimization {.unnumbered}
 
-```python
-batch_size = 1
-batch_size = 4
-batch_size = 8
-batch_size = 16
-```
-
-và chạy lại. Bạn sẽ thấy GPU thường có lợi hơn khi workload đủ lớn.
-
-
-## Mini Lab 4 — So sánh graph trước và sau optimization
-
-Tạo file `save_optimized_graph.py`:
+Tạo `save_optimized_graph.py`:
 
 ```python
 import onnx
@@ -939,38 +1379,22 @@ print("Optimized model saved to:", optimized_path)
 print("Optimized node count:", count_nodes(optimized_path))
 ```
 
-Chạy:
-
 ```bash
 python save_optimized_graph.py
 ```
 
-Bạn có thể thấy node count giảm do:
-
-- BatchNorm folding.
-- Conv fusion.
-- Redundant node elimination.
-- Constant folding.
-
-Mở hai file bằng Netron:
+Mở cả hai file bằng Netron:
 
 ```bash
 netron toy_cnn.onnx
 netron toy_cnn_optimized.onnx
 ```
 
-Quan sát:
+Quan sát: node nào biến mất? Pattern nào được fuse? Có node domain `com.microsoft.*` không? Optimized graph = artifact debug/deploy cụ thể — không assume portable sang môi trường khác.
 
-- Node nào biến mất?
-- Pattern nào được fuse?
-- Có node mới nào thuộc domain đặc biệt của ORT không?
+### Lab 5 — Bật profiling trace {.unnumbered}
 
-> Ghi chú: optimized model không nhất thiết là artifact portable cho mọi backend. Hãy xem nó như artifact phục vụ deployment cụ thể hoặc debugging.
-
-
-## Mini Lab 5 — Bật profiling trace
-
-Tạo file `profile_ort.py`:
+Tạo `profile_ort.py`:
 
 ```python
 import json
@@ -1005,303 +1429,20 @@ with open(profile_file, "r", encoding="utf-8") as f:
 
 print("Number of profile events:", len(events))
 
-# In vài event đầu để bạn thấy format.
+# In vài event đầu để xem format
 for event in events[:10]:
     print(event.get("name"), event.get("dur"), event.get("cat"))
 ```
-
-Chạy:
 
 ```bash
 python profile_ort.py
 ```
 
-File profile thường là JSON trace có thể mở bằng:
+Mở file JSON bằng Perfetto UI hoặc `chrome://tracing`. Tìm: op tốn thời gian nhất, event copy/memory đáng ngờ, thời gian nằm ở compute hay overhead.
 
-- Perfetto UI.
-- Chrome/Edge tracing.
-- Các tool phân tích trace tương thích.
+### Lab 6 — I/O Binding với CUDA {.unnumbered}
 
-Bạn cần quan sát:
-
-- Operator nào tốn thời gian nhất.
-- Có node copy/memory-related đáng chú ý không.
-- Thời gian nằm ở compute hay overhead.
-- Có operator bất thường dominate latency không.
-
-
-## Thread management trên CPU
-
-Khi chạy CPU EP, ONNX Runtime có thread pool để parallelize computation.
-
-Có hai khái niệm:
-
-### Intra-op parallelism
-
-Parallelize bên trong một operator.
-
-Ví dụ:
-
-```text
-Một MatMul lớn -> chia việc cho nhiều CPU threads
-```
-
-Cấu hình:
-
-```python
-options = ort.SessionOptions()
-options.intra_op_num_threads = 4
-```
-
-### Inter-op parallelism
-
-Parallelize giữa nhiều operator độc lập trong graph.
-
-Ví dụ graph có hai branch song song:
-
-```text
-        -> branch A ->
-Input                  Concat -> Output
-        -> branch B ->
-```
-
-Cấu hình:
-
-```python
-options = ort.SessionOptions()
-options.execution_mode = ort.ExecutionMode.ORT_PARALLEL
-options.inter_op_num_threads = 2
-```
-
-### Khi nào chỉnh threads?
-
-Bạn nên chỉnh threads khi:
-
-- Chạy CPU inference.
-- Chạy nhiều model/session song song.
-- CPU utilization quá cao.
-- p99 latency biến động.
-- Service chạy trong container bị giới hạn CPU.
-- Multi-tenant server có nhiều service tranh CPU.
-
-Rule of thumb:
-
-```text
-Bắt đầu với default.
-Benchmark.
-Nếu chạy nhiều sessions song song, giảm intra_op_num_threads để tránh oversubscription.
-Nếu model có nhiều branch, thử ORT_PARALLEL + inter_op_num_threads.
-Nếu p99 cao, test thread affinity/spinning/dynamic block settings.
-```
-
-
-## CUDA Execution Provider
-
-`CUDAExecutionProvider` dùng NVIDIA GPU thông qua CUDA ecosystem.
-
-Tạo session:
-
-```python
-session = ort.InferenceSession(
-    "model.onnx",
-    providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
-)
-```
-
-Cấu hình chi tiết hơn:
-
-```python
-providers = [
-    (
-        "CUDAExecutionProvider",
-        {
-            "device_id": 0,
-            "arena_extend_strategy": "kNextPowerOfTwo",
-            "gpu_mem_limit": 2 * 1024 * 1024 * 1024,
-            "cudnn_conv_algo_search": "EXHAUSTIVE",
-            "do_copy_in_default_stream": True,
-        },
-    ),
-    "CPUExecutionProvider",
-]
-
-session = ort.InferenceSession("model.onnx", providers=providers)
-```
-
-Các option thường gặp:
-
-| Option                      | Ý nghĩa                                                             |
-|:----------------------------|:--------------------------------------------------------------------|
-| `device_id`                 | GPU index                                                           |
-| `gpu_mem_limit`             | Giới hạn memory arena của GPU                                       |
-| `arena_extend_strategy`     | Cách memory arena tăng kích thước                                   |
-| `cudnn_conv_algo_search`    | Cách chọn thuật toán convolution của cuDNN                          |
-| `do_copy_in_default_stream` | Copy trên default stream hay không                                  |
-| `use_tf32`                  | Cho phép TF32 trên NVIDIA Ampere+ cho một số FP32 matmul/conv       |
-| `enable_cuda_graph`         | Dùng CUDA Graph để giảm CPU launch overhead trong điều kiện phù hợp |
-
-### Lưu ý về CUDA/cuDNN compatibility
-
-`onnxruntime-gpu` phải tương thích với major version CUDA/cuDNN trong môi trường. Khi dùng chung với PyTorch GPU, cần chú ý version PyTorch đang kéo theo CUDA/cuDNN nào.
-
-Một mẹo thực tế:
-
-```python
-import torch
-import onnxruntime as ort
-
-# Import torch trước có thể giúp preload một số CUDA/cuDNN libraries
-# trong môi trường mà PyTorch đã cài sẵn các runtime library tương ứng.
-print(torch.__version__)
-print(ort.get_available_providers())
-```
-
-Nếu provider không load được, kiểm tra:
-
-```python
-import onnxruntime as ort
-ort.print_debug_info()
-```
-
-
-## TensorRT Execution Provider
-
-`TensorrtExecutionProvider` cho phép ONNX Runtime dùng TensorRT để optimize subgraph.
-
-Tạo session:
-
-```python
-import onnxruntime as ort
-
-providers = [
-    (
-        "TensorrtExecutionProvider",
-        {
-            "device_id": 0,
-            "trt_fp16_enable": True,
-            "trt_engine_cache_enable": True,
-            "trt_engine_cache_path": "./trt_cache",
-        },
-    ),
-    (
-        "CUDAExecutionProvider",
-        {
-            "device_id": 0,
-        },
-    ),
-    "CPUExecutionProvider",
-]
-
-session = ort.InferenceSession(
-    "model.onnx",
-    providers=providers,
-)
-```
-
-Mental model:
-
-```text
-ONNX Runtime
-   |
-   | partition graph
-   v
-TensorRT-supported subgraphs -> TensorRT engine
-Unsupported GPU subgraphs    -> CUDA EP
-Remaining nodes              -> CPU EP
-```
-
-### Khi nào dùng TensorRT EP?
-
-TensorRT EP phù hợp khi:
-
-- Deployment trên NVIDIA GPU.
-- Model có nhiều operator TensorRT hỗ trợ.
-- Bạn cần latency/throughput tốt hơn CUDA EP.
-- Bạn chấp nhận engine build time.
-- Bạn có thể cache engine.
-- Input shape tương đối ổn định hoặc có profile rõ ràng.
-
-### Khi nào chưa nên dùng TensorRT EP?
-
-Không nên nhảy ngay vào TensorRT EP nếu:
-
-- ONNX model chưa sạch.
-- Shape inference chưa rõ.
-- Có nhiều unsupported/custom ops.
-- Bạn chưa benchmark CUDA EP baseline.
-- Bạn chưa tách cold start khỏi warm latency.
-- Input shape thay đổi quá rộng và chưa có optimization profile hợp lý.
-
-### Engine cache
-
-TensorRT engine build có thể chậm. Bật engine cache giúp lần sau load nhanh hơn:
-
-```python
-trt_options = {
-    "trt_engine_cache_enable": True,
-    "trt_engine_cache_path": "./trt_cache",
-}
-```
-
-Với dynamic shape, cache còn phải gắn với profile. Nếu input shape nằm ngoài range/profile đã cache, engine có thể bị rebuild.
-
-### TensorRT EP không thay thế việc học TensorRT native
-
-TensorRT EP rất tiện, nhưng khi cần control sâu:
-
-- optimization profile,
-- plugin,
-- calibration,
-- memory,
-- stream,
-- engine serialization,
-- debugging tactic selection,
-
-bạn vẫn cần học TensorRT native ở Lesson 4.
-
----
-
-## I/O Binding là gì?
-
-Mặc định, khi bạn dùng:
-
-```python
-session.run(None, {"input": numpy_array})
-```
-
-input là Numpy array trên CPU. Nếu graph chạy trên GPU, ORT phải copy input từ CPU sang GPU. Output mặc định cũng thường được trả về CPU.
-
-Pipeline mặc định:
-
-```text
-CPU numpy input
-   |
-   | copy CPU -> GPU
-   v
-GPU compute
-   |
-   | copy GPU -> CPU
-   v
-CPU numpy output
-```
-
-Với model nhỏ hoặc output lớn, thời gian copy có thể dominate latency.
-
-**I/O Binding** cho phép bạn bind input/output trực tiếp trên device.
-
-Mental model:
-
-```text
-Không để ORT tự quyết định copy I/O mỗi lần.
-Bạn nói rõ input ở đâu, output muốn nằm ở đâu.
-```
-
-
-## Mini Lab 6 — I/O Binding với CUDA
-
-Phần này cần `CUDAExecutionProvider`.
-
-Tạo file `iobinding_cuda.py`:
+Cần `CUDAExecutionProvider`. Tạo `iobinding_cuda.py`:
 
 ```python
 import time
@@ -1322,7 +1463,7 @@ output_name = session.get_outputs()[0].name
 
 x_cpu = np.random.randn(1, 3, 224, 224).astype(np.float32)
 
-# Copy input into an OrtValue on CUDA device 0.
+# Copy input vào OrtValue trên CUDA device 0
 x_gpu = ort.OrtValue.ortvalue_from_numpy(x_cpu, "cuda", 0)
 
 io_binding = session.io_binding()
@@ -1336,7 +1477,7 @@ io_binding.bind_input(
     buffer_ptr=x_gpu.data_ptr(),
 )
 
-# Yêu cầu ORT allocate output trên GPU.
+# Yêu cầu ORT allocate output trên GPU
 io_binding.bind_output(
     name=output_name,
     device_type="cuda",
@@ -1355,848 +1496,138 @@ for _ in range(100):
     latencies.append((end - start) * 1000)
 
 outputs_gpu = io_binding.get_outputs()
-print("Output OrtValue device:", outputs_gpu[0].device_name())
+print("Output device:", outputs_gpu[0].device_name())
 print("Mean latency ms:", sum(latencies) / len(latencies))
 
-# Chỉ copy về CPU khi thật sự cần.
+# Chỉ copy về CPU khi thật sự cần
 y_cpu = outputs_gpu[0].numpy()
 print("Output shape:", y_cpu.shape)
 ```
 
-So sánh với `session.run()` thông thường.
-
-Điều cần quan sát:
-
-- Với model nhỏ, khác biệt có thể không lớn.
-- Với model lớn hoặc output lớn, I/O Binding có thể giảm overhead đáng kể.
-- Nếu downstream cũng chạy GPU, giữ output trên GPU sẽ tránh copy không cần thiết.
-
-## Device tensor và zero-copy mindset
-
-Trong production GPU pipeline, ideal flow là:
-
-```text
-preprocessing GPU -> input tensor GPU -> model GPU -> output tensor GPU -> postprocessing GPU
-```
-
-Không phải:
-
-```text
-preprocessing CPU -> copy to GPU -> model GPU -> copy to CPU -> postprocessing CPU
-```
-
-I/O Binding giúp bạn tiến gần hơn tới pipeline đầu tiên.
-
-Ví dụ trong vision serving:
-
-```text
-decode image CPU
-resize/normalize GPU
-ORT input GPU
-ORT output GPU
-NMS GPU
-return compact result CPU
-```
-
-Bạn vẫn phải copy kết quả cuối cùng về CPU để trả response, nhưng không nên copy tensor lớn về CPU quá sớm.
-
-
-## Profiling: đo đúng trước khi tối ưu
-
-Không profiling thì rất dễ tối ưu sai chỗ.
-
-Bạn cần phân biệt:
-
-| Thành phần       | Ví dụ                                             |
-|:-----------------|:--------------------------------------------------|
-| Session creation | Load model, optimize graph, build TensorRT engine |
-| Warmup           | Lazy init, kernel cache, allocator growth         |
-| Input copy       | CPU -> GPU                                        |
-| Compute          | Conv/MatMul/Attention kernels                     |
-| Output copy      | GPU -> CPU                                        |
-| Postprocessing   | NMS, decode, threshold                            |
-| Queueing         | Request chờ batch hoặc worker                     |
-
-### Bật profiling trong code
-
-```python
-options = ort.SessionOptions()
-options.enable_profiling = True
-
-session = ort.InferenceSession(
-    "model.onnx",
-    sess_options=options,
-    providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
-)
-
-# Run inference nhiều lần
-for _ in range(100):
-    session.run(None, inputs)
-
-profile_file = session.end_profiling()
-print(profile_file)
-```
-
-### Đọc trace
-
-Trace JSON cho bạn thấy event-level information như:
-
-- operator name,
-- duration,
-- thread,
-- provider,
-- kernel timing,
-- memory/copy-related events tùy provider/build.
-
-Bạn có thể mở bằng:
-
-```text
-Perfetto UI
-Chrome tracing
-Edge tracing
-```
-
-### Dùng `onnxruntime_perf_test`
-
-Nếu có binary `onnxruntime_perf_test`, bạn có thể chạy:
-
 ```bash
-onnxruntime_perf_test -e cpu -r 100 toy_cnn.onnx
-onnxruntime_perf_test -e cuda -r 100 toy_cnn.onnx
-onnxruntime_perf_test -e tensorrt -r 10 -i "trt_fp16_enable|true" toy_cnn.onnx
+python iobinding_cuda.py
 ```
 
-Tool này hữu ích khi bạn muốn benchmark ngoài application code.
-
-
-## Benchmark methodology chuẩn
-
-Một benchmark inference tốt nên có:
-
-### Fixed environment
-
-Ghi lại:
-
-```text
-CPU model
-GPU model
-RAM
-Driver version
-CUDA version
-cuDNN version
-TensorRT version
-ONNX Runtime version
-Python version
-OS
-```
-
-### Fixed model artifact
-
-Ghi lại:
-
-```text
-model name
-opset version
-input shape
-precision
-dynamic/static shape
-optimization level
-provider list
-provider options
-```
-
-### Warmup
-
-Không tính warmup vào kết quả steady-state.
-
-```python
-for _ in range(30):
-    session.run(None, inputs)
-```
-
-### Percentiles
-
-Không chỉ đo average.
-
-Nên đo:
-
-```text
-mean
-p50
-p90
-p95
-p99
-min
-max
-throughput
-```
-
-Average có thể đẹp nhưng p99 xấu.
-
-### Batch size sweep
-
-Test nhiều batch size:
-
-```text
-batch = 1, 2, 4, 8, 16, 32
-```
-
-Bạn cần biết điểm trade-off:
-
-```text
-batch nhỏ  -> latency thấp hơn nhưng GPU utilization thấp
-batch lớn  -> throughput cao hơn nhưng per-request latency tăng
-```
-
-### Tách preprocessing/postprocessing
-
-Benchmark runtime riêng:
-
-```text
-ORT-only latency
-```
-
-và end-to-end latency:
-
-```text
-preprocess + ORT + postprocess
-```
-
-Cả hai đều cần, nhưng không được trộn lẫn khi debug.
-
-
-## Performance tuning checklist
-
-Khi model chậm, đi theo thứ tự này.
-
-### Kiểm tra provider
-
-```python
-print(ort.get_available_providers())
-print(session.get_providers())
-```
-
-Đảm bảo provider đúng và priority đúng.
-
-### Kiểm tra input/output
-
-```python
-for i in session.get_inputs():
-    print(i.name, i.shape, i.type)
-```
-
-Đảm bảo dtype đúng:
-
-```text
-float32 vs float64
-int64 vs int32
-```
-
-Numpy mặc định có thể tạo `float64` nếu bạn không cast:
-
-```python
-x = np.random.randn(1, 3, 224, 224)  # float64, thường sai
-x = x.astype(np.float32)             # đúng hơn cho model float32
-```
-
-### Bật graph optimization
-
-```python
-options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-```
-
-### Warmup
-
-Không benchmark cold run.
-
-### Bật profiling
-
-Tìm operator dominate latency.
-
-### Kiểm tra fallback
-
-Nếu dùng CUDA/TensorRT, bật verbose logging hoặc xem profiling để phát hiện node chạy CPU.
-
-### Dùng I/O Binding
-
-Nếu input/output copy dominate latency, bind data trên device.
-
-### Tune thread nếu CPU
-
-Nếu CPU EP:
-
-```python
-options.intra_op_num_threads = 4
-options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
-```
-
-Nếu nhiều sessions chạy song song, tránh mỗi session dùng quá nhiều threads.
-
-### Tune batch size
-
-Benchmark theo batch size thực tế.
-
-### Với TensorRT EP
-
-Bật engine cache:
-
-```python
-"trt_engine_cache_enable": True
-```
-
-Cân nhắc FP16:
-
-```python
-"trt_fp16_enable": True
-```
-
-Với dynamic shape, cần hiểu optimization profile.
-
-
-
-## Debug case study 1 — Model chạy được CPU nhưng CUDA lỗi
-
-Triệu chứng:
-
-```text
-CPUExecutionProvider chạy được
-CUDAExecutionProvider lỗi hoặc không xuất hiện
-```
-
-Khả năng cao:
-
-1. Bạn cài `onnxruntime` thay vì `onnxruntime-gpu`.
-2. CUDA/cuDNN runtime không tương thích.
-3. Driver NVIDIA không đủ mới.
-4. Environment thiếu shared libraries.
-5. Container không expose GPU.
-6. Dùng sai Python environment.
-
-Checklist:
-
-```python
-import onnxruntime as ort
-print(ort.__version__)
-print(ort.get_available_providers())
-ort.print_debug_info()
-```
-
-Kiểm tra GPU:
-
-```bash
-nvidia-smi
-```
-
-Kiểm tra package:
-
-```bash
-pip show onnxruntime
-pip show onnxruntime-gpu
-```
-
-Không nên cài lẫn lung tung nhiều package nếu không biết rõ environment. Tạo venv mới thường nhanh hơn debug dependency rối.
-
-
-## Debug case study 2 — CUDA chạy chậm hơn CPU
-
-Triệu chứng:
-
-```text
-CPU: 3 ms
-CUDA: 7 ms
-```
-
-Khả năng:
-
-1. Model quá nhỏ.
-2. Batch size = 1.
-3. `session.run()` copy CPU -> GPU -> CPU mỗi lần.
-4. Một số node fallback CPU.
-5. Bạn tính cả session creation.
-6. GPU đang bận.
-7. Power management/GPU clocks chưa ổn định.
-8. Input dtype không đúng gây conversion.
-9. Output tensor lớn bị copy về CPU.
-
-Cách debug:
-
-```text
-1. Tăng batch size.
-2. Warmup 30-100 lần.
-3. Bật profiling.
-4. Dùng I/O Binding.
-5. Xem provider placement/fallback.
-6. So sánh ORT-only vs end-to-end.
-```
-
-
-## Debug case study 3 — TensorRT EP lần đầu rất chậm
-
-Triệu chứng:
-
-```text
-First run/session creation: rất lâu
-Steady-state: nhanh
-```
-
-Đây có thể là bình thường vì TensorRT cần build engine.
-
-Giải pháp:
-
-```python
-trt_options = {
-    "trt_engine_cache_enable": True,
-    "trt_engine_cache_path": "./trt_cache",
-}
-```
-
-Sau lần đầu build, engine cache giúp lần sau nhanh hơn.
-
-Nhưng nếu input shape thay đổi ngoài profile, engine có thể rebuild.
-
-## Debug case study 4 — TensorRT EP không nhận toàn bộ graph
-
-Triệu chứng:
-
-```text
-Có TensorRT EP nhưng speedup thấp
-Profiling thấy nhiều node chạy CUDA/CPU
-```
-
-Nguyên nhân:
-
-- Operator không được TensorRT hỗ trợ.
-- Shape inference thiếu.
-- Dynamic shape quá phức tạp.
-- Data-dependent shape ops.
-- Custom op chưa có plugin.
-- Graph có pattern không TensorRT-friendly.
-
-Giải pháp:
-
-1. Chạy ONNX shape inference.
-2. Simplify graph nếu phù hợp.
-3. Kiểm tra unsupported ops.
-4. Dùng TensorRT plugin nếu cần.
-5. Chấp nhận CUDA fallback cho một số phần.
-6. Nếu cần tối ưu sâu, chuyển sang TensorRT native workflow.
-
-
-## Common mistakes
-
-### Mistake 1 — Không chỉ định providers
-
-Không nên dựa vào default trong code production.
-
-Nên viết rõ:
-
-```python
-providers=["CUDAExecutionProvider", "CPUExecutionProvider"]
-```
-
-hoặc:
-
-```python
-providers=["CPUExecutionProvider"]
-```
-
-### Mistake 2 — Provider order sai
-
-Sai:
-
-```python
-providers=["CPUExecutionProvider", "CUDAExecutionProvider"]
-```
-
-Đúng hơn nếu muốn GPU priority:
-
-```python
-providers=["CUDAExecutionProvider", "CPUExecutionProvider"]
-```
-
-### Mistake 3 — Tạo session mỗi request
-
-Session phải được reuse.
-
-### Mistake 4 — Benchmark không warmup
-
-Lần đầu không đại diện steady-state.
-
-### Mistake 5 — Chỉ đo average latency
-
-Cần p95/p99.
-
-### Mistake 6 — Dùng Numpy dtype sai
-
-Sai:
-
-```python
-x = np.random.randn(1, 3, 224, 224)
-```
-
-Đúng:
-
-```python
-x = np.random.randn(1, 3, 224, 224).astype(np.float32)
-```
-
-### Mistake 7 — Không biết output đang copy về CPU
-
-Với GPU pipeline, output CPU có thể làm mất lợi thế.
-
-### Mistake 8 — So sánh TensorRT cold start với CUDA warm run
-
-TensorRT có engine build time. Cần tách startup và steady-state.
-
-
-## Production pattern cơ bản
-
-Một inference service đơn giản nên có pattern:
-
-```python
-import numpy as np
-import onnxruntime as ort
-
-
-class OrtModel:
-    def __init__(self, model_path: str):
-        options = ort.SessionOptions()
-        options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-
-        providers = self._select_providers()
-
-        self.session = ort.InferenceSession(
-            model_path,
-            sess_options=options,
-            providers=providers,
-        )
-
-        self.input_name = self.session.get_inputs()[0].name
-        self.output_names = [x.name for x in self.session.get_outputs()]
-
-        self._warmup()
-
-    def _select_providers(self):
-        available = ort.get_available_providers()
-
-        if "TensorrtExecutionProvider" in available:
-            return [
-                (
-                    "TensorrtExecutionProvider",
-                    {
-                        "trt_fp16_enable": True,
-                        "trt_engine_cache_enable": True,
-                        "trt_engine_cache_path": "./trt_cache",
-                    },
-                ),
-                "CUDAExecutionProvider",
-                "CPUExecutionProvider",
-            ]
-
-        if "CUDAExecutionProvider" in available:
-            return ["CUDAExecutionProvider", "CPUExecutionProvider"]
-
-        return ["CPUExecutionProvider"]
-
-    def _warmup(self):
-        # Cần thay shape theo model thật.
-        x = np.random.randn(1, 3, 224, 224).astype(np.float32)
-        for _ in range(10):
-            self.session.run(self.output_names, {self.input_name: x})
-
-    def predict(self, x: np.ndarray):
-        if x.dtype != np.float32:
-            x = x.astype(np.float32)
-
-        return self.session.run(self.output_names, {self.input_name: x})
-```
-
-Pattern này chưa xử lý batching, monitoring, concurrency hay I/O Binding, nhưng đã đúng ở mức căn bản:
-
-- Reuse session.
-- Explicit providers.
-- Graph optimization.
-- Warmup.
-- Validate dtype.
-
-
-## Production checklist
-
-Trước khi deploy ONNX Runtime service:
-
-### Model artifact
-
-- [ ] ONNX model đã được validate bằng `onnx.checker`.
-- [ ] Input/output names rõ ràng.
-- [ ] Shape static/dynamic được hiểu rõ.
-- [ ] Opset phù hợp với backend.
-- [ ] Model accuracy đã được so với framework gốc.
-
-### Runtime configuration
-
-- [ ] Providers được chỉ định rõ.
-- [ ] Provider order đúng.
-- [ ] Graph optimization level được set.
-- [ ] Thread settings phù hợp nếu chạy CPU.
-- [ ] CUDA/TensorRT options được ghi lại.
-- [ ] Engine cache bật nếu dùng TensorRT EP.
-
-### Performance
-
-- [ ] Có warmup.
-- [ ] Có p50/p95/p99.
-- [ ] Có batch size sweep.
-- [ ] Có ORT-only và end-to-end latency.
-- [ ] Có profiling trace.
-- [ ] Đã kiểm tra fallback.
-- [ ] Đã kiểm tra CPU/GPU memory copy.
-
-### Service
-
-- [ ] Session được tạo một lần ở startup.
-- [ ] Input validation có dtype/shape check.
-- [ ] Concurrency được kiểm soát.
-- [ ] Metrics có latency, throughput, error rate.
-- [ ] Logs có provider/session config.
-- [ ] Có canary hoặc rollback plan.
-
-
-## Concept map
+Điều cần quan sát: với model nhỏ, khác biệt có thể không lớn. Với model lớn hoặc output lớn, I/O Binding thường giảm overhead đáng kể. Nếu downstream cũng GPU, giữ output trên GPU tránh copy thừa.
+
+::: {.callout-tip icon=false collapse="true"}
+## Exercises thêm
+
+1. **Provider order**: đảo `["CPU…", "CUDA…"]` vs `["CUDA…", "CPU…"]` — so latency và `get_providers()`
+2. **Optimization levels**: benchmark 4 level; ghi bảng `mean, p50, p90, p99, node count` cho `DISABLE_ALL / BASIC / EXTENDED / ALL`
+3. **Batch sweep**: bảng mean/p99/throughput với batch **1 / 2 / 4 / 8 / 16 / 32**; `throughput = batch / (mean_ms / 1000)`
+4. **Profile analysis**: op chậm nhất? có event copy/memory? provider placement bất thường? overhead ở compute hay nơi khác?
+5. **(GPU) I/O Binding**: so `session.run()` vs `run_with_iobinding()` nhiều batch size. Khi nào có lợi / không đáng kể? Output có cần copy về CPU không?
+6. **(GPU) TRT EP**: CUDA baseline → TRT no-cache → TRT với cache; tách session creation time vs steady-state latency
+:::
+
+
+## Checkpoint questions {.unnumbered}
+
+::: {.callout-tip icon=false collapse="true"}
+## Tự kiểm — trả lời thử trước khi mở
+
+1. **ONNX vs ONNX Runtime?** Format/spec vs engine chạy model.
+2. **Session init làm gì?** Load, validate, optimize, init EP, plan, memory/kernels.
+3. **Vì sao không tạo session mỗi request?** Chi phí khởi tạo lớn; TRT build hàng giây–phút.
+4. **Execution Provider là gì?** Backend chạy node/subgraph trên hardware/library cụ thể.
+5. **Provider order ảnh hưởng gì?** Quyết định EP nào nhận subgraph; sai order → CPU ưu tiên dù có GPU.
+6. **Graph partitioning là gì?** ORT hỏi từng EP về capability → chia graph thành subgraph.
+7. **Fallback làm GPU chậm thế nào?** Copy GPU→CPU→GPU lặp nhiều lần — copy overhead.
+8. **Basic vs extended optimize?** Basic: fold/fuse an toàn, trước partitioning. Extended: pattern kiến trúc (GELU/Attention), phụ thuộc provider.
+9. **Online vs offline optimize?** Online: mỗi session init. Offline: lưu file, startup nhanh, kém portable hơn.
+10. **Vì sao optimized model có thể không portable hoàn toàn?** Artifact phụ thuộc provider/hardware/session options; layout opt gắn máy.
+11. **Intra-op vs inter-op threads?** Bên trong một op vs giữa nhiều op song song trong graph.
+12. **CUDA chậm hơn CPU khi nào?** Model/batch nhỏ, copy mỗi run, fallback, cold start, provider order sai, GPU bận / clocks chưa ổn.
+13. **I/O Binding giải quyết gì?** Loại bỏ copy CPU↔GPU bằng cách bind buffer trực tiếp trên device.
+14. **TRT lần đầu chậm — tại sao?** Build TensorRT engine. Fix: engine cache.
+15. **Engine cache dùng để làm gì?** Lưu TRT engine để lần sau không rebuild; shape ngoài profile → rebuild.
+16. **Tại sao p99 quan trọng hơn average trong production?** SLO/tail latency; mean đẹp vẫn có thể fail p99.
+17. **Benchmark cần metric nào?** Warmup + p50/p90/p99 + throughput; tách ORT-only vs E2E.
+18. **Debug thế nào khi `CUDAExecutionProvider` không xuất hiện?** `get_available_providers`, `print_debug_info`, `nvidia-smi`, kiểm tra `onnxruntime-gpu` vs CPU package / CUDA-cuDNN / `--gpus`.
+19. **Debug thế nào khi TensorRT EP không speedup?** Shape inference, unsupported ops, dynamic profile, partition fallback CUDA/CPU, so steady-state (có cache) vs cold build.
+20. **Khi nào chuyển từ TensorRT EP sang TensorRT native?** Cần control sâu precision/profile/plugin/tactic; EP chỉ cover subgraph; Lesson 4.
+:::
+
+
+## Glossary {.unnumbered}
+
+| Thuật ngữ | Giải thích |
+|:----------|:-----------|
+| **ONNX** | Format/spec mở biểu diễn ML model (graph + weights + I/O + opset) |
+| **ONNX Runtime** | Engine chạy ONNX/ORT model: optimize, plan, dispatch, memory |
+| **InferenceSession** | Object trung tâm: load, optimize, run — tạo một lần, reuse mãi |
+| **Execution Provider** | Backend chạy node/subgraph trên hardware/library cụ thể |
+| **CUDA EP** | EP dùng NVIDIA CUDA/cuDNN/cuBLAS |
+| **TensorRT EP** | EP dùng TensorRT để compile subgraph hỗ trợ thành engine |
+| **Graph optimization** | Biến đổi graph để nhanh hơn mà giữ nguyên output semantics |
+| **Constant folding** | Tính trước phần graph chỉ phụ thuộc constant |
+| **Fusion** | Gộp nhiều node thành kernel/op hiệu quả hơn |
+| **Graph partitioning** | Chia graph thành subgraph cho từng EP theo capability |
+| **Fallback** | Node/subgraph chuyển sang EP thấp hơn khi EP ưu tiên không hỗ trợ |
+| **I/O Binding** | Bind input/output trực tiếp trên device để giảm copy CPU↔GPU |
+| **OrtValue** | Data container của ORT cho tensor trên CPU hoặc device |
+| **Warmup** | Chạy thử trước khi đo để qua lazy init và cache cold start |
+| **p99 latency** | 99% request có latency ≤ giá trị này; thước đo quan trọng cho production |
+| **Engine cache** | Cache TRT engine để giảm build time cho lần sau |
+| **Memory arena** | Memory pool giảm overhead alloc/dealloc liên tục |
+| **Intra-op threads** | Thread parallelism bên trong một operator |
+| **Inter-op threads** | Thread parallelism giữa nhiều op độc lập trong graph |
+
+
+## Summary {.unnumbered}
+
+::: {.callout-tip icon=false collapse="true"}
+## Concept map — ORT trong một khung
 
 ```text
 ONNX model
-   |
-   v
-InferenceSession
-   |
-   +-- SessionOptions
-   |      +-- graph optimization level
-   |      +-- threading
-   |      +-- profiling
-   |      +-- optimized model path
-   |
-   +-- Execution Providers
-   |      +-- CPU EP
-   |      +-- CUDA EP
-   |      +-- TensorRT EP
-   |
-   +-- Graph Optimizer
-   |      +-- constant folding
-   |      +-- node elimination
-   |      +-- fusion
-   |      +-- layout optimization
-   |
-   +-- Graph Partitioner
-   |      +-- provider capability
-   |      +-- priority order
-   |      +-- fallback
-   |
-   +-- Runtime Execution
-          +-- memory allocation
-          +-- input/output copy
-          +-- kernel dispatch
-          +-- profiling events
+   → InferenceSession
+        +-- SessionOptions (graph opt level, threading, profiling, optimized model path)
+        +-- Execution Providers (CPU / CUDA / TensorRT)
+        +-- Graph Optimizer (constant folding, node elimination, fusion, layout)
+        +-- Graph Partitioner (capability, priority order, fallback)
+        +-- Runtime Execution (memory alloc, I/O copy, kernel dispatch, profiling events)
 ```
 
+Bốn trụ khi đọc bài: **Session** · **Providers** · **Optimize/Partition** · **Measure (profile + p99)**.
+:::
 
-## Câu hỏi tự kiểm tra
+1. **ORT = engine**: optimize graph → partition → dispatch → memory. Không chỉ "chạy từng node".
+2. **Session reuse**: session creation tốn kém (đặc biệt TRT) — tạo một lần lúc startup.
+3. **Provider order = priority**: sai order → CPU ưu tiên dù có GPU. Luôn kiểm tra `session.get_providers()`.
+4. **Fallback = copy overhead**: GPU session chậm hơn CPU thường do copy CPU↔GPU lặp — không phải compute.
+5. **ORT_ENABLE_ALL**: luôn bật cho production; offline mode giảm startup overhead (artifact kém portable hơn).
+6. **Profiling trước khi tune**: không biết bottleneck thì tối ưu sai chỗ. Dùng JSON trace + Perfetto.
+7. **p99 quan trọng hơn average** trong production — average đẹp chưa đủ.
+8. **TRT EP**: tiện nhưng có build cost → engine cache; không thay thế TensorRT native (Lesson 4).
 
-1. ONNX và ONNX Runtime khác nhau thế nào?
-2. `InferenceSession` làm những việc gì khi được khởi tạo?
-3. Vì sao không nên tạo `InferenceSession` cho mỗi request?
-4. Execution Provider là gì?
-5. Provider order ảnh hưởng thế nào tới graph execution?
-6. Graph partitioning là gì?
-7. CPU fallback có thể làm GPU inference chậm như thế nào?
-8. Basic optimization khác extended optimization ở điểm nào?
-9. Online optimization khác offline optimization thế nào?
-10. Vì sao optimized model có thể không portable hoàn toàn?
-11. Khi nào CUDA EP chậm hơn CPU EP?
-12. I/O Binding giải quyết vấn đề gì?
-13. Vì sao TensorRT EP lần đầu có thể rất chậm?
-14. Engine cache dùng để làm gì?
-15. Một benchmark inference đúng cần các metric nào?
-16. Tại sao p99 latency quan trọng hơn average trong production?
-17. `intra_op_num_threads` và `inter_op_num_threads` khác nhau thế nào?
-18. Bạn sẽ debug thế nào khi `CUDAExecutionProvider` không xuất hiện?
-19. Bạn sẽ debug thế nào khi TensorRT EP không speedup?
-20. Khi nào nên chuyển từ TensorRT EP sang TensorRT native?
+Inference engineer checklist ngắn: reuse session · explicit providers · warmup · profile · đo p99 · hiểu copy/fallback trước khi nhảy sang TRT/FP16.
 
 
-## Bài tập thực hành
+## Preview bài tiếp theo {.unnumbered}
 
-### Bài tập 1 — Provider order
-
-Chạy cùng model với:
-
-```python
-providers=["CUDAExecutionProvider", "CPUExecutionProvider"]
-```
-
-và:
-
-```python
-providers=["CPUExecutionProvider", "CUDAExecutionProvider"]
-```
-
-So sánh latency và session providers. Giải thích kết quả.
-
-### Bài tập 2 — Optimization level
-
-Benchmark 4 cấu hình:
-
-```python
-ORT_DISABLE_ALL
-ORT_ENABLE_BASIC
-ORT_ENABLE_EXTENDED
-ORT_ENABLE_ALL
-```
-
-Ghi lại:
+Lesson 4: **TensorRT Internals — Engine Building, Tactic Selection, Optimization Profiles and FP16/INT8**
 
 ```text
-mean, p50, p90, p99, node count optimized graph
+ONNX → TensorRT parser → network definition → builder config
+     → optimization profile → engine → execution context
 ```
 
-### Bài tập 3 — Batch size sweep
-
-Chạy benchmark với:
-
-```text
-batch = 1, 2, 4, 8, 16, 32
-```
-
-Vẽ bảng:
-
-| Batch | Mean ms | p99 ms | Throughput samples/s |
-|------:|--------:|-------:|---------------------:|
-
-Throughput:
-
-```text
-samples_per_second = batch_size / (mean_ms / 1000)
-```
-
-### Bài tập 4 — Profiling
-
-Bật profiling, mở trace trong Perfetto hoặc Chrome tracing.
-
-Trả lời:
-
-- Operator nào tốn thời gian nhất?
-- Có event nào liên quan copy/memory không?
-- Có operator nào bất thường không?
-
-### Bài tập 5 — I/O Binding
-
-Nếu có GPU, so sánh:
-
-```text
-session.run()
-run_with_iobinding()
-```
-
-với batch size khác nhau.
-
-Trả lời:
-
-- Khi nào I/O Binding có lợi?
-- Khi nào khác biệt không đáng kể?
-- Output có cần copy về CPU không?
-
-### Bài tập 6 — TensorRT EP
-
-Nếu có TensorRT EP:
-
-- Chạy CUDA EP baseline.
-- Chạy TensorRT EP không cache.
-- Chạy TensorRT EP có cache.
-- So sánh session creation time và steady-state latency.
+Lesson 4 đi sâu vào những gì TRT EP làm "behind the scenes" — cùng với control sâu về precision, calibration, custom plugin và tactic selection.
 
 
-## Glossary
+## References {.unnumbered}
 
-| Thuật ngữ          | Giải thích                                                                        |
-|:-------------------|:----------------------------------------------------------------------------------|
-| ONNX               | Format/specification biểu diễn model machine learning dưới dạng graph             |
-| ONNX Runtime       | Runtime engine để chạy ONNX/ORT model                                             |
-| InferenceSession   | Object trung tâm để load, optimize và run model                                   |
-| Execution Provider | Backend chạy node/subgraph trên hardware/library cụ thể                           |
-| CUDA EP            | Execution Provider dùng NVIDIA CUDA                                               |
-| TensorRT EP        | Execution Provider dùng NVIDIA TensorRT                                           |
-| Graph optimization | Biến đổi graph để chạy nhanh hơn                                                  |
-| Constant folding   | Tính trước phần graph chỉ phụ thuộc constant                                      |
-| Fusion             | Gộp nhiều node thành node/kernel hiệu quả hơn                                     |
-| Graph partitioning | Chia graph thành các phần cho từng provider                                       |
-| Fallback           | Node/subgraph không chạy được trên provider ưu tiên nên chuyển sang provider khác |
-| I/O Binding        | Bind input/output vào device memory để giảm copy                                  |
-| OrtValue           | Data container của ONNX Runtime cho tensor trên CPU hoặc device                   |
-| Warmup             | Chạy thử trước khi đo để bỏ qua lazy initialization                               |
-| p99 latency        | 99% request có latency nhỏ hơn hoặc bằng giá trị này                              |
-| Engine cache       | Cache TensorRT engine để giảm thời gian build/load về sau                         |
-| Memory arena       | Memory pool giúp giảm overhead allocation/deallocation                            |
-| Intra-op threads   | Thread parallelism bên trong một operator                                         |
-| Inter-op threads   | Thread parallelism giữa nhiều operator trong graph                                |
-
-
-## 40. Summary
-
-ONNX Runtime là lớp runtime quan trọng giữa ONNX model và hardware thực tế. Để dùng ORT hiệu quả, bạn cần hiểu bốn ý chính:
-
-```text
-1. ORT tối ưu graph trước khi chạy.
-2. ORT phân vùng graph cho từng Execution Provider.
-3. Provider order quyết định fallback và performance.
-4. Data movement CPU/GPU có thể quan trọng không kém compute.
-```
-
-Nếu chỉ biết:
-
-```python
-session.run()
-```
-
-bạn mới dùng ORT ở mức API. Nếu hiểu:
-
-```text
-SessionOptions
-Execution Providers
-Graph optimizations
-I/O Binding
-Profiling
-Threading
-CUDA/TensorRT provider options
-```
-
-bạn bắt đầu dùng ORT như một inference engineer.
-
-Bài tiếp theo nên là:
-
-```text
-Lesson 4: TensorRT Internals — Engine Building, Tactic Selection, Optimization Profiles and FP16/INT8 Execution
-```
-
-Ở Lesson 4, chúng ta sẽ đi từ ONNX Runtime sang TensorRT sâu hơn:
-
-```text
-ONNX graph -> TensorRT parser -> network definition -> builder config -> optimization profile -> engine -> execution context
-```
-
-
-
-## Nguồn tham khảo chính thức
-
-Các nguồn dưới đây là tài liệu chính thức hoặc tài liệu primary từ ONNX Runtime/NVIDIA/Microsoft, dùng để xây dựng nội dung bài học này:
-
-1. ONNX Runtime Documentation — https://onnxruntime.ai/docs/
-2. ONNX Runtime Python API Summary — https://onnxruntime.ai/docs/api/python/api_summary.html
-3. ONNX Runtime Execution Providers — https://onnxruntime.ai/docs/execution-providers/
-4. ONNX Runtime Graph Optimizations — https://onnxruntime.ai/docs/performance/model-optimizations/graph-optimizations.html
-5. ONNX Runtime I/O Binding — https://onnxruntime.ai/docs/performance/tune-performance/iobinding.html
-6. ONNX Runtime Performance Tuning — https://onnxruntime.ai/docs/performance/tune-performance/
-7. ONNX Runtime Thread Management — https://onnxruntime.ai/docs/performance/tune-performance/threading.html
-8. ONNX Runtime Profiling Tools — https://onnxruntime.ai/docs/performance/tune-performance/profiling-tools.html
-9. ONNX Runtime CUDA Execution Provider — https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html
-10. ONNX Runtime TensorRT Execution Provider — https://onnxruntime.ai/docs/execution-providers/TensorRT-ExecutionProvider.html
-11. ONNX Runtime Troubleshooting Performance Issues — https://onnxruntime.ai/docs/performance/tune-performance/troubleshooting.html
-12. ONNX Runtime Device Tensors — https://onnxruntime.ai/docs/performance/device-tensor.html
+1. [ONNX Runtime Documentation](https://onnxruntime.ai/docs/)
+2. [Python API Summary](https://onnxruntime.ai/docs/api/python/api_summary.html)
+3. [Execution Providers](https://onnxruntime.ai/docs/execution-providers/)
+4. [Graph Optimizations](https://onnxruntime.ai/docs/performance/model-optimizations/graph-optimizations.html)
+5. [I/O Binding](https://onnxruntime.ai/docs/performance/tune-performance/iobinding.html)
+6. [Performance Tuning](https://onnxruntime.ai/docs/performance/tune-performance/)
+7. [Thread Management](https://onnxruntime.ai/docs/performance/tune-performance/threading.html)
+8. [Profiling Tools](https://onnxruntime.ai/docs/performance/tune-performance/profiling-tools.html)
+9. [CUDA Execution Provider](https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html)
+10. [TensorRT Execution Provider](https://onnxruntime.ai/docs/execution-providers/TensorRT-ExecutionProvider.html)
+11. [Troubleshooting Performance](https://onnxruntime.ai/docs/performance/tune-performance/troubleshooting.html)
+12. [Device Tensors](https://onnxruntime.ai/docs/performance/device-tensor.html)

@@ -7,826 +7,314 @@ series: ai-optimize
 order: 8
 description: "Canary, A/B, shadow, monitoring, autoscaling, SLO và incident response."
 role: "Canary, A/B, shadow, monitoring, autoscaling, SLO và incident response"
+aliases:
+  - /bai-hoc/ai-optimize/lesson_8_safe_model_rollouts_and_production_operations.html
+  - /bai-hoc/ai-optimize/lesson-08-safe-model-rollouts-and-production-operations.html
 ---
 
 ::: {.callout-note icon=false}
 ## Mục tiêu bài học
-Mục tiêu của bài này là giúp bạn biết **đưa model mới vào production một cách an toàn**, thay vì chỉ deploy model rồi hy vọng mọi thứ ổn. Sau bài này, bạn cần hiểu cách thiết kế SLO, rollout theo canary, chạy A/B test, shadow traffic, quan sát hệ thống bằng monitoring, autoscale workload inference, và xử lý sự cố khi model mới gây lỗi latency, accuracy hoặc availability.
+Đưa model mới vào production **an toàn**: thiết kế SLO, chọn đúng rollout strategy, chạy canary/A/B/shadow, quan sát bằng monitoring, autoscale workload inference, và xử lý sự cố có hệ thống. Bài **không** dạy tối ưu model (Lesson 4–5), Triton config cơ bản (Lesson 6), hay benchmark methodology (Lesson 7).
 :::
 
-## 0. Vị trí của Lesson 8 trong chuỗi học
+::: {.callout-note icon=false}
+## Lộ trình bài học
 
-Ở các bài trước, bạn đã đi từ nền tảng GPU inference tới benchmark hệ thống:
+| # | Phần | Trả lời câu hỏi | Thời lượng |
+|:--|:-----|:----------------|:-----------|
+| 1–2 | Vì sao khó / SLO | Model rollout khác code rollout thế nào? SLO là gì? | 20 phút |
+| 3–4 | Strategies / Canary | Khi nào dùng gì? Canary schedule, gate, rollback? | 25 phút |
+| 5 | A/B + Shadow | Canary vs A/B? Shadow dùng khi nào? | 20 phút |
+| 6 | Triton ops | Versioning, control mode, warmup, metrics? | 20 phút |
+| 7–8 | Monitor / Scale / Incident | Dashboard, alert, autoscale, runbook, postmortem? | 30 phút |
+| 9 | Release pipeline | CI/CD gates, checklist, patterns? | 15 phút + labs |
 
-```text
-Lesson 1: Modern GPU Inference Architecture
-    request -> preprocessing -> batching -> runtime -> GPU execution -> response
+Đọc tối thiểu: phần 1–5. Phần 6–9 và Mini-lab nên hoàn thành trước khi vận hành model production.
+:::
 
-Lesson 2: ONNX Fundamentals
-    model graph -> operators -> opset -> shapes -> export pipeline
+::: {.reading-modes}
+**Đọc nhanh:** callout *Ý chính* + bảng + sơ đồ xương sống.  
+**Đọc đủ:** mở tip đào sâu, làm Mini-lab và Checkpoint.
+:::
 
-Lesson 3: ONNX Runtime Deep Dive
-    InferenceSession -> Execution Providers -> graph optimization -> I/O Binding
 
-Lesson 4: TensorRT Internals
-    ONNX -> TensorRT builder -> optimized engine -> execution context -> FP16/INT8
+## Bối cảnh {.unnumbered}
 
-Lesson 5: Quantization Deep Dive
-    PTQ/QAT -> calibration -> Q/DQ graph -> INT8/FP8 -> accuracy recovery
+Lesson 1–7 đi từ kiến trúc GPU → ONNX → ORT → TensorRT → quantization → Triton → benchmarking. Lesson 8 trả lời câu hỏi tiếp theo: **model đã benchmark tốt trong lab — làm sao đưa vào production mà không làm ảnh hưởng người dùng?**
 
-Lesson 6: NVIDIA Triton Inference Server
-    model repository -> backend -> scheduler -> dynamic batching -> production serving
-
-Lesson 7: Profiling and Benchmarking Inference Systems
-    trtexec -> Perf Analyzer -> Nsight Systems -> metrics -> bottleneck analysis
+```{mermaid}
+%%| label: fig-l8-spine
+%%| fig-cap: "Sơ đồ xương sống Lesson 8: từ artifact vượt CI/SLO gate → shadow → canary → monitor → scale/protect → promote hoặc rollback."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  AR([Artifact]) -->|"CI + SLO gate"| GT([Gate])
+  GT -->|"shadow traffic"| SH([Shadow])
+  SH -->|"1→5→10→50→100%"| CA([Canary/AB])
+  CA -->|"golden signals"| MO([Monitor])
+  MO -->|"HPA / overload"| SC([Scale])
+  SC -->|"promote / rollback"| PR([Promote])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2.5px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class AR,PR soft
+  class GT,SH io
+  class CA,MO ok
+  class SC hot
 ```
 
-Lesson 8 trả lời câu hỏi tiếp theo:
-
-```text
-Model mới đã benchmark tốt trong lab.
-Làm sao đưa nó vào production mà không làm ảnh hưởng người dùng?
-```
-
-Đây là điểm chuyển từ **performance engineering** sang **production operations**.
-
-Trong thực tế, một model có thể rất tốt trên offline benchmark nhưng vẫn gây sự cố production vì:
-
-- input thực tế khác dữ liệu benchmark;
-- p99 latency xấu hơn do traffic pattern khác;
-- dynamic batching bị queue lâu hơn dự kiến;
-- TensorRT engine build cho GPU type này nhưng chạy trên GPU type khác;
-- model mới trả output schema khác model cũ;
-- tokenizer, preprocessing hoặc postprocessing thay đổi;
-- model accuracy tốt hơn trung bình nhưng tệ hơn ở một nhóm người dùng quan trọng;
-- memory tăng khiến pod OOM;
-- autoscaler scale chậm hơn tốc độ tăng traffic;
-- rollback không chuẩn bị trước.
-
-Tư duy quan trọng nhất của bài này:
+Mantra của bài:
 
 ```text
 A model release is not just a file replacement.
 It is a controlled change to a live distributed system.
 ```
 
-
-
-## Learning outcomes
-
-Sau bài này, bạn cần giải thích và thực hành được:
-
-1. Vì sao deploy model khác deploy code thông thường.
-2. Một model release gồm những artifact nào ngoài weight file.
-3. SLI, SLO, SLA và error budget là gì.
-4. Cách định nghĩa SLO cho inference service.
-5. Cách chọn metric để quyết định rollout tiếp hay rollback.
-6. Sự khác nhau giữa rolling update, blue/green, canary, A/B testing và shadow traffic.
-7. Khi nào dùng canary deployment.
-8. Khi nào dùng A/B testing.
-9. Khi nào dùng shadow traffic.
-10. Cách thiết kế canary schedule: 1% -> 5% -> 10% -> 25% -> 50% -> 100%.
-11. Cách thiết kế metric gates cho canary.
-12. Cách rollback nhanh khi model mới gây lỗi.
-13. Cách dùng Triton model repository, model versions và model control modes trong vận hành.
-14. Cách monitor Triton metrics: request count, failure count, latency, queue time, compute time, GPU metrics.
-15. Cách xây dashboard production cho inference service.
-16. Cách thiết kế alert dựa trên SLO thay vì alert tùy tiện.
-17. Cách autoscale inference workloads trên Kubernetes.
-18. Vì sao autoscale GPU inference khó hơn autoscale web API thông thường.
-19. Cách xử lý overload bằng timeout, queue limit, load shedding, rate limiting và priority.
-20. Cách lập runbook incident response cho lỗi latency, error rate, accuracy regression, OOM, GPU saturation và model load failure.
-21. Cách viết postmortem không đổ lỗi cá nhân.
-22. Cách xây release checklist cho model inference production.
-
-
-
-## Prerequisites
-
-Bạn nên đã nắm:
-
-- Triton model repository.
-- `config.pbtxt`.
-- Dynamic batching.
-- `instance_group`.
-- TensorRT engine / ONNX model.
-- Perf Analyzer benchmark.
-- p50, p95, p99 latency.
-- Kubernetes Deployment và Service ở mức cơ bản.
-- Prometheus/Grafana ở mức khái niệm.
-
-Bạn không cần phải là Kubernetes expert, nhưng cần hiểu các khái niệm:
-
-```text
-Pod
-Deployment
-Service
-Ingress / Gateway
-Horizontal Pod Autoscaler
-Prometheus metric
-Alert
-Rollback
-```
-
-
-
-## Vì sao model rollout khó hơn code rollout?
-
-Deploy code backend thông thường đã khó. Deploy model còn khó hơn vì model có thêm các chiều rủi ro mà code release thường không có.
-
-### Code release thường thay đổi logic rõ ràng
-
-Ví dụ:
-
-```text
-API v1:
-    total = price * quantity
-
-API v2:
-    total = price * quantity * discount
-```
-
-Ta có thể viết unit test, integration test, contract test.
-
-### Model release thay đổi behavior xác suất
-
-Ví dụ:
-
-```text
-image -> classifier -> probability distribution
-text -> embedding model -> vector
-query -> reranker -> ranking scores
-request -> LLM -> generated output
-```
-
-Model mới có thể:
-
-- tốt hơn ở validation set;
-- nhưng tệ hơn ở long-tail input;
-- tốt hơn accuracy trung bình;
-- nhưng chậm hơn ở request dài;
-- tốt hơn F1 score offline;
-- nhưng làm giảm conversion trong production;
-- ổn trên batch size 1;
-- nhưng xấu hơn khi dynamic batching;
-- ổn trên GPU A10;
-- nhưng lỗi trên GPU T4/A100/H100 nếu engine không tương thích.
-
-### Model release thường gồm nhiều artifact
-
-Một model release không chỉ là:
-
-```text
-model.onnx
-```
-
-Nó thường là:
-
-```text
-model.onnx
-model.plan
-config.pbtxt
-preprocessing.py
-tokenizer.json
-vocab.txt
-label_map.json
-calibration_summary.json
-input_schema.json
-output_schema.json
-Docker image
-Triton version
-CUDA version
-TensorRT version
-GPU type
-benchmark report
-rollback version
-monitoring dashboard
-release manifest
-```
-
-Nếu một trong các artifact này lệch nhau, model có thể vẫn load được nhưng trả kết quả sai.
-
-Ví dụ cực kỳ phổ biến:
-
-```text
-Model được train với normalization:
-    mean = [0.485, 0.456, 0.406]
-    std  = [0.229, 0.224, 0.225]
-
-Production preprocessing dùng:
-    mean = [0.5, 0.5, 0.5]
-    std  = [0.5, 0.5, 0.5]
-
-Kết quả:
-    model chạy không lỗi,
-    latency bình thường,
-    GPU utilization bình thường,
-    nhưng accuracy production giảm mạnh.
-```
-
-Đây là lý do model rollout phải kiểm soát cả:
-
-```text
-correctness
-performance
-reliability
-quality
-cost
-safety
-rollbackability
-```
-
-
-
+::: {.callout-tip icon=false collapse="true"}
 ## Mental model: production inference service
 
-Một service inference production thường có kiến trúc:
-
 ```text
-Client
-  |
-  v
-API Gateway / Load Balancer
-  |
-  v
-Inference Router
-  |             \
-  |              \ shadow traffic
-  |               \
-  v                v
-Triton stable     Triton candidate
-model v1          model v2
-  |                |
-  v                v
-Metrics           Metrics
-  \                /
-   \              /
-    v            v
-Prometheus / Grafana / Alerting
-        |
-        v
-Rollout Controller / Human Operator
-        |
-        v
-promote / pause / rollback
+Client → API Gateway / LB → Inference Router
+                              ├─→ Triton stable (v1)  → Metrics ─┐
+                              └─→ Triton candidate (v2, shadow/canary) → Metrics ─┤
+                                                                                 ▼
+                                                    Prometheus / Grafana / Alerting
+                                                                                 │
+                                                    Rollout Controller / Operator
+                                                                                 │
+                                                         promote / pause / rollback
 ```
 
-Trong đó:
+Stable phục vụ production chính; candidate là version cần kiểm chứng; router quyết định traffic; metrics trả lời “có an toàn không?”; controller tăng/giảm weight; **rollback phải sẵn sàng trước khi bắt đầu**.
 
-- **stable model** là version đang phục vụ production chính.
-- **candidate model** là version mới cần kiểm chứng.
-- **router** quyết định request nào đi vào stable/candidate.
-- **metrics** cho biết candidate có an toàn hay không.
-- **rollout controller** tăng/giảm traffic dựa trên rule hoặc quyết định của operator.
-- **rollback mechanism** phải sẵn sàng trước khi rollout.
-
-Một rollout an toàn không hỏi:
-
-```text
-Model v2 có tốt không?
-```
-
-Nó hỏi:
-
-```text
-Với traffic thật, trong điều kiện production thật,
-model v2 có thỏa SLO và guardrail tốt hơn hoặc ít nhất không tệ hơn model v1 không?
-```
+Câu hỏi đúng không phải “v2 tốt không?” mà: *Với traffic thật, trong điều kiện production thật, v2 có thỏa SLO và guardrail tốt hơn hoặc ít nhất không tệ hơn v1?*
+:::
 
 
+## Learning outcomes {.unnumbered}
 
-## SLI, SLO, SLA và error budget
-
-Trước khi rollout, bạn cần biết thế nào là “ổn”. Nếu không có định nghĩa rõ ràng, bạn sẽ không biết khi nào nên promote hoặc rollback.
-
-### SLI là gì?
-
-**SLI** là Service Level Indicator: chỉ số đo được của service.
-
-Với inference service, SLI thường gồm:
-
-```text
-availability / success rate
-latency p50 / p95 / p99
-timeout rate
-error rate
-queue time
-compute time
-request throughput
-GPU memory usage
-GPU utilization
-model quality metric
-prediction drift
-input distribution drift
-```
-
-Ví dụ SLI:
-
-```text
-request_success_rate = successful_requests / total_requests
-p99_latency_ms = percentile(latency_ms, 99)
-timeout_rate = timeout_requests / total_requests
-```
-
-### SLO là gì?
-
-**SLO** là Service Level Objective: mục tiêu định lượng bạn cam kết nội bộ.
-
-Ví dụ:
-
-```text
-SLO availability:
-    99.9% requests thành công trong 30 ngày.
-
-SLO latency:
-    99% requests có latency < 100 ms trong 7 ngày.
-
-SLO timeout:
-    timeout rate < 0.1% trong 1 ngày.
-
-SLO quality:
-    online disagreement rate giữa candidate và stable < 2% trong canary window.
-
-SLO cost:
-    cost per 1M inferences không tăng quá 10% so với stable baseline.
-```
-
-### SLA là gì?
-
-**SLA** là Service Level Agreement: cam kết chính thức với khách hàng hoặc đối tác. SLA thường có hậu quả hợp đồng nếu vi phạm.
-
-Trong quá trình học ML systems, ta thường tập trung vào SLO trước.
-
-### Error budget là gì?
-
-Error budget là phần lỗi được phép xảy ra trong một khoảng thời gian.
-
-Nếu SLO availability là:
-
-```text
-99.9% success rate / 30 days
-```
-
-thì error budget là:
-
-```text
-0.1% requests được phép lỗi
-```
-
-Nếu service có 10,000,000 requests/tháng:
-
-```text
-total_requests = 10,000,000
-allowed_error_rate = 0.1% = 0.001
-allowed_failed_requests = 10,000,000 * 0.001 = 10,000
-```
-
-Nếu trong tháng model rollout gây thêm 8,000 failed requests, bạn đã tiêu gần hết error budget. Khi đó team nên ưu tiên reliability hơn feature/model release mới.
-
-### SLO tốt cho inference service phải có nhiều chiều
-
-Một SLO chỉ có accuracy là chưa đủ.
-
-Một SLO chỉ có latency là chưa đủ.
-
-Một inference service nên có ít nhất:
-
-```text
-Availability SLO
-Latency SLO
-Quality guardrail
-Cost/resource guardrail
-```
-
-Ví dụ:
-
-```text
-Production inference SLO
-
-Availability:
-    99.9% requests return successful response trong rolling 30 days.
-
-Latency:
-    99% image classification requests < 100 ms server-side latency.
-
-Quality:
-    model disagreement rate trong canary < 2% so với stable trên traffic đã gán nhãn/heuristic.
-
-Safety:
-    invalid output schema rate = 0.
-
-Resource:
-    GPU memory usage < 85% sustained trong 10 phút.
-```
-
-### SLO không phải metric dashboard
-
-Dashboard có thể có 50 metrics. SLO nên ít hơn nhiều.
-
-Dashboard trả lời:
-
-```text
-Chuyện gì đang xảy ra?
-```
-
-SLO trả lời:
-
-```text
-Người dùng có đang nhận được chất lượng dịch vụ như kỳ vọng không?
-```
+1. Vì sao deploy model khác deploy code — và một release gồm những artifact nào
+2. SLI, SLO, SLA, error budget và cách định nghĩa SLO nhiều chiều cho inference
+3. Rolling, blue/green, canary, A/B, shadow, feature flag — khi nào dùng cái nào
+4. Canary schedule 1→5→10→25→50→100%; metric gates; rollback conditions
+5. Canary vs A/B testing; sticky assignment; guardrails; shadow pseudo-code
+6. Triton versioning, `version_policy`, model control modes, warmup, health ≠ promote
+7. Triton metrics quan trọng; dashboard production; stable vs candidate labeling
+8. SLO-based alerting; Prometheus alert rules
+9. Autoscaling signals; CPU/GPU util không đủ; HPA; xung đột với dynamic batching
+10. Overload: load shedding, fallback, priority queue
+11. Runbooks: p99 spike, error rate, accuracy regression, GPU OOM, model load failure
+12. Blameless postmortem template; release pipeline CI/CD; production checklist
 
 
+## Prerequisites {.unnumbered}
 
-## Release artifact: thứ bạn thật sự đang rollout
+| Chủ đề | Cần nắm |
+|:-------|:--------|
+| Triton | Model repo, `config.pbtxt`, dynamic batching, `instance_group` (Lesson 6) |
+| Benchmarking | p50/p95/p99, Perf Analyzer, Prometheus metrics (Lesson 7) |
+| Kubernetes | Pod, Deployment, Service, HPA ở mức khái niệm |
+| Monitoring | Prometheus/Grafana ở mức khái niệm |
+| GPU | TensorRT engine, CUDA, GPU memory |
 
-Một lỗi phổ biến là coi rollout là thay file model.
+::: {.callout-tip icon=false collapse="true"}
+## Hai nhóm lab
+**Design-only:** SLO, release manifest, canary plan, router mock, shadow sim, PromQL, runbook, postmortem — làm được trên mọi máy.  
+**Cluster labs:** Argo Rollouts, HPA, `kubectl rollout` — cần Kubernetes cluster test. Không có cluster vẫn học đủ bài; khi có cluster chỉ cần áp YAML mẫu.
+:::
 
-Trong production, bạn nên có một **release manifest** mô tả đầy đủ phiên bản model.
 
-Ví dụ:
+## Vì sao model rollout khó hơn code rollout? {#sec-why-harder}
+
+> Code deploy đã khó — tại sao model deploy lại cần thêm cả một bộ quy trình riêng?
+
+::: {.callout-important icon=false}
+## Ý chính
+Model release thay đổi **behavior xác suất** trên dữ liệu thật, không phải logic tất định. Model mới có thể tốt hơn trên validation set nhưng chậm hơn ở request dài, lỗi ở input long-tail, hoặc dùng nhiều GPU memory hơn dự kiến — và không có unit test nào bắt được tất cả những điều này trước khi thấy traffic thật.
+:::
+
+Code release thay đổi logic rõ ràng: `total = price * quantity` → `total = price * quantity * discount`. Ta viết được unit test, contract test. Model release thay đổi distribution của output: classifier mới có thể có accuracy trung bình tốt hơn nhưng tệ hơn ở một nhóm input quan trọng.
+
+Ngoài ra, một model release không chỉ là một file — đây là điểm nhiều team bỏ qua:
+
+| Artifact | Ví dụ | Rủi ro nếu lệch |
+|:---------|:------|:----------------|
+| Model weight | `model.plan`, `model.onnx` | Wrong inference |
+| Config | `config.pbtxt` | Wrong shapes/dtypes |
+| Preprocessing | `preprocess.py`, `tokenizer.json` | Silent accuracy drop |
+| Postprocessing | `postprocess.py`, `label_map.json` | Wrong output labels |
+| Runtime | Triton/TRT/CUDA version | Plan incompatible |
+| Schema | `input_schema.json`, `output_schema.json` | Client breaks |
+| Rollback target | Version cũ trong repo | Không rollback được |
+
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Normalization mismatch: model train với `mean=[0.485, 0.456, 0.406]` nhưng preprocessing dùng `mean=[0.5, 0.5, 0.5]`. Latency bình thường, GPU utilization bình thường — nhưng accuracy production giảm mạnh. Không có lỗi nào được log.
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Release manifest đầy đủ
+Một **release manifest** ghi lại toàn bộ artifacts + runtime + schema + rollback target, giúp incident response biết ngay cái gì đã thay đổi:
 
 ```yaml
 release_id: image_classifier_v2_2026_05_14
 model_name: image_classifier
 candidate_version: "2"
 stable_version: "1"
-
 artifacts:
   onnx: s3://models/image_classifier/v2/model.onnx
   tensorrt_engine: s3://models/image_classifier/v2/a10g/model.plan
   triton_config: s3://models/image_classifier/v2/config.pbtxt
   preprocessing: git://inference-service/preprocess.py@a1b2c3d
-  postprocessing: git://inference-service/postprocess.py@a1b2c3d
   label_map: s3://models/image_classifier/v2/label_map.json
-  calibration_report: s3://models/image_classifier/v2/calibration_report.json
-
 runtime:
   triton_version: "24.12"
   tensorrt_version: "10.x"
   cuda_version: "12.x"
   gpu_type: "NVIDIA A10G"
-
 contracts:
   input_schema: s3://models/image_classifier/v2/input_schema.json
   output_schema: s3://models/image_classifier/v2/output_schema.json
-
-validation:
-  offline_accuracy_report: s3://reports/image_classifier/v2/offline_accuracy.md
-  benchmark_report: s3://reports/image_classifier/v2/perf_report.md
-  compatibility_report: s3://reports/image_classifier/v2/compatibility.md
-
 rollout:
   strategy: canary
   schedule: [1, 5, 10, 25, 50, 100]
   rollback_to: "1"
   owner: ml-platform-team
 ```
-
-Release manifest giúp bạn trả lời:
-
-- version nào đang chạy?
-- model này được build bằng TensorRT/CUDA nào?
-- input schema là gì?
-- rollback về đâu?
-- benchmark baseline ở đâu?
-- ai chịu trách nhiệm rollout?
-
-Nếu không có manifest, incident response thường rất chậm vì không ai biết chính xác cái gì đã thay đổi.
+:::
 
 
+## SLI, SLO, SLA và error budget {#sec-slo}
 
-##  Các chiến lược deploy model
+> Thế nào là "model mới hoạt động ổn" — và làm sao định nghĩa điều đó trước khi rollout?
 
-Không phải mọi thay đổi đều cần cùng một rollout strategy.
+::: {.callout-important icon=false}
+## Ý chính
+Không có định nghĩa "ổn" thì không biết khi nào promote, khi nào rollback. **SLO** là mục tiêu định lượng nội bộ; **error budget** là lượng lỗi được phép — dùng để quyết định tốc độ rollout. SLO cho inference service cần ít nhất bốn chiều: availability, latency, quality guardrail, resource guardrail.
+:::
 
-###  Rolling update
+**SLI** (Service Level Indicator) là chỉ số đo được: `success_rate`, `p99_latency_ms`, `timeout_rate`, `disagreement_rate`.
 
-Rolling update thay dần pod cũ bằng pod mới.
+**SLO** (Service Level Objective) là mục tiêu định lượng nội bộ:
 
-```text
-v1 pods: [old, old, old, old]
+| Chiều | Ví dụ SLO |
+|:------|:----------|
+| Availability | 99.9% requests thành công trong rolling 30 ngày |
+| Latency | 99% requests < 100 ms server-side trong 7 ngày |
+| Timeout | Timeout rate < 0.1% trong 1 ngày |
+| Quality | Candidate disagreement rate < 2% với stable trong canary window |
+| Resource | GPU memory < 85% sustained trong 10 phút |
 
-Step 1: [new, old, old, old]
-Step 2: [new, new, old, old]
-Step 3: [new, new, new, old]
-Step 4: [new, new, new, new]
+**SLA** (Service Level Agreement) là cam kết chính thức với khách hàng, thường có hậu quả hợp đồng. SLO là mục tiêu nội bộ nghiêm ngặt hơn SLA.
+
+**Error budget**: nếu SLO availability là 99.9%/30 ngày và service có 10 triệu requests/tháng, error budget = 10,000 failed requests. Khi một rollout tiêu gần hết error budget, team nên freeze release mới và ưu tiên reliability.
+
+::: {.callout-tip icon=false collapse="true"}
+## SLO ≠ dashboard metrics
+Dashboard có thể có 50 metrics. SLO nên < 10. Dashboard trả lời *"Chuyện gì đang xảy ra?"*. SLO trả lời *"Người dùng có nhận được chất lượng dịch vụ như kỳ vọng không?"*. Đừng biến SLO thành thêm một lớp dashboard.
+
+Error budget policy ví dụ:
+- 50% monthly budget consumed → freeze non-critical rollouts
+- 100% consumed → chỉ reliability fix được ship
+:::
+
+
+## Các chiến lược deploy model {#sec-strategies}
+
+> Khi có model mới, chọn rolling update, blue/green, canary, A/B, hay shadow — dựa vào tiêu chí gì?
+
+::: {.callout-important icon=false}
+## Ý chính
+Không có chiến lược nào tốt nhất cho mọi tình huống. **Canary** là lựa chọn mặc định cho model production release — nó giới hạn blast radius và cho phép rollback sớm. Shadow traffic là bước chuẩn bị trước canary. A/B testing dùng khi cần đo business impact, không chỉ kỹ thuật.
+:::
+
+```{mermaid}
+%%| label: fig-l8-strategies
+%%| fig-cap: "Vị trí các chiến lược trên pipeline: shadow → canary/AB là trung tâm của rollout an toàn."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  AR([Artifact]) -->|"CI + SLO gate"| GT([Gate])
+  GT -->|"shadow traffic"| SH([Shadow])
+  SH -->|"1→5→10→50→100%"| CA([Canary/AB])
+  CA -->|"golden signals"| MO([Monitor])
+  MO -->|"HPA / overload"| SC([Scale])
+  SC -->|"promote / rollback"| PR([Promote])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:3px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class AR,PR soft
+  class GT io
+  class MO,SC ok
+  class SH,CA hot
 ```
 
-Ưu điểm:
+| Strategy | Mục tiêu chính | Ảnh hưởng user | Phù hợp cho |
+|:---------|:--------------|:---------------|:------------|
+| Rolling update | Deploy đơn giản | Có, trong khi swap | Change ít rủi ro, behavior gần như không đổi |
+| Blue/green | Rollback nhanh bằng switch | Có khi switch | Service critical, cần instant rollback |
+| Canary | Rollout an toàn, giới hạn blast radius | Có nhưng nhỏ ban đầu | Model release production tiêu chuẩn |
+| A/B testing | Đo business/user impact | Có | Cần đo CTR, conversion, engagement |
+| Shadow traffic | Validate không ảnh hưởng user | Không | Pre-canary validation trên traffic thật |
+| Feature flag | Điều khiển linh hoạt theo segment | Tùy | Targeting, nhiều experiment song song |
 
-- đơn giản;
-- Kubernetes hỗ trợ sẵn;
-- phù hợp với code change ít rủi ro.
+**Rolling update** phù hợp cho code change rủi ro thấp; không lý tưởng cho model release vì traffic split không rõ ràng và khó so sánh stable vs candidate.
 
-Nhược điểm với ML model:
+**Blue/green** tốt cho rollback cực nhanh (switch traffic) nhưng tốn tài nguyên gấp đôi và nếu switch 100% đột ngột, lỗi vẫn ảnh hưởng nhiều user.
 
-- traffic split không luôn rõ ràng;
-- khó so sánh stable vs candidate;
-- không lý tưởng cho quality validation;
-- rollback có thể vẫn mất thời gian nếu image/model load chậm.
-
-Dùng khi:
-
-```text
-change nhỏ,
-rủi ro thấp,
-đã có test tốt,
-model behavior gần như không đổi.
-```
-
-### Blue/green deployment
-
-Bạn chạy hai environment:
-
-```text
-blue  = stable production
- green = candidate production-ready
-```
-
-Sau khi green sẵn sàng, switch traffic từ blue sang green.
-
-Ưu điểm:
-
-- rollback nhanh bằng cách switch lại blue;
-- dễ validate green trước khi nhận traffic chính;
-- tách biệt môi trường.
-
-Nhược điểm:
-
-- tốn tài nguyên gấp đôi trong thời gian rollout;
-- nếu switch 100% quá nhanh, lỗi có thể ảnh hưởng nhiều user.
-
-Dùng khi:
-
-```text
-cần rollback rất nhanh,
-service quan trọng,
-có đủ tài nguyên để chạy hai stack song song.
-```
-
-### Canary deployment
-
-Canary gửi một phần nhỏ production traffic tới model mới.
-
-```text
-99% traffic -> stable v1
- 1% traffic -> candidate v2
-```
-
-Sau đó tăng dần:
-
-```text
-1% -> 5% -> 10% -> 25% -> 50% -> 100%
-```
-
-Ưu điểm:
-
-- phát hiện lỗi trên traffic thật;
-- giới hạn blast radius;
-- có thể rollback sớm;
-- phù hợp với model release.
-
-Nhược điểm:
-
-- cần routing/traffic splitting;
-- cần metrics tốt;
-- sample nhỏ có thể chưa đại diện;
-- nếu model lỗi nghiêm trọng, vẫn ảnh hưởng một phần user.
-
-Dùng khi:
-
-```text
-model mới có khả năng thay đổi behavior,
-cần kiểm chứng production,
-muốn giảm rủi ro rollout.
-```
-
-###  A/B testing
-
-A/B testing chia user/request thành nhóm để so sánh outcome.
-
-```text
-Group A -> model v1
-Group B -> model v2
-```
-
-Khác với canary:
-
-- canary ưu tiên **safety**;
-- A/B testing ưu tiên **measurement of impact**.
-
-A/B test nên có:
-
-```text
-randomization
-sticky assignment
-primary metric
-guardrail metrics
-experiment duration
-sample size estimate
-analysis plan
-```
-
-Dùng khi:
-
-```text
-model mới có thể tốt hơn,
-nhưng cần đo impact business/user behavior.
-```
-
-### Shadow traffic
-
-Shadow traffic gửi bản sao request thật tới model mới nhưng không trả response của model mới cho user.
-
-```text
-request -> stable v1 -> response to user
-       \
-        \-> candidate v2 -> metrics only
-```
-
-Ưu điểm:
-
-- không ảnh hưởng user;
-- thấy latency/error trên traffic thật;
-- hữu ích để validate schema, stability, resource usage.
-
-Nhược điểm:
-
-- không đo được user behavior;
-- không nên dùng với operation có side effect;
-- tăng tải hệ thống;
-- cần xử lý dữ liệu nhạy cảm cẩn thận.
-
-Dùng khi:
-
-```text
-muốn kiểm tra candidate trên production traffic trước khi canary,
-nhưng chưa muốn trả kết quả candidate cho user.
-```
-
-###  Feature flag / routing flag
-
-Bạn có thể điều khiển model theo:
-
-```text
-user_id
-region
-customer tier
-request header
-model version parameter
-feature flag
-```
-
-Ví dụ:
+::: {.callout-tip icon=false collapse="true"}
+## Feature flag cho model routing
+Header-based routing cho phép target nhóm user cụ thể:
 
 ```text
 X-Model-Version: candidate
 X-Experiment-Id: exp_2026_05_classifier_v2
 ```
 
-Dùng khi:
-
-```text
-cần target một nhóm user cụ thể,
-cần rollback bằng config,
-cần chạy nhiều experiment song song.
-```
-
-###  Bảng so sánh nhanh
-
-| Strategy       |                Mục tiêu chính |       Ảnh hưởng user |        Cần traffic splitting | Phù hợp cho               |
-|----------------|------------------------------:|---------------------:|-----------------------------:|---------------------------|
-| Rolling update |               Deploy đơn giản |                   Có |               Không bắt buộc | Change rủi ro thấp        |
-| Blue/green     |         Switch/rollback nhanh |        Có khi switch |                           Có | Service critical          |
-| Canary         |               Rollout an toàn | Có, nhưng ít ban đầu |                           Có | Model release production  |
-| A/B testing    |                     Đo impact |                   Có |                           Có | Product/model experiment  |
-| Shadow traffic | Validate không ảnh hưởng user |                Không |  Có hoặc request duplication | Pre-canary validation     |
-| Feature flag   |          Điều khiển linh hoạt |                  Tùy |                           Có | Targeting/experimentation |
+Rollback chỉ cần đổi config, không cần redeploy. Nhiều experiment chạy song song mà không làm rối nhau.
+:::
 
 
+## Canary deployment sâu {#sec-canary}
 
-## Canary deployment cho inference service
+> Canary đúng nghĩa không chỉ là "route 5% traffic" — vậy cần thêm những gì?
 
-Canary là chiến lược quan trọng nhất cho model rollout production.
+::: {.callout-important icon=false}
+## Ý chính
+Canary cần **metric gates** để tự động promote hoặc rollback. Không có gates thì chỉ là "deploy từ từ". Schedule chuẩn: 1%→5%→10%→25%→50%→100%, mỗi bước cần đủ số requests tối thiểu lẫn thời gian quan sát. Rollback phải sẵn sàng **trước** khi bắt đầu rollout.
+:::
 
-### Canary không phải chỉ là “route 5% traffic”
+**Canary schedule**:
 
-Một canary chuẩn gồm:
+| Bước | Traffic | Thời gian tối thiểu | Requests tối thiểu |
+|:-----|:--------|:--------------------|:-------------------|
+| Warmup | 0% | Load + warmup | 100–1,000 |
+| Step 1 | 1% | 10–30 phút | 10,000 |
+| Step 2 | 5% | 10–30 phút | 25,000 |
+| Step 3 | 10% | 30–60 phút | 50,000 |
+| Step 4 | 25% | 30–60 phút | 100,000 |
+| Step 5 | 50% | 1–2 giờ | 200,000 |
+| Promote | 100% | — | — |
 
-```text
-candidate version
-stable baseline
-traffic schedule
-metric gates
-minimum observation window
-automated rollback condition
-manual approval points
-owner
-rollback target
-```
+**Metric gates**: mỗi bước chỉ advance khi tất cả gates pass.
 
-Nếu thiếu metric gates, bạn chỉ đang “deploy từ từ”, không phải canary đúng nghĩa.
+| Gate | Ví dụ điều kiện |
+|:-----|:----------------|
+| Availability | `candidate_success_rate >= stable_success_rate - 0.1%` |
+| Latency | `candidate_p99_latency <= stable_p99_latency * 1.10` |
+| Timeout | `candidate_timeout_rate <= stable_timeout_rate + 0.05%` |
+| GPU memory | `candidate_gpu_memory_usage < 85%` |
+| Quality | `candidate_disagreement_rate <= 2%` |
+| Schema | `invalid_response_schema_count == 0` |
 
-### Canary schedule mẫu
+**Candidate vs absolute threshold**: nên dùng cả hai. Relative threshold phát hiện degradation so với stable (tránh false alarm khi toàn hệ thống chậm do upstream). Absolute threshold giữ SLO dù stable cũng chậm.
 
-Một schedule phổ biến:
+**Rollback ngay nếu**: error rate tăng rõ rệt; p99 vượt SLO; timeout rate tăng; invalid schema xuất hiện; GPU OOM; NaN/Inf output; quality guardrail fail. Quy tắc: *Rollback fast, investigate after.*
 
-```text
-0%  - load candidate, warm up, health check
-1%  - observe 10-30 minutes
-5%  - observe 10-30 minutes
-10% - observe 30-60 minutes
-25% - observe 30-60 minutes
-50% - observe 1-2 hours
-100% - promote
-```
-
-Với service traffic thấp, mỗi step cần dựa trên số request tối thiểu thay vì thời gian cố định.
-
-Ví dụ:
-
-```text
-Promote step only if:
-    candidate_requests >= 10,000
-    and observation_window >= 15 minutes
-    and all gates pass
-```
-
-### Metric gates cho canary
-
-Một canary gate tốt không chỉ nhìn “error rate”.
-
-Ví dụ gate:
-
-```text
-Availability gate:
-    candidate_success_rate >= stable_success_rate - 0.1%
-
-Latency gate:
-    candidate_p99_latency <= stable_p99_latency * 1.10
-
-Timeout gate:
-    candidate_timeout_rate <= stable_timeout_rate + 0.05%
-
-GPU memory gate:
-    candidate_gpu_memory_usage < 85%
-
-Quality gate:
-    candidate_disagreement_rate <= 2%
-
-Schema gate:
-    invalid_response_schema_count == 0
-```
-
-Với model inference, nên có cả:
-
-```text
-technical gates + quality gates + business guardrails
-```
-
-### Candidate vs absolute threshold
-
-Có hai cách đặt gate.
-
-Cách 1: absolute threshold.
-
-```text
-candidate_p99_latency < 100 ms
-candidate_error_rate < 0.1%
-```
-
-Cách 2: relative threshold so với stable.
-
-```text
-candidate_p99_latency <= stable_p99_latency * 1.10
-candidate_error_rate <= stable_error_rate + 0.05%
-```
-
-Trong rollout, relative threshold thường hữu ích vì production traffic biến động theo thời gian.
-
-Ví dụ:
-
-```text
-Nếu cả stable và candidate đều chậm vì upstream database lag,
-thì không nên đổ lỗi ngay cho candidate.
-```
-
-Tuy nhiên, absolute threshold vẫn cần cho SLO:
-
-```text
-Dù stable cũng chậm, user vẫn bị ảnh hưởng.
-```
-
-Do đó nên dùng cả hai:
-
-```text
-candidate không được tệ hơn stable quá nhiều
-và toàn service không được vi phạm SLO.
-```
-
-### Canary với Argo Rollouts: ví dụ khái niệm
-
-> Đây là ví dụ học tập. Trong production, bạn cần chỉnh image, Service, Ingress/Gateway, metric name và PromQL theo hệ thống thật.
+::: {.callout-tip icon=false collapse="true"}
+## Canary với Argo Rollouts — YAML mẫu
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -874,18 +362,13 @@ spec:
       containers:
         - name: triton
           image: nvcr.io/nvidia/tritonserver:24.12-py3
-          args:
-            - tritonserver
-            - --model-repository=/models
           ports:
             - containerPort: 8000
             - containerPort: 8001
             - containerPort: 8002
 ```
 
-### AnalysisTemplate với Prometheus
-
-Ví dụ kiểm tra success rate:
+**AnalysisTemplate với Prometheus** (success rate):
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -912,161 +395,35 @@ spec:
             )
 ```
 
-Ví dụ kiểm tra latency p99 nếu bạn có histogram metric phù hợp trong hệ thống:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: AnalysisTemplate
-metadata:
-  name: image-classifier-latency-check
-spec:
-  metrics:
-    - name: p99-latency
-      interval: 1m
-      count: 5
-      successCondition: result[0] <= 0.100
-      failureLimit: 1
-      provider:
-        prometheus:
-          address: http://prometheus.monitoring.svc.cluster.local:9090
-          query: |
-            histogram_quantile(
-              0.99,
-              sum(rate(inference_request_duration_seconds_bucket{model="image_classifier"}[5m])) by (le)
-            )
-```
-
-Lưu ý:
-
-- Metric name trong thực tế phụ thuộc exporter và setup của bạn.
-- Triton có metrics riêng; bạn có thể dùng trực tiếp hoặc transform sang histogram phù hợp.
-- Luôn validate PromQL trong Prometheus UI trước khi đưa vào rollout automation.
-
-### Canary rollback conditions
-
-Rollback ngay nếu:
-
-```text
-error rate tăng rõ rệt;
-p99 latency vượt SLO;
-timeout rate tăng;
-invalid response schema xuất hiện;
-GPU OOM hoặc pod crash loop;
-model returns NaN/Inf;
-quality guardrail fail;
-operator phát hiện issue nghiêm trọng.
-```
-
-Không nên chờ đủ toàn bộ canary schedule nếu gate đã fail.
-
-Quy tắc tốt:
-
-```text
-Rollback fast, investigate after.
-```
-
-Trong incident, ưu tiên giảm ảnh hưởng user trước, phân tích nguyên nhân sau.
+Luôn validate PromQL trong Prometheus UI trước khi dùng trong rollout automation.
+:::
 
 
+## A/B testing và shadow traffic {#sec-ab-shadow}
 
-##  A/B testing cho model inference
+> Canary đã an toàn — nhưng khi nào cần A/B test? Và shadow traffic đứng ở đâu trong pipeline?
 
-A/B testing thường bị nhầm với canary. Hai thứ này liên quan nhưng không giống nhau.
+::: {.callout-important icon=false}
+## Ý chính
+**Canary** hỏi: *"Model mới có đủ an toàn?"* **A/B testing** hỏi: *"Model mới có tạo ra impact tốt hơn cho user?"* — hai câu hỏi khác nhau, cần tool và thời gian khác nhau. **Shadow traffic** là bước validate trước canary: thấy latency/error trên traffic thật mà không trả response candidate cho user.
+:::
 
-### Canary vs A/B testing
+**Canary vs A/B testing**:
 
-Canary hỏi:
+| Tiêu chí | Canary | A/B Testing |
+|:---------|:-------|:------------|
+| Mục tiêu | Safety | Business impact |
+| Thời gian | Ngắn (giờ/ngày) | Dài hơn (ngày/tuần) |
+| Rollback | Nhanh và thường xuyên | Ít rollback hơn |
+| Metric chính | p99, error rate | CTR, conversion, engagement |
+| Khi dùng | Mọi model release | Khi offline metric chưa đủ để quyết định |
 
-```text
-Model mới có đủ an toàn để rollout không?
-```
+**A/B test chuẩn** cần: hypothesis, sticky assignment, primary metric, guardrail metrics, minimum sample size, experiment duration, rollback rule.
 
-A/B testing hỏi:
-
-```text
-Model mới có tạo impact tốt hơn model cũ không?
-```
-
-Canary thường ngắn hơn, có rollback nhanh.
-
-A/B testing thường dài hơn, cần thiết kế thống kê cẩn thận hơn.
-
-### Khi nào cần A/B test?
-
-Dùng A/B test khi offline metric không đủ để quyết định.
-
-Ví dụ:
-
-```text
-Recommendation model:
-    offline NDCG tăng 2%, nhưng không biết CTR/revenue có tăng không.
-
-Ranking model:
-    MAP tăng, nhưng user engagement chưa chắc tăng.
-
-Moderation model:
-    precision tăng, nhưng false positive có thể làm user khó chịu.
-
-Embedding model:
-    retrieval recall tăng, nhưng latency/cost cũng tăng.
-```
-
-### Thành phần của một A/B test chuẩn
-
-Một A/B test nên có:
-
-```text
-hypothesis
-variant A
-variant B
-unit of randomization
-sticky assignment
-primary metric
-guardrail metrics
-minimum sample size
-experiment duration
-exclusion rules
-analysis plan
-rollback rule
-```
-
-Ví dụ:
-
-```text
-Hypothesis:
-    Model v2 tăng top-1 click-through rate mà không làm tăng p99 latency quá 10%.
-
-Variant A:
-    current ranking model v1
-
-Variant B:
-    candidate ranking model v2
-
-Randomization unit:
-    user_id
-
-Primary metric:
-    CTR per user session
-
-Guardrails:
-    p99 latency
-    error rate
-    zero-result rate
-    complaint/report rate
-
-Duration:
-    7 days
-```
-
-### Sticky assignment
-
-Không nên route cùng một user lúc thì model A, lúc thì model B nếu metric phụ thuộc trải nghiệm liên tục.
-
-Bạn nên dùng sticky assignment:
+**Sticky assignment** — tránh user thấy kết quả lúc A lúc B:
 
 ```python
 import hashlib
-
 
 def assign_variant(user_id: str, experiment_id: str, traffic_percent_b: int = 50) -> str:
     key = f"{experiment_id}:{user_id}".encode("utf-8")
@@ -1074,57 +431,83 @@ def assign_variant(user_id: str, experiment_id: str, traffic_percent_b: int = 50
     return "B" if bucket < traffic_percent_b else "A"
 ```
 
-Sticky assignment giúp:
+**Guardrail quan trọng hơn primary metric khi**: CTR tăng 3% nhưng p99 latency tăng 80%, error rate tăng 0.5%, complaint rate tăng → không nên promote.
 
-- user experience ổn định hơn;
-- giảm contamination giữa variants;
-- phân tích kết quả dễ hơn.
+**Shadow traffic architecture**:
 
-### Guardrail metrics
-
-Không bao giờ chỉ nhìn primary metric.
-
-Ví dụ primary metric tăng nhưng guardrail fail:
-
-```text
-CTR tăng 3%
-but p99 latency tăng 80%
-but error rate tăng 0.5%
-but complaint rate tăng
+```{mermaid}
+%%| label: fig-l8-shadow
+%%| fig-cap: "Shadow traffic: stable phục vụ user, candidate nhận bản sao request và chỉ emit metrics/logs."
+%%| fig-width: 6.5
+%%| fig-align: "center"
+flowchart TB
+  C([Client]) -->|"request"| API([Inference API])
+  API -->|"response to user"| ST([Stable v1])
+  API -->|"async duplicate"| CD([Candidate v2])
+  CD -->|"metrics/logs only"| M([Monitoring])
+  ST -->|"user response"| C
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2.5px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class C,M soft
+  class API io
+  class ST ok
+  class CD hot
 ```
 
-Model đó không nên promote ngay.
+Candidate path phải: non-blocking, best-effort, no user-facing response, no side effects, rate-limited, observable. Nếu candidate fail, stable response vẫn trả bình thường.
 
-Guardrail phổ biến cho inference:
+::: {.callout-tip icon=false collapse="true"}
+## Shadow pseudo-code và safety rules
 
-```text
-latency p95/p99
-error rate
-timeout rate
-cost per request
-GPU memory
-invalid output rate
-fallback rate
-safety violation rate
-complaint/report rate
+```python
+import asyncio
+import httpx
+
+STABLE_URL = "http://triton-stable:8000/v2/models/image_classifier/infer"
+CANDIDATE_URL = "http://triton-candidate:8000/v2/models/image_classifier/infer"
+
+async def call_candidate_shadow(payload: dict, request_id: str) -> None:
+    try:
+        async with httpx.AsyncClient(timeout=0.2) as client:
+            r = await client.post(CANDIDATE_URL, json=payload)
+            print({"request_id": request_id, "candidate_status": r.status_code})
+    except Exception as exc:
+        print({"request_id": request_id, "shadow_error": str(exc)})
+
+async def handle_request(payload: dict, request_id: str) -> dict:
+    # Fire shadow task, do NOT await it on user's critical path.
+    asyncio.create_task(call_candidate_shadow(payload, request_id))
+    async with httpx.AsyncClient(timeout=0.2) as client:
+        r = await client.post(STABLE_URL, json=payload)
+        r.raise_for_status()
+        return r.json()
 ```
 
-### Pitfalls của A/B testing model
+Trong production, dùng **bounded queue + worker pool** thay vì `create_task` không giới hạn. Không bao giờ shadow request có side effects (gửi email thật, ghi DB thật, gọi payment API thật).
 
-Các lỗi phổ biến:
+**Safety rules:** sample shadow (không 100% nếu capacity mỏng); rate-limit candidate path; chạy candidate trên capacity riêng khi có thể; timeout shadow ngắn hơn user path; không block user response; log `request_id` để join stable vs candidate.
 
-1. **Sample quá nhỏ**: kết quả không đáng tin.
-2. **Experiment quá ngắn**: không qua đủ chu kỳ traffic.
-3. **Không sticky assignment**: user bị đổi variant liên tục.
-4. **Selection bias**: chỉ một nhóm user được đưa vào variant B.
-5. **Metric leakage**: một user ảnh hưởng nhiều request nhưng phân tích theo request.
-6. **Novelty effect**: user phản ứng tạm thời với thay đổi mới.
-7. **Guardrail thiếu**: primary metric tăng nhưng reliability xấu.
-8. **Không log đủ exposure**: không biết user/request thật sự dùng model nào.
+**Shadow comparison** theo loại model:
+- Classification: `stable_top1 == candidate_top1?`, KL divergence, confidence delta
+- Embedding: cosine similarity, nearest-neighbor overlap
+- Ranking: top-k overlap, rank correlation
+- LLM: schema validity, safety classifier, length distribution, cost/request
+:::
 
-### Log schema cho A/B testing
+::: {.callout-tip icon=false collapse="true"}
+## Pitfalls phổ biến của A/B testing
+1. **Sample quá nhỏ** → kết quả không đáng tin; tính minimum sample size trước
+2. **Experiment quá ngắn** → không qua đủ chu kỳ traffic (weekday vs weekend)
+3. **Không sticky** → user bị đổi variant liên tục
+4. **Selection bias** → chỉ một nhóm user được đưa vào variant B
+5. **Metric leakage** → một user ảnh hưởng nhiều request nhưng phân tích theo request
+6. **Novelty effect** → user phản ứng tạm thời với thay đổi mới, cần chạy đủ dài
+7. **Guardrail thiếu** → primary metric tăng nhưng reliability xấu
+8. **Không log exposure** → không biết user/request thật sự dùng model nào
 
-Bạn nên log ít nhất:
+Log schema tối thiểu (không log PII thô — hash/anonymize):
 
 ```json
 {
@@ -1142,618 +525,151 @@ Bạn nên log ít nhất:
   "fallback_used": false
 }
 ```
-
-Không log dữ liệu nhạy cảm nếu không cần. Dùng hash/anonymization theo policy của hệ thống.
-
+:::
 
 
-## Shadow traffic
+## Triton production operations {#sec-triton-ops}
 
-Shadow traffic là bước rất hữu ích trước canary.
+> Triton có nhiều cơ chế production hơn là chỉ serve model — cần biết cái gì để vận hành an toàn?
 
-### Shadow traffic giải quyết vấn đề gì?
-Offline benchmark thường không phản ánh production traffic thật.
+::: {.callout-important icon=false}
+## Ý chính
+Để canary/rollback hoạt động tốt với Triton, cần nắm: `version_policy` để kiểm soát version nào được serve; `EXPLICIT` control mode để load/unload có chủ đích; warmup trước khi nhận traffic; và hiểu rằng health check chỉ nói service còn sống — không chứng minh model output đúng hay latency ổn.
+:::
 
-Shadow traffic giúp kiểm tra:
-
-```text
-model có handle input thật không?
-model có lỗi schema không?
-latency trên request thật là bao nhiêu?
-GPU memory có ổn không?
-model có crash với edge cases không?
-preprocessing/postprocessing có tương thích không?
-```
-
-Nhưng shadow traffic không đo được:
-
-```text
-user satisfaction
-conversion
-CTR
-business outcome
-```
-
-vì response của candidate không được trả cho user.
-
-### Kiến trúc shadow traffic
-
-```text
-Client
-  |
-  v
-Inference API
-  |
-  +> stable model v1 -> response to user
-  |
-  +-- async duplicate --> candidate model v2 -> metrics/logs only
-```
-
-Candidate path phải:
-
-```text
-non-blocking
-best-effort
-no user-facing response
-no side effects
-rate limited
-observable
-```
-
-Nếu candidate fail, stable response vẫn phải trả bình thường.
-
-###  Shadow traffic pseudo-code
-
-Ví dụ đơn giản bằng Python async:
-
-```python
-import asyncio
-import httpx
-
-STABLE_URL = "http://triton-stable:8000/v2/models/image_classifier/infer"
-CANDIDATE_URL = "http://triton-candidate:8000/v2/models/image_classifier/infer"
-
-
-async def call_stable(payload: dict) -> dict:
-    async with httpx.AsyncClient(timeout=0.2) as client:
-        r = await client.post(STABLE_URL, json=payload)
-        r.raise_for_status()
-        return r.json()
-
-
-async def call_candidate_shadow(payload: dict, request_id: str) -> None:
-    try:
-        async with httpx.AsyncClient(timeout=0.2) as client:
-            r = await client.post(CANDIDATE_URL, json=payload)
-            # Log latency/status/output summary only.
-            # Do not block user response.
-            print({
-                "request_id": request_id,
-                "candidate_status": r.status_code,
-            })
-    except Exception as exc:
-        print({
-            "request_id": request_id,
-            "candidate_shadow_error": str(exc),
-        })
-
-
-async def handle_request(payload: dict, request_id: str) -> dict:
-    shadow_task = asyncio.create_task(call_candidate_shadow(payload, request_id))
-    stable_response = await call_stable(payload)
-
-    # Avoid leaking unfinished background tasks in real production code.
-    # You may use a bounded queue/worker pool instead of raw create_task.
-    _ = shadow_task
-
-    return stable_response
-```
-
-Trong production thật, không nên tạo task không giới hạn. Bạn nên dùng:
-
-```text
-bounded queue
-worker pool
-rate limit
-circuit breaker
-sampling
-```
-
-### Shadow comparison
-
-Với classification:
-
-```text
-stable_top1 == candidate_top1?
-KL divergence giữa probability distribution?
-confidence delta?
-```
-
-Với object detection:
-
-```text
-number of boxes
-IoU match
-class mismatch
-confidence distribution
-```
-
-Với embedding:
-
-```text
-cosine similarity
-nearest-neighbor overlap
-retrieval top-k overlap
-```
-
-Với ranking:
-
-```text
-top-k overlap
-rank correlation
-score distribution shift
-```
-
-Với LLM:
-
-```text
-schema validity
-safety classifier score
-length distribution
-latency/token
-cost/request
-human/evaluator sample review
-```
-
-### Shadow traffic safety rules
-
-Không dùng shadow traffic bừa bãi nếu request có side effect.
-
-Ví dụ nguy hiểm:
-
-```text
-shadow request gửi email thật
-shadow request ghi database thật
-shadow request gọi payment API thật
-shadow request tạo ticket thật
-```
-
-Candidate path nên là read-only hoặc mocked side effects.
-
-
-
-##  Triton-specific production operations
-
-Triton không chỉ chạy model. Triton còn có cơ chế model repository, versioning, model control, metrics, scheduler, batching, rate limiter.
-
-### Model repository versioning
-
-Cấu trúc phổ biến:
+**Model repository versioning** — giữ stable và candidate trong cùng repo:
 
 ```text
 model_repository/
   image_classifier/
     config.pbtxt
-    1/
+    1/          ← stable
       model.plan
-    2/
+    2/          ← candidate
       model.plan
 ```
 
-Nếu bạn dùng version directory, bạn có thể giữ stable và candidate trong cùng repository.
-
-Nhưng cần rõ:
-
-```text
-version nào đang serve?
-client gọi version cụ thể hay latest?
-version_policy trong config là gì?
-rollback bằng cách nào?
-```
-
-### `version_policy`
-
-Ví dụ chỉ serve version 1:
+**`version_policy`** kiểm soát version nào được load:
 
 ```protobuf
-name: "image_classifier"
-platform: "tensorrt_plan"
-max_batch_size: 8
+# Chỉ serve version 1 (stable):
+version_policy: { specific: { versions: [1] } }
 
-version_policy: {
-  specific: {
-    versions: [1]
-  }
-}
+# Serve cả hai (cho shadow/canary):
+version_policy: { specific: { versions: [1, 2] } }
+
+# Promote: chỉ version 2:
+version_policy: { specific: { versions: [2] } }
 ```
 
-Promote sang version 2:
+**Stable/candidate naming** thay thế: dùng hai model names `image_classifier_stable` và `image_classifier_candidate` — metrics tách biệt rõ, dễ route traffic bằng service/router.
 
-```protobuf
-version_policy: {
-  specific: {
-    versions: [2]
-  }
-}
-```
+**Model control modes**:
 
-Serve cả hai version:
+| Mode | Cách hoạt động | Dùng khi |
+|:-----|:---------------|:---------|
+| `NONE` | Load tại startup, không thay đổi runtime | Dev/test đơn giản |
+| `POLL` | Tự kiểm tra repo theo chu kỳ, load khi thay đổi | Deploy qua filesystem sync |
+| `EXPLICIT` | Load/unload qua API | Production: load/unload có kiểm soát |
 
-```protobuf
-version_policy: {
-  specific: {
-    versions: [1, 2]
-  }
-}
-```
-
-Nếu serve cả hai version, router/client có thể gọi version cụ thể.
-
-### Model names cho stable/candidate
-
-Một cách khác là dùng hai model names:
-
-```text
-image_classifier_stable
-image_classifier_candidate
-```
-
-Ưu điểm:
-
-- dễ route traffic bằng service/router;
-- metrics tách biệt rõ;
-- dễ shadow traffic;
-- không phụ thuộc client gọi version cụ thể.
-
-Nhược điểm:
-
-- cần quản lý config trùng lặp;
-- nếu không chuẩn hóa naming, repository sẽ rối.
-
-### Model control modes
-
-Triton có ba model control modes phổ biến:
-
-```text
-NONE
-POLL
-EXPLICIT
-```
-
-Khái niệm:
-
-```text
-NONE:
-    Triton load models khi startup.
-    Thay đổi repository lúc đang chạy thường không được áp dụng.
-
-POLL:
-    Triton kiểm tra model repository theo chu kỳ và load/unload/reload khi phát hiện thay đổi.
-
-EXPLICIT:
-    Load/unload model thông qua model control API.
-```
-
-Trong production nghiêm túc, `EXPLICIT` thường dễ kiểm soát hơn vì model load/unload là hành động có chủ đích.
-
-Ví dụ:
+`EXPLICIT` load/unload:
 
 ```bash
-curl -X POST localhost:8000/v2/repository/models/image_classifier/load
-curl -X POST localhost:8000/v2/repository/models/image_classifier/unload
+curl -X POST localhost:8000/v2/repository/models/image_classifier_candidate/load
+curl -X POST localhost:8000/v2/repository/models/image_classifier_candidate/unload
 ```
 
-### Warmup trước khi nhận traffic
+**Warmup trước khi nhận traffic**: `load model → health check → 100–1000 synthetic requests → validate schema → measure initial latency → mark ready → start canary at 1%`. Không bỏ qua bước này vì CUDA context init và kernel warmup có thể làm request đầu tiên chậm 3–10×.
 
-Một model có thể load thành công nhưng request đầu tiên chậm vì:
+**Health check ≠ promote**: `/health/live` (process sống?) và `/health/ready` (model ready?) không chứng minh output đúng, p99 ổn, accuracy không giảm. Health check là điều kiện cần, không đủ.
 
-```text
-CUDA context initialization
-engine initialization
-memory allocation
-kernel/tactic warmup
-cache cold start
+::: {.callout-tip icon=false collapse="true"}
+## Triton metrics quan trọng nhất
+
+| Metric | Ý nghĩa |
+|:-------|:--------|
+| `nv_inference_request_success` | Requests thành công |
+| `nv_inference_request_failure` | Requests lỗi |
+| `nv_inference_pending_request_count` | Queue depth |
+| `nv_inference_queue_duration_us` | Thời gian chờ trước execute |
+| `nv_inference_compute_infer_duration_us` | Thời gian GPU compute |
+| `nv_inference_compute_input_duration_us` | H2D + preprocessing |
+| `nv_inference_compute_output_duration_us` | D2H + postprocessing |
+
+Luôn kiểm tra endpoint `/metrics` của Triton version đang dùng — metric availability phụ thuộc version/config.
+
+**Rate limiter**: Triton có rate limiter để manage scheduling lên model instances. Trong hệ thống nhiều model, rate limiting tránh model ít quan trọng làm nghẽn tài nguyên dùng chung. Kết hợp với `max_queue_delay` để tránh queue vô hạn làm p99 spike.
+:::
+
+
+## Monitoring, alerting và dashboards {#sec-monitoring}
+
+> Đã có metric — nhưng metric nào thật sự quan trọng, dashboard nên có gì, và alert khi nào?
+
+::: {.callout-important icon=false}
+## Ý chính
+Alert tốt phải liên quan trực tiếp đến user impact và có action rõ ràng. Alert theo GPU utilization > 80% thường là noise; alert theo *p99 latency vượt SLO trong 10 phút tại minimum traffic threshold* mới hữu ích. Label metrics theo `model_version`, `variant`, `experiment_id` — không thì không phân biệt được stable vs candidate.
+:::
+
+```{mermaid}
+%%| label: fig-l8-monitoring
+%%| fig-cap: "Monitoring flow: golden signals từ Triton → Prometheus scrape → Grafana dashboard + SLO alert → on-call action."
+%%| fig-width: 6.5
+%%| fig-align: "center"
+flowchart TB
+  TR([Triton /metrics]) -->|"scrape 15s"| PR([Prometheus])
+  PR -->|"dashboards"| GR([Grafana])
+  PR -->|"SLO alert rules"| AL([Alertmanager])
+  AL -->|"on-call"| OC([Runbook])
+  GR -->|"canary comparison"| OC
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2.5px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class TR io
+  class PR ok
+  class GR soft
+  class AL,OC hot
 ```
 
-Trước khi đưa candidate vào traffic, nên chạy warmup:
-
-```text
-load model
-health check
-send synthetic requests
-validate output schema
-measure initial latency
-mark ready
-start canary
-```
-
-Pseudo-flow:
-
-```text
-1. Load candidate model.
-2. Wait until model ready.
-3. Send 100-1000 warmup requests with representative shapes.
-4. Verify no error.
-5. Verify latency within expected range.
-6. Enable 1% traffic.
-```
-
-### Health check không đủ để promote
-
-Health check chỉ nói service còn sống.
-
-```text
-/health/live  -> process sống?
-/health/ready -> model ready?
-```
-
-Nó không chứng minh:
-
-```text
-model output đúng;
-p99 latency ổn;
-accuracy không giảm;
-GPU memory không leak;
-request thật không lỗi.
-```
-
-Do đó health check là điều kiện cần, không phải điều kiện đủ.
-
-### 11.7 Triton metrics quan trọng
-
-Các nhóm metrics cần quan sát:
-
-```text
-request success/failure
-request count
-inference count
-execution count
-queue duration
-compute input duration
-compute infer duration
-compute output duration
-GPU utilization
-GPU memory
-pinned memory
-cache metrics nếu dùng response cache
-```
-
-Một số metric name phổ biến trong Triton:
-
-```text
-nv_inference_request_success
-nv_inference_request_failure
-nv_inference_count
-nv_inference_exec_count
-nv_inference_pending_request_count
-nv_inference_request_duration_us
-nv_inference_queue_duration_us
-nv_inference_compute_input_duration_us
-nv_inference_compute_infer_duration_us
-nv_inference_compute_output_duration_us
-```
-
-Luôn kiểm tra endpoint `/metrics` của Triton version bạn đang dùng vì metric availability có thể phụ thuộc version/config.
-
-### Rate limiter và overload protection
-
-Nếu một GPU service bị overload, để queue vô hạn thường làm p99 latency tăng rất mạnh.
-
-Bạn cần thiết kế:
-
-```text
-max queue delay
-max queue size
-timeout
-rate limit
-priority
-load shedding
-fallback
-```
-
-Triton có rate limiter để quản lý tốc độ request được schedule lên model instances. Trong hệ thống nhiều model, rate limiting giúp tránh model ít quan trọng làm nghẽn tài nguyên dùng chung.
-
-
-
-## Monitoring cho inference service
-
-Monitoring tốt phải trả lời được:
-
-```text
-Service có đang phục vụ user tốt không?
-Nếu không, nghẽn ở đâu?
-Thay đổi nào gây ra vấn đề?
-Rollback có giúp không?
-```
-
-### Golden signals cho inference
-
-Bốn nhóm cơ bản:
-
-```text
-Latency
-Traffic
-Errors
-Saturation
-```
-
-Với inference, mở rộng thành:
-
-```text
-Latency:
-    client latency
-    server latency
-    queue time
-    compute time
-    H2D/D2H nếu có
-    p50/p95/p99
-
-Traffic:
-    request rate
-    inference rate
-    batch size distribution
-    input shape distribution
-    token length distribution với LLM
-
-Errors:
-    HTTP/gRPC error
-    model failure
-    timeout
-    invalid schema
-    NaN/Inf output
-    fallback rate
-
-Saturation:
-    GPU utilization
-    GPU memory
-    CPU utilization
-    CPU memory
-    pending requests
-    queue depth
-    model instance busy time
-```
-
-### Dashboard tối thiểu
-
-Dashboard production nên có các panel:
-
-1. Request rate by model/version.
-2. Success rate by model/version.
-3. Error rate by model/version.
-4. p50/p95/p99 latency.
-5. Queue duration.
-6. Compute infer duration.
-7. Batch size distribution.
-8. Pending requests.
-9. GPU utilization.
-10. GPU memory usage.
-11. Pod restart count.
-12. Model load/unload events.
-13. Canary traffic percentage.
-14. Candidate vs stable comparison.
-15. Cost proxy: GPU hours / 1M requests.
-
-### Tách stable và candidate metrics
-
-Nếu stable và candidate dùng cùng model name/version label không rõ ràng, bạn sẽ không biết candidate có tệ hơn stable không.
-
-Luôn label metrics theo:
-
-```text
-model_name
-model_version
-deployment
-variant
-experiment_id
-pod
-gpu
-```
-
-Ví dụ:
-
-```text
-model="image_classifier"
-version="2"
-variant="candidate"
-experiment_id="rollout_2026_05_14"
-```
-
-### Client-side vs server-side monitoring
-
-Server-side metrics không đủ.
-
-Bạn cần cả client-side metrics vì user latency gồm:
-
-```text
-client serialization
-network
-gateway
-queueing
-Triton request handling
-model compute
-response serialization
-network back to client
-client deserialization
-```
-
-Triton có thể báo compute infer rất nhanh, nhưng user vẫn thấy chậm vì:
-
-```text
-network slow
-payload lớn
-client thread pool nghẽn
-gateway retry
-load balancer queue
-```
-
-### Quality monitoring
-
-Model quality không thể luôn đo real-time vì nhãn thật có thể đến muộn.
-
-Bạn nên có nhiều tầng:
-
-```text
-online immediate checks:
-    schema validity
-    confidence distribution
-    score distribution
-    disagreement with stable
-    fallback rate
-    safety filter score
-
-delayed labels:
-    accuracy
-    precision/recall
-    conversion
-    user feedback
-    human review
-
-data drift:
-    input feature distribution
-    image size/source distribution
-    language distribution
-    token length distribution
-    embedding norm distribution
-```
-
-### Alerting theo SLO
-
-Không nên alert mọi biến động nhỏ.
-
-Alert tốt nên:
-
-```text
-liên quan trực tiếp tới user impact;
-có action rõ ràng;
-ít false positive;
-phân biệt warning vs critical;
-gắn với runbook.
-```
-
-Ví dụ alert tệ:
-
-```text
-GPU utilization > 80%
-```
-
-Vì GPU utilization cao có thể là bình thường.
-
-Ví dụ alert tốt hơn:
-
-```text
-p99 latency > SLO trong 10 phút
-và request rate > minimum traffic threshold
-```
-
-Hoặc:
-
-```text
-error budget burn rate vượt ngưỡng
-```
-
-### Prometheus alert rule ví dụ
-
-Ví dụ error rate:
+**Golden signals** cho inference service:
+
+| Signal | Metrics quan trọng |
+|:-------|:------------------|
+| Latency | client p50/p95/p99, server-side queue + compute infer duration |
+| Traffic | request rate, inference rate, batch size distribution |
+| Errors | HTTP/gRPC error, model failure, timeout, invalid schema, NaN/Inf output |
+| Saturation | GPU utilization, GPU memory, pending requests, queue depth |
+
+**Dashboard tối thiểu** (15 panel):
+
+1. Request rate by model/version
+2. Success rate by model/version
+3. Error rate by model/version
+4. p50/p95/p99 latency (stable vs candidate)
+5. Queue duration
+6. Compute infer duration
+7. Batch size distribution
+8. Pending requests
+9. GPU utilization
+10. GPU memory usage
+11. Pod restart count
+12. Model load/unload events
+13. Canary traffic percentage
+14. Candidate vs stable comparison panel
+15. Cost proxy: GPU hours / 1M requests
+
+**Client-side monitoring** — server-side không đủ vì user latency còn gồm: serialization, network RTT, gateway queue, client thread pool. Triton có thể báo compute infer = 40 ms nhưng user thấy 200 ms vì network + gateway.
+
+**Quality monitoring** — model quality không thể luôn đo real-time:
+
+| Tầng | Metric | Khi có |
+|:-----|:-------|:-------|
+| Online immediate | Schema validity, confidence distribution, disagreement with stable, fallback rate | Ngay lập tức |
+| Delayed labels | Accuracy, precision/recall, conversion, user feedback | Giờ → ngày |
+| Data drift | Input feature distribution, token length, embedding norm | Batch job |
+
+**Prometheus alert rules** ví dụ:
 
 ```yaml
 groups:
@@ -1776,125 +692,60 @@ groups:
         annotations:
           summary: "High inference error rate for image_classifier"
           runbook: "https://runbooks.example.com/inference-high-error-rate"
+      - alert: TritonPendingRequestsHigh
+        expr: sum(nv_inference_pending_request_count{model="image_classifier"}) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Triton pending request queue is high"
 ```
 
-Ví dụ pending requests:
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Metric stable + candidate bị aggregate chung: nếu candidate đang gây lỗi nhưng chỉ nhận 5% traffic, error rate tổng trông vẫn ổn. Luôn label theo `variant`, `model_version`, `experiment_id` và có panel so sánh riêng.
+:::
 
-```yaml
-- alert: TritonPendingRequestsHigh
-  expr: |
-    sum(nv_inference_pending_request_count{model="image_classifier"}) > 100
-  for: 5m
-  labels:
-    severity: warning
-  annotations:
-    summary: "Triton pending request queue is high"
+
+## Autoscaling, overload và incident response {#sec-autoscale}
+
+> Scale thêm pod có đảm bảo SLO không — và khi incident xảy ra, làm gì trước tiên?
+
+::: {.callout-important icon=false}
+## Ý chính
+Autoscale GPU inference theo CPU utilization hầu như không hoạt động — inference là GPU-bound, CPU thấp trong khi GPU bão hòa. Scale theo **pending requests** hoặc **queue duration** phản ánh user impact trực tiếp hơn. Khi incident xảy ra: giảm impact trước (rollback/route về 0%), điều tra root cause sau.
+:::
+
+```{mermaid}
+%%| label: fig-l8-incident
+%%| fig-cap: "Incident lifecycle: Detect → Triage → Mitigate (rollback ưu tiên) → Resolve → Postmortem → Prevent."
+%%| fig-width: 5.5
+%%| fig-align: "center"
+flowchart TB
+  D([Detect]) -->|"alert / on-call"| T([Triage])
+  T -->|"rollback first"| M([Mitigate])
+  M -->|"SLO restored"| R([Resolve])
+  R -->|"blameless"| P([Postmortem])
+  P -->|"action items"| PV([Prevent])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2.5px,color:#5C3B10
+  class D,T soft
+  class M hot
+  class R,P,PV ok
 ```
 
+**Autoscaling signals** — so sánh:
 
+| Signal | CPU inference | GPU inference |
+|:-------|:-------------|:-------------|
+| CPU utilization | Tốt | Thường thấp dù GPU nghẽn |
+| GPU utilization | — | Hữu ích nhưng nonlinear vs latency |
+| Pending requests | Tốt | **Tốt nhất cho overload signal** |
+| Queue duration | Tốt | Trực tiếp phản ánh user wait |
+| Request rate/replica | Tốt | Tốt cho proactive scaling |
 
-## Autoscaling inference workloads
-
-Autoscaling inference khó hơn autoscaling web API vì:
-
-```text
-GPU đắt và khan hiếm;
-model load time lâu;
-TensorRT engine warmup cần thời gian;
-traffic có burst;
-latency phụ thuộc batching;
-GPU utilization không tuyến tính với request latency;
-scaling thêm pod có thể làm batch size nhỏ hơn;
-cold start có thể gây p99 spike.
-```
-
-### Scale theo cái gì?
-
-Các metric autoscaling có thể dùng:
-
-```text
-CPU utilization
-GPU utilization
-GPU memory
-request rate
-concurrency
-pending request count
-queue duration
-p95/p99 latency
-custom business priority
-```
-
-Không có metric nào hoàn hảo.
-
-### CPU utilization thường không đủ
-
-Inference GPU service có thể CPU thấp nhưng GPU nghẽn.
-
-```text
-CPU utilization: 20%
-GPU utilization: 98%
-p99 latency: 300 ms
-```
-
-Nếu HPA scale theo CPU, nó sẽ không scale đúng.
-
-### GPU utilization cũng không luôn đủ
-
-GPU utilization cao có thể tốt:
-
-```text
-GPU utilization: 90%
-p99 latency: 60 ms
-throughput: high
-```
-
-GPU utilization thấp cũng có thể xấu:
-
-```text
-GPU utilization: 30%
-p99 latency: 200 ms
-reason: CPU preprocessing bottleneck / network / queue / small batch / sync overhead
-```
-
-Do đó autoscaling tốt thường dùng custom metrics như:
-
-```text
-pending requests
-queue duration
-request rate per replica
-p95/p99 latency
-```
-
-### Kubernetes HPA khái niệm
-
-Horizontal Pod Autoscaler điều chỉnh số replicas của workload dựa trên observed metrics.
-
-Ví dụ HPA theo CPU:
-
-```yaml
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: image-classifier-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: image-classifier
-  minReplicas: 2
-  maxReplicas: 20
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
-```
-
-Với inference GPU, bạn thường cần custom metrics adapter để scale theo Prometheus metrics.
-
-Pseudo YAML theo custom metric:
+**HPA khái niệm** — scale theo custom metric (pending requests):
 
 ```yaml
 apiVersion: autoscaling/v2
@@ -1918,624 +769,211 @@ spec:
           averageValue: "20"
 ```
 
-### Autoscaling và dynamic batching có thể xung đột
-
-Dynamic batching cần gom request để tăng GPU utilization.
-
-Nếu scale quá nhiều replicas:
-
-```text
-traffic per replica giảm
-batch size trung bình giảm
-GPU utilization giảm
-cost tăng
-```
-
-Nếu scale quá ít replicas:
-
-```text
-queue tăng
-p99 latency tăng
-timeout tăng
-```
-
-Bạn cần tìm điểm cân bằng:
-
-```text
-replica count
-instance_group count
-dynamic batching config
-max queue delay
-request timeout
-```
-
-### Scale-up và cold start
-
-Với TensorRT/Triton, pod mới có thể cần:
-
-```text
-pull image
-mount model repository
-load model
-allocate GPU memory
-initialize CUDA context
-warm up model
-pass readiness check
-```
-
-Nếu scale-up mất 2 phút nhưng traffic spike xảy ra trong 20 giây, autoscaling phản ứng quá chậm.
-
-Giải pháp:
-
-```text
-minReplicas đủ cao
-predictive/scheduled scaling cho traffic theo giờ
-pre-warmed standby pods
-small engine/model load time
-warmup requests trước readiness
-queue limit và load shedding
-```
-
-### Scale-to-zero hiếm khi phù hợp cho low-latency GPU inference
-
-Scale-to-zero tiết kiệm cost nhưng cold start thường quá lớn cho latency-sensitive inference.
-
-Dùng scale-to-zero khi:
-
-```text
-traffic rất thưa;
-latency không critical;
-async/batch inference;
-user chấp nhận cold start.
-```
-
-Không nên dùng cho:
-
-```text
-online realtime inference;
-strict p99 SLO;
-interactive product;
-mission-critical API.
-```
-
-
-
-## Overload management
-
-Một hệ thống production không chỉ cần nhanh khi tải bình thường. Nó cần degrade có kiểm soát khi overload.
-
-### Overload trông như thế nào?
-
-Dấu hiệu:
-
-```text
-request rate tăng
-pending requests tăng
-queue duration tăng
-p99 latency tăng
-timeouts tăng
-retries tăng
-GPU utilization cao
-pod memory tăng
-client cancellation tăng
-```
-
-Nếu client retry mạnh, overload có thể tự khuếch đại:
-
-```text
-service chậm -> client timeout -> client retry -> traffic tăng -> service chậm hơn
-```
-
-### Cơ chế bảo vệ
-
-Bạn cần ít nhất một số cơ chế:
-
-```text
-timeout
-max queue size
-max queue delay
-rate limiting
-load shedding
-priority queue
-circuit breaker
-fallback model
-cached response
-reduced precision / cheaper model
-```
-
-### Load shedding
-
-Load shedding nghĩa là từ chối một phần request để bảo vệ phần còn lại.
-
-Ví dụ:
-
-```text
-Nếu queue quá dài:
-    reject low-priority requests với 429/503
-    keep high-priority requests
-```
-
-Điều này nghe có vẻ xấu, nhưng tốt hơn để toàn bộ hệ thống timeout.
-
-```text
-Controlled failure is better than uncontrolled collapse.
-```
-
-### Fallback model
-
-Một số hệ thống có model fallback:
-
-```text
-primary model: large, accurate, expensive
-fallback model: small, faster, less accurate
-```
-
-Khi overload:
-
-```text
-route một phần traffic sang fallback
-hoặc fallback khi primary timeout
-```
-
-Cần monitor fallback rate vì fallback quá nhiều nghĩa là primary service không đủ capacity.
-
-### Request priority
-
-Không phải request nào cũng quan trọng như nhau.
-
-Ví dụ:
-
-```text
-premium user > free user
-interactive request > background request
-safety-critical request > analytics request
-```
-
-Priority giúp hệ thống giữ SLO cho traffic quan trọng nhất khi overload.
-
-
-
-## Incident response cho inference service
-
-Incident response không bắt đầu khi incident xảy ra. Nó bắt đầu từ trước bằng runbook, dashboard, rollback path và ownership rõ ràng.
-
-### Incident lifecycle
-
-Một incident thường đi qua:
-
-```text
-Detect
-Triage
-Mitigate
-Resolve
-Postmortem
-Prevent recurrence
-```
-
-### Nguyên tắc ưu tiên
-
-Khi sự cố đang ảnh hưởng user:
-
-```text
-1. Giảm impact trước.
-2. Khôi phục SLO trước.
-3. Điều tra root cause sau.
-```
-
-Đừng mất 30 phút debug TensorRT trong khi rollback có thể giảm impact trong 2 phút.
-
-### Runbook: p99 latency spike sau rollout
-
-Triệu chứng:
-
-```text
-candidate p99 latency tăng
-stable bình thường
-error rate chưa tăng
-GPU utilization candidate cao hơn
-```
-
-Hành động:
-
-```text
-1. Pause rollout.
-2. Giảm candidate traffic về 0% nếu p99 vượt SLO.
-3. So sánh candidate vs stable:
-    - request rate
-    - input shape distribution
-    - queue duration
-    - compute infer duration
-    - batch size distribution
-    - GPU memory
-4. Kiểm tra thay đổi:
-    - TensorRT engine profile
-    - dynamic batching config
-    - instance_group
-    - preprocessing/postprocessing
-    - model precision
-5. Nếu rollback giải quyết vấn đề, giữ stable.
-6. Tạo benchmark reproduction với traffic sample.
-```
-
-Root cause thường gặp:
-
-```text
-optimization profile không khớp shape thật;
-max_queue_delay quá cao;
-instance_group quá ít;
-model v2 compute nặng hơn;
-preprocessing CPU chậm hơn;
-batch size distribution khác lab benchmark;
-GPU memory pressure gây slowdown.
-```
-
-### Runbook: error rate tăng
-
-Triệu chứng:
-
-```text
-nv_inference_request_failure tăng
-HTTP 5xx tăng
-timeouts tăng
-candidate nhiều lỗi hơn stable
-```
-
-Hành động:
-
-```text
-1. Rollback hoặc route candidate về 0%.
-2. Kiểm tra Triton logs.
-3. Kiểm tra model readiness.
-4. Kiểm tra input schema mismatch.
-5. Kiểm tra output schema mismatch.
-6. Kiểm tra unsupported shape/dtype.
-7. Kiểm tra OOM / CUDA errors.
-8. Kiểm tra client có gọi đúng model version không.
-```
-
-Root cause thường gặp:
-
-```text
-input dtype sai;
-input name sai;
-shape dynamic ngoài optimization profile;
-model version chưa load xong;
-config.pbtxt không khớp model;
-client gọi latest version ngoài ý muốn;
-GPU OOM;
-backend crash.
-```
-
-### Runbook: accuracy/quality regression
-
-Triệu chứng:
-
-```text
-offline metric tốt nhưng online quality giảm;
-disagreement rate cao;
-user complaint tăng;
-business metric giảm;
-confidence distribution shift.
-```
-
-Hành động:
-
-```text
-1. Pause rollout.
-2. Nếu impact rõ, rollback.
-3. Lấy sample request candidate sai.
-4. So sánh stable vs candidate outputs.
-5. Kiểm tra preprocessing/tokenizer/label map.
-6. Kiểm tra calibration/quantization.
-7. Kiểm tra data distribution drift.
-8. Re-run offline eval trên production sample.
-9. Nếu là issue segment-specific, cân nhắc block rollout cho segment đó.
-```
-
-Root cause thường gặp:
-
-```text
-label map lệch index;
-tokenizer version sai;
-normalization sai;
-INT8 calibration không đại diện;
-postprocessing threshold thay đổi;
-training/eval data không đại diện production;
-model tốt trung bình nhưng tệ ở subgroup.
-```
-
-### Runbook: GPU OOM hoặc pod crash loop
-
-Triệu chứng:
-
-```text
-pod restart tăng;
-Triton model load fail;
-CUDA out of memory;
-GPU memory gần 100%;
-model unavailable.
-```
-
-Hành động:
-
-```text
-1. Rollback candidate.
-2. Kiểm tra model size và engine size.
-3. Kiểm tra instance_group count.
-4. Kiểm tra max_batch_size và dynamic batching.
-5. Kiểm tra có load nhiều model cùng GPU không.
-6. Kiểm tra memory leak trong Python backend/preprocessing.
-7. Giảm instance count hoặc batch size nếu cần.
-8. Tách model sang GPU/node riêng nếu contention.
-```
-
-Root cause thường gặp:
-
-```text
-engine lớn hơn dự kiến;
-load cả stable và candidate trên cùng GPU;
-instance_group count quá cao;
-max_batch_size quá lớn;
-multiple model replicas trên cùng node;
-Python backend giữ tensor/reference không giải phóng.
-```
-
-### Runbook: model load failure
-
-Triệu chứng:
-
-```text
-model status UNAVAILABLE;
-repository load API fail;
-Triton startup fail;
-readiness probe fail.
-```
-
-Hành động:
-
-```text
-1. Không route traffic tới candidate.
-2. Kiểm tra model repository layout.
-3. Kiểm tra config.pbtxt.
-4. Kiểm tra filename đúng với backend.
-5. Kiểm tra TensorRT plan compatible với GPU/TensorRT version.
-6. Kiểm tra permission/mount path.
-7. Kiểm tra logs lúc load model.
-8. Rebuild engine nếu version mismatch.
-```
-
-Root cause thường gặp:
-
-```text
-sai thư mục version;
-sai default_model_filename;
-plan file build từ TensorRT version khác;
-plan file build cho GPU architecture khác;
-config input/output không khớp;
-model repository mount thiếu file.
-```
-
-
-
-## Postmortem không đổ lỗi cá nhân
-
-Sau incident, cần postmortem để học và ngăn tái diễn.
-
-Một postmortem tốt gồm:
-
-```text
-summary
-impact
-timeline
-root cause
-trigger
-what went well
-what went poorly
-where we got lucky
-action items
-owners
-deadlines
-```
-
-### Template postmortem
+**Xung đột autoscaling vs dynamic batching**: scale quá nhiều replicas → traffic per replica giảm → batch size nhỏ hơn → GPU utilization giảm → cost tăng. Scale quá ít → queue tăng → p99 spike. Điểm cân bằng: `replica count × instance_group × max_queue_delay × request timeout`.
+
+**Cold start**: pod mới cần pull image + mount repo + load model + allocate GPU memory + CUDA context init + warmup → có thể mất 2–5 phút. Nếu traffic spike xảy ra trong 20 giây, autoscaling phản ứng quá chậm. Giải pháp: `minReplicas` đủ cao, scheduled scaling trước peak, pre-warmed standby, queue limit + load shedding.
+
+**Scale-to-zero** không phù hợp cho online realtime inference với strict p99 SLO.
+
+**Overload management**:
+
+| Cơ chế | Mô tả |
+|:-------|:------|
+| Timeout | Giới hạn thời gian request được phép chờ |
+| Max queue size | Từ chối request khi queue đầy |
+| Rate limiting | Giới hạn RPS vào service |
+| Load shedding | Reject low-priority requests với 429/503 |
+| Priority queue | Giữ high-priority requests khi overload |
+| Fallback model | Route sang model nhỏ/nhanh hơn khi primary overload |
+| Circuit breaker | Ngắt traffic khi downstream fail quá nhiều |
+
+*Controlled failure is better than uncontrolled collapse.*
+
+::: {.callout-tip icon=false collapse="true"}
+## Năm runbooks quan trọng nhất
+
+**Runbook 1 — p99 latency spike sau rollout**  
+Triệu chứng: candidate p99 tăng, stable bình thường, GPU util candidate cao hơn.  
+Hành động: (1) Pause rollout → (2) Route candidate về 0% → (3) So sánh queue duration, compute duration, batch size, input shape distribution → (4) Kiểm tra TRT optimization profile, dynamic batching config, instance_group → (5) Nếu rollback giải quyết, giữ stable.  
+Root cause thường: optimization profile không khớp shape thật; `max_queue_delay` quá cao; instance_group quá ít.
+
+**Runbook 2 — Error rate tăng**  
+Triệu chứng: `nv_inference_request_failure` tăng, HTTP 5xx tăng.  
+Hành động: (1) Rollback → (2) Triton logs → (3) Model readiness → (4) Input/output schema mismatch → (5) OOM/CUDA errors.  
+Root cause: input dtype/name sai; shape ngoài optimization profile; config.pbtxt không khớp; GPU OOM.
+
+**Runbook 3 — Accuracy/quality regression**  
+Triệu chứng: offline metric tốt nhưng online quality giảm; disagreement rate cao; user complaint tăng.  
+Hành động: (1) Pause → (2) Rollback nếu impact rõ → (3) Sample request candidate sai → (4) Kiểm tra preprocessing/tokenizer/label_map → (5) Re-run offline eval trên production sample.  
+Root cause: label map lệch index; tokenizer version sai; normalization sai; INT8 calibration không đại diện.
+
+**Runbook 4 — GPU OOM / pod crash loop**  
+Triệu chứng: pod restart tăng; CUDA out of memory; model unavailable.  
+Hành động: (1) Rollback candidate → (2) Engine size vs instance_group count → (3) max_batch_size và dynamic batching → (4) Kiểm tra load nhiều model cùng GPU → (5) Memory leak trong Python backend.  
+Root cause: engine lớn hơn dự kiến; load cả stable + candidate trên cùng GPU; instance_group quá cao.
+
+**Runbook 5 — Model load failure**  
+Triệu chứng: model status UNAVAILABLE; readiness probe fail.  
+Hành động: (1) Không route traffic → (2) Repo layout → (3) config.pbtxt → (4) Filename đúng với backend → (5) TRT plan compatible với GPU/TRT version → (6) Permission/mount path.  
+Root cause: sai thư mục version; plan build từ TRT/GPU khác; config input/output không khớp.
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Postmortem template blameless
 
 ```markdown
 # Postmortem: image_classifier_v2 latency regression
 
 ## Summary
-On 2026-05-14, image_classifier_v2 canary caused p99 latency to exceed 100 ms SLO for 18 minutes.
+2026-05-14: image_classifier_v2 canary gây p99 > 100 ms SLO trong 18 phút.
 
 ## Impact
-- 3% production traffic affected.
-- 42,000 requests saw elevated latency.
-- No data loss.
-- No incorrect schema returned.
+- 3% traffic bị ảnh hưởng (~42,000 requests elevated latency)
+- Không mất dữ liệu, không sai schema
 
 ## Timeline
-- 10:00: rollout started at 1%.
-- 10:15: promoted to 5%.
-- 10:20: p99 alert fired.
-- 10:23: rollout paused.
-- 10:25: candidate traffic set to 0%.
-- 10:30: latency returned to baseline.
+- 10:00 rollout 1% | 10:15 promote 5% | 10:20 p99 alert fired
+- 10:23 rollout paused | 10:25 candidate → 0% | 10:30 latency normalized
 
 ## Root Cause
-TensorRT optimization profile was built with opt shape [1, 3, 224, 224], but 40% production traffic used [1, 3, 384, 384]. Candidate engine selected slower tactics for these shapes.
+TensorRT profile build với opt shape [1,3,224,224] nhưng 40% production traffic dùng
+[1,3,384,384]. Candidate engine chọn tactic chậm hơn cho các shape này.
 
 ## Trigger
-Canary traffic included high-resolution image segment not present in benchmark dataset.
+Canary traffic gồm high-resolution image segment không có trong benchmark dataset.
 
 ## What went well
-- Canary limited blast radius.
-- Alert fired within 5 minutes.
-- Rollback was fast.
+- Canary giới hạn blast radius ở 3%
+- Alert fired trong 5 phút
+- Rollback hoàn tất trong 2 phút
 
 ## What went poorly
-- Benchmark dataset did not include production shape distribution.
-- No canary gate checked input shape segment.
+- Benchmark dataset không phản ánh production shape distribution
+- Không có canary gate kiểm tra input shape segment
 
 ## Action Items
-- Add production shape distribution to benchmark report. Owner: A. Due: 2026-05-20.
-- Add shape-segment latency dashboard. Owner: B. Due: 2026-05-21.
-- Update TensorRT profile build process. Owner: C. Due: 2026-05-22.
+- Add production shape distribution vào benchmark report. Owner: A. Due: 2026-05-20.
+- Add shape-segment latency panel. Owner: B. Due: 2026-05-21.
+- Update TRT profile build process để cover p95 shape. Owner: C. Due: 2026-05-22.
 ```
 
-### Action item phải cụ thể
+Action item tốt là cụ thể và đo được, không phải "cẩn thận hơn lần sau".
+:::
 
-Action item tệ:
+
+## Release pipeline và production checklist {#sec-pipeline}
+
+> Làm sao xây pipeline CI/CD đảm bảo model mới luôn đi qua đủ gates trước khi chạm production?
+
+::: {.callout-important icon=false}
+## Ý chính
+Pipeline model release là chuỗi **quality gates tự động**, không phải checklist thủ công. Immutable artifacts, tách build-time vs run-time, one-click rollback, và progressive exposure là bốn design patterns cốt lõi. Không tự động hóa promote/rollback cho đến khi metrics đáng tin cậy.
+:::
+
+**Pipeline chuẩn**:
 
 ```text
-Be more careful next time.
+Train → Offline eval → Export ONNX → Validate ONNX
+  → Build TensorRT engine → Benchmark isolated (trtexec)
+  → Build Triton repository → Integration tests
+  → Perf Analyzer baseline → Generate release manifest
+  → Deploy shadow → Canary 1→5→10→25→50→100%
+  → A/B test nếu cần → Promote → Monitor post-release
+  → Archive artifacts + report
 ```
 
-Action item tốt:
+**Quality gates trong CI/CD**:
 
-```text
-Add automated check that compares TensorRT optimization profile min/opt/max shapes against last 7 days production shape distribution before rollout.
-```
+| Gate | Điều kiện pass |
+|:-----|:--------------|
+| ONNX validation | `onnxruntime` validate không lỗi |
+| TRT engine build | Build thành công cho target GPU |
+| Unit + schema tests | 100% pass |
+| Offline accuracy | `>= baseline - tolerance` |
+| p99 latency | `<= baseline * 1.10` |
+| GPU memory | `<= baseline * 1.10` |
+| Triton config | Validate thành công |
+| Model load | Load + warmup OK trong staging |
+| Rollback artifact | Version cũ có sẵn trong repo |
 
+::: {.callout-tip icon=false collapse="true"}
+## Release checklist đầy đủ
 
+**Trước rollout:**
+- [ ] Model artifact immutable (không ghi đè version cũ)
+- [ ] Input/output schema documented
+- [ ] Preprocessing + postprocessing version pinned
+- [ ] Label map/tokenizer pinned
+- [ ] ONNX validation passed
+- [ ] TRT engine build cho target GPU; dynamic shape profile covers production shapes
+- [ ] Benchmark report completed
+- [ ] Triton config reviewed
+- [ ] Candidate loads + warmup OK trong staging
+- [ ] Dashboard ready (stable vs candidate panels)
+- [ ] Alerts ready + runbooks linked
+- [ ] Rollback target known + tested
+- [ ] Owner/on-call assigned
+- [ ] Canary schedule approved
 
-## Production release pipeline cho model inference
+**Trong rollout:**
+- [ ] Start at 1% traffic
+- [ ] Monitor success rate, p95/p99, timeout, queue duration, GPU memory
+- [ ] Compare candidate vs stable actively
+- [ ] Pause nếu uncertain; rollback ngay nếu critical gate fail
 
-Một pipeline chuẩn có thể như sau:
+**Sau rollout:**
+- [ ] Confirm 100% traffic stable ≥ 24 giờ
+- [ ] Giữ old version trong rollback window (thường 7 ngày)
+- [ ] Monitor 24–72 giờ tùy service criticality
+- [ ] Archive metrics + release report
+- [ ] Update model registry
+- [ ] Cleanup old artifacts **chỉ sau** rollback window
 
-```text
-1. Train model
-2. Offline evaluation
-3. Export ONNX
-4. Validate ONNX
-5. Build TensorRT engine
-6. Benchmark isolated model
-7. Build Triton repository
-8. Run integration tests
-9. Run Perf Analyzer baseline
-10. Generate release manifest
-11. Deploy candidate dark/shadow
-12. Canary rollout
-13. A/B test nếu cần
-14. Promote
-15. Monitor post-release
-16. Archive artifacts and report
-```
+**Bốn production design patterns:**
 
-### Quality gates trong CI/CD
-
-Ví dụ gates:
-
-```text
-ONNX validation passes
-TensorRT engine builds successfully
-unit tests pass
-schema tests pass
-offline accuracy >= baseline - tolerance
-p99 latency <= baseline * 1.10
-GPU memory <= baseline * 1.10
-no unsupported ops fallback unexpectedly
-Triton config validates
-model loads successfully
-warmup passes
-rollback artifact exists
-```
-
-### Release checklist
-
-Trước rollout:
-
-```text
-[ ] Model artifact immutable.
-[ ] Input schema documented.
-[ ] Output schema documented.
-[ ] Preprocessing version pinned.
-[ ] Postprocessing version pinned.
-[ ] Label map/tokenizer pinned.
-[ ] ONNX validation passed.
-[ ] TensorRT engine built for target GPU.
-[ ] Dynamic shape profile covers production shapes.
-[ ] Benchmark report completed.
-[ ] Triton config reviewed.
-[ ] Candidate model loads in staging.
-[ ] Warmup completed.
-[ ] Dashboard ready.
-[ ] Alerts ready.
-[ ] Rollback target known.
-[ ] Owner/on-call known.
-[ ] Canary schedule approved.
-```
-
-Trong rollout:
-
-```text
-[ ] Start at low traffic percentage.
-[ ] Watch success rate.
-[ ] Watch p95/p99 latency.
-[ ] Watch timeout rate.
-[ ] Watch queue duration.
-[ ] Watch GPU memory.
-[ ] Watch model quality guardrails.
-[ ] Compare candidate vs stable.
-[ ] Pause if metrics uncertain.
-[ ] Rollback immediately on critical failure.
-```
-
-Sau rollout:
-
-```text
-[ ] Confirm 100% traffic stable.
-[ ] Keep old version available for rollback window.
-[ ] Monitor 24-72 hours depending on service criticality.
-[ ] Archive metrics and release report.
-[ ] Update model registry.
-[ ] Clean up old artifacts only after rollback window.
-```
+1. **Immutable artifacts**: không ghi đè `v2/model.plan` — tạo `v3/` nếu cần sửa
+2. **Tách build vs run**: TRT engine build trong CI; production chỉ load prebuilt engine
+3. **One-click rollback**: route candidate về 0% hoặc switch version_policy — không rebuild khi incident
+4. **Progressive exposure**: unit → integration → staging → shadow → 1% → 5% → A/B → full
+:::
 
 
+## Mini-lab {.unnumbered}
 
-## Labs
+::: {.callout-note icon=false}
+## Thực hành — Safe Model Rollouts
+Labs 1–5 là design-only (mọi máy). Labs 6–10 cần cluster/GPU nhưng mô phỏng được bằng mock service.
+:::
 
-Các lab dưới đây có thể thực hành bằng mock service nếu bạn chưa có Kubernetes/Triton cluster. Mục tiêu là học workflow.
+### Lab 1: Viết SLO cho inference service {.unnumbered}
 
-
-
-### Lab 1 — Viết SLO cho inference service
-
-Tạo file `slo.md`:
+Tạo file `slo.md` với đầy đủ SLIs, SLOs và error budget policy:
 
 ```markdown
 # SLO: image_classifier
 
-## User-facing behavior
-User sends image and receives classification result.
-
 ## SLIs
-- request success rate
+- request_success_rate
 - server-side p99 latency
-- invalid output schema rate
-- timeout rate
-- candidate/stable disagreement rate
+- invalid_output_schema_rate
+- timeout_rate
+- candidate/stable disagreement_rate
 
 ## SLOs
 - 99.9% requests successful over 30 days
 - 99% requests under 100 ms over 7 days
 - invalid output schema rate = 0
 - timeout rate < 0.1% over 1 day
+- disagreement rate < 2% in canary window
 
 ## Error budget policy
-If 50% of monthly error budget is consumed, freeze non-critical model rollouts.
-If 100% is consumed, only reliability fixes can ship.
+- 50% monthly budget consumed → freeze non-critical rollouts
+- 100% consumed → only reliability fixes can ship
 ```
 
-Checkpoint:
+### Lab 2: Tạo release manifest {.unnumbered}
 
-```text
-Bạn có thể giải thích vì sao mỗi SLO này liên quan tới user impact không?
-```
-
-
-
-### Lab 2 — Tạo release manifest
-
-Tạo file `release_manifest.yaml`:
+Viết `release_manifest.yaml`:
 
 ```yaml
 release_id: image_classifier_v2_2026_05_14
@@ -2545,13 +983,11 @@ candidate_version: "2"
 strategy: canary
 traffic_schedule: [1, 5, 10, 25, 50, 100]
 rollback_to: "1"
-
 artifacts:
   onnx: ./model_repository/image_classifier/2/model.onnx
   triton_config: ./model_repository/image_classifier/config.pbtxt
   benchmark_report: ./reports/perf_v2.md
   offline_eval_report: ./reports/eval_v2.md
-
 slo_gates:
   min_success_rate: 0.999
   max_p99_latency_ms: 100
@@ -2559,160 +995,66 @@ slo_gates:
   max_disagreement_rate: 0.02
 ```
 
-Checkpoint:
+Checkpoint: nếu incident xảy ra, file này giúp rollback/debug nhanh hơn thế nào?
 
-```text
-Nếu incident xảy ra, file này giúp rollback/debug nhanh hơn như thế nào?
-```
+### Lab 3: Thiết kế canary schedule + gates {.unnumbered}
 
+Viết `canary_plan.md` với schedule (duration + minimum requests mỗi bước), promotion gates, rollback gates. Giải thích vì sao cần cả duration và minimum request count.
 
-
-### Lab 3 — Thiết kế canary schedule
-
-Viết file `canary_plan.md`:
-
-```markdown
-# Canary Plan
-
-## Schedule
-- 1% traffic for 15 minutes or 10,000 requests
-- 5% traffic for 15 minutes or 25,000 requests
-- 10% traffic for 30 minutes or 50,000 requests
-- 25% traffic for 30 minutes or 100,000 requests
-- 50% traffic for 60 minutes or 200,000 requests
-- 100% promote
-
-## Promotion gates
-- success rate >= 99.9%
-- p99 latency <= 100 ms
-- timeout rate < 0.1%
-- invalid schema count = 0
-- disagreement rate <= 2%
-
-## Rollback gates
-- any schema error
-- p99 latency > 120 ms for 5 minutes
-- error rate > 0.5% for 5 minutes
-- GPU OOM
-```
-
-Checkpoint:
-
-```text
-Vì sao cần cả duration và minimum request count?
-```
-
-
-
-### Lab 4 — Mock stable/candidate router
-
-Tạo file `router.py`:
+### Lab 4: Mock stable/candidate router {.unnumbered}
 
 ```python
 import hashlib
-import random
-import time
-from typing import Literal
 
-
-def route_request(request_id: str, canary_percent: int) -> Literal["stable", "candidate"]:
+def route_request(request_id: str, canary_percent: int) -> str:
     bucket = int(hashlib.sha256(request_id.encode()).hexdigest(), 16) % 100
     return "candidate" if bucket < canary_percent else "stable"
-
-
-def stable_model() -> dict:
-    time.sleep(random.uniform(0.02, 0.04))
-    return {"status": "ok", "model": "stable", "label": "cat"}
-
-
-def candidate_model() -> dict:
-    # Simulate occasional slower candidate.
-    time.sleep(random.uniform(0.02, 0.08))
-    return {"status": "ok", "model": "candidate", "label": "cat"}
-
-
-def handle_request(request_id: str, canary_percent: int) -> dict:
-    variant = route_request(request_id, canary_percent)
-    if variant == "candidate":
-        return candidate_model()
-    return stable_model()
-
 
 if __name__ == "__main__":
     counts = {"stable": 0, "candidate": 0}
     for i in range(1000):
-        variant = route_request(f"req-{i}", canary_percent=5)
-        counts[variant] += 1
-    print(counts)
+        counts[route_request(f"req-{i}", canary_percent=5)] += 1
+    print(counts)  # candidate ≈ 50/1000
 ```
 
-Chạy:
+Chạy và xác nhận tỷ lệ candidate gần 5%. Kiểm tra routing có deterministic theo `request_id` không.
 
-```bash
-python router.py
-```
-
-Checkpoint:
-
-```text
-Tỷ lệ candidate có gần 5% không?
-Routing có deterministic theo request_id không?
-```
-
-
-
-### Lab 5 — Shadow traffic simulation
-
-Tạo file `shadow_sim.py`:
+### Lab 5: Shadow traffic simulation {.unnumbered}
 
 ```python
 import asyncio
 import random
 import time
 
-
 async def stable_model(request_id: str) -> dict:
     await asyncio.sleep(random.uniform(0.02, 0.04))
     return {"request_id": request_id, "model": "stable", "label": "cat"}
-
 
 async def candidate_shadow(request_id: str) -> None:
     start = time.perf_counter()
     try:
         await asyncio.sleep(random.uniform(0.02, 0.08))
-        latency_ms = (time.perf_counter() - start) * 1000
-        print({"request_id": request_id, "shadow_latency_ms": round(latency_ms, 2)})
+        print({"request_id": request_id,
+               "shadow_latency_ms": round((time.perf_counter() - start) * 1000, 2)})
     except Exception as exc:
         print({"request_id": request_id, "shadow_error": str(exc)})
-
 
 async def handle_request(request_id: str) -> dict:
     asyncio.create_task(candidate_shadow(request_id))
     return await stable_model(request_id)
 
-
 async def main() -> None:
     responses = await asyncio.gather(*(handle_request(f"req-{i}") for i in range(10)))
-    print("user responses:", responses)
-    await asyncio.sleep(0.2)  # allow shadow tasks to finish in this demo
+    await asyncio.sleep(0.2)  # allow shadow tasks to finish in demo
+    print("user responses:", [r["label"] for r in responses])
 
-
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())
 ```
 
-Checkpoint:
+::: {.callout-tip icon=false collapse="true"}
+## Labs 6–10 (GPU/cluster)
 
-```text
-Candidate shadow có ảnh hưởng response trả cho user không?
-Trong production, vì sao cần bounded queue thay vì create_task không giới hạn?
-```
-
-
-
-### Lab 6 — Viết Prometheus queries cho Triton
-
-Tạo file `promql.md`:
+**Lab 6 — PromQL cho Triton** (thêm label `variant` / `model_version` khi có):
 
 ```promql
 # Success rate
@@ -2726,460 +1068,156 @@ sum(rate(nv_inference_request_success{model="image_classifier"}[5m]))
 
 # Failure rate
 sum(rate(nv_inference_request_failure{model="image_classifier"}[5m]))
-/
-(
-  sum(rate(nv_inference_request_success{model="image_classifier"}[5m]))
-  +
-  sum(rate(nv_inference_request_failure{model="image_classifier"}[5m]))
-)
 
-# Pending requests
+# Pending / queue pressure
 sum(nv_inference_pending_request_count{model="image_classifier"})
 ```
 
-Checkpoint:
-
-```text
-Các query này có phân biệt stable/candidate chưa?
-Nếu chưa, cần thêm label gì?
-```
-
-
-
-### Lab 7 — Kubernetes rolling update rollback drill
-
-Nếu bạn có cluster test, tạo Deployment đơn giản rồi update image.
+**Lab 7 — Kubernetes rolling update + rollback drill:**
 
 ```bash
-kubectl set image deployment/image-classifier triton=nvcr.io/nvidia/tritonserver:24.12-py3
-kubectl rollout status deployment/image-classifier
-kubectl rollout history deployment/image-classifier
-kubectl rollout undo deployment/image-classifier
+kubectl set image deploy/image-classifier triton=nvcr.io/nvidia/tritonserver:24.12-py3
+kubectl rollout status deploy/image-classifier
+kubectl rollout history deploy/image-classifier
+kubectl rollout undo deploy/image-classifier
 ```
 
-Checkpoint:
-
-```text
-Rollback mất bao lâu?
-Pod mới cần bao lâu để ready?
-Model load time có nằm trong readiness không?
-```
-
-
-
-### Lab 8 — HPA design exercise
-
-Viết `hpa_design.md`:
-
-```markdown
-# HPA Design for image_classifier
-
-## Candidate metrics
-- CPU utilization: not enough because inference is GPU-bound
-- GPU utilization: useful but not sufficient
-- pending request count: good overload signal
-- p95/p99 latency: user-impact signal, but noisy for autoscaling
-- request rate per replica: useful for proactive scaling
-
-## Initial policy
-- minReplicas: 3
-- maxReplicas: 20
-- scale up if pending requests average > 20 per pod for 2 minutes
-- scale down slowly after 15 minutes below threshold
-
-## Cold start mitigation
-- pre-warm pods
-- readiness waits for model warmup
-- scheduled scaling before daily peak
-```
-
-Checkpoint:
-
-```text
-Vì sao scale-down nên chậm hơn scale-up?
-```
-
-
-
-### Lab 9 — Incident response drill
-
-Tình huống:
-
-```text
-Sau khi canary lên 10%, p99 latency tăng từ 80 ms lên 180 ms.
-Error rate không tăng.
-GPU utilization candidate là 95%, stable là 70%.
-Queue duration candidate tăng mạnh.
-```
-
-Viết câu trả lời trong `incident_drill.md`:
-
-```markdown
-# Incident Drill: candidate p99 latency spike
-
-## Immediate action
-- Pause rollout.
-- Reduce candidate traffic to 0% if SLO is violated.
-
-## Evidence to collect
-- candidate vs stable request rate
-- p99 latency
-- queue duration
-- compute infer duration
-- batch size distribution
-- input shape distribution
-- GPU memory
-- instance_group count
-- dynamic batching config
-
-## Hypotheses
-- candidate model compute heavier
-- TensorRT optimization profile mismatch
-- dynamic batching queue delay too high
-- instance count too low
-- production shape distribution not covered in benchmark
-
-## Recovery
-- keep stable serving 100%
-- reproduce with production traffic sample
-- rebuild engine or update config
-```
-
-Checkpoint:
-
-```text
-Bạn đã ưu tiên mitigation trước root-cause analysis chưa?
-```
-
-
-
-### Lab 10 — Viết postmortem giả lập
-
-Dùng template ở Section 16 và viết postmortem cho incident trong Lab 9.
-
-Yêu cầu:
-
-```text
-- có timeline;
-- có impact định lượng;
-- có root cause;
-- có action items cụ thể;
-- không đổ lỗi cá nhân.
-```
-
-
-
-## Common failure patterns
-
-### Pattern 1: Canary không có metric gate
-
-Triệu chứng:
-
-```text
-traffic tăng dần nhưng không có điều kiện promote/rollback rõ ràng
-```
-
-Fix:
-
-```text
-thêm success rate, p99 latency, timeout, schema, quality gates
-```
-
-### Pattern 2: Dashboard không tách version
-
-Triệu chứng:
-
-```text
-metric chung trông ổn nhưng candidate đang lỗi
-```
-
-Fix:
-
-```text
-label metrics theo model_version / variant / experiment_id
-```
-
-### Pattern 3: Shadow traffic gây overload
-
-Triệu chứng:
-
-```text
-stable latency tăng sau khi bật shadow
-```
-
-Fix:
-
-```text
-sample shadow traffic
-rate limit candidate path
-chạy candidate trên capacity riêng
-```
-
-### Pattern 4: Rollback chậm vì old model đã bị xóa
-
-Triệu chứng:
-
-```text
-muốn rollback nhưng artifact/version cũ không còn sẵn
-```
-
-Fix:
-
-```text
-giữ stable version trong rollback window
-không cleanup artifact ngay sau promote
-```
-
-### Pattern 5: Autoscaling theo CPU cho GPU workload
-
-Triệu chứng:
-
-```text
-p99 latency cao nhưng HPA không scale
-```
-
-Fix:
-
-```text
-scale theo custom metrics như pending requests, queue duration, request rate per replica
-```
-
-### Pattern 6: Accuracy regression không bị alert
-
-Triệu chứng:
-
-```text
-latency/error ổn nhưng user complaint tăng
-```
-
-Fix:
-
-```text
-thêm quality guardrails, disagreement monitoring, delayed-label evaluation
-```
-
-
-
-## Production design patterns
-
-### Immutable artifacts
-
-Không ghi đè:
-
-```text
-model_repository/image_classifier/2/model.plan
-```
-
-Nếu cần sửa, tạo version mới:
-
-```text
-model_repository/image_classifier/3/model.plan
-```
-
-Artifact immutable giúp rollback và audit dễ hơn.
-
-### Separate build-time and run-time
-
-Không nên build TensorRT engine ngay trong request path.
-
-Nên:
-
-```text
-CI/CD builds engine
-CI/CD validates engine
-production only loads prebuilt engine
-```
-
-### One-click rollback
-
-Rollback nên là thao tác đơn giản:
-
-```text
-set candidate weight to 0
-or switch stable version back to previous
-or undo rollout
-```
-
-Không nên cần rebuild model khi đang incident.
-
-### 20.4 Progressive exposure
-
-Luôn tăng exposure theo tầng:
-
-```text
-unit tests
-integration tests
-staging
-shadow traffic
-1% canary
-5% canary
-A/B test if needed
-full rollout
-```
-
-### Observability before automation
-
-Đừng tự động promote/rollback nếu metrics chưa đáng tin.
-
-Thứ tự đúng:
-
-```text
-first: measure correctly
-then: alert correctly
-then: automate rollout decisions
-```
-
-
-
-## Checkpoint questions
-
-Trả lời các câu này trước khi sang Lesson 9:
-
-1. Vì sao model rollout cần quan tâm cả preprocessing và postprocessing?
-2. Canary khác A/B testing như thế nào?
-3. Shadow traffic đo được gì và không đo được gì?
-4. Vì sao health check không đủ để promote model?
-5. SLI và SLO khác nhau thế nào?
-6. Error budget giúp quyết định rollout như thế nào?
-7. Vì sao cần label metrics theo model version?
-8. Khi p99 latency tăng, bạn kiểm tra queue time hay compute time trước? Vì sao?
-9. Vì sao autoscale theo CPU thường không đủ cho GPU inference?
-10. Vì sao scale quá nhiều replicas có thể làm dynamic batching kém hiệu quả?
-11. Rollback target phải chuẩn bị từ khi nào?
-12. Một postmortem tốt khác gì một bản báo cáo đổ lỗi?
-
-
-
-## Glossary
-
-**A/B testing**
-: Thí nghiệm so sánh hai hoặc nhiều variants để đo impact trên metric đã định nghĩa.
-
-**Alert**
-: Cảnh báo khi metric vượt điều kiện cần hành động.
-
-**Blue/green deployment**
-: Chạy hai environment stable/candidate và switch traffic giữa chúng.
-
-**Canary deployment**
-: Rollout candidate tới một phần nhỏ traffic rồi tăng dần nếu metrics tốt.
-
-**Error budget**
-: Lượng lỗi được phép xảy ra trong một khoảng thời gian dựa trên SLO.
-
-**Fallback model**
-: Model thay thế, thường nhỏ/nhanh hơn, dùng khi primary model lỗi hoặc overload.
-
-**Guardrail metric**
-: Metric bảo vệ, dùng để đảm bảo experiment không gây hại dù primary metric có vẻ tốt.
-
-**HPA**
-: Horizontal Pod Autoscaler, cơ chế Kubernetes tự động điều chỉnh số replicas.
-
-**Incident response**
-: Quy trình phát hiện, giảm impact, khôi phục và học từ sự cố production.
-
-**Load shedding**
-: Chủ động từ chối một phần request để tránh toàn hệ thống sụp đổ.
-
-**Postmortem**
-: Báo cáo sau sự cố nhằm học và ngăn tái diễn, không đổ lỗi cá nhân.
-
-**Rollback**
-: Quay lại version/config trước đó để khôi phục service.
-
-**Shadow traffic**
-: Gửi bản sao request thật tới candidate nhưng không trả response candidate cho user.
-
-**SLI**
-: Service Level Indicator, chỉ số đo được của service.
-
-**SLO**
-: Service Level Objective, mục tiêu định lượng cho service.
-
-
-
-## Tóm tắt bài học
-
-Trong các lesson trước, bạn học cách tối ưu và benchmark model. Lesson 8 thêm lớp quan trọng nhất của production:
-
-```text
-safe change management
-```
-
-Một inference engineer giỏi không chỉ biết làm model nhanh. Họ biết:
-
-```text
-đưa model mới vào production từng bước;
-đo candidate so với stable;
-phát hiện lỗi sớm;
-giới hạn blast radius;
-rollback nhanh;
-autoscale hợp lý;
-xử lý incident có hệ thống;
-học từ postmortem.
-```
-
-Công thức thực chiến:
-
-```text
-Before rollout:
-    define SLO
-    validate artifact
-    benchmark
-    prepare dashboard
-    prepare rollback
-
-During rollout:
-    start small
-    compare candidate vs stable
-    watch technical + quality gates
-    pause/rollback if uncertain
-
-After rollout:
-    monitor longer
-    keep rollback window
-    archive release report
-    update registry
-```
-
-Câu cần nhớ:
+Đo thời gian rollback và readiness.
+
+**Lab 8 — HPA design:** viết `hpa_design.md` — vì sao CPU không đủ; metric đề xuất (`triton_pending_requests`); minReplicas/maxReplicas; cold start mitigation (`minReplicas`, pre-warm, scheduled scale).
+
+**Lab 9 — Incident drill:** canary 10%, p99 80→180 ms, GPU candidate 95%, queue↑. Viết immediate action → evidence → hypotheses → recovery (ưu tiên route candidate → 0%).
+
+**Lab 10 — Postmortem:** dùng template ở tip Postmortem (@sec-autoscale); impact định lượng; action items có owner + due date; blameless.
+:::
+
+
+## Checkpoint questions {.unnumbered}
+
+1. Vì sao model rollout cần quan tâm cả preprocessing và postprocessing, không chỉ weight file?
+2. Canary khác A/B testing ở mục tiêu và thời gian thế nào?
+3. Shadow traffic đo được gì và **không** đo được gì?
+4. Vì sao health check không đủ để promote model vào production?
+5. SLI và SLO khác nhau thế nào? Cho ví dụ cụ thể.
+6. Error budget giúp quyết định rollout như thế nào trong thực tế?
+7. `version_policy: specific: versions: [1, 2]` có tác dụng gì trong canary?
+8. Model control mode `EXPLICIT` khác `POLL` thế nào — và khi nào dùng cái nào?
+9. Vì sao cần warmup trước khi nhận production traffic?
+10. Vì sao cần label metrics theo `model_version` và `variant`?
+11. Khi p99 tăng đột ngột, bạn nhìn queue duration hay compute duration trước?
+12. Vì sao autoscale theo CPU utilization thường không đủ cho GPU inference?
+13. Scaling thêm replicas có thể làm dynamic batching kém hiệu quả — tại sao?
+14. Scale-to-zero phù hợp với loại inference workload nào?
+15. Load shedding là gì — khi nào nên dùng?
+16. Rollback artifact phải chuẩn bị từ khi nào — trước hay sau khi bắt đầu canary?
+17. Triton pending request count tăng gợi ý vấn đề ở đâu trong pipeline?
+18. Relative threshold và absolute threshold trong canary gate: dùng cái nào, hay cả hai?
+19. Một postmortem tốt khác gì một bản báo cáo đổ lỗi?
+20. Tại sao không nên tự động hóa promote/rollback trước khi metrics đáng tin cậy?
+
+::: {.callout-tip icon=false collapse="true"}
+## Tự kiểm — đáp án ngắn
+1. Preprocessing sai (normalization, tokenizer) gây silent accuracy drop dù latency và error rate bình thường.
+2. Canary = safety/rollback nhanh; A/B = đo business impact, chạy dài hơn, cần thiết kế thống kê cẩn thận hơn.
+3. Shadow đo: latency, error rate, schema, GPU memory trên traffic thật. Không đo: user behavior, conversion, CTR.
+4. Health check chỉ nói process còn sống / model ready — không chứng minh output đúng, p99 ổn, accuracy không giảm.
+5. SLI là metric đo được (p99_latency_ms); SLO là mục tiêu (p99 < 100 ms trong 7 ngày).
+6. Khi error budget cạn, team pause rollout mới để ưu tiên reliability; budget còn nhiều thì rollout nhanh hơn.
+7. Serve cả hai version, router/client có thể gọi version cụ thể — cần thiết cho canary/shadow.
+8. POLL tự kiểm tra định kỳ; EXPLICIT load/unload qua API có chủ đích — EXPLICIT an toàn hơn cho production.
+9. CUDA context init + kernel warmup làm request đầu tiên chậm 3–10× so với steady state.
+10. Nếu không tách label, metric stable + candidate aggregate chung — không phát hiện được candidate regression.
+11. Queue duration trước: nếu queue cao → saturation/thiếu instance; nếu queue thấp nhưng compute cao → model compute nặng hơn.
+12. Inference là GPU-bound; CPU có thể 20% trong khi GPU 98%; HPA theo CPU không scale kịp.
+13. Traffic per replica giảm → batch size giảm → GPU utilization giảm → throughput/cost kém hơn.
+14. Traffic rất thưa, latency không critical, async/batch inference; không dùng cho online realtime + strict p99 SLO.
+15. Load shedding = từ chối low-priority requests khi overload để bảo vệ high-priority. Dùng khi queue đã đầy.
+16. Trước khi bắt đầu — rollback target phải được xác nhận, tested, và sẵn sàng trước khi mở canary.
+17. Queue depth tăng = request đến nhanh hơn model xử lý; cần scale hoặc tăng instance_group.
+18. Cả hai: relative phát hiện degradation vs stable; absolute giữ SLO dù toàn hệ thống chậm.
+19. Postmortem tốt có action items cụ thể + owner + deadline; không đặt tên người phạm lỗi; học từ hệ thống không hoàn hảo.
+20. Nếu metrics chưa đáng tin (labeling sai, scrape lag, insufficient data) thì automation promote/rollback sẽ hành động sai.
+:::
+
+
+## Glossary {.unnumbered}
+
+| Thuật ngữ | Định nghĩa |
+|:----------|:-----------|
+| **A/B testing** | Thí nghiệm so sánh hai variants để đo impact trên metric định nghĩa trước |
+| **Blameless postmortem** | Báo cáo sau sự cố tập trung vào hệ thống, không đổ lỗi cá nhân |
+| **Blue/green deployment** | Chạy hai environment và switch traffic giữa chúng |
+| **Canary deployment** | Rollout candidate tới một phần nhỏ traffic rồi tăng dần nếu metrics pass |
+| **Error budget** | Lượng lỗi được phép trong khoảng thời gian dựa trên SLO |
+| **Fallback model** | Model nhỏ/nhanh hơn dùng khi primary model overload hoặc fail |
+| **Feature flag** | Điều khiển routing theo user/region/segment qua config |
+| **Guardrail metric** | Metric bảo vệ đảm bảo experiment không gây hại dù primary metric tốt |
+| **HPA** | Horizontal Pod Autoscaler — tự động điều chỉnh số pod replicas trên Kubernetes |
+| **Incident response** | Quy trình detect → mitigate → resolve → postmortem |
+| **Load shedding** | Chủ động từ chối low-priority request để tránh toàn hệ thống sụp đổ |
+| **Metric gate** | Điều kiện định lượng phải pass trước khi advance canary step |
+| **Release manifest** | File mô tả đầy đủ tất cả artifact, runtime, schema, rollback target của một release |
+| **Rollback** | Quay lại version/config trước đó để khôi phục service |
+| **Shadow traffic** | Bản sao request thật gửi tới candidate — không trả response cho user |
+| **SLA** | Service Level Agreement — cam kết chính thức với khách hàng có hậu quả hợp đồng |
+| **SLI** | Service Level Indicator — chỉ số đo được của service |
+| **SLO** | Service Level Objective — mục tiêu định lượng nội bộ |
+| **Sticky assignment** | Đảm bảo cùng user/request luôn được route về cùng variant trong A/B test |
+| **version_policy** | Cấu hình Triton kiểm soát version nào của model được load và serve |
+| **Warmup** | Gửi synthetic requests trước khi nhận traffic thật để loại cold start |
+
+
+## Summary {.unnumbered}
+
+- Model release ≠ thay file weight — một release đầy đủ gồm engine, config, preprocessing, tokenizer, schema, rollback target; bất cứ artifact nào lệch đều gây lỗi silent.
+- Định nghĩa SLO trước rollout: availability, latency, quality guardrail, resource guardrail — error budget quyết định tốc độ rollout.
+- Canary với metric gates là chiến lược mặc định; shadow traffic là bước chuẩn bị; A/B test khi cần đo business impact.
+- Triton: dùng `version_policy` + `EXPLICIT` mode + warmup; health check là điều kiện cần không đủ.
+- Dashboard tốt phân biệt stable vs candidate bằng label `variant`/`model_version`; alert theo SLO không theo threshold tùy ý.
+- Autoscale theo pending requests hoặc queue duration, không phải CPU; scale-to-zero không phù hợp cho realtime inference.
+- Khi incident: giảm impact trước (rollback), điều tra sau; 5 runbook chính cho p99 spike, error rate, accuracy regression, GPU OOM, model load failure.
+- Blameless postmortem với action items cụ thể + owner + deadline ngăn tái diễn tốt hơn bất kỳ công cụ nào.
 
 ```text
 A safe model rollout is a measurement-driven, reversible production change.
 ```
 
+::: {.callout-tip icon=false collapse="true"}
+## Common failure patterns
+
+| Pattern | Triệu chứng | Fix |
+|:--------|:------------|:----|
+| Canary không có metric gate | Traffic tăng dần nhưng không promote/rollback rõ | Thêm success, p99, timeout, schema, quality gates |
+| Dashboard không tách version | Metric chung “ổn” nhưng candidate lỗi | Label `model_version` / `variant` / `experiment_id` |
+| Shadow gây overload | Stable latency tăng sau khi bật shadow | Sample + rate-limit candidate; capacity riêng |
+| Rollback chậm vì xóa artifact cũ | Muốn rollback nhưng version cũ không còn | Giữ stable trong rollback window; không cleanup sớm |
+| Autoscale theo CPU cho GPU | p99 cao nhưng HPA không scale | Scale theo pending requests / queue duration / RPS/replica |
+| Accuracy regression không alert | Latency/error ổn nhưng complaint tăng | Quality guardrails, disagreement, delayed-label eval |
+:::
 
 
-## Chuẩn bị cho Lesson 9
+## Preview bài tiếp theo {.unnumbered}
 
-Lesson tiếp theo nên là:
+**Lesson 9: Advanced Inference Systems for LLMs** — Lesson 8 hoàn thành lớp production operations cho inference service thông thường. Lesson 9 sẽ đi vào đặc thù của **Large Language Models**:
 
 ```text
-Lesson 9: End-to-End Inference Optimization Project — PyTorch to ONNX to TensorRT to Triton with Benchmarking, Canary Rollout and Production Checklist
+LLM inference challenges:
+  KV cache management
+  Continuous batching / iteration-level scheduling
+  Speculative decoding
+  Tensor parallelism / pipeline parallelism
+  PagedAttention
+  vLLM, TensorRT-LLM
+  Token streaming
+  Cost/token optimization
 ```
 
-Lesson 9 sẽ ghép toàn bộ chuỗi lại thành một project:
-
-```text
-PyTorch model
-  -> export ONNX
-  -> validate ONNX
-  -> benchmark ONNX Runtime
-  -> build TensorRT engine
-  -> benchmark trtexec
-  -> deploy Triton
-  -> run Perf Analyzer
-  -> configure metrics
-  -> design canary rollout
-  -> produce final release report
-```
+Các khái niệm SLO, canary, monitoring từ Lesson 8 vẫn áp dụng cho LLM — nhưng metric quan trọng thay đổi: throughput tính theo tokens/s, SLO tính theo time-to-first-token (TTFT) và inter-token latency (ITL), không chỉ request latency.
 
 
+## References {.unnumbered}
 
-## References
-
-- NVIDIA Triton Inference Server Documentation — Architecture, model repository, model management, metrics, rate limiter, model configuration.
-- Kubernetes Documentation — Rolling updates and Horizontal Pod Autoscaler.
-- Argo Rollouts Documentation — Canary strategy, analysis, experiments and progressive delivery.
-- Google SRE Workbook — Implementing SLOs, alerting on SLOs, error budget policy and postmortem culture.
+- NVIDIA Triton Inference Server Documentation — Architecture, model repository, model management, metrics, rate limiter, model configuration, model control modes, version policy.
+- Kubernetes Documentation — Rolling updates and Horizontal Pod Autoscaler (autoscaling/v2).
+- Argo Rollouts Documentation — Canary strategy, AnalysisTemplate, Prometheus metrics integration, progressive delivery.
+- Google SRE Workbook — Implementing SLOs, alerting on SLOs, error budget policy and postmortem culture (O'Reilly, 2018).

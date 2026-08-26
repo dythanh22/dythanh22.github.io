@@ -3,25 +3,32 @@ title: "Giới thiệu"
 description: "Về tác giả và mục đích của website"
 ---
 
-## Về website này
+<p class="about-lead">
+Mình là <strong>Thanh</strong> (<strong>dythanh22</strong>). Site này là nơi mình đăng <strong>chuỗi bài học</strong> để đọc lại theo thứ tự — không phải blog ghi chú rời.
+</p>
 
-Trang cá nhân của **dythanh22** — đăng **chuỗi bài học** để đọc lại theo thứ tự.
+<ul class="about-links">
+<li><a href="bai-hoc/architecture-models/index.qmd">Architecture Models →</a></li>
+<li><a href="bai-hoc/ai-optimize/index.qmd">AI Optimization →</a></li>
+<li><a href="https://github.com/dythanh22">GitHub</a></li>
+</ul>
 
-Hiện có hai chuỗi:
+## Hai chuỗi đang mở
 
-- [Architecture Models](bai-hoc/architecture-models/index.qmd) — CNN, RNN/LSTM/GRU, VAE/GAN/DDPM, Word2Vec, Transformer/BERT/ViT, U-Net
-- [AI Optimization for Inference Systems](bai-hoc/ai-optimize/index.qmd) — 10 bài từ artifact đến production serving
+- **[Architecture Models](bai-hoc/architecture-models/index.qmd)** — CNN, RNN/LSTM/GRU, VAE/GAN/DDPM, Word2Vec, Transformer/BERT/ViT, U-Net. Mỗi model tách theo khối xây dựng.
+- **[AI Optimization](bai-hoc/ai-optimize/index.qmd)** — mười bài từ artifact đến production serving (ONNX → TensorRT → Triton → LLM ops).
 
-Viết bằng **Quarto** (`.qmd` / `.md`), deploy qua GitHub Actions lên [dythanh22.github.io](https://dythanh22.github.io).
+Cách đọc: vào một chuỗi, đi theo sidebar và nút trước/sau. Trình duyệt nhớ trang đã mở để bạn quay lại tiếp.
 
 ## Công nghệ
 
+Viết bằng Quarto, deploy GitHub Pages qua Actions. Theme Bootstrap (cosmo / darkly) + SCSS tùy biến — không backend.
+
 | Thành phần | Công cụ |
 |------------|---------|
-| Viết nội dung | Quarto, Markdown, HTML |
+| Nội dung | Quarto (`.qmd`) |
 | Hosting | GitHub Pages |
 | CI/CD | GitHub Actions |
-| Theme | Bootstrap (cosmo / darkly) + custom SCSS |
 
 ## Liên hệ
 

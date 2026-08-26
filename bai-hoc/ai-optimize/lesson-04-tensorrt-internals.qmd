@@ -7,465 +7,267 @@ series: ai-optimize
 order: 4
 description: "Engine, tactics, profiles, FP16/INT8 — TensorRT như inference compiler."
 role: "Engine, tactics, profiles, FP16/INT8 — TensorRT như inference compiler"
+aliases:
+  - /bai-hoc/ai-optimize/lesson_4_tensorrt_internals.html
 ---
 
 ::: {.callout-note icon=false}
 ## Mục tiêu bài học
-Mục tiêu của bài này là giúp bạn hiểu **TensorRT** không chỉ như một tool convert ONNX sang engine, mà như một **inference compiler + runtime** cho GPU NVIDIA. Sau bài này, khi thấy các khái niệm như `engine`, `plan file`, `builder`, `optimization profile`, `tactic`, `FP16`, `INT8`, `calibration`, `Q/DQ`, `execution context`, bạn sẽ hiểu chúng nằm ở đâu trong pipeline và vì sao chúng ảnh hưởng trực tiếp đến latency, throughput, memory và accuracy.
+Hiểu **TensorRT** như **inference compiler + runtime** cho NVIDIA GPU — không chỉ “convert ONNX sang `.plan`”. Sau bài, bạn nắm `engine`, `builder`, `optimization profile`, `tactic`, FP16/INT8, `calibration`, Q/DQ, `execution context`, và vì sao chúng ảnh hưởng latency, throughput, memory, accuracy. Bài **không** dạy Triton serving sâu (Lesson 6) hay quantization lý thuyết đầy đủ (Lesson 5).
 :::
 
-## Vị trí của Lesson 4 trong chuỗi học
+::: {.callout-note icon=false}
+## Lộ trình bài học
 
-Ở Lesson 1, bạn đã học về inference system ở mức kiến trúc:
+| # | Phần | Trả lời câu hỏi | Thời lượng |
+|:--|:-----|:----------------|:-----------|
+| 1 | TensorRT là / không phải gì | Khác ONNX, ORT, Triton thế nào? | 10 phút |
+| 2 | Objects + build vs runtime | Engine build chậm, inference nhanh vì sao? | 15 phút |
+| 3 | Build pipeline + tactics | Fusion, precision, tactic, workspace, timing cache? | 25 phút |
+| 4 | Optimization profiles | `min`/`opt`/`max`; profile rộng có hại? | 15 phút |
+| 5 | FP16 · INT8 | Khi nào FP16 đủ; INT8 cần calibration/QDQ thế nào? | 25 phút |
+| 6 | `trtexec` · Python · accuracy · debug | Đo đúng, build API, Polygraphy, xử lý lỗi | 45–60 phút |
+| 7 | Mini-lab | Build, profile, so số liệu | 45–60 phút |
 
-```text
-request -> preprocessing -> batching -> runtime -> GPU execution -> postprocessing -> response
+Đọc tối thiểu: phần 1–5 + Lab 1–2. Mở tip *Đào sâu* khi cần làm việc thật; Lab Python/INT8 optional nếu chưa có GPU.
+:::
+
+::: {.reading-modes}
+**Đọc nhanh:** callout *Ý chính* + bảng + sơ đồ xương sống.  
+**Đọc đủ:** mở mọi tip đào sâu / checklist, làm Mini-lab và Checkpoint.
+:::
+
+
+## Bối cảnh {.unnumbered}
+
+Lesson 1: kiến trúc inference. Lesson 2: ONNX là IR. Lesson 3: ORT chạy graph đa backend. Lesson 4: **compiler NVIDIA** — chuyên biệt hóa sâu cho GPU, shape và precision.
+
+```{mermaid}
+%%| label: fig-l4-spine
+%%| fig-cap: "Sơ đồ xương sống Lesson 4: ONNX → NetworkDefinition → Builder → Engine → ExecutionContext → GPU."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  O([ONNX]) -->|"parse"| N([NetworkDefinition])
+  N -->|"build"| B([Builder + Config])
+  B -->|"serialize"| E([Engine / plan])
+  E -->|"deserialize"| C([ExecutionContext])
+  C -->|"enqueue"| G([GPU kernels])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class O,N soft
+  class B,E hot
+  class C,G ok
 ```
 
-Ở Lesson 2, bạn đã học ONNX như một intermediate representation:
-
-```text
-PyTorch / TensorFlow model -> ONNX graph -> operators + tensors + weights + shapes
-```
-
-Ở Lesson 3, bạn đã học ONNX Runtime:
-
-```text
-ONNX model -> InferenceSession -> graph optimization -> Execution Providers -> kernels
-```
-
-Lesson 4 đi sâu vào TensorRT:
-
-```text
-ONNX model
-   |
-   | parse
-   v
-TensorRT NetworkDefinition
-   |
-   | build-time optimization
-   v
-TensorRT engine / plan file
-   |
-   | deserialize
-   v
-TensorRT Runtime + ExecutionContext
-   |
-   | enqueue on CUDA stream
-   v
-GPU kernels
-```
-
-Tư duy quan trọng nhất của bài này:
+Tư duy cốt lõi:
 
 ```text
 ONNX Runtime thường chạy graph.
-TensorRT build một engine đã được tối ưu cho GPU, precision, shape range, memory và kernel tactics.
+TensorRT build một engine đã tối ưu cho GPU, precision, shape range, memory và kernel tactics.
 ```
 
 
-## Learning outcomes
+## Learning outcomes {.unnumbered}
 
-Sau bài này, bạn cần giải thích và thực hành được:
-
-1. TensorRT là gì và khác gì với ONNX, ONNX Runtime, PyTorch và Triton.
-2. Vì sao TensorRT được xem như một inference compiler.
-3. TensorRT engine / plan file là gì.
-4. Builder, NetworkDefinition, BuilderConfig, Runtime, Engine và ExecutionContext có vai trò gì.
-5. Quá trình build engine từ ONNX diễn ra như thế nào.
-6. Graph fusion, constant folding, layout selection, memory planning và precision selection là gì.
-7. Tactic selection là gì và vì sao engine build có thể mất nhiều thời gian.
-8. Timing cache giúp gì trong build pipeline.
-9. Dynamic shape trong TensorRT hoạt động khác gì dynamic axes trong ONNX.
-10. Optimization profile với `min`, `opt`, `max` shape là gì.
-11. Vì sao chọn profile quá rộng có thể làm engine chậm.
-12. FP16 inference khác gì FP32/TF32.
-13. INT8 inference cần calibration hoặc explicit quantization như thế nào.
-14. Q/DQ graph là gì và vì sao hướng hiện đại ưu tiên explicit quantization.
-15. Cách build engine bằng `trtexec`.
-16. Cách đọc output benchmark cơ bản của `trtexec`.
-17. Cách build engine bằng TensorRT Python API ở mức căn bản.
-18. Cách debug các lỗi thường gặp: unsupported op, build fail, profile mismatch, FP16 NaN, INT8 accuracy drop, engine portability.
+1. TensorRT khác ONNX, ORT, PyTorch, Triton thế nào  
+2. Vì sao TensorRT được xem như inference compiler  
+3. Engine / plan file; Builder, NetworkDefinition, BuilderConfig, Runtime, ExecutionContext  
+4. Build engine: parse, fusion, layout, precision, tactic, memory plan, serialize  
+5. Tactic, workspace, timing cache  
+6. Dynamic shape vs optimization profile (`min` / `opt` / `max`)  
+7. FP16 vs FP32/TF32; INT8 với calibration / QAT / Q/DQ  
+8. Build & đọc benchmark bằng `trtexec`; Python API căn bản  
+9. Debug: unsupported op, profile mismatch, FP16 NaN, INT8 drop, portability, app chậm hơn `trtexec`  
 
 
-## Prerequisites
+## Prerequisites {.unnumbered}
 
-Bạn nên đã nắm:
+- Shape (ví dụ NCHW), ONNX graph/opset (Lesson 2), EP và benchmark mindset (Lesson 3)  
+- Python; PyTorch đủ để export ONNX  
+- CUDA stream, host/device memory (Lesson 1)  
+- Lab cần **NVIDIA GPU + TensorRT**; không GPU vẫn học lý thuyết + log mẫu  
 
-- Tensor shape: ví dụ `NCHW = [batch, channel, height, width]`.
-- ONNX graph, operator, initializer và opset từ Lesson 2.
-- Execution Provider và benchmark mindset từ Lesson 3.
-- Python cơ bản.
-- Một chút PyTorch để export model sang ONNX.
-- Khái niệm CUDA stream, host/device memory, GPU kernel từ Lesson 1.
+::: {.callout-tip icon=false collapse="true"}
+## Cài đặt gợi ý
 
-Phần thực hành TensorRT cần NVIDIA GPU. Nếu bạn chưa có GPU, bạn vẫn có thể học phần lý thuyết và đọc logs mẫu, sau đó chạy labs trên cloud GPU hoặc máy có GPU.
-
-
-## TensorRT là gì?
-
-**TensorRT** là SDK của NVIDIA để tối ưu và tăng tốc deep learning inference trên NVIDIA GPU. Nó nhận model đã train xong từ các framework như PyTorch, TensorFlow hoặc ONNX, sau đó build thành một representation tối ưu để chạy inference với latency thấp và throughput cao.
-
-Mental model:
-
-```text
-TensorRT = model optimizer + GPU kernel/tactic selector + precision optimizer + runtime executor
+```bash
+which trtexec
+python -c "import tensorrt as trt; print(trt.__version__)"
 ```
 
-TensorRT thường nằm ở giai đoạn deployment, không phải giai đoạn training:
+Cài TensorRT + CUDA theo guide NVIDIA cho driver/GPU của bạn. Không có GPU: đọc body + tip; chạy labs trên cloud GPU sau.
+:::
 
-```text
-Training framework
-   |
-   | train
-   v
-trained model
-   |
-   | export
-   v
-ONNX model
-   |
-   | build
-   v
-TensorRT engine
-   |
-   | serve
-   v
-production inference
+
+## TensorRT là gì — và không phải gì? {#sec-trt-what}
+
+> TensorRT chỉ là “tool convert ONNX”, hay là compiler thật sự?
+
+::: {.callout-important icon=false}
+## Ý chính
+**TensorRT** = model optimizer + GPU kernel/tactic selector + precision optimizer + runtime executor trên **NVIDIA GPU**. Nó **compile** graph thành engine chuyên biệt cho hardware và shape — không chỉ đọc ONNX rồi execute từng op như interpreter đơn giản.
+:::
+
+Pipeline deployment điển hình: train → export ONNX → build TensorRT engine → serve production.
+
+```{mermaid}
+%%| label: fig-l4-train-deploy
+%%| fig-cap: "Training → ONNX → TensorRT engine → production. Build có thể chậm; runtime phải nhanh."
+%%| fig-width: 6.5
+%%| fig-align: "center"
+flowchart LR
+  T([Train]) --> M([Trained model])
+  M -->|"export"| X([ONNX])
+  X -->|"build"| E([TRT engine])
+  E -->|"serve"| P([Production])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#E8F5E9,stroke:#43A047,stroke-width:1.5px,color:#1B5E20
+  class T,M soft
+  class X,E hot
+  class P ok
 ```
 
-Điểm quan trọng:
+| Không phải | Hệ quả |
+|:-----------|:-------|
+| ONNX | ONNX = interchange format (graph + weights); TRT = optimizer + runtime NVIDIA |
+| ONNX Runtime | ORT đa EP; TRT native = API / `trtexec`; cũng có TensorRT EP trong ORT |
+| Triton | Triton = serving (HTTP/gRPC, batching, repo, metrics); TRT = engine Triton có thể serve |
 
-```text
-TensorRT không chỉ đọc ONNX rồi execute từng op.
-TensorRT compile graph thành một engine được tối ưu cho hardware và shape cụ thể.
+Ba cách dùng phổ biến:
+
+| Cách | Luồng |
+|:-----|:------|
+| 1 | ONNX → `trtexec` → `.plan` |
+| 2 | ONNX → TensorRT Python/C++ API → `.plan` |
+| 3 | ONNX Runtime + TensorRT EP (dùng TRT gián tiếp) |
+
+Cách 1–2 dùng TensorRT trực tiếp. Cách 3 dùng qua ORT.
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: bức tranh 14 bước từ model đến inference
+1. Train trong PyTorch / TensorFlow  
+2. Export ONNX  
+3. Validate ONNX bằng ORT  
+4. Simplify / fix ONNX nếu cần  
+5. Parse ONNX bằng TensorRT  
+6. Chọn precision (FP32 / TF32 / FP16 / INT8 / …)  
+7. Chọn shapes hoặc optimization profiles  
+8. Build engine  
+9. Serialize plan file  
+10. Load engine trong runtime  
+11. Allocate input/output buffers  
+12. Set input shape nếu dynamic  
+13. Enqueue lên CUDA stream  
+14. Copy output hoặc giữ trên GPU  
+
+Trong production thường build trước: `model.onnx → model_fp16.plan`, rồi deserialize lúc startup — không build lại mỗi request. Build lớn + nhiều profile có thể mất **vài phút đến hàng chục phút**; deserialize thường **giây**.
+:::
+
+
+## Objects cốt lõi trong TensorRT {#sec-objects}
+
+> Builder, Engine, ExecutionContext — cái nào “compile”, cái nào “chạy”?
+
+::: {.callout-important icon=false}
+## Ý chính
+Nhớ chuỗi: **Builder** (+ NetworkDefinition + BuilderConfig) tạo **engine** (compiled model) → **Runtime** deserialize plan → **ExecutionContext** giữ state runtime và **enqueue** lên CUDA stream. Một engine có thể tạo nhiều context (concurrent streams/workers).
+:::
+
+| Object | Mental model | Việc chính |
+|:-------|:-------------|:-----------|
+| `Builder` | Compiler driver | Nhận network + config (precision, workspace, profiles, timing cache) → serialized engine |
+| `NetworkDefinition` | Graph nội bộ TRT | Từ ONNX Parser hoặc tự `network.add_convolution_nd(...)` / `mark_output` |
+| `BuilderConfig` | Compiler flags | Precision, memory pool/workspace, profiles, timing cache, profiling, compatibility, DLA… |
+| `ICudaEngine` | Compiled model | Biết I/O, profiles, tactics, memory needs, layer plan, precision/layout; serialize `.plan`/`.engine`/`.trt` |
+| `Runtime` | Loader | `plan file → ICudaEngine` |
+| `ExecutionContext` | Per-execution state | Profile đang chọn, runtime shape, tensor addresses, activation memory state |
+| CUDA stream | Async queue | CPU enqueue → GPU chạy; đo latency phải synchronize đúng |
+
+Con đường phổ biến từ PyTorch: `PyTorch → ONNX → TensorRT ONNX Parser → NetworkDefinition`.
+
+Tên đuôi file (`.plan` / `.engine` / `.trt`) không bắt buộc — quan trọng là nội dung serialized engine.
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: ExecutionContext và stream
+Execution thường **asynchronous**. Sai: đo wall-clock mà không sync stream → số ảo. Đúng: enqueue rồi `cudaStreamSynchronize` (hoặc CUDA event) khi cần latency E2E. Context giữ state dynamic shape — đổi shape liên tục có overhead cập nhật nội bộ (xem @sec-profiles).
+:::
+
+
+## Build phase vs runtime phase {#sec-build-runtime}
+
+> Vì sao build engine chậm nhưng inference phải nhanh — và sai ở đâu nếu gộp hai pha?
+
+::: {.callout-important icon=false}
+## Ý chính
+**Build** = compiler (parse, fuse, chọn tactic, plan memory, serialize) — có thể chậm. **Runtime** = load engine + context + buffers + enqueue — phải phục vụ request nhanh. Production: **không** build trong request path.
+:::
+
+```{mermaid}
+%%| label: fig-l4-build-runtime
+%%| fig-cap: "Build phase (tô sáng) vs runtime: ONNX → Builder → plan; rồi Runtime → Context → GPU."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  O([ONNX]) --> N([Network])
+  N --> B([Builder])
+  B --> E([Engine/plan])
+  E --> R([Runtime])
+  R --> C([Context])
+  C --> G([GPU])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class O,R,C,G soft
+  class N,B,E hot
 ```
 
-
-## TensorRT không phải là gì?
-
-### TensorRT không phải ONNX
-
-ONNX là format mô tả graph. TensorRT là compiler/runtime chạy graph đó trên NVIDIA GPU.
-
-```text
-ONNX = model interchange format
-TensorRT = optimizer + runtime for NVIDIA GPU inference
-```
-
-### TensorRT không phải ONNX Runtime
-
-ONNX Runtime là runtime tổng quát, có nhiều Execution Providers. TensorRT là backend tối ưu riêng cho NVIDIA GPU.
-
-Có ba cách phổ biến để dùng TensorRT:
-
-```text
-Cách 1: ONNX -> trtexec -> TensorRT engine
-Cách 2: ONNX -> TensorRT Python/C++ API -> TensorRT engine
-Cách 3: ONNX Runtime + TensorRT Execution Provider
-```
-
-Cách 1 và 2 dùng TensorRT trực tiếp. Cách 3 dùng TensorRT gián tiếp thông qua ONNX Runtime.
-
-### TensorRT không phải Triton
-
-Triton Inference Server là inference serving server. TensorRT là backend/engine mà Triton có thể serve.
-
-```text
-TensorRT = optimized engine
-Triton = server quản lý request, batching, model repository, metrics, versioning
-```
-
-Bạn có thể deploy TensorRT engine trong Triton, nhưng bản thân TensorRT không cung cấp đầy đủ các tính năng serving như HTTP/gRPC endpoint, model version routing, dynamic batching policy hay metrics server.
-
-
-## Bức tranh tổng thể: từ model đến TensorRT engine
-
-Pipeline tiêu chuẩn:
-
-```text
-1. Train model trong PyTorch / TensorFlow
-2. Export sang ONNX
-3. Validate ONNX bằng ONNX Runtime
-4. Simplify / fix ONNX nếu cần
-5. Parse ONNX bằng TensorRT
-6. Chọn precision: FP32 / TF32 / FP16 / INT8 / FP8
-7. Chọn input shapes hoặc optimization profiles
-8. Build TensorRT engine
-9. Serialize engine thành plan file
-10. Load engine trong runtime
-11. Allocate input/output buffers
-12. Set input shape nếu dynamic
-13. Enqueue inference vào CUDA stream
-14. Copy output hoặc giữ output trên GPU
-```
-
-Ở mức system:
-
-```text
-Build phase:
-ONNX -> TensorRT engine
-
-Runtime phase:
-TensorRT engine + input tensors -> output tensors
-```
-
-Điểm rất quan trọng:
-
-```text
-Build phase có thể chậm.
-Runtime phase phải nhanh.
-```
-
-Trong production, bạn thường build engine trước rồi lưu lại:
-
-```text
-model.onnx -> model_fp16.plan
-```
-
-Khi service khởi động, nó deserialize `.plan` thay vì build lại từ ONNX cho mỗi request.
-
-## Các object cốt lõi trong TensorRT
-
-TensorRT API có nhiều lớp, nhưng ở mức căn bản bạn cần nhớ các object sau.
-
-### `Builder`
-
-`Builder` chịu trách nhiệm build engine từ một network definition và builder config.
-
-Mental model:
-
-```text
-Builder = compiler driver
-```
-
-Nó nhận:
-
-- graph đã parse hoặc graph do bạn tự construct,
-- config về precision,
-- config về memory workspace,
-- optimization profiles,
-- tactic/timing cache,
-- flags khác.
-
-Sau đó nó tạo ra serialized engine.
-
-### `NetworkDefinition`
-
-`NetworkDefinition` là representation nội bộ của TensorRT cho model graph.
-
-Nó có thể đến từ:
-
-```text
-ONNX Parser -> NetworkDefinition
-```
-
-hoặc bạn tự tạo bằng TensorRT layer API:
-
-```python
-network.add_convolution_nd(...)
-network.add_activation(...)
-network.mark_output(...)
-```
-
-Trong thực tế, với phần lớn model từ PyTorch, con đường phổ biến là:
-
-```text
-PyTorch -> ONNX -> TensorRT ONNX Parser -> NetworkDefinition
-```
-
-### `BuilderConfig`
-
-`BuilderConfig` chứa các quyết định build-time:
-
-- precision flags,
-- memory pool / workspace limit,
-- optimization profiles,
-- timing cache,
-- profiling verbosity,
-- hardware compatibility,
-- version compatibility,
-- auxiliary streams,
-- DLA settings nếu dùng Jetson/DLA.
-
-Mental model:
-
-```text
-BuilderConfig = compiler flags
-```
-
-### `ICudaEngine`
-
-`ICudaEngine` là engine đã được build. Nó chứa execution plan tối ưu cho TensorRT runtime.
-
-Mental model:
-
-```text
-Engine = compiled model
-```
-
-Engine biết:
-
-- input/output tensors,
-- supported optimization profiles,
-- selected tactics,
-- memory requirements,
-- layer execution plan,
-- precision/layout choices.
-
-Engine thường được serialize thành file:
-
-```text
-model.plan
-model.engine
-model.trt
-```
-
-Tên đuôi file không phải chuẩn bắt buộc. Nội dung quan trọng là serialized TensorRT engine.
-
-### `Runtime`
-
-`Runtime` dùng để deserialize engine:
-
-```text
-plan file -> ICudaEngine
-```
-
-Mental model:
-
-```text
-Runtime = loader for compiled engine
-```
-
-### `ExecutionContext`
-
-`ExecutionContext` là runtime state để chạy inference từ một engine.
-
-Mental model:
-
-```text
-ExecutionContext = per-execution-state for an engine
-```
-
-Một engine có thể tạo nhiều execution contexts. Điều này hữu ích khi bạn muốn chạy concurrent inference trên nhiều CUDA streams hoặc nhiều request workers.
-
-ExecutionContext giữ các state như:
-
-- selected optimization profile,
-- current runtime input shape,
-- tensor addresses,
-- activation memory state,
-- execution-related metadata.
-
-### CUDA stream
-
-TensorRT enqueue inference vào CUDA stream.
-
-```text
-CPU thread -> enqueue work -> CUDA stream -> GPU executes kernels asynchronously
-```
-
-Điểm quan trọng:
-
-```text
-TensorRT execution thường asynchronous.
-Đo latency sai nếu không synchronize đúng cách.
-```
-
-
-## Engine build phase vs runtime phase
-
-Một lỗi tư duy phổ biến là xem `build engine` và `run inference` là cùng một việc. Chúng khác nhau hoàn toàn.
-
-### Build phase
-
-Build phase là lúc TensorRT làm các việc tốn thời gian:
-
-- parse ONNX,
-- validate graph,
-- infer shapes,
-- fold constants,
-- fuse layers,
-- chọn data format,
-- chọn precision,
-- benchmark candidate kernels,
-- chọn tactics,
-- plan memory,
-- serialize engine.
-
-Pseudo-flow:
-
-```text
-ONNX
-  -> parse
-  -> NetworkDefinition
-  -> optimize graph
-  -> choose kernels/tactics
-  -> memory plan
-  -> serialized engine
-```
-
-Build phase có thể mất vài giây, vài phút, hoặc lâu hơn với model lớn và nhiều dynamic profiles.
-
-### Runtime phase
-
-Runtime phase là lúc service dùng engine đã build để chạy inference:
-
-- load engine,
-- tạo execution context,
-- allocate buffers,
-- set input shape,
-- set tensor addresses,
-- enqueue inference,
-- synchronize/copy output nếu cần.
-
-Pseudo-flow:
-
-```text
-serialized engine
-  -> deserialize
-  -> create execution context
-  -> set shapes and buffers
-  -> enqueue
-  -> get outputs
-```
-
-Runtime phase phải được tối ưu để phục vụ request nhanh.
-
-### Production rule
-
-Trong production, không build engine trong request path.
+| Pha | Việc làm |
+|:----|:---------|
+| Build | Parse ONNX, validate, infer shapes, fold constants, fuse, chọn format/precision, benchmark tactics, memory plan, serialize |
+| Runtime | Deserialize, tạo context, allocate buffers, set shape, set addresses, enqueue, sync/copy khi cần |
 
 Sai:
 
 ```text
-request -> parse ONNX -> build engine -> run inference -> response
+request → parse ONNX → build engine → run inference → response
 ```
 
 Đúng:
 
 ```text
-service startup -> load engine
-request -> enqueue inference -> response
+service startup → load engine
+request → enqueue inference → response
 ```
 
-## TensorRT build engine như thế nào?
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Cùng một ONNX, build trên GPU khác hoặc TensorRT version khác có thể ra engine/tactic khác. Coi `.plan` là artifact **gắn hardware + version**, không phải “ONNX thứ hai” portable tuyệt đối (xem @sec-debug-prod).
+:::
 
-Build engine là phần “compiler” của TensorRT. Mỗi bước bên dưới ảnh hưởng đến performance.
+::: {.callout-tip icon=false collapse="true"}
+## Pseudo-flow hai pha
+Build: `ONNX → parse → NetworkDefinition → optimize → choose kernels/tactics → memory plan → serialized engine`.  
+Runtime: `serialized engine → deserialize → execution context → set shapes/buffers → enqueue → outputs`.
+:::
 
-### Parse ONNX
 
-TensorRT ONNX parser đọc file `.onnx` và chuyển graph thành `NetworkDefinition`.
+## Build pipeline: TensorRT compile như thế nào? {#sec-build}
 
-```text
-ONNX graph nodes -> TensorRT layers
-ONNX tensors -> TensorRT tensors
-ONNX weights -> TensorRT weights
-```
+> Từ `.onnx` đến `.plan`, từng bước compiler ảnh hưởng latency thế nào?
 
-Nếu operator không được TensorRT hỗ trợ, parser có thể fail.
+::: {.callout-important icon=false}
+## Ý chính
+Build = chuỗi: **parse → shape analysis → constant folding / DCE → layer fusion → layout → precision → tactic selection → memory planning → serialize**. Nhiều ONNX nodes có thể thành ít engine layers. Unsupported op làm parse/build fail — ORT chạy được không đảm bảo TRT build được.
+:::
 
-Ví dụ lỗi thường gặp:
+### Parse ONNX {.unnumbered}
+
+Parser đọc `.onnx` → `NetworkDefinition` (nodes → layers, tensors, weights).
+
+Lỗi thường gặp trong log:
 
 ```text
 Unsupported operator: GridSample
@@ -473,248 +275,74 @@ Unsupported ONNX data type
 No importer registered for op: SomeCustomOp
 ```
 
-Cách xử lý:
+Thứ tự xử lý: (1) opset phù hợp, (2) `onnxsim`, (3) rewrite model, (4) ONNX GraphSurgeon, (5) TensorRT plugin, (6) chạy op ngoài TRT.
 
-1. Export ONNX với opset phù hợp.
-2. Simplify graph bằng `onnxsim`.
-3. Rewrite model để dùng operator được TensorRT hỗ trợ.
-4. Dùng ONNX GraphSurgeon để sửa graph.
-5. Viết TensorRT plugin cho custom op.
-6. Chạy op đó ngoài TensorRT nếu không thể plugin.
+### Shape analysis {.unnumbered}
 
-### Shape analysis
+Static `[1,3,224,224]` → tối ưu hẹp cho shape đó. Dynamic `[-1,3,-1,-1]` → cần optimization profile (`min`/`opt`/`max`) — xem @sec-profiles.
 
-TensorRT cần hiểu input/output shapes để plan memory và chọn kernel.
+### Constant folding và DCE {.unnumbered}
 
-Với static shape:
+Constant chỉ phụ thuộc constant → tính trước lúc build (ví dụ `Constant A + Constant B → Constant C`). Nhánh không ảnh hưởng output → loại bỏ (dead computation elimination) — ví dụ branch B không đóng góp vào output cuối cùng thì bị cắt khỏi engine.
 
-```text
-input: [1, 3, 224, 224]
-```
+### Layer fusion {.unnumbered}
 
-Builder có thể tối ưu rất cụ thể cho shape đó.
-
-Với dynamic shape:
-
-```text
-input: [-1, 3, -1, -1]
-```
-
-Builder cần optimization profile để biết miền shape hợp lệ:
-
-```text
-min: [1, 3, 224, 224]
-opt: [8, 3, 224, 224]
-max: [32, 3, 512, 512]
-```
-
-### Constant folding
-
-Nếu một phần graph chỉ phụ thuộc vào constants, TensorRT có thể tính trước trong build phase.
-
-Ví dụ:
-
-```text
-constant A + constant B -> constant C
-```
-
-Thay vì chạy phép cộng ở runtime, TensorRT lưu kết quả.
-
-### Dead computation elimination
-
-Nếu tensor/layer không ảnh hưởng đến output, builder có thể loại bỏ.
-
-Ví dụ:
-
-```text
-x -> branch A -> output
-x -> branch B -> unused
-```
-
-Branch B có thể bị loại.
-
-### Layer fusion
-
-TensorRT có thể fuse nhiều op thành một engine layer hoặc một kernel/tactic hiệu quả hơn.
-
-Ví dụ phổ biến:
-
-```text
-Conv -> BatchNorm -> ReLU
-```
-
-có thể trở thành:
-
-```text
-Fused Conv + Scale + ReLU
-```
-
-Lợi ích:
-
-- ít kernel launch hơn,
-- ít read/write intermediate tensors hơn,
-- giảm memory bandwidth,
-- tăng cache locality,
-- tận dụng kernel chuyên biệt.
-
-Mental model:
+Ví dụ `Conv → BatchNorm → ReLU` có thể thành fused Conv+Scale+ReLU: ít kernel launch, ít read/write intermediate, giảm bandwidth, tăng locality, dùng kernel chuyên biệt.
 
 ```text
 Không phải càng nhiều ONNX nodes thì runtime càng nhiều GPU kernels.
-TensorRT có thể gom nhiều nodes thành ít engine layers hơn.
 ```
 
-### Layout and data format selection
+### Layout / data format {.unnumbered}
 
-ONNX model có thể dùng layout quen thuộc như NCHW, nhưng TensorRT có thể chọn format nội bộ khác để chạy nhanh hơn.
+ONNX có thể NCHW; TRT có thể chọn format nội bộ vectorized/channel-packed. Quan tâm boundary input/output, plugin format, và **reformat layers** (đổi layout nhiều lần → chậm).
 
-Ví dụ:
+### Precision, tactic, memory, serialize {.unnumbered}
 
-```text
-NCHW -> internal vectorized/channel-packed format
+Precision có thể gồm FP32 / TF32 / FP16 / **BF16** / **FP8** / INT8… theo config + hardware — chi tiết @sec-fp16 và @sec-int8. Tactic selection — @sec-tactics.
+
+**Memory planning:** builder tái sử dụng activation buffers khi lifetime không chồng (ví dụ buffer của Layer1 free sau Layer3 → reuse cho Layer5). Ảnh hưởng: peak VRAM, max batch, nhiều ExecutionContext, auxiliary streams. Serialize: `ICudaEngine → model.plan`.
+
+Engine gắn với TensorRT version, CUDA/cuDNN, GPU arch, platform, build flags. Prefer build trong môi trường giống deploy. `BuilderConfig` còn có các chế độ **version compatibility**, **hardware compatibility**, **auxiliary streams**, và target **Jetson/DLA** khi cần — xem @sec-debug-prod.
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: fusion, reformat và dump
+Nếu `--dumpLayerInfo` / `--dumpProfile` thấy nhiều **reformat**, bottleneck có thể là layout chứ không phải Conv. Một engine layer có thể tương ứng nhiều ONNX nodes sau fusion. Nếu một layer chiếm ~60% latency, tối ưu “toàn graph” kém hiệu quả hơn hiểu đúng layer đó (Lab 4).
+:::
+
+
+## Tactic selection, workspace và timing cache {#sec-tactics}
+
+> Vì sao build lâu — và workspace nhỏ có thể làm engine chậm hơn?
+
+::: {.callout-important icon=false}
+## Ý chính
+**Tactic** = implementation/kernel strategy cụ thể cho layer (hoặc fused layer). Builder liệt kê candidate, lọc (unsupported / vượt workspace), benchmark hoặc ước lượng, chọn winner. Workspace quá nhỏ → loại tactic nhanh cần nhiều temp memory. **Timing cache** tái dùng kết quả timing để rebuild/CI nhanh hơn. Sau đổi precision/rebuild: luôn validate accuracy.
+:::
+
+Một Conv/MatMul có thể có nhiều tactic (implicit GEMM, Winograd, FFT-like, Tensor Core tiling/layout khác nhau…).
+
+Tactic phụ thuộc: GPU architecture, input shape, batch, precision, tensor layout, workspace limit, libraries/kernels, optimization profile, builder optimization level, timing cache, môi trường.
+
+```{mermaid}
+%%| label: fig-l4-tactic
+%%| fig-cap: "Tactic selection: candidate → lọc workspace → timing/estimate → winner vào engine."
+%%| fig-width: 6
+%%| fig-align: "center"
+flowchart TB
+  L([Layer / fused]) --> C([Candidate tactics])
+  C -->|"filter"| F([Workspace OK?])
+  F -->|"time / estimate"| W([Winner tactic])
+  W --> E([Engine plan])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class L,C soft
+  class F,W hot
+  class E ok
 ```
 
-Bạn không luôn kiểm soát format nội bộ. Điều bạn cần quan tâm là:
-
-- input format ở boundary,
-- output format ở boundary,
-- plugin format nếu có custom plugin,
-- có phát sinh reformat layer không.
-
-Reformat layer có thể làm chậm nếu TensorRT phải đổi layout nhiều lần.
-
-### Precision selection
-
-TensorRT có thể chạy layer ở nhiều precision khác nhau tùy config và hardware:
-
-```text
-FP32 / TF32 / FP16 / BF16 / FP8 / INT8
-```
-
-Trong bài này ta tập trung vào:
-
-```text
-FP16 và INT8
-```
-
-Vì đây là hai chế độ bạn sẽ gặp rất thường xuyên trong production inference.
-
-### Tactic selection
-
-Đây là phần quan trọng nhất.
-
-Một layer như convolution hoặc matrix multiplication không chỉ có một implementation. Nó có thể có nhiều kernel implementation khác nhau:
-
-```text
-Conv2D layer
-  -> tactic A: implicit GEMM
-  -> tactic B: Winograd
-  -> tactic C: FFT-like
-  -> tactic D: Tensor Core optimized kernel
-  -> tactic E: different tiling/layout strategy
-```
-
-TensorRT builder sẽ thử/đánh giá các candidate tactics trong build phase rồi chọn tactic tốt cho engine.
-
-Mental model:
-
-```text
-Tactic = concrete implementation strategy/kernel for a layer or fused layer.
-```
-
-Tactic selection phụ thuộc vào:
-
-- GPU architecture,
-- input shape,
-- batch size,
-- precision,
-- tensor layout,
-- workspace limit,
-- available libraries/kernels,
-- optimization profile,
-- builder optimization level,
-- timing cache,
-- environment.
-
-Đây là lý do cùng một ONNX model nhưng build trên GPU khác hoặc TensorRT version khác có thể tạo engine khác.
-
-### Memory planning
-
-TensorRT cố gắng reuse activation buffers khi có thể.
-
-Ví dụ:
-
-```text
-Layer 1 output buffer -> no longer needed after Layer 3
-same memory region can be reused for Layer 5 output
-```
-
-Memory planning ảnh hưởng đến:
-
-- peak GPU memory,
-- throughput,
-- khả năng chạy nhiều contexts,
-- ability to run auxiliary streams,
-- batch size tối đa.
-
-### Serialization
-
-Sau khi build, TensorRT serialize engine thành binary plan.
-
-```text
-ICudaEngine -> model.plan
-```
-
-File này thường được dùng trong deployment.
-
-Cảnh báo production:
-
-```text
-TensorRT engine không nên được xem là portable artifact tuyệt đối.
-```
-
-Engine thường phụ thuộc vào:
-
-- TensorRT version,
-- CUDA/cuDNN stack,
-- GPU architecture,
-- platform,
-- build flags.
-
-Nếu muốn portability tốt hơn, bạn cần cấu hình version compatibility hoặc hardware compatibility theo tài liệu TensorRT. Trong nhiều hệ thống production, cách đơn giản và an toàn là build engine trong chính environment gần giống deployment environment.
-
-
-## Tactic selection chi tiết
-
-### Vì sao tactic selection tồn tại?
-
-GPU performance phụ thuộc mạnh vào shape và hardware.
-
-Một kernel nhanh cho shape này có thể chậm cho shape khác.
-
-Ví dụ:
-
-```text
-batch=1, C=64, H=224, W=224
-```
-
-khác với:
-
-```text
-batch=32, C=64, H=224, W=224
-```
-
-và khác với:
-
-```text
-batch=1, sequence_length=2048, hidden=4096
-```
-
-TensorRT không chỉ chọn “Conv kernel”. Nó chọn một tactic cụ thể cho điều kiện cụ thể.
-
-### Tactic selection giống autotuning
-
-Tư duy gần đúng:
+Mental model (đủ để debug):
 
 ```text
 for each layer or fused subgraph:
@@ -725,92 +353,33 @@ for each layer or fused subgraph:
     choose best tactic
 ```
 
-Trong thực tế TensorRT phức tạp hơn, nhưng mental model này đủ tốt để debug.
+| Cơ chế | Vai trò |
+|:-------|:--------|
+| Workspace / memory pool | Cho phép (hoặc loại) tactic cần buffer tạm lớn |
+| Timing cache | First build: time nhiều tactic → lưu; lần sau reuse → nhanh hơn |
+| Accuracy | Chủ yếu perf; FP16 overflow, INT8 quant error vẫn cần metric |
 
-### Workspace ảnh hưởng tactic selection
+Timing cache hữu ích khi: build nhiều model tương tự, rebuild thường xuyên, CI nhiều variants/profiles/precision.
 
-Một số tactics cần temporary workspace lớn.
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Đặt workspace “cực thấp cho chắc” có thể ép builder chọn tactic chậm hơn (`workspace too small → fast tactic unavailable`). Cùng Conv: `batch=1, 224²` vs `batch=32` vs sequence dài → winner khác — đó là lý do `opt` shape và GPU target quyết định mạnh.
+:::
 
-Nếu bạn set workspace quá nhỏ, TensorRT có thể loại bỏ tactics nhanh hơn nhưng cần nhiều memory hơn.
-
-Ví dụ:
-
-```text
-workspace too small -> fast tactic unavailable -> slower tactic selected
-```
-
-Do đó khi build engine, đừng set workspace quá thấp nếu bạn không có lý do.
-
-### Timing cache
-
-Vì TensorRT có thể benchmark nhiều tactics trong build phase, build engine có thể chậm. Timing cache giúp lưu kết quả timing/tactic để reuse trong các lần build sau.
-
-Mental model:
-
-```text
-First build: benchmark many tactics -> store timing cache
-Next build: reuse timing cache -> faster build
-```
-
-Timing cache đặc biệt hữu ích khi:
-
-- build nhiều model tương tự,
-- rebuild engine thường xuyên,
-- CI/CD build nhiều variants,
-- build nhiều optimization profiles,
-- build engine cho nhiều precision.
-
-### Tactic và accuracy
-
-Tactic selection chủ yếu là performance, nhưng khi precision thấp, tactic/layer choice có thể ảnh hưởng numeric behavior.
-
-Ví dụ:
-
-- FP16 có nguy cơ overflow/underflow ở intermediate values.
-- INT8 có quantization/clamping error.
-- Một số reduction hoặc normalization layers nhạy với precision.
-
-Production rule:
-
-```text
-Sau khi đổi precision hoặc rebuild engine, luôn validate accuracy metric.
-```
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: tactic và numeric behavior
+Tactic selection chủ yếu performance, nhưng precision thấp thì choice có thể ảnh hưởng số học: FP16 overflow/underflow intermediate; INT8 quantization/clamping; reduction/normalization nhạy precision. Production rule: sau đổi precision hoặc rebuild engine, luôn validate accuracy metric — không chỉ nhìn latency.
+:::
 
 
-## Dynamic shapes trong TensorRT
+## Dynamic shapes và optimization profiles {#sec-profiles}
 
-Dynamic shape trong TensorRT là khả năng để một số dimensions được quyết định tại runtime.
+> Dynamic axes trong ONNX đã đủ — hay TensorRT còn cần `min`/`opt`/`max`?
 
-Ví dụ ONNX input:
-
-```text
-input: [N, 3, H, W]
-```
-
-Có thể export thành:
-
-```text
-input: [-1, 3, -1, -1]
-```
-
-Trong TensorRT, `-1` biểu thị runtime dimension.
-
-Nhưng TensorRT không thể tối ưu một miền vô hạn. Bạn phải cung cấp optimization profile.
-
-
-## Optimization profile
-
-### Optimization profile là gì?
-
-Optimization profile định nghĩa range shape mà engine có thể nhận, cùng với shape mà builder sẽ tối ưu mạnh nhất.
-
-Mỗi dynamic input cần có:
-
-```text
-min shape
-opt shape
-max shape
-```
+::: {.callout-important icon=false}
+## Ý chính
+ONNX có thể khai báo `-1` (dynamic). TensorRT **không tối ưu miền vô hạn**: mỗi dynamic input cần **optimization profile** với `min`, `opt`, `max`. Builder ưu tiên tối ưu quanh **`opt`**, nhưng tactic phải hợp lệ trên cả `[min, max]`. Profile quá rộng → tactic “an toàn” → chậm ở traffic thật. Nhiều profile hẹp thường tốt hơn một profile khổng lồ. Runtime shape ngoài range → fail.
+:::
 
 Ví dụ:
 
@@ -821,83 +390,41 @@ opt: [8, 3, 224, 224]
 max: [32, 3, 224, 224]
 ```
 
-Ý nghĩa:
+| Trường | Ý nghĩa |
+|:-------|:--------|
+| `min` | Shape nhỏ nhất engine cho phép |
+| `opt` | Shape builder ưu tiên tối ưu performance |
+| `max` | Shape lớn nhất engine cho phép |
 
-- `min`: shape nhỏ nhất engine cho phép.
-- `opt`: shape builder ưu tiên tối ưu performance.
-- `max`: shape lớn nhất engine cho phép.
+Runtime: `min ≤ runtime_shape ≤ max`.
 
-Runtime input phải nằm trong range:
-
-```text
-min <= runtime_shape <= max
+```{mermaid}
+%%| label: fig-l4-profile
+%%| fig-cap: "Optimization profile: range hợp lệ [min, max]; builder tối ưu mạnh quanh opt."
+%%| fig-width: 5.5
+%%| fig-align: "center"
+flowchart LR
+  Min([min]) -->|"range"| Max([max])
+  Opt([opt]) -.->|"ưu tiên tactic"| Min
+  Opt -.-> Max
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:2px,color:#5C3B10
+  class Min,Max soft
+  class Opt hot
 ```
 
-Nếu input nằm ngoài range, inference sẽ fail.
+Batch cũng là shape dimension (explicit batch). Muốn batch động → profile cho `N` trong `[N,3,224,224]`.
 
-### `opt` shape quan trọng hơn bạn nghĩ
+| Tình huống | Gợi ý |
+|:-----------|:------|
+| Traffic chủ yếu batch 1 | `opt` gần batch 1; đừng `opt=32` chỉ vì `max=32` |
+| Real-time batch 1–4 + job 16–64 | Hai profiles, không một range 1–64 |
+| Ảnh 224 và 512 | Profiles tách theo độ phân giải |
+| Đổi shape liên tục trong một context | Overhead cập nhật state — thiết kế batching/routing |
 
-Builder chọn kernels/tactics tối ưu cho `opt` shape, nhưng chúng phải hợp lệ cho toàn bộ range từ `min` đến `max`.
+Slogan: **one wide profile** = tiện, kém tối ưu; **multiple targeted profiles** = perf tốt hơn, phức tạp hơn.
 
-Nếu range quá rộng:
-
-```text
-min: [1, 3, 128, 128]
-opt: [8, 3, 512, 512]
-max: [64, 3, 2048, 2048]
-```
-
-TensorRT có thể phải chọn tactics “an toàn” cho nhiều shape, dẫn đến performance kém ở shape thường gặp.
-
-Rule of thumb:
-
-```text
-Profile nên phản ánh traffic thật.
-Không nên tạo một profile siêu rộng chỉ để “cho chắc”.
-```
-
-### Một profile vs nhiều profiles
-
-Nếu traffic có nhiều cụm shape khác nhau, dùng nhiều profiles có thể tốt hơn.
-
-Ví dụ service xử lý ảnh:
-
-```text
-Profile 0: batch 1-4, 224x224, opt batch 1
-Profile 1: batch 8-32, 224x224, opt batch 16
-Profile 2: batch 1-8, 512x512, opt batch 4
-```
-
-Tư duy:
-
-```text
-One wide profile = convenient but often less optimal.
-Multiple targeted profiles = better performance but more complexity.
-```
-
-### Batch dimension cũng là shape dimension
-
-Trong TensorRT hiện đại, batch thường là explicit dimension trong tensor shape.
-
-Ví dụ:
-
-```text
-images: [N, 3, 224, 224]
-```
-
-Nếu muốn batch động, bạn cần profile cho dimension `N`.
-
-Ví dụ:
-
-```text
-min: [1, 3, 224, 224]
-opt: [8, 3, 224, 224]
-max: [32, 3, 224, 224]
-```
-
-### Runtime flow với dynamic shape
-
-Runtime dynamic shape flow:
+Runtime flow:
 
 ```text
 1. Deserialize engine
@@ -908,8 +435,6 @@ Runtime dynamic shape flow:
 6. Enqueue inference
 ```
 
-Pseudo-code:
-
 ```python
 context.set_optimization_profile_async(profile_index, stream_handle)
 context.set_input_shape("images", (8, 3, 224, 224))
@@ -918,109 +443,70 @@ context.set_tensor_address("logits", output_device_ptr)
 context.execute_async_v3(stream_handle=stream_handle)
 ```
 
-Tên hàm cụ thể có thể khác nhẹ theo TensorRT version, nhưng flow tư duy là như trên.
+(Tên hàm có thể khác nhẹ theo version TensorRT; flow tư duy giữ nguyên.)
 
-### Shape switching overhead
+::: {.callout-tip icon=false collapse="true"}
+## Shape switching overhead và production routing
 
-Nếu bạn đổi shape liên tục trong cùng context, runtime có thể phải cập nhật internal state.
-
-Ví dụ:
-
-```text
-request 1: [1, 3, 224, 224]
-request 2: [16, 3, 224, 224]
-request 3: [1, 3, 512, 512]
-request 4: [8, 3, 224, 224]
-```
-
-Nếu traffic shape rất đa dạng, bạn cần thiết kế batching/profile routing cẩn thận.
-
-Production pattern:
+Đổi shape liên tục trong một context có overhead cập nhật state nội bộ:
 
 ```text
-Group requests by shape bucket -> select matching profile -> run batches with stable shapes
+req: [1,224] → [16,224] → [1,512] → [8,224]
+# đổi shape liên tục → overhead; throughput kém hơn giữ shape ổn định
 ```
 
-
-## FP32, TF32, FP16 và INT8: bạn cần hiểu gì?
-
-### FP32
-
-FP32 là single precision float. Đây thường là baseline accuracy.
+Pattern production:
 
 ```text
-FP32 = high precision, high memory bandwidth, slower than lower precision on Tensor Cores
+Group requests by shape bucket
+  → select matching optimization profile
+  → run batches with stable shapes
 ```
 
-Khi validate TensorRT, bạn thường so sánh:
+Ví dụ: bucket `224` realtime vs bucket `512/1024` high-res — đừng route request 512 vào profile chỉ cho 224.
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Case: profile quá rộng làm batch 1 chậm
+Profile “linh hoạt”: `min=[1,3,128,128]`, `opt=[16,3,1024,1024]`, `max=[64,3,4096,4096]` trong khi production chủ yếu `[1,3,224,224]` → latency batch 1 kém vì tối ưu quanh `opt` xa traffic và range quá rộng.
+
+Sửa bằng profiles hẹp, khớp traffic:
 
 ```text
-PyTorch FP32 output
-ONNX Runtime FP32 output
-TensorRT FP32/FP16/INT8 output
+Profile 0 (realtime 224):
+  min = opt = max quanh [1–4, 3, 224, 224]
+
+Profile 1 (high-res):
+  min [1, 3, 512, 512]
+  opt [2, 3, 1024, 1024]
+  max [4, 3, 1024, 1024]
 ```
 
-### TF32
-
-TF32 là format/tính toán được NVIDIA Ampere+ hỗ trợ cho một số matrix operations. Nó dùng range giống FP32 hơn nhưng mantissa thấp hơn FP32, nhằm tăng tốc toán tensor/matrix.
-
-Trong nhiều workflow, TF32 có thể được bật mặc định cho một số operations. Nếu bạn cần strict reproducibility hoặc so sánh số học chặt, cần kiểm tra config precision.
-
-### FP16
-
-FP16 dùng 16-bit floating point.
-
-Lợi ích:
-
-- giảm memory bandwidth,
-- giảm activation/weight footprint,
-- tận dụng Tensor Cores,
-- thường tăng throughput đáng kể trên GPU hỗ trợ fast FP16.
-
-Nhược điểm:
-
-- range nhỏ hơn FP32,
-- dễ overflow/underflow hơn,
-- một số layer nhạy precision cần giữ FP32.
-
-Mental model:
-
-```text
-FP16 thường là optimization đầu tiên nên thử cho TensorRT inference.
-```
-
-### INT8
-
-INT8 dùng integer 8-bit để biểu diễn weights/activations đã quantize.
-
-Lợi ích:
-
-- giảm memory footprint,
-- giảm memory bandwidth,
-- tăng arithmetic throughput trên hardware hỗ trợ INT8 Tensor Cores,
-- tốt cho throughput/cost trong production.
-
-Nhược điểm:
-
-- cần scale factors,
-- có rounding error,
-- có clamping error,
-- accuracy có thể giảm,
-- cần calibration hoặc QAT/explicit quantization.
-
-Mental model:
-
-```text
-FP16 = thường dễ bật và dễ giữ accuracy.
-INT8 = nhanh hơn nhưng cần quy trình quantization nghiêm túc.
-```
+Rule: **profile phản ánh traffic thật** — không tạo profile siêu rộng “cho chắc”.
+:::
 
 
-## FP16 execution trong TensorRT
+## FP32, TF32 và FP16 trong TensorRT {#sec-fp16}
 
-### Bật FP16 bằng `trtexec`
+> Bật `--fp16` có nghĩa mọi layer chạy FP16 không — và khi nào dễ mất accuracy?
 
-Ví dụ:
+::: {.callout-important icon=false}
+## Ý chính
+**FP16** thường là bước tối ưu đầu tiên trên Tensor Cores (giảm bandwidth/footprint, tăng throughput). `--fp16` = **cho phép** FP16 tactics — không nhất thiết ép toàn graph FP16; một số layer có thể giữ FP32. Sau FP16: so TensorRT FP32 vs FP16 và vs ORT; kiểm NaN/Inf.
+:::
+
+| Precision | Đặc điểm | Khi dùng |
+|:----------|:---------|:---------|
+| FP32 | Baseline accuracy; tốn bandwidth hơn | Reference khi validate |
+| TF32 | Ampere+; range gần FP32, mantissa thấp hơn; thường mặc định một số matmul | Cần reproducibility chặt → kiểm config |
+| FP16 | 16-bit float; Tensor Cores; range nhỏ hơn → overflow/underflow | Optimization đầu tiên nên thử |
+| BF16 | Range gần FP32 hơn FP16; hỗ trợ tùy GPU/TRT version | Khi hardware/workflow hỗ trợ |
+| FP8 | Precision thấp hơn; hardware mới | Khi pipeline và GPU hỗ trợ |
+| INT8 | Cần scale/calibration/QDQ — @sec-int8 | Throughput/memory tight |
+
+**FP16 vs INT8:** FP16 thường dễ bật và dễ giữ accuracy hơn; INT8 thường nhanh hơn / tiết kiệm memory hơn nhưng cần quantization nghiêm túc (calibration hoặc QAT / Q/DQ).
+
+Bật FP16 bằng `trtexec`:
 
 ```bash
 trtexec \
@@ -1030,60 +516,46 @@ trtexec \
   --fp16
 ```
 
-Ý nghĩa:
+| Flag | Ý nghĩa |
+|:-----|:--------|
+| `--onnx` | Input ONNX |
+| `--saveEngine` | Output serialized engine |
+| `--shapes` | Shape build/benchmark |
+| `--fp16` | Cho phép FP16 tactics |
+
+FP16 dễ lỗi accuracy khi: activation magnitude lớn; reduction trên chiều lớn; normalization nhạy; softmax/log/exp range rộng; model chưa từng kiểm mixed precision; metric rất nhạy sai số nhỏ.
+
+::: {.callout-tip icon=false collapse="true"}
+## Checklist debug FP16 (NaN/Inf hoặc accuracy ↓)
+1. Compare TensorRT FP32 vs TensorRT FP16  
+2. Compare TensorRT FP16 vs ONNX Runtime FP32  
+3. Check NaN/Inf  
+4. Dump intermediate bằng Polygraphy nếu cần  
+5. Force layer nhạy về FP32 nếu API/workflow cho phép  
+6. Kiểm preprocessing / input range  
+7. Validate preprocessing; scale/clip input nếu hợp lý; fine-tune mixed precision nếu cần  
+
+Khi validate, thường so: PyTorch FP32 · ORT FP32 · TensorRT FP32/FP16/INT8.
+:::
+
+
+## INT8 execution: calibration, PTQ, QAT và Q/DQ {#sec-int8}
+
+> Vì sao INT8 không chỉ thêm `--int8` — và Q/DQ khác calibration implicit thế nào?
+
+::: {.callout-important icon=false}
+## Ý chính
+INT8 map float → int8 qua **scale** (round + clamp). Accuracy loss đến từ **rounding error** và **clamping error**. Cần **PTQ + calibration data đại diện**, hoặc **QAT**, hoặc graph **explicit Q/DQ**. Hướng hiện đại ưu tiên explicit Q/DQ + strongly typed. Calibration data phải đúng preprocessing và shape/profile traffic thật.
+:::
+
+Mental model symmetric INT8:
 
 ```text
---onnx        input ONNX model
---saveEngine  output serialized TensorRT engine
---shapes      runtime/static input shape dùng cho build/benchmark
---fp16        cho phép TensorRT dùng FP16 tactics
+float_value → divide by scale → round → clamp to int8 range
+int8_value → multiply by scale → approximate float_value
 ```
 
-### FP16 không có nghĩa mọi layer đều FP16
-
-TensorRT có thể chọn precision layer-by-layer tùy config, hardware và constraints. Một số layer có thể vẫn chạy FP32 nếu cần hoặc nếu FP16 implementation không phù hợp.
-
-Mental model:
-
-```text
---fp16 = enable FP16 tactics, không nhất thiết ép toàn bộ graph thành FP16 tuyệt đối.
-```
-
-### Khi nào FP16 dễ lỗi accuracy?
-
-Các trường hợp cần cẩn thận:
-
-- activations có magnitude lớn,
-- reduction over large dimension,
-- normalization nhạy số học,
-- softmax/log/exp với input range rộng,
-- model chưa từng được kiểm tra mixed precision,
-- output metric rất nhạy với sai số nhỏ.
-
-Debug checklist:
-
-1. Compare TensorRT FP32 vs TensorRT FP16.
-2. Compare TensorRT FP16 vs ONNX Runtime FP32.
-3. Check NaN/Inf.
-4. Dump intermediate outputs bằng Polygraphy nếu cần.
-5. Force sensitive layer về FP32 nếu API/workflow cho phép.
-6. Kiểm tra preprocessing input range.
-
-
-## INT8 execution trong TensorRT
-
-INT8 phức tạp hơn FP16 vì bạn cần biết scale để map floating-point values sang int8 values.
-
-### Quantization mental model
-
-Với symmetric INT8 quantization, ta có thể nghĩ đơn giản:
-
-```text
-float_value -> divide by scale -> round -> clamp to int8 range
-int8_value -> multiply by scale -> approximate float_value
-```
-
-Ví dụ:
+Ví dụ đúng range:
 
 ```text
 x_float = 0.73
@@ -1092,244 +564,79 @@ x_int8 = round(0.73 / 0.01) = 73
 x_dequant = 73 * 0.01 = 0.73
 ```
 
-Nếu value vượt range:
+Clamping error khi vượt range:
 
 ```text
 x_float = 2.0
 scale = 0.01
-x_int8 = round(200) -> clamp to 127
+x_int8 = round(200) → clamp to 127
 x_dequant = 1.27
 ```
 
-Đó là clamping error.
+| Scale | Hệ quả |
+|:------|:-------|
+| Quá nhỏ | Ít rounding cho value nhỏ; dễ clamp value lớn |
+| Quá lớn | Ít clamp value lớn; rounding thô hơn cho value nhỏ |
 
-### Rounding error và clamping error
+Calibration / QAT tìm scale khớp distribution thật.
 
-INT8 accuracy loss thường đến từ hai nguồn:
+| Phương pháp | Flow | Ưu / nhược |
+|:------------|:-----|:-----------|
+| PTQ | FP32 → calibration set → ước range/scale → INT8 | Nhanh, không retrain; accuracy có thể giảm nếu data kém |
+| QAT | Train với fake-quant → export QDQ ONNX → TRT INT8 | Thường giữ accuracy tốt hơn; cần data + pipeline train |
+| Explicit Q/DQ | `QuantizeLinear`/`DequantizeLinear` trong graph (nội bộ TRT: QuantizeLayer / DequantizeLayer) | Semantics rõ, dễ debug, TRT ít “đoán” |
+| Implicit calibration | Bật INT8 + calibrator trong builder | Còn hỗ trợ; hiện đại ưu tiên explicit khi được |
 
-```text
-rounding error: float không thể biểu diễn chính xác bằng int8 grid
-clamping error: value ngoài dynamic range bị clip
-```
+INT8 + dynamic shapes: calibration cần calibration optimization profile — thường dùng **`opt`** của profile. Shape calibration phải khớp; calibration chỉ batch/shape không đại diện → accuracy kém ở runtime shapes khác.
 
-Scale nhỏ:
-
-```text
-ít rounding error cho value nhỏ
-nhưng dễ clamp value lớn
-```
-
-Scale lớn:
+Workflow Q/DQ thực tế:
 
 ```text
-ít clamp value lớn
-nhưng rounding thô hơn cho value nhỏ
+FP32 ONNX
+  → quantization tool inserts Q/DQ nodes
+  → quantized ONNX
+  → TensorRT strongly typed build
+  → INT8 engine
 ```
-
-Calibration hoặc QAT cố gắng tìm scale tốt cho distribution thật.
-
-### PTQ: Post-Training Quantization
-
-PTQ quantize model sau training.
-
-Flow:
-
-```text
-trained FP32 model
-  -> representative calibration dataset
-  -> estimate activation ranges / scales
-  -> quantized INT8 model/engine
-```
-
-Ưu điểm:
-
-- không cần retrain,
-- triển khai nhanh,
-- phù hợp khi không có pipeline training đầy đủ.
-
-Nhược điểm:
-
-- accuracy có thể giảm,
-- calibration dataset phải đại diện dữ liệu thật,
-- sensitive layers có thể cần giữ precision cao hơn.
-
-### QAT: Quantization-Aware Training
-
-QAT mô phỏng quantization trong training.
-
-Flow:
-
-```text
-training with fake quantization
-  -> model learns to tolerate quantization noise
-  -> export quantized/QDQ ONNX
-  -> TensorRT build strongly typed INT8 engine
-```
-
-Ưu điểm:
-
-- thường giữ accuracy tốt hơn PTQ,
-- phù hợp model nhạy INT8.
-
-Nhược điểm:
-
-- cần training data,
-- cần training pipeline,
-- tốn thời gian hơn.
-
-### Explicit quantization và Q/DQ graph
-
-Trong workflow hiện đại, quantization thường được biểu diễn trực tiếp trong graph bằng Q/DQ operators:
-
-```text
-QuantizeLinear -> DequantizeLinear
-```
-
-hoặc trong TensorRT internal representation:
-
-```text
-QuantizeLayer / DequantizeLayer
-```
-
-Mental model:
-
-```text
-Q/DQ graph nói rõ tensor nào được quantize và scale là gì.
-```
-
-Ưu điểm:
-
-- semantics rõ ràng,
-- dễ debug hơn implicit quantization,
-- phù hợp strongly typed workflow,
-- TensorRT ít “đoán” hơn về chỗ cần quantize.
-
-### Implicit INT8 calibration
-
-TensorRT truyền thống cũng hỗ trợ implicit INT8 calibration, trong đó bạn bật INT8 và cung cấp calibrator/calibration data để builder đo activation ranges.
-
-Tuy nhiên, hướng hiện đại nên ưu tiên explicit quantization/QDQ khi có thể, đặc biệt nếu bạn muốn kiểm soát rõ precision và chuẩn bị cho API TensorRT mới.
-
-### INT8 với dynamic shapes
-
-Nếu model có dynamic shapes và bạn dùng INT8 calibration, calibration cần một calibration optimization profile. Calibration thường dùng `opt` values của profile đó.
-
-Điểm thực tế:
-
-```text
-Calibration data shape phải phù hợp với calibration profile.
-```
-
-Nếu calibration chỉ dùng batch/shape không đại diện traffic thật, INT8 accuracy có thể kém ở runtime shapes khác.
-
-
-
-## `trtexec`: tool quan trọng nhất để học TensorRT
-
-`trtexec` là command-line tool của TensorRT để:
-
-- parse ONNX,
-- build engine,
-- save engine,
-- load engine,
-- benchmark latency/throughput,
-- dump layer info,
-- dump per-layer profile,
-- kiểm tra shape/precision flags.
-
-Bạn nên học TensorRT bằng `trtexec` trước khi viết Python/C++ runtime code.
-
-Lý do:
-
-```text
-trtexec giúp tách vấn đề model/build/performance khỏi bug trong application code.
-```
-
-Nếu `trtexec` build fail, vấn đề thường nằm ở model/operator/shape/config.
-Nếu `trtexec` nhanh nhưng application chậm, vấn đề thường nằm ở app code, data transfer, memory allocation, synchronization hoặc batching.
-
-
-
-## Lab 1 — Build TensorRT engine bằng `trtexec`
-
-Giả sử bạn đã có file:
-
-```text
-model.onnx
-```
-
-và input tensor tên là:
-
-```text
-images
-```
-
-shape:
-
-```text
-[1, 3, 224, 224]
-```
-
-###  Build FP32 engine
 
 ```bash
+python3 -m modelopt.onnx.quantization \
+  --onnx_path model.onnx \
+  --quantize_mode int8 \
+  --output_path model_int8_qdq.onnx
+
 trtexec \
-  --onnx=model.onnx \
-  --saveEngine=model_fp32.plan \
-  --shapes=images:1x3x224x224
+  --onnx=model_int8_qdq.onnx \
+  --shapes=images:8x3x224x224 \
+  --stronglyTyped \
+  --saveEngine=model_int8.plan
 ```
 
-###  Build FP16 engine
+`--stronglyTyped`: tôn trọng data types trong graph. Q/DQ nói rõ chỗ quantize/dequantize và scale.
 
-```bash
-trtexec \
-  --onnx=model.onnx \
-  --saveEngine=model_fp16.plan \
-  --shapes=images:1x3x224x224 \
-  --fp16
-```
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Calibration bằng **random data** chỉ demo performance — **không** đủ đánh giá accuracy production. Preprocessing calibration khác production (thiếu normalize…) → scale sai → INT8 nhanh nhưng metric giảm mạnh. Chi tiết quantization sâu hơn ở Lesson 5.
+:::
 
-###  Benchmark engine đã build
-
-```bash
-trtexec \
-  --loadEngine=model_fp16.plan \
-  --shapes=images:1x3x224x224
-```
-
-###  Benchmark không tính H2D/D2H transfer
-
-```bash
-trtexec \
-  --loadEngine=model_fp16.plan \
-  --shapes=images:1x3x224x224 \
-  --noDataTransfers
-```
-
-`--noDataTransfers` giúp bạn xem phần compute thuần GPU, nhưng production latency thật vẫn cần tính data transfer nếu app copy dữ liệu CPU↔GPU.
-
-###  Benchmark ổn định hơn
-
-```bash
-trtexec \
-  --loadEngine=model_fp16.plan \
-  --shapes=images:1x3x224x224 \
-  --noDataTransfers \
-  --useCudaGraph \
-  --useSpinWait \
-  --duration=60
-```
-
-Ý nghĩa:
-
-- `--useCudaGraph`: có thể giảm CPU enqueue overhead trong một số workload.
-- `--useSpinWait`: timing ổn định hơn nhưng dùng CPU nhiều hơn.
-- `--duration=60`: chạy lâu hơn để số đo ổn định hơn.
+::: {.callout-tip icon=false collapse="true"}
+## Case: INT8 nhanh +50% nhưng accuracy giảm mạnh
+Nguyên nhân thường: calibration vài ảnh random hoặc preprocessing khác production (`resize→crop→normalize` vs `resize` không normalize). Cách sửa: calibration set đại diện; đúng preprocessing; per-layer divergence; exclude sensitive layers; QAT nếu PTQ không đủ; đánh giá **task metric**, không chỉ tensor diff.
+:::
 
 
-## Đọc output benchmark của `trtexec`
+## `trtexec` và đọc benchmark {#sec-trtexec}
 
-Output thường có các dòng như:
+> `trtexec` nhanh nghĩa là service chắc nhanh — và các dòng summary nghĩa là gì?
+
+::: {.callout-important icon=false}
+## Ý chính
+**`trtexec`** là tool học/build/benchmark đầu tiên: tách vấn đề model/build khỏi bug app. Nếu `trtexec` fail → thường model/op/shape/config. Nếu `trtexec` nhanh mà app chậm → copy, alloc, sync, preprocess, batching. Đọc **GPU Compute Time**, H2D/D2H, enqueue, throughput; median ≠ p99.
+:::
+
+`trtexec` làm được: parse ONNX, build/save/load engine, benchmark latency/throughput, dump layer info / per-layer profile, kiểm shape/precision flags.
+
+Output mẫu:
 
 ```text
 === Performance summary ===
@@ -1341,215 +648,48 @@ GPU Compute Time: mean = 1.969 ms
 D2H Latency: mean = 0.000 ms
 ```
 
-Bạn cần hiểu:
-
-### Throughput
-
-```text
-requests hoặc inferences per second
-```
-
-Nếu batch size = 8, cần phân biệt:
-
-```text
-batch throughput vs item throughput
-```
-
-Ví dụ:
-
-```text
-100 batches/s * 8 images/batch = 800 images/s
-```
-
-### Latency
-
-Latency là thời gian end-to-end trong benchmark của `trtexec` theo config hiện tại.
-
-Cần chú ý:
-
-```text
-median latency != p99 latency
-```
-
-Production SLO thường quan tâm p95/p99.
-
-###  GPU Compute Time
-
-Thời gian GPU thực thi kernels.
-
-Nếu:
-
-```text
-Latency >> GPU Compute Time
-```
-
-có thể có overhead ở:
-
-- H2D/D2H copy,
-- CPU enqueue,
-- synchronization,
-- memory allocation,
-- app-level queueing,
-- preprocessing/postprocessing.
-
-### Enqueue Time
-
-Thời gian CPU submit work vào GPU.
-
-Nếu enqueue time cao, workload có thể bị CPU-bound hoặc launch-bound. CUDA Graphs có thể giúp trong một số trường hợp.
-
-###  H2D và D2H
-
-- H2D: Host to Device copy.
-- D2H: Device to Host copy.
-
-Nếu inference compute rất nhanh nhưng H2D/D2H lớn, bottleneck có thể không nằm ở model.
-
-
-
-## Lab 2 — Dynamic shape và optimization profile bằng `trtexec`
-
-Giả sử input:
-
-```text
-images: [N, 3, 224, 224]
-```
-
-Bạn muốn hỗ trợ batch từ 1 đến 32, tối ưu cho batch 8.
-
-Build engine:
-
-```bash
-trtexec \
-  --onnx=model.onnx \
-  --saveEngine=model_dynamic_fp16.plan \
-  --minShapes=images:1x3x224x224 \
-  --optShapes=images:8x3x224x224 \
-  --maxShapes=images:32x3x224x224 \
-  --fp16
-```
-
-Benchmark batch 1:
-
-```bash
-trtexec \
-  --loadEngine=model_dynamic_fp16.plan \
-  --shapes=images:1x3x224x224
-```
-
-Benchmark batch 8:
-
-```bash
-trtexec \
-  --loadEngine=model_dynamic_fp16.plan \
-  --shapes=images:8x3x224x224
-```
-
-Benchmark batch 32:
-
-```bash
-trtexec \
-  --loadEngine=model_dynamic_fp16.plan \
-  --shapes=images:32x3x224x224
-```
-
-Câu hỏi cần trả lời sau lab:
-
-1. Batch nào latency thấp nhất?
-2. Batch nào throughput cao nhất?
-3. Batch nào gần `optShapes` nhất?
-4. Batch 1 có bị chậm bất thường không?
-5. Batch 32 có memory pressure không?
-6. Nếu traffic chủ yếu batch 1, profile trên có hợp lý không?
-
-## Lab 3 — Tạo nhiều optimization profiles
-
-Nếu service có hai traffic modes:
-
-```text
-real-time: batch 1-4
-batch processing: batch 16-64
-```
-
-Bạn không nên dùng một profile quá rộng nếu performance quan trọng.
-
-Profile đề xuất:
-
-```text
-Profile 0:
-min: [1, 3, 224, 224]
-opt: [1, 3, 224, 224]
-max: [4, 3, 224, 224]
-
-Profile 1:
-min: [8, 3, 224, 224]
-opt: [32, 3, 224, 224]
-max: [64, 3, 224, 224]
-```
-
-Với Python API, bạn sẽ add nhiều profiles vào builder config.
-
-Pseudo-code:
-
-```python
-profile0 = builder.create_optimization_profile()
-profile0.set_shape("images", (1, 3, 224, 224), (1, 3, 224, 224), (4, 3, 224, 224))
-config.add_optimization_profile(profile0)
-
-profile1 = builder.create_optimization_profile()
-profile1.set_shape("images", (8, 3, 224, 224), (32, 3, 224, 224), (64, 3, 224, 224))
-config.add_optimization_profile(profile1)
-```
-
-Runtime cần chọn profile phù hợp với request shape.
-
-
-
-## Lab 4 — Dump layer info và per-layer profile
-
-Build/benchmark với layer info:
-
-```bash
-trtexec \
-  --onnx=model.onnx \
-  --shapes=images:8x3x224x224 \
-  --fp16 \
-  --profilingVerbosity=detailed \
-  --dumpLayerInfo \
-  --dumpProfile \
-  --separateProfileRun
-```
-
-Bạn cần tìm:
-
-- layer nào chiếm nhiều thời gian nhất,
-- layer nào chạy FP32 thay vì FP16,
-- có reformat layers không,
-- tactic name là gì,
-- một TensorRT engine layer correspond với bao nhiêu ONNX nodes,
-- bottleneck là convolution, matmul, normalization, resize hay plugin.
-
-Cách đọc tư duy:
-
-```text
-Nếu một layer chiếm 60% latency, tối ưu toàn graph không quan trọng bằng hiểu layer đó.
-```
-
-
-## TensorRT Python API: build engine từ ONNX
-
-Phần này giúp bạn hiểu TensorRT API, không chỉ dùng `trtexec`.
-
-> Lưu ý: TensorRT Python API có thể thay đổi nhẹ giữa các version. Code dưới đây viết theo style TensorRT 10.x ở mức educational. Khi chạy thực tế, hãy kiểm tra API docs tương ứng version bạn cài.
-
-### Build FP16 engine
-
-Tạo file `build_engine.py`:
+| Metric | Cách đọc |
+|:-------|:---------|
+| Throughput | Inferences/s; batch=8 → phân biệt batch/s vs item/s (`100 batch/s × 8 = 800 images/s`) |
+| Latency | E2E theo config `trtexec`; production quan tâm p95/p99 |
+| GPU Compute Time | Kernels thuần; Latency ≫ compute → copy/CPU/sync/alloc/queue/pre-post |
+| Enqueue Time | CPU submit; cao → CPU-bound / launch-bound; CUDA Graphs có thể giúp |
+| H2D / D2H | Host↔Device; compute nhanh nhưng copy lớn → bottleneck không ở model |
+| `--noDataTransfers` | Đo compute sạch; E2E production vẫn có thể có transfer |
+
+Benchmark ổn định hơn (Lab 1): `--useCudaGraph` (giảm enqueue overhead một số workload), `--useSpinWait` (timing ổn hơn, tốn CPU), `--duration=60`.
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: khi app chậm hơn trtexec
+Nguyên nhân app thường gặp:
+
+- Alloc GPU/host mỗi request
+- Copy CPU↔GPU thừa / không pinned memory
+- Preprocess / postprocess CPU nặng
+- Sync CUDA quá nhiều (`cudaDeviceSynchronize` sau mỗi bước)
+- Batching kém / tạo ExecutionContext mỗi request
+- Python GIL / threading
+- Logging quá nhiều
+- Request queue phía server
+
+Debug: đo riêng preprocess / H2D / enqueue+compute / D2H / postprocess; CUDA events; Nsight Systems (timeline CPU/GPU); so `trtexec --noDataTransfers`.
+:::
+
+
+## Python API: build, runtime và memory {#sec-python-api}
+
+> Ngoài `trtexec`, build/run bằng Python cần quản lý gì về shape, addresses và buffers?
+
+::: {.callout-important icon=false}
+## Ý chính
+Python API (TensorRT 10.x style dưới đây — kiểm tra docs version của bạn): parse ONNX → BuilderConfig (workspace, FP16, profile) → `build_serialized_network`. Runtime: deserialize → context → **tự** quản lý device pointers + stream — TensorRT không tự map NumPy. Production: allocate/reuse buffers và context; tránh deserialize/alloc/free mỗi request; tránh D2H nếu postprocess vẫn trên GPU.
+:::
+
+Build FP16 + dynamic profile (`build_engine.py`):
 
 ```python
 import sys
 from pathlib import Path
-
 import tensorrt as trt
 
 
@@ -1565,27 +705,20 @@ def build_engine(
 ):
     logger = trt.Logger(trt.Logger.INFO)
     builder = trt.Builder(logger)
-
-    # In TensorRT 10.x, explicit batch is the normal model.
-    # Some older examples use EXPLICIT_BATCH flag. Check your installed version.
+    # TensorRT 10.x: explicit batch là mô hình bình thường → create_network(0).
+    # API cũ hơn từng dùng flag EXPLICIT_BATCH — kiểm docs đúng version của bạn.
     network = builder.create_network(0)
     parser = trt.OnnxParser(network, logger)
 
-    onnx_bytes = Path(onnx_path).read_bytes()
-    if not parser.parse(onnx_bytes):
-        print("Failed to parse ONNX model")
+    if not parser.parse(Path(onnx_path).read_bytes()):
         for i in range(parser.num_errors):
             print(parser.get_error(i))
         raise RuntimeError("ONNX parsing failed")
 
     config = builder.create_builder_config()
-
-    # Workspace controls which tactics are allowed to be considered.
     config.set_memory_pool_limit(
-        trt.MemoryPoolType.WORKSPACE,
-        workspace_gib * (1 << 30),
+        trt.MemoryPoolType.WORKSPACE, workspace_gib * (1 << 30)
     )
-
     if fp16:
         if builder.platform_has_fast_fp16:
             config.set_flag(trt.BuilderFlag.FP16)
@@ -1596,11 +729,10 @@ def build_engine(
     profile.set_shape(input_name, min_shape, opt_shape, max_shape)
     config.add_optimization_profile(profile)
 
-    serialized_engine = builder.build_serialized_network(network, config)
-    if serialized_engine is None:
+    serialized = builder.build_serialized_network(network, config)
+    if serialized is None:
         raise RuntimeError("Engine build failed")
-
-    Path(engine_path).write_bytes(bytes(serialized_engine))
+    Path(engine_path).write_bytes(bytes(serialized))
     print(f"Saved TensorRT engine to: {engine_path}")
 
 
@@ -1608,39 +740,16 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Usage: python build_engine.py model.onnx model.plan")
         raise SystemExit(1)
-
     build_engine(sys.argv[1], sys.argv[2])
 ```
-
-Chạy:
 
 ```bash
 python build_engine.py model.onnx model_fp16.plan
 ```
 
-### Những lỗi thường gặp khi parse ONNX
+Parse fail — nguyên nhân thường: unsupported op, dynamic shape chưa rõ, dtype không hỗ trợ, opset, custom op, export sai tên I/O.
 
-Nếu parse fail, in parser errors:
-
-```python
-for i in range(parser.num_errors):
-    print(parser.get_error(i))
-```
-
-Các nguyên nhân thường gặp:
-
-- unsupported ONNX op,
-- dynamic shape chưa rõ,
-- data type không hỗ trợ,
-- opset không phù hợp,
-- custom op,
-- graph có node TensorRT không import được,
-- model export sai input/output names.
-
-
-## TensorRT Python API: runtime inference flow
-
-Một inference app TensorRT thường làm:
+Runtime flow:
 
 ```text
 1. Read serialized engine bytes
@@ -1651,27 +760,21 @@ Một inference app TensorRT thường làm:
 6. Set runtime shape if dynamic
 7. Bind tensor addresses
 8. Execute asynchronously on CUDA stream
-9. Copy output back or pass output GPU pointer downstream
+9. Copy output back or pass GPU pointer downstream
 10. Synchronize only when needed
 ```
-
-Pseudo-code high-level:
 
 ```python
 import tensorrt as trt
 
 logger = trt.Logger(trt.Logger.INFO)
 runtime = trt.Runtime(logger)
-
 with open("model_fp16.plan", "rb") as f:
     engine = runtime.deserialize_cuda_engine(f.read())
-
 context = engine.create_execution_context()
 
-# Allocate GPU buffers with cuda-python, PyCUDA, CuPy, PyTorch tensors, etc.
-# input_device_ptr = ...
-# output_device_ptr = ...
-# stream_handle = ...
+# Allocate GPU buffers: cuda-python / PyCUDA / CuPy / PyTorch tensors
+# input_device_ptr = ...; output_device_ptr = ...; stream_handle = ...
 
 context.set_input_shape("images", (8, 3, 224, 224))
 context.set_tensor_address("images", int(input_device_ptr))
@@ -1679,236 +782,134 @@ context.set_tensor_address("logits", int(output_device_ptr))
 context.execute_async_v3(stream_handle=stream_handle)
 ```
 
-Điểm quan trọng:
+| Memory | Ý nghĩa |
+|:-------|:--------|
+| Host | CPU RAM |
+| Device | GPU VRAM — kernels TRT chạy ở đây |
+| H2D / D2H | `CPU → GPU` trước infer; `GPU → CPU` nếu cần trả về host |
 
-```text
-TensorRT không tự biết NumPy array của bạn ở đâu.
-Bạn phải quản lý host/device memory và tensor addresses đúng cách.
+Sai: mỗi request `cudaMalloc → copy → execute → cudaFree`. Đúng: startup allocate pool; request borrow → copy/execute → return. Pipeline GPU end-to-end (`preprocess GPU → TRT → postprocess GPU`) tốt hơn copy qua CPU hai đầu khi throughput cao.
+
+::: {.callout-tip icon=false collapse="true"}
+## Nhiều optimization profiles (Python)
+Realtime batch 1–4 vs batch job 8–64:
+
+```python
+profile0 = builder.create_optimization_profile()
+profile0.set_shape("images", (1, 3, 224, 224), (1, 3, 224, 224), (4, 3, 224, 224))
+config.add_optimization_profile(profile0)
+
+profile1 = builder.create_optimization_profile()
+profile1.set_shape("images", (8, 3, 224, 224), (32, 3, 224, 224), (64, 3, 224, 224))
+config.add_optimization_profile(profile1)
 ```
 
-Trong production, tránh:
-
-- allocate GPU memory mỗi request,
-- create execution context mỗi request,
-- deserialize engine mỗi request,
-- synchronize quá sớm,
-- copy output về CPU nếu downstream vẫn chạy trên GPU.
+Runtime chọn `profile_index` theo shape request.
+:::
 
 
-## Memory management trong TensorRT runtime
+## Validate accuracy và Polygraphy {#sec-accuracy}
 
-### Host memory vs device memory
+> Chỉ nhìn latency sau khi build engine — thiếu gì?
 
-Host memory:
+::: {.callout-important icon=false}
+## Ý chính
+Luôn so `accuracy_metric(TensorRT)` với reference (PyTorch FP32 / ORT FP32 / TRT FP32). Tolerance float **không** one-size-fits-all; với INT8 tensor có thể lệch nhiều nhưng **task metric** vẫn ổn. **Polygraphy** giúp inspect, so ORT vs TRT, debug precision nhanh hơn đọc raw log.
+:::
 
-```text
-CPU RAM
-```
-
-Device memory:
-
-```text
-GPU VRAM
-```
-
-TensorRT kernels chạy trên device memory. Nếu input bắt đầu từ CPU, bạn cần copy:
-
-```text
-CPU input -> GPU input buffer
-```
-
-Nếu output cần trả về CPU, bạn copy:
-
-```text
-GPU output buffer -> CPU output
-```
-
-### Reuse buffers
-
-Production rule:
-
-```text
-Allocate once, reuse many times.
-```
-
-Sai:
-
-```text
-every request -> cudaMalloc -> copy -> execute -> cudaFree
-```
-
-Đúng:
-
-```text
-startup -> allocate buffer pool
-request -> borrow buffer -> copy/execute -> return buffer
-```
-
-### Avoid unnecessary D2H
-
-Nếu pipeline sau inference vẫn chạy trên GPU, đừng copy output về CPU.
-
-Ví dụ:
-
-```text
-preprocessing GPU -> TensorRT -> postprocessing GPU -> result
-```
-
-sẽ tốt hơn:
-
-```text
-preprocessing CPU -> copy H2D -> TensorRT -> copy D2H -> postprocessing CPU
-```
-
-trong nhiều high-throughput systems.
-
-
-## INT8 workflow thực tế với ONNX Q/DQ
-
-Một workflow hiện đại:
-
-```text
-FP32 ONNX
-  -> quantization tool inserts Q/DQ nodes
-  -> quantized ONNX
-  -> TensorRT strongly typed build
-  -> INT8 engine
-```
-
-Ví dụ với NVIDIA ModelOpt cho ONNX:
-
-```bash
-python3 -m modelopt.onnx.quantization \
-  --onnx_path model.onnx \
-  --quantize_mode int8 \
-  --output_path model_int8_qdq.onnx
-```
-
-Sau đó build bằng TensorRT:
-
-```bash
-trtexec \
-  --onnx=model_int8_qdq.onnx \
-  --shapes=images:8x3x224x224 \
-  --stronglyTyped \
-  --saveEngine=model_int8.plan
-```
-
-Giải thích:
-
-```text
-Q/DQ nodes trong ONNX nói cho TensorRT biết nơi quantize/dequantize và scale.
---stronglyTyped yêu cầu TensorRT tôn trọng data types trong graph.
-```
-
-Cảnh báo:
-
-```text
-Calibration bằng random data chỉ dùng để demo performance, không đủ để đánh giá accuracy production.
-```
-
-Bạn cần calibration data đại diện dữ liệu thật.
-
-
-## Validate accuracy sau khi build TensorRT
-
-Không bao giờ chỉ nhìn latency.
-
-Bạn cần kiểm tra:
-
-```text
-accuracy_metric(TensorRT) vs accuracy_metric(reference)
-```
-
-Reference có thể là:
-
-- PyTorch FP32,
-- ONNX Runtime FP32,
-- TensorRT FP32 baseline.
-
-### So sánh output tensor
-
-Với classification:
-
-- top-1 class có giống không,
-- top-k overlap,
-- max absolute error,
-- mean absolute error,
-- cosine similarity logits.
-
-Với detection:
-
-- mAP,
-- box IoU,
-- class confidence distribution,
-- NMS output differences.
-
-Với segmentation:
-
-- mIoU,
-- pixel accuracy,
-- boundary differences.
-
-Với embeddings:
-
-- cosine similarity,
-- retrieval recall@k,
-- downstream task metric.
-
-### Tolerance không phải one-size-fits-all
-
-Ví dụ:
+| Task | Gợi ý so sánh |
+|:-----|:--------------|
+| Classification | top-1/top-k, max/mean abs error, cosine logits |
+| Detection | mAP, box IoU, confidence distribution, NMS diff |
+| Segmentation | mIoU, pixel accuracy, boundary |
+| Embeddings | cosine similarity, recall@k, downstream metric |
 
 ```python
 np.testing.assert_allclose(trt_output, ort_output, rtol=1e-3, atol=1e-3)
 ```
 
-có thể hợp lý cho FP16 ở một số model, nhưng không phải rule chung.
-
-Với INT8, output tensor có thể khác đáng kể hơn, nhưng metric cuối vẫn có thể ổn.
-
-Production rule:
-
-```text
-So sánh task metric, không chỉ so sánh từng float output.
-```
-
-
-## Polygraphy: tool rất hữu ích để debug TensorRT
-
-Polygraphy là tool của NVIDIA giúp debug model conversion và accuracy/performance issues.
-
-Các use cases:
-
-- inspect ONNX model,
-- run ONNX Runtime vs TensorRT,
-- compare outputs,
-- reduce failing model,
-- debug precision issues,
-- inspect layer outputs.
-
-Ví dụ inspect model:
+Có thể hợp lý cho FP16 một số model — không phải rule chung. Production: **so task metric, không chỉ từng float**.
 
 ```bash
 polygraphy inspect model model.onnx
-```
 
-Ví dụ compare ONNX Runtime và TensorRT:
-
-```bash
 polygraphy run model.onnx \
   --onnxrt \
   --trt \
+  --trt-outputs mark all \
   --atol 1e-3 \
   --rtol 1e-3
 ```
 
-Khi TensorRT build fail hoặc output sai, Polygraphy thường giúp bạn tìm vấn đề nhanh hơn nhiều so với đọc raw logs.
+Polygraphy còn: compare outputs, reduce failing model, inspect layer outputs, debug precision. Flag `--trt-outputs mark all` giúp so khớp output tensors giữa ORT và TRT rõ hơn khi debug.
+
+::: {.callout-tip icon=false collapse="true"}
+## Workflow chuẩn 10 bước (đủ lệnh)
+
+```bash
+# 1–2. Export + validate ONNX
+python export_to_onnx.py --output model.onnx
+python validate_onnx.py model.onnx   # checker + ORT smoke
+
+# 3. Inspect graph
+polygraphy inspect model model.onnx   # hoặc Netron
+
+# 4. FP32 baseline
+trtexec --onnx=model.onnx --saveEngine=model_fp32.plan \
+  --shapes=images:8x3x224x224
+
+# 5. FP16
+trtexec --onnx=model.onnx --saveEngine=model_fp16.plan \
+  --shapes=images:8x3x224x224 --fp16
+
+# 6. Accuracy: ORT vs TRT (+ task metric trên validation set)
+polygraphy run model.onnx --onnxrt --trt \
+  --trt-outputs mark all --atol 1e-3 --rtol 1e-3
+
+# 7. Dynamic profile (nếu traffic cần)
+trtexec --onnx=model.onnx --saveEngine=model_dynamic_fp16.plan \
+  --minShapes=images:1x3x224x224 \
+  --optShapes=images:8x3x224x224 \
+  --maxShapes=images:32x3x224x224 \
+  --fp16
+
+# 8. Layer profile
+trtexec --loadEngine=model_dynamic_fp16.plan \
+  --shapes=images:8x3x224x224 \
+  --profilingVerbosity=detailed \
+  --dumpLayerInfo --dumpProfile --separateProfileRun
+
+# 9. Deploy .plan → Triton / custom runtime
+# 10. Monitor: p50/p95/p99, throughput, GPU util, memory,
+#     request queue time, error rate, accuracy drift
+```
+:::
 
 
-## Debug: unsupported operator
+## Debug, portability, Triton và best practices {#sec-debug-prod}
 
-### Triệu chứng
+> ORT chạy được nhưng TRT fail; engine có mang máy khác được không; bắt đầu debug từ đâu?
+
+::: {.callout-important icon=false}
+## Ý chính
+Hầu hết sự cố thuộc vài nhóm: unsupported op, profile/shape mismatch, build chậm, FP16 NaN, INT8 accuracy drop, app ≪ `trtexec`, engine không portable. **ONNX valid ≠ TensorRT compatible**. Engine artifact phải kèm metadata (TRT version, GPU arch, precision, profiles). Triton phục vụ `.plan` — TRT vẫn là compute backend.
+:::
+
+### Debug playbook {.unnumbered}
+
+| Triệu chứng | Nguyên nhân / xử lý đầu |
+|:------------|:------------------------|
+| `No importer registered for op: X` | Opset, simplify, rewrite, GraphSurgeon, plugin, split/ORT TRT EP fallback |
+| Shape outside profile / `set_input_shape` fail | Shape trong `[min,max]`; đúng profile index & input name; set shape trước execute |
+| Build rất chậm | Timing cache; thu hẹp/bớt profiles; build offline CI; không build trên request path |
+| FP16 NaN / accuracy ↓ | So FP32 vs FP16; Polygraphy; giữ layer nhạy FP32; preprocessing |
+| INT8 accuracy ↓ | Calibration đại diện + đúng preprocess; exclude layer; QAT; task metric |
+| App chậm hơn `trtexec` | Xem tip @sec-trtexec — thường app I/O/memory/sync |
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: symptom strings và nguyên nhân đầy đủ
+
+**Unsupported op — log thường gặp:**
 
 ```text
 No importer registered for op: X
@@ -1916,32 +917,9 @@ Unsupported operator X
 ERROR: builtin_op_importers.cpp: ...
 ```
 
-### Nguyên nhân
+Nguyên nhân: op không hỗ trợ; opset quá mới/cũ; exporter tạo graph phức tạp; attribute combo không hỗ trợ; custom op. Thứ tự xử lý: ONNX checker → ORT xác nhận model → Netron → `onnxsim` → đổi opset → rewrite → GraphSurgeon → plugin → hybrid pipeline.
 
-- ONNX op chưa được TensorRT hỗ trợ.
-- Opset quá mới hoặc quá cũ.
-- Exporter tạo graph phức tạp.
-- Operator có attribute TensorRT không hỗ trợ.
-- Model có custom op.
-
-### Cách xử lý
-
-Thứ tự khuyến nghị:
-
-1. Chạy ONNX checker.
-2. Chạy ONNX Runtime để xác nhận model đúng.
-3. Inspect graph bằng Netron.
-4. Simplify bằng `onnxsim`.
-5. Thử export lại với opset khác.
-6. Rewrite model để dùng op đơn giản hơn.
-7. Dùng ONNX GraphSurgeon để thay subgraph.
-8. Viết TensorRT plugin.
-9. Nếu chỉ vài op không hỗ trợ, cân nhắc ONNX Runtime TensorRT EP fallback hoặc split pipeline.
-
-
-## Debug: dynamic shape/profile mismatch
-
-### Triệu chứng
+**Profile mismatch — log thường gặp:**
 
 ```text
 input shape outside optimization profile
@@ -1949,160 +927,33 @@ profile does not support dimensions
 set_input_shape failed
 ```
 
-### Nguyên nhân
+Xử lý: (1) print I/O names, (2) print profile min/opt/max, (3) verify runtime shape, (4) đúng profile index, (5) set shape trước execute, (6) không route shape 512 vào profile chỉ cho 224.
 
-Runtime shape không nằm trong:
+**INT8 accuracy drop — nguyên nhân hay bỏ sót:** calibration quá ít sample; Q/DQ placement kém; distribution có outliers; dynamic calibration sai profile. Xử lý: so FP32 rồi FP16 trước INT8; per-layer divergence (Polygraphy); exclude layers nhạy; QAT; đánh giá bằng **task metric**.
+:::
 
-```text
-[min_shape, max_shape]
-```
-
-hoặc bạn quên set runtime input shape.
-
-### Cách xử lý
-
-1. In input tensor names từ engine.
-2. In optimization profile shapes.
-3. Verify runtime shape.
-4. Chọn đúng profile index.
-5. Gọi set input shape trước execute.
-6. Không route shape 512x512 vào profile chỉ hỗ trợ 224x224.
-
-Checklist:
+Checklist profile mismatch:
 
 ```text
 [ ] input name đúng chưa?
 [ ] profile index đúng chưa?
 [ ] shape nằm trong min/max chưa?
 [ ] opt shape có phản ánh traffic thật chưa?
-[ ] output shape đã được infer sau khi set input shape chưa?
+[ ] output shape đã infer sau khi set input shape chưa?
 ```
 
+Unsupported op — thứ tự: ONNX checker → ORT xác nhận model → Netron → `onnxsim` → đổi opset → rewrite → GraphSurgeon → plugin → hybrid pipeline.
 
-## Debug: engine build rất chậm
+### Engine portability {.unnumbered}
 
-### Nguyên nhân có thể
-
-- Model lớn.
-- Dynamic profiles quá rộng.
-- Quá nhiều profiles.
-- Workspace lớn và nhiều tactics được thử.
-- FP16/INT8/FP8 làm tăng candidate tactics.
-- Timing cache chưa có.
-- Build trên máy yếu hoặc GPU đang bận.
-
-### Cách xử lý
-
-- Dùng timing cache.
-- Giảm số profiles.
-- Tách profile theo traffic thật thay vì quá rộng.
-- Build offline trong CI/CD hoặc image build step.
-- Không build trong request path.
-- Lưu engine artifact theo hardware/version.
-
-
-## Debug: FP16 output NaN/Inf hoặc accuracy giảm
-
-### Nguyên nhân có thể
-
-- Intermediate activation overflow FP16.
-- Input chưa normalize đúng.
-- Layer nhạy precision.
-- Reduction/normalization chạy precision thấp.
-- Model có value magnitude lớn.
-
-### Cách xử lý
-
-1. Validate preprocessing.
-2. Compare TensorRT FP32 vs FP16.
-3. Check NaN/Inf bằng Polygraphy.
-4. Dump layer outputs.
-5. Giữ layer nhạy ở FP32 nếu workflow/API hỗ trợ.
-6. Scale/clip input nếu hợp lý.
-7. Retrain hoặc fine-tune mixed precision nếu cần.
-
-
-## Debug: INT8 accuracy drop
-
-### Nguyên nhân có thể
-
-- Calibration data không đại diện.
-- Calibration data quá ít.
-- Preprocessing calibration khác production.
-- Dynamic shape calibration không đúng profile.
-- Sensitive layers bị quantize.
-- Q/DQ placement không tốt.
-- Distribution có outliers.
-
-### Cách xử lý
-
-1. So sánh FP32 baseline trước.
-2. So sánh FP16 trước khi INT8.
-3. Dùng calibration data đại diện production.
-4. Kiểm tra preprocessing trong calibration pipeline.
-5. Exclude sensitive layers nếu tool hỗ trợ.
-6. Dùng QAT nếu PTQ không đủ accuracy.
-7. Đánh giá task metric, không chỉ tensor diff.
-8. Kiểm tra per-layer output divergence.
-
-
-## Debug: application chậm hơn `trtexec`
-
-Đây là tình huống rất phổ biến.
-
-### Nếu `trtexec` nhanh nhưng app chậm
-
-Vấn đề thường nằm ở app:
-
-- allocate memory mỗi request,
-- copy CPU↔GPU không cần thiết,
-- preprocessing CPU chậm,
-- postprocessing CPU chậm,
-- synchronize quá nhiều,
-- không dùng pinned memory,
-- batch không hiệu quả,
-- tạo context/session mỗi request,
-- Python overhead,
-- GIL/threading issue,
-- logging quá nhiều,
-- queueing trong server.
-
-### Cách debug
-
-1. Đo riêng preprocessing.
-2. Đo H2D copy.
-3. Đo TensorRT enqueue + GPU compute.
-4. Đo D2H copy.
-5. Đo postprocessing.
-6. Dùng CUDA events cho GPU timing.
-7. Dùng Nsight Systems cho timeline.
-8. So sánh với `trtexec --noDataTransfers`.
-
-
-## Engine portability trong production
-
-TensorRT plan file không nên được xem như artifact portable cho mọi máy.
-
-Cần quản lý theo:
-
-```text
-model version
-TensorRT version
-CUDA/cuDNN version
-GPU architecture
-precision
-optimization profiles
-build flags
-```
-
-Ví dụ naming:
+Quản lý artifact theo: model version, TensorRT version, CUDA/cuDNN, GPU architecture, precision, profiles, build flags.
 
 ```text
 resnet50_trt10.16_sm80_fp16_b1-32_224x224.plan
 resnet50_trt10.16_sm90_fp16_b1-32_224x224.plan
 ```
 
-Hoặc lưu metadata cạnh engine:
+Metadata cạnh engine (ví dụ):
 
 ```json
 {
@@ -2123,17 +974,7 @@ Hoặc lưu metadata cạnh engine:
 }
 ```
 
-Production rule:
-
-```text
-Engine artifact phải đi kèm metadata build.
-```
-
-## TensorRT trong Triton
-
-Lesson này tập trung TensorRT internals, nhưng bạn cần biết TensorRT sẽ được dùng trong serving như thế nào.
-
-Với Triton, bạn có thể có model repository:
+### TensorRT trong Triton {.unnumbered}
 
 ```text
 model_repository/
@@ -2143,503 +984,232 @@ model_repository/
       model.plan
 ```
 
-Triton sẽ load TensorRT plan và serve qua HTTP/gRPC.
+Triton thêm: scheduling, dynamic batching, concurrent execution, versioning, metrics, health, ensemble. Engine vẫn là backend compute — chi tiết serving ở Lesson 6.
 
-Triton thêm các tính năng:
+### Best practices và misconceptions {.unnumbered}
 
-- request scheduling,
-- dynamic batching,
-- concurrent model execution,
-- model versioning,
-- metrics,
-- health endpoint,
-- ensemble models.
+| Nhóm | Thực hành |
+|:-----|:----------|
+| Build | Offline; lưu engine + metadata; timing cache; profile theo traffic; workspace đủ; validate sớm bằng `trtexec` |
+| Precision | FP32 baseline → FP16 trước INT8; validate sau mỗi đổi; INT8: data đại diện hoặc QAT; ưu tiên Q/DQ |
+| Runtime | Deserialize một lần; reuse context/buffers; tránh alloc/copy thừa; stream + sync đúng |
+| Profiling | `trtexec` trước app; dump layer/profile; Nsight; tách compute vs H2D/D2H; p50/p95/p99 |
 
-TensorRT engine vẫn là phần compute backend.
+| Hiểu nhầm | Thực tế |
+|:----------|:--------|
+| TRT luôn nhanh hơn mọi runtime | Phụ thuộc model, shape, precision, HW, transfer, app |
+| Bật FP16 = mọi layer FP16 | Có thể chọn theo layer |
+| INT8 chỉ cần `--int8` | Cần scale / calibration / QDQ + validate |
+| Dynamic càng rộng càng tốt | Thường hại tactic quanh traffic thật |
+| Engine dùng mọi GPU | Rebuild trên target (trừ compatibility mode phù hợp) |
+| `trtexec` nhanh → service nhanh | Còn preprocess, queue, network, postprocess… |
 
+::: {.callout-tip icon=false collapse="true"}
+## Case: ORT CUDA chạy được nhưng `trtexec` fail
 
-## Một ví dụ end-to-end workflow chuẩn
+ORT CUDA EP có thể chạy op bằng kernel riêng hoặc **fallback CPU**. TensorRT cần importer/layer/plugin — thiếu thì build fail.
 
-### Step 1: Export ONNX
-
-```bash
-python export_to_onnx.py --output model.onnx
+```python
+# ORT CUDA có thể vẫn chạy (có fallback)
+session = ort.InferenceSession(
+    "model.onnx",
+    providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
+)
 ```
 
-### Step 2: Validate ONNX
-
 ```bash
-python validate_onnx.py model.onnx
+# TRT có thể fail ngay lúc parse/build
+trtexec --onnx=model.onnx --saveEngine=model.plan --fp16
 ```
 
-### Step 3: Inspect model
+Cách nghĩ: `ONNX valid ≠ TensorRT compatible`. Xử lý: inspect node lỗi → support matrix → simplify → export lại → plugin → split graph.
+:::
 
-```bash
-polygraphy inspect model model.onnx
+::: {.callout-tip icon=false collapse="true"}
+## Case: preprocess mismatch sau khi engine “đúng”
+Latency/accuracy lệch so PyTorch dù engine build OK — thường do preprocessing khác:
+
+```text
+Train/export: resize → center crop → normalize (mean/std)
+Serving bug:  resize → (không normalize) → inference
 ```
 
-hoặc mở bằng Netron.
+Luôn version hóa preprocessing cùng model artifact; so input tensor (không chỉ output) khi debug.
+:::
 
-### Step 4: Build FP32 baseline
+
+## Mini-lab {.unnumbered}
+
+::: {.callout-note icon=false}
+## Thực hành — TensorRT với `trtexec` (và optional Python)
+Giả sử `model.onnx`, input `images`, shape `[N,3,224,224]`. Ghi bảng median/p99 latency, throughput, GPU compute. Cần NVIDIA GPU + `trtexec`.
+:::
+
+### Lab 1: Build & benchmark FP32/FP16 {.unnumbered}
 
 ```bash
-trtexec \
-  --onnx=model.onnx \
-  --saveEngine=model_fp32.plan \
-  --shapes=images:8x3x224x224
+trtexec --onnx=model.onnx --saveEngine=model_fp32.plan \
+  --shapes=images:1x3x224x224
+
+trtexec --onnx=model.onnx --saveEngine=model_fp16.plan \
+  --shapes=images:1x3x224x224 --fp16
+
+trtexec --loadEngine=model_fp16.plan --shapes=images:1x3x224x224
+trtexec --loadEngine=model_fp16.plan --shapes=images:1x3x224x224 --noDataTransfers
+
+trtexec --loadEngine=model_fp16.plan --shapes=images:1x3x224x224 \
+  --noDataTransfers --useCudaGraph --useSpinWait --duration=60
 ```
 
-### Step 5: Build FP16
+Gợi ý flag: `--useCudaGraph` giảm enqueue overhead (một số workload); `--useSpinWait` timing ổn hơn (tốn CPU); `--duration=60` đo lâu hơn để percentile ổn định; `--noDataTransfers` đo compute sạch.
+
+### Lab 2: Dynamic profile min/opt/max {.unnumbered}
 
 ```bash
-trtexec \
-  --onnx=model.onnx \
-  --saveEngine=model_fp16.plan \
-  --shapes=images:8x3x224x224 \
-  --fp16
-```
-
-### Step 6: Compare accuracy
-
-```bash
-polygraphy run model.onnx \
-  --onnxrt \
-  --trt \
-  --trt-outputs mark all \
-  --atol 1e-3 \
-  --rtol 1e-3
-```
-
-Sau đó chạy metric task-level trên validation set.
-
-### Step 7: Build dynamic engine nếu production cần dynamic batch
-
-```bash
-trtexec \
-  --onnx=model.onnx \
-  --saveEngine=model_dynamic_fp16.plan \
+trtexec --onnx=model.onnx --saveEngine=model_dynamic_fp16.plan \
   --minShapes=images:1x3x224x224 \
   --optShapes=images:8x3x224x224 \
   --maxShapes=images:32x3x224x224 \
   --fp16
+
+trtexec --loadEngine=model_dynamic_fp16.plan --shapes=images:1x3x224x224
+trtexec --loadEngine=model_dynamic_fp16.plan --shapes=images:8x3x224x224
+trtexec --loadEngine=model_dynamic_fp16.plan --shapes=images:32x3x224x224
 ```
 
-### Step 8: Profile layers
+Hỏi: batch nào latency thấp / throughput cao? Gần `optShapes` nhất? Batch 1 bất thường? Batch 32 memory pressure? Traffic thật có khớp `opt` không?
+
+### Lab 3: Nhiều optimization profiles {.unnumbered}
+
+Realtime vs batch job — dựng hai profiles (Python API như tip @sec-python-api). Spec gợi ý:
+
+```text
+Profile 0 (realtime):
+  min = [1, 3, 224, 224]
+  opt = [1, 3, 224, 224]
+  max = [4, 3, 224, 224]
+
+Profile 1 (batch job):
+  min = [8,  3, 224, 224]
+  opt = [32, 3, 224, 224]
+  max = [64, 3, 224, 224]
+```
+
+Runtime chọn profile theo shape (xem code tip @sec-python-api). Quan sát: batch 1 trên Profile 0 vs ép vào Profile 1 — latency khác thế nào?
+
+### Lab 4: Dump layer info {.unnumbered}
 
 ```bash
-trtexec \
-  --loadEngine=model_dynamic_fp16.plan \
-  --shapes=images:8x3x224x224 \
+trtexec --onnx=model.onnx --shapes=images:8x3x224x224 --fp16 \
   --profilingVerbosity=detailed \
-  --dumpLayerInfo \
-  --dumpProfile \
-  --separateProfileRun
+  --dumpLayerInfo --dumpProfile --separateProfileRun
 ```
 
-### Step 9: Deploy
-
-```text
-model.plan -> Triton / custom TensorRT runtime service
-```
-
-### Step 10: Monitor
-
-Theo dõi:
-
-- p50/p95/p99 latency,
-- throughput,
-- GPU utilization,
-- memory usage,
-- request queue time,
-- error rate,
-- accuracy drift nếu có feedback loop.
-
-
-
-## Case study 1 — Vì sao ONNX Runtime chạy được nhưng TensorRT build fail?
-
-### Tình huống
-
-Bạn export model sang ONNX. ONNX Runtime chạy OK:
-
-```python
-session = ort.InferenceSession("model.onnx", providers=["CUDAExecutionProvider"])
-```
-
-Nhưng TensorRT fail:
-
-```bash
-trtexec --onnx=model.onnx --fp16
-```
-
-### Nguyên nhân
-
-ONNX Runtime CUDA EP có thể hỗ trợ một operator bằng kernel riêng hoặc fallback CPU. TensorRT cần parse operator đó thành TensorRT layer/plugin. Nếu TensorRT không có importer hoặc implementation phù hợp, build sẽ fail.
-
-### Cách nghĩ đúng
-
-```text
-ONNX valid != TensorRT compatible
-ONNX Runtime runs != TensorRT can build full engine
-```
-
-### Cách xử lý
-
-1. Inspect node gây lỗi.
-2. Kiểm tra TensorRT operator support.
-3. Simplify ONNX.
-4. Export lại model với op khác.
-5. Viết plugin nếu op là custom/quan trọng.
-6. Split graph nếu cần.
-
-
-## Case study 2 — Dynamic profile quá rộng làm performance kém
-
-### Tình huống
-
-Bạn muốn engine “linh hoạt”, nên tạo profile:
-
-```text
-min: [1, 3, 128, 128]
-opt: [16, 3, 1024, 1024]
-max: [64, 3, 4096, 4096]
-```
-
-Nhưng production chủ yếu chạy:
-
-```text
-[1, 3, 224, 224]
-```
-
-Engine latency batch 1 rất chậm.
-
-### Nguyên nhân
-
-Builder tối ưu mạnh nhất ở `opt`, đồng thời tactics phải hợp lệ cho range quá rộng. Shape production thật lại xa `opt`.
-
-### Cách sửa
-
-Tạo profile gần traffic thật:
-
-```text
-Profile 0:
-min: [1, 3, 224, 224]
-opt: [1, 3, 224, 224]
-max: [4, 3, 224, 224]
-```
-
-Nếu cần high-res:
-
-```text
-Profile 1:
-min: [1, 3, 512, 512]
-opt: [2, 3, 1024, 1024]
-max: [4, 3, 1024, 1024]
-```
-
-
-## Case study 3 — INT8 nhanh hơn nhưng accuracy giảm mạnh
-
-### Tình huống
-
-Bạn quantize INT8 và throughput tăng 50%, nhưng accuracy giảm nhiều.
-
-### Nguyên nhân có thể
-
-Calibration data chỉ gồm vài ảnh random hoặc không đúng preprocessing.
-
-Ví dụ production preprocessing:
-
-```text
-resize -> center crop -> normalize mean/std
-```
-
-Calibration preprocessing lại:
-
-```text
-resize -> no normalization
-```
-
-Scale được học từ distribution sai, nên INT8 quantization sai.
-
-### Cách sửa
-
-- Dùng calibration dataset đại diện.
-- Dùng đúng preprocessing production.
-- Kiểm tra per-layer divergence.
-- Exclude sensitive layers.
-- Thử QAT nếu PTQ không đủ.
-- Đánh giá bằng metric thật.
-
-## TensorRT best practices tóm tắt
-
-### Build
-
-- Build engine offline.
-- Lưu engine và metadata.
-- Dùng timing cache nếu build nhiều lần.
-- Dùng profile theo traffic thật.
-- Không dùng profile quá rộng nếu không cần.
-- Set workspace đủ lớn để builder có nhiều tactic choices.
-- Validate operator compatibility sớm bằng `trtexec`.
-
-### Precision
-
-- Bắt đầu với FP32 baseline.
-- Thử FP16 trước INT8.
-- Validate accuracy sau mỗi thay đổi precision.
-- Với INT8, dùng calibration data đại diện hoặc QAT.
-- Ưu tiên explicit Q/DQ workflow khi có thể.
-
-### Runtime
-
-- Deserialize engine một lần lúc startup.
-- Reuse execution contexts nếu phù hợp.
-- Reuse device buffers.
-- Tránh allocate/free mỗi request.
-- Tránh copy CPU↔GPU không cần thiết.
-- Dùng CUDA streams đúng cách.
-- Đo latency với synchronization đúng.
-
-### Profiling
-
-- Dùng `trtexec` trước khi debug app.
-- Dùng `--dumpProfile` và `--dumpLayerInfo` để tìm layer chậm.
-- Dùng Nsight Systems để xem timeline CPU/GPU.
-- Tách compute time khỏi H2D/D2H.
-- Đo p50/p95/p99, không chỉ mean.
-
-
-## Common misconceptions
-
-### Misconception 1: “TensorRT luôn nhanh hơn mọi runtime.”
-
-Không luôn đúng. TensorRT rất mạnh trên NVIDIA GPU, nhưng performance phụ thuộc model, shape, precision, hardware, data transfer và app design.
-
-### Misconception 2: “Bật FP16 là toàn bộ model chạy FP16.”
-
-Không nhất thiết. TensorRT có thể chọn precision theo layer tùy config và constraints.
-
-### Misconception 3: “INT8 chỉ cần thêm `--int8` là xong.”
-
-Không. INT8 cần scale, calibration hoặc Q/DQ graph, và cần validate accuracy nghiêm túc.
-
-### Misconception 4: “Dynamic shape càng rộng càng tốt.”
-
-Không. Profile quá rộng có thể làm tactic selection kém tối ưu.
-
-### Misconception 5: “Engine build xong dùng được ở mọi GPU.”
-
-Không nên giả định vậy. Engine có portability constraints theo platform, TensorRT version và GPU architecture trừ khi bạn dùng compatibility modes phù hợp.
-
-### Misconception 6: “`trtexec` nhanh nghĩa là service chắc chắn nhanh.”
-
-Không. Service còn có preprocessing, batching, data transfer, queueing, memory allocation, network overhead và postprocessing.
-
-
-
-## Mini project — Optimize một image classification model
-
-Mục tiêu: từ ONNX model tạo TensorRT engine FP32, FP16, dynamic FP16, optional INT8, rồi benchmark.
-
-### Deliverables
-
-Bạn cần tạo:
-
-```text
-model.onnx
-model_fp32.plan
-model_fp16.plan
-model_dynamic_fp16.plan
-benchmark_results.md
-accuracy_report.md
-```
-
-### Benchmark table template
-
-```markdown
-| Engine | Shape | Precision | Median latency | P99 latency | Throughput | GPU compute | Notes |
-|---:|---:|---:|---:|---:|---:|---:|---:|
-| ONNX Runtime CUDA | 1x3x224x224 | FP32 | | | | | |
-| TensorRT | 1x3x224x224 | FP32 | | | | | |
-| TensorRT | 1x3x224x224 | FP16 | | | | | |
-| TensorRT dynamic | 1x3x224x224 | FP16 | | | | | |
-| TensorRT dynamic | 8x3x224x224 | FP16 | | | | | |
-| TensorRT Q/DQ | 8x3x224x224 | INT8 | | | | | optional |
-```
-
-### Questions
-
-1. FP16 nhanh hơn FP32 bao nhiêu?
-2. Batch 8 throughput/item có tốt hơn batch 1 không?
-3. Dynamic engine có chậm hơn static engine ở cùng shape không?
-4. `optShapes` có ảnh hưởng đến latency không?
-5. INT8 có giữ accuracy không?
-6. Layer nào bottleneck nhất?
-7. H2D/D2H có đáng kể không?
-
-
-
-## Checkpoint questions
-
-Bạn nên tự trả lời được các câu sau mà không nhìn tài liệu:
-
-1. TensorRT engine là gì?
-2. Vì sao engine build chậm nhưng runtime nhanh?
-3. Builder khác Runtime như thế nào?
-4. ExecutionContext dùng để làm gì?
-5. Tactic là gì?
-6. Workspace limit ảnh hưởng tactic selection như thế nào?
-7. Dynamic shape trong ONNX khác gì optimization profile trong TensorRT?
-8. `min`, `opt`, `max` shape có ý nghĩa gì?
-9. Vì sao `opt` shape cần phản ánh traffic thật?
-10. Khi nào nên dùng nhiều optimization profiles?
-11. FP16 có rủi ro accuracy gì?
-12. INT8 cần calibration/QAT vì sao?
-13. Q/DQ graph là gì?
-14. Vì sao ONNX Runtime chạy được nhưng TensorRT build fail?
-15. Vì sao app có thể chậm hơn `trtexec`?
-16. Vì sao TensorRT engine không nên xem là portable tuyệt đối?
-17. Khi gặp unsupported op, bạn xử lý theo thứ tự nào?
-18. Khi INT8 accuracy giảm, bạn debug từ đâu?
-19. Khi profile mismatch, bạn kiểm tra gì?
-20. Khi latency p99 cao, bạn tách bottleneck như thế nào?
-
-
-## Glossary
-
-### TensorRT
-
-SDK của NVIDIA để tối ưu và chạy deep learning inference trên NVIDIA GPU.
-
-### Engine / Plan file
-
-Compiled TensorRT representation của model, thường được serialize thành `.plan`, `.engine` hoặc `.trt`.
-
-### Builder
-
-Object build engine từ network definition và builder config.
-
-### NetworkDefinition
-
-Graph representation nội bộ của TensorRT.
-
-### BuilderConfig
-
-Build-time configuration: precision, workspace, profiles, timing cache, compatibility flags, profiling settings.
-
-### Runtime
-
-Object dùng để deserialize engine và tạo runtime engine object.
-
-### ExecutionContext
-
-Runtime state để execute engine. Dynamic shape/profile state thường gắn với context.
-
-### Tactic
-
-Một implementation/kernel strategy cụ thể cho layer hoặc fused layer.
-
-### Timing cache
-
-Cache kết quả timing/tactic để giảm thời gian build engine ở các lần sau.
-
-### Optimization profile
-
-Range shape hợp lệ và opt shape cho dynamic inputs.
-
-### FP16
-
-16-bit floating point precision, thường tăng tốc inference trên Tensor Cores.
-
-### INT8
-
-8-bit integer quantized inference, cần scale/calibration/QAT/QDQ để giữ accuracy.
-
-### Q/DQ
-
-Quantize/Dequantize nodes thể hiện explicit quantization trong graph.
-
-### Calibration
-
-Quá trình dùng representative data để estimate activation ranges/scales cho quantization.
-
-### Polygraphy
-
-Tool của NVIDIA để inspect, compare và debug model conversion/accuracy issues.
-
-### `trtexec`
-
-Command-line tool để build, benchmark và profile TensorRT engines.
-
-## Lesson summary
-
-TensorRT là một inference compiler/runtime cho NVIDIA GPU. Nó nhận model graph, thường từ ONNX, sau đó build thành engine đã tối ưu cho precision, shape, GPU architecture, tactics và memory plan.
-
-Điểm cốt lõi cần nhớ:
-
-```text
-TensorRT performance đến từ build-time specialization.
-```
-
-Các khái niệm quan trọng nhất:
-
-- Engine là compiled model.
-- Builder tạo engine.
-- Runtime load engine.
-- ExecutionContext chạy inference.
-- Tactic là kernel implementation được chọn.
-- Optimization profile định nghĩa dynamic shape range.
-- `opt` shape ảnh hưởng mạnh đến performance.
-- FP16 thường là bước tối ưu đầu tiên.
-- INT8 cần quantization workflow nghiêm túc.
-- `trtexec` là tool đầu tiên nên dùng để benchmark/debug.
-- Accuracy validation là bắt buộc sau mọi optimization.
-
-Nếu Lesson 3 giúp bạn hiểu ONNX Runtime như graph runtime đa backend, thì Lesson 4 giúp bạn hiểu TensorRT như một compiler tối ưu sâu cho NVIDIA GPU.
-
-
-## References
-
-Tài liệu nên đọc sau bài này:
-
-1. NVIDIA TensorRT Documentation — main docs  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/
-
-2. NVIDIA TensorRT Quick Start Guide  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/getting-started/quick-start-guide.html
-
-3. TensorRT Capabilities  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/architecture/capabilities.html
-
-4. Working with Dynamic Shapes  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/work-dynamic-shapes.html
-
-5. TensorRT Optimization Profiles API  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/_static/python-api/infer/Core/OptimizationProfile.html
-
-6. Working with Quantized Types  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/work-quantized-types.html
-
-7. TensorRT Accuracy Considerations  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/accuracy-considerations.html
-
-8. TensorRT Best Practices  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/best-practices.html
-
-9. Performance Benchmarking using `trtexec`  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/benchmarking.html
-
-10. TensorRT Troubleshooting  
-    https://docs.nvidia.com/deeplearning/tensorrt/latest/reference/troubleshooting.html
-
-
-## Next lesson
-
-Lesson tiếp theo nên là:
-
-```text
-Lesson 5: Quantization Deep Dive — PTQ, QAT, Calibration, Q/DQ Graphs, INT8/FP8 and Accuracy Recovery
-```
-
-Lý do: Lesson 4 đã giới thiệu FP16 và INT8 ở mức TensorRT internals. Lesson 5 sẽ đi sâu riêng vào quantization, vì đây là chủ đề lớn, dễ sai và cực kỳ quan trọng trong production inference.
+Tìm: layer % latency cao nhất; layer vẫn FP32; reformat; tên tactic; bottleneck Conv/MatMul/norm/resize/plugin.
+
+::: {.callout-tip icon=false collapse="true"}
+## Mini project — image classification end-to-end
+Deliverables: `model.onnx`, `model_fp32.plan`, `model_fp16.plan`, `model_dynamic_fp16.plan`, `benchmark_results.md`, `accuracy_report.md` (INT8 optional).
+
+| Engine | Shape | Precision | Median | P99 | Throughput | GPU compute | Notes |
+|:-------|:------|:----------|-------:|----:|-----------:|------------:|:------|
+| ORT CUDA | 1×3×224×224 | FP32 | | | | | |
+| TRT | 1×3×224×224 | FP32 | | | | | |
+| TRT | 1×3×224×224 | FP16 | | | | | |
+| TRT dynamic | 1×3×224×224 | FP16 | | | | | |
+| TRT dynamic | 8×3×224×224 | FP16 | | | | | |
+| TRT Q/DQ | 8×3×224×224 | INT8 | | | | | optional |
+
+Câu hỏi phản tư:
+
+1. FP16 nhanh hơn FP32 bao nhiêu (median / p99 / throughput)?
+2. Batch 8: throughput/item có tốt hơn batch 1 không?
+3. Dynamic engine có chậm hơn static ở cùng shape không?
+4. Đổi `optShapes` có ảnh hưởng latency ở traffic thật không?
+5. INT8 (nếu làm) có giữ accuracy trong budget không?
+6. Layer nào bottleneck nhất (`--dumpProfile`)?
+7. H2D/D2H có đáng kể so với GPU Compute Time không?
+8. Chọn engine nào cho production? Vì sao? Accuracy có chấp nhận được không?
+:::
+
+
+## Checkpoint questions {.unnumbered}
+
+::: {.callout-tip icon=false collapse="true"}
+## Tự kiểm
+
+1. TensorRT engine / plan là gì? Compiled model đã chọn tactics, memory, precision.  
+2. Vì sao build chậm, runtime nhanh? Autotune tactics lúc build; runtime chỉ enqueue.  
+3. Builder vs Runtime? Compile vs load serialized engine.  
+4. ExecutionContext? State: profile, shape, addresses.  
+5. Tactic? Kernel/strategy cụ thể cho layer.  
+6. Workspace nhỏ ảnh hưởng gì? Loại tactic cần nhiều temp → có thể chậm hơn.  
+7. Timing cache? Reuse kết quả timing giữa các lần build.  
+8. ONNX dynamic vs TRT profile? `-1` chưa đủ; cần min/opt/max.  
+9. `opt`? Shape ưu tiên tối ưu — khớp traffic thật.  
+10. Nhiều profiles khi nào? Cụm traffic khác nhau.  
+11. FP16 rủi ro? Overflow/NaN; không phải mọi layer FP16.  
+12. INT8 cần gì? Scale + calibration/QAT/QDQ + validate.  
+13. Rounding vs clamping error? Lưới int8 vs clip ngoài range.  
+14. Q/DQ? Explicit quantize/dequantize trong graph.  
+15. ORT ok, TRT fail? Fallback ORT vs thiếu importer TRT.  
+16. App chậm hơn trtexec? Copy/alloc/sync/preprocess.  
+17. Engine không portable? GPU arch + TRT version — metadata + rebuild.  
+18. Unsupported op — thứ tự xử lý? Checker → ORT → Netron → simplify → opset → rewrite → plugin.  
+19. INT8 accuracy ↓ — bắt đầu đâu? Calibration/preprocess → per-layer → QAT.  
+20. p99 cao — tách bottleneck thế nào? Preprocess / H2D / compute / D2H / post / queue.
+:::
+
+
+## Glossary {.unnumbered}
+
+| Thuật ngữ | Giải thích ngắn |
+|:----------|:----------------|
+| TensorRT | SDK NVIDIA optimize + chạy inference trên GPU NVIDIA |
+| Engine / plan file | Compiled model serialize (`.plan` / `.engine` / `.trt`) |
+| Builder | Compiler driver tạo engine |
+| NetworkDefinition | Graph nội bộ TensorRT |
+| BuilderConfig | Flags build: precision, workspace, profiles, cache |
+| Runtime | Deserialize plan → engine |
+| ExecutionContext | State để execute (shape, profile, addresses) |
+| Tactic | Implementation/kernel cụ thể cho layer |
+| Timing cache | Cache timing giảm thời gian rebuild |
+| Optimization profile | `min` / `opt` / `max` cho dynamic inputs |
+| FP16 / TF32 / INT8 | Half float / TensorFloat-32 / 8-bit quantized |
+| Q/DQ | Quantize / Dequantize nodes (explicit quantization) |
+| Calibration | Ước scale từ representative data (PTQ) |
+| PTQ / QAT | Post-training quant / quantization-aware training |
+| Polygraphy | Tool debug/so sánh accuracy conversion |
+| `trtexec` | CLI build, benchmark, profile TensorRT |
+| Reformat layer | Layer đổi layout/format nội bộ (có thể tốn thêm) |
+
+
+## Summary {.unnumbered}
+
+1. TensorRT = inference **compiler** + runtime NVIDIA — performance từ **build-time specialization**.  
+2. Engine = compiled model; Builder tạo; Runtime load; Context chạy trên stream.  
+3. Tactic + workspace + timing cache giải thích build lâu và engine khác nhau theo GPU/shape.  
+4. Profile `opt` phải phản ánh traffic; range quá rộng thường hại.  
+5. FP16 trước; INT8 cần quantization nghiêm túc (ví dụ số scale/clamp) + validate task metric.  
+6. Đo bằng `trtexec` nhưng quyết định production bằng E2E app + accuracy + metadata engine.
+
+
+## Preview bài tiếp theo {.unnumbered}
+
+Lesson 5: **Quantization Deep Dive — PTQ, QAT, Calibration, Q/DQ, INT8/FP8 and Accuracy Recovery**
+
+Lesson 4 đã đặt FP16/INT8 trong pipeline TensorRT. Lesson 5 đi sâu quantization: scale, calibration, QAT, phục hồi accuracy khi INT8 làm metric giảm.
+
+
+## References {.unnumbered}
+
+1. [NVIDIA TensorRT Documentation](https://docs.nvidia.com/deeplearning/tensorrt/latest/)  
+2. [TensorRT Quick Start Guide](https://docs.nvidia.com/deeplearning/tensorrt/latest/getting-started/quick-start-guide.html)  
+3. [TensorRT Capabilities](https://docs.nvidia.com/deeplearning/tensorrt/latest/architecture/capabilities.html)  
+4. [Working with Dynamic Shapes](https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/work-dynamic-shapes.html)  
+5. [Optimization Profiles API](https://docs.nvidia.com/deeplearning/tensorrt/latest/_static/python-api/infer/Core/OptimizationProfile.html)  
+6. [Working with Quantized Types](https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/work-quantized-types.html)  
+7. [Accuracy Considerations](https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/accuracy-considerations.html)  
+8. [Best Practices](https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/best-practices.html)  
+9. [Benchmarking with trtexec](https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/benchmarking.html)  
+10. [Troubleshooting](https://docs.nvidia.com/deeplearning/tensorrt/latest/reference/troubleshooting.html)

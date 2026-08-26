@@ -7,316 +7,235 @@ series: ai-optimize
 order: 1
 description: "Mental model: GPU inference, latency, throughput, batching và bottleneck."
 role: "Mental model: GPU inference, latency, throughput, batching và bottleneck"
+aliases:
+  - /bai-hoc/ai-optimize/lesson_1_modern_gpu_inference_architecture.html
+  - /bai-hoc/ai-optimize/lesson_1_modern_gpu_inference_architecture.qmd
 ---
 
 ::: {.callout-note icon=false}
 ## Mục tiêu bài học
-Mục tiêu của bài này không phải là học API TensorRT hay ONNX ngay lập tức. Mục tiêu là xây dựng một mental model đúng về inference system: request đi qua đâu, GPU thực thi thế nào, vì sao batching quan trọng, vì sao một model đã train xong vẫn chưa phải là một production service, và vì sao các công cụ như ONNX, ONNX Runtime, TensorRT, Triton tồn tại.
+Bài này không dạy API TensorRT hay ONNX ngay. Mục tiêu là xây **mental model** đúng về inference system: request đi qua đâu, GPU thực thi thế nào, vì sao batching quan trọng, vì sao model đã train xong vẫn chưa phải production service, và vì sao ONNX, ONNX Runtime, TensorRT, Triton tồn tại.
 :::
 
-## Bối cảnh của chuỗi bài học
+::: {.callout-tip icon=false}
+## Nền kiến trúc (tuỳ chọn)
+Chuỗi này tập trung serving. Nền CNN / Transformer nằm ở [Architecture Models](../architecture-models/index.qmd).
+:::
+
+::: {.callout-note icon=false}
+## Lộ trình bài học
+
+| # | Phần | Trả lời câu hỏi | Thời lượng |
+|:--|:-----|:----------------|:-----------|
+| 1 | Artifact vs service | Vì sao train xong chưa phải xong? | 10 phút |
+| 2 | Vòng đời một request | Thời gian thực sự đi đâu? | 15 phút |
+| 3 | GPU mental model | GPU chạy model thế nào? | 20 phút |
+| 4 | ONNX / TensorRT / Triton | Mỗi công cụ giải quyết việc gì? | 15 phút |
+| 5 | Latency vs throughput | Vì sao batching là con dao hai lưỡi? | 15 phút |
+| 6 | Bottleneck & worked examples | Tự chẩn đoán trước khi tối ưu | 30 phút |
+
+Đọc tối thiểu: phần 1, 2, 4. Phần 3 có thể quay lại sau.
+:::
+
+::: {.reading-modes}
+**Đọc nhanh (~15–20 phút):** chỉ các callout *Ý chính* + bảng + sơ đồ xương sống.  
+**Đọc đủ:** mở các tip "Con số cụ thể / Đào sâu", làm Mini-lab và Checkpoint.
+:::
+
+
+## Bối cảnh {.unnumbered}
 
 Bạn đang học ONNX và TensorRT. Hai công nghệ này thường được giới thiệu bằng những câu như:
 
-- Export model từ PyTorch sang ONNX.
-- Build TensorRT engine.
-- Chạy inference nhanh hơn.
-- Deploy bằng Triton.
+- Export model từ PyTorch sang ONNX
+- Build TensorRT engine
+- Chạy inference nhanh hơn
+- Deploy bằng Triton
 
 Cách học đó có thể giúp bạn chạy được demo, nhưng thường không giúp bạn debug khi gặp lỗi thực tế như:
 
-- ONNX export sai shape.
-- TensorRT không hỗ trợ một operator.
-- Dynamic shape làm engine build fail.
-- INT8 quantization làm accuracy giảm.
-- GPU utilization cao nhưng latency p99 vẫn tệ.
-- Triton dynamic batching tăng throughput nhưng làm tail latency vượt SLO.
+- ONNX export sai shape
+- TensorRT không hỗ trợ một operator
+- Dynamic shape làm engine build fail
+- INT8 **quantization** (giảm precision) làm accuracy giảm
+- GPU utilization cao nhưng latency p99 vẫn tệ
+- Triton **dynamic batching** tăng throughput nhưng làm **tail latency** vượt SLO
 
-Vì vậy, bài đầu tiên này tập trung vào kiến trúc inference hiện đại. Sau bài này, ONNX và TensorRT sẽ không còn là các tool rời rạc, mà trở thành các mảnh ghép rõ ràng trong một pipeline production.
+Vì vậy, bài đầu tiên tập trung vào kiến trúc inference hiện đại. Sau bài này, ONNX và TensorRT không còn là các tool rời rạc, mà trở thành các mảnh ghép rõ ràng trong một pipeline production.
 
 
-## Learning outcomes
+## Learning outcomes {.unnumbered}
 
 Sau bài này, bạn cần giải thích được:
 
-1. Vì sao một trained model artifact chưa phải là production inference service.
-2. Một request inference đi qua những thành phần nào từ client tới GPU rồi trả kết quả.
-3. Sự khác nhau giữa latency, throughput, p50, p95, p99, GPU utilization và concurrency.
-4. Vì sao GPU phù hợp với deep learning inference.
-5. Các khái niệm nền tảng: host, device, CUDA kernel, stream, SM, warp, memory hierarchy, Tensor Core.
-6. Vai trò của ONNX, ONNX Runtime, TensorRT và Triton trong inference stack.
-7. Vì sao batching có thể tăng throughput nhưng cũng có thể làm latency xấu đi.
-8. Cách nhận diện bottleneck ở mức hệ thống trước khi tối ưu model.
+1. Vì sao một trained **model artifact** chưa phải là production **inference** service
+2. Một request inference đi qua những thành phần nào từ client tới GPU rồi trả kết quả
+3. Sự khác nhau giữa **latency**, **throughput**, p50, p95, **p99**, GPU utilization và concurrency
+4. Vì sao GPU phù hợp với deep learning inference
+5. Các khái niệm nền tảng: host, device, CUDA **kernel**, stream, **SM**, **warp**, memory hierarchy, **Tensor Cores**
+6. Vai trò của ONNX, ONNX Runtime, TensorRT và Triton trong inference stack
+7. Vì sao batching có thể tăng throughput nhưng cũng có thể làm latency xấu đi
+8. Cách nhận diện bottleneck ở mức hệ thống trước khi tối ưu model
 
 
-## Prerequisites
+## Prerequisites {.unnumbered}
 
-Bạn không cần biết CUDA programming trước khi học bài này. Tuy nhiên, bạn nên đã quen với:
+Bạn không cần biết CUDA programming trước khi học bài này. Bạn nên đã quen với:
 
-- Python cơ bản.
-- PyTorch hoặc TensorFlow ở mức biết load model và chạy inference.
-- Khái niệm tensor, batch size, forward pass.
-- Một chút kiến thức về API service như HTTP/gRPC là lợi thế.
+- Python cơ bản
+- PyTorch hoặc TensorFlow ở mức biết load model và chạy inference
+- Khái niệm tensor, batch size, forward pass
+- Một chút kiến thức về API service như HTTP/gRPC là lợi thế
 
-Nếu chưa có GPU, bạn vẫn học được bài này. Các phần thực hành trong bài chủ yếu là worksheet và tư duy hệ thống. Ở các bài sau, khi đi vào ONNX Runtime, TensorRT và Triton, GPU NVIDIA sẽ hữu ích hơn.
+Nếu chưa có GPU, bạn vẫn học được bài này. Phần thực hành chủ yếu là worksheet và tư duy hệ thống. Ở các bài sau, GPU NVIDIA sẽ hữu ích hơn.
 
 
+## Big picture: từ training tới serving {#sec-big-picture}
 
-## Big picture: từ training tới serving
+> Vì sao một model đã đạt accuracy tốt trên tập test vẫn có thể làm service chậm khi lên production?
 
-Một pipeline machine learning production thường có hai thế giới khác nhau:
+::: {.callout-important icon=false}
+## Ý chính
+Training tối ưu cho **tổng thời gian xử lý toàn bộ dataset**. Inference production tối ưu cho **thời gian phản hồi của từng request**. Hai mục tiêu này dẫn tới hai thiết kế hệ thống khác nhau.
+:::
 
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
+Một pipeline machine learning production thường có hai thế giới:
 
+```{mermaid}
+%%| label: fig-train-infer
+%%| fig-cap: "Training world tối ưu throughput dài hạn; Inference world tối ưu request-level behavior."
+%%| fig-width: 5.5
+%%| fig-align: "center"
 flowchart TB
-
-subgraph T[TRAINING WORLD]
-
-direction TB
-
-T1[Raw data]
-T2[Feature processing]
-T3[Training loop]
-T4[Model artifact]
-T5[Validation]
-
-T1 --> T2 --> T3 --> T4 --> T5
-
-end
-
-subgraph I[INFERENCE WORLD]
-
-direction TB
-
-I1[Model artifact]
-I2[Export / conversion]
-I3[Runtime optimization]
-I4[Serving]
-I5[Monitoring / scaling]
-
-I1 --> I2 --> I3 --> I4 --> I5
-
-end
-
-T4 -. Deploy .-> I1
+  subgraph T["TRAINING WORLD"]
+    direction TB
+    T1([Raw data]) --> T2([Feature processing])
+    T2 --> T3([Training loop])
+    T3 --> T4([Model artifact])
+    T4 --> T5([Validation])
+  end
+  subgraph I["INFERENCE WORLD"]
+    direction TB
+    I1([Model artifact]) --> I2([Export / conversion])
+    I2 --> I3([Runtime optimization])
+    I3 --> I4([Serving])
+    I4 --> I5([Monitoring / scaling])
+  end
+  T4 -. Deploy .-> I1
+  classDef train fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef trainKey fill:#DCEEFF,stroke:#2F6FBE,stroke-width:2px,color:#1F3A5F
+  classDef infer fill:#EAF8F0,stroke:#45A878,stroke-width:1.5px,color:#24543A
+  classDef inferKey fill:#D5F0E2,stroke:#2E8B5A,stroke-width:2px,color:#24543A
+  class T1,T2,T3,T5 train
+  class T4 trainKey
+  class I2,I3,I4,I5 infer
+  class I1 inferKey
+  style T fill:#F5FAFF,stroke:#4A90E2,stroke-width:2px,color:#1F3A5F
+  style I fill:#F4FCF7,stroke:#45A878,stroke-width:2px,color:#24543A
 ```
 
+Training thường tối ưu cho throughput dài hạn: nhiều data, nhiều epoch, nhiều GPU, nhiều giờ hoặc ngày.
+
+Inference production tối ưu cho request-level behavior. Mỗi request phải được phản hồi trong khoảng thời gian chấp nhận được. Service thường đặt **SLO** (Service Level Objective) như:
+
+- p99 latency < 100 ms
+- availability ≥ 99.9%
+- throughput ≥ 1000 requests/second
+
+Một model train tốt chưa chắc phục vụ tốt. Production inference cần thêm tối ưu, scheduling, batching, memory management, monitoring và rollout.
+
+::: {.callout-tip icon=false collapse="true"}
+## Con số cụ thể
+Một service phân loại ảnh có GPU execution chỉ 8 ms, nhưng end-to-end là 51 ms. Model chiếm khoảng 15% thời gian người dùng thực sự chờ. Chi tiết ở @sec-worked.
+:::
 
 
-Training thường tối ưu cho throughput dài hạn: xử lý nhiều data, nhiều epoch, nhiều GPU, nhiều giờ hoặc nhiều ngày.
+## Model artifact khác gì inference service? {#sec-artifact-vs-service}
 
-Inference production thường tối ưu cho request-level behavior: mỗi request phải được phản hồi trong một khoảng thời gian có thể chấp nhận được. Ví dụ, service có thể đặt SLO như:
+> Model file sau training trả lời câu hỏi gì — và inference service trả lời câu hỏi gì khác?
 
-```text
-p99 latency < 100 ms
-availability >= 99.9%
-throughput >= 1000 requests/second
-```
-
-Điểm quan trọng: một model train tốt chưa chắc phục vụ tốt. Production inference cần thêm các lớp tối ưu, scheduling, batching, memory management, monitoring và rollout.
-
-
-
-## Model artifact khác gì inference service?
+::: {.callout-important icon=false}
+## Ý chính
+**Model artifact** lưu graph/weights đã học. **Inference service** nhận request, xử lý ổn định, đạt latency/throughput mục tiêu, quan sát lỗi và rollout an toàn. Artifact chưa phải service.
+:::
 
 ### Model artifact
 
-Model artifact là sản phẩm của quá trình training. Nó có thể là:
+Model artifact là sản phẩm của quá trình training. Nó có thể là file weight, checkpoint, serialized model, TorchScript module, ONNX model, hoặc TensorRT engine.
 
-- File weight.
-- Checkpoint.
-- Serialized model.
-- TorchScript module.
-- ONNX model.
-- TensorRT engine.
-
-Artifact trả lời câu hỏi:
-
-\important{Model đã học được gì, và computation graph hoặc weights của nó được lưu ở đâu?}
+Artifact trả lời: *Model đã học được gì, và computation graph hoặc weights được lưu ở đâu?*
 
 ### Inference service
 
-Inference service trả lời câu hỏi khác:
-
-\insight{Làm sao nhận request từ user, xử lý input, chạy model ổn định, trả output đúng format, đạt latency/throughput mục tiêu, quan sát được lỗi, và rollout an toàn?}
+Inference service trả lời: *Làm sao nhận request từ user, xử lý input, chạy model ổn định, trả output đúng format, đạt latency/throughput mục tiêu, quan sát được lỗi, và rollout an toàn?*
 
 Một inference service thường bao gồm:
 
-| Thành phần         | Vai trò                                                               |
-|:-------------------|:----------------------------------------------------------------------|
-| API layer          | Nhận request qua HTTP/gRPC/message queue                              |
-| Input validation   | Kiểm tra schema, size, dtype, range, authentication                   |
-| Preprocessing      | Decode ảnh, tokenize text, resize, normalize, pad/truncate            |
-| Scheduler          | Queue request, gom batch, điều phối worker/GPU                        |
-| Runtime            | ONNX Runtime, TensorRT, PyTorch eager, TensorFlow Serving, vLLM, v.v. |
-| GPU execution      | Kernel launch, memory transfer, compute, synchronization              |
-| Postprocessing     | Softmax, NMS, decode token, map label, format result                  |
-| Observability      | Metrics, logs, traces, profiling, alerting                            |
-| Deployment control | Versioning, rollback, canary, A/B testing                             |
+| Thành phần | Vai trò |
+|:-----------|:--------|
+| API layer | Nhận request qua HTTP/gRPC/message queue |
+| Input validation | Kiểm tra schema, size, dtype, range, authentication |
+| Preprocessing | Decode ảnh, tokenize text, resize, normalize, pad/truncate |
+| Scheduler | Queue request, gom batch, điều phối worker/GPU |
+| Runtime | ONNX Runtime, TensorRT, PyTorch eager, TensorFlow Serving, vLLM, v.v. |
+| GPU execution | Kernel launch, memory transfer, compute, synchronization |
+| Postprocessing | Softmax, NMS, decode token, map label, format result |
+| Observability | Metrics, logs, traces, profiling, alerting |
+| Deployment control | Versioning, rollback, canary, A/B testing |
 
-Sai lầm phổ biến là chỉ nhìn vào dòng:
+Sai lầm phổ biến là chỉ nhìn `Input → Model → Output`. Trong production, dòng đúng hơn là request đi qua queue, preprocess, transfer, execute, postprocess rồi mới response. Nếu chỉ tối ưu bước `execute` mà bottleneck thật nằm ở `queue` hoặc `preprocess`, service vẫn chậm.
+
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Chỉ tối ưu bước `execute` — thực tế bottleneck có thể nằm ở `queue` hoặc `preprocess`. Service vẫn chậm dù model đã nhanh.
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: chi phí ẩn quanh model
+Ngoài thời gian chạy model, end-to-end còn gồm: queue latency (request chờ đến lượt), CPU↔GPU transfer (H2D/D2H), batching delay (chờ gom đủ batch), serialization (đóng gói kết quả) và postprocessing logic (softmax, NMS, decode). User cảm nhận tổng của tất cả các phần này — không chỉ phần GPU.
+:::
 
 
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
+## Anatomy of one inference request {#sec-request-anatomy}
+
+> Khi user gửi một request, thời gian thực sự đi vào những đoạn nào trước khi có response?
+
+::: {.callout-important icon=false}
+## Ý chính
+Trong demo bạn thường đo `L_gpu_execute`. Trong production, user cảm nhận `L_total`. Nếu preprocess chiếm phần lớn budget, tăng tốc model gần như không cứu được SLO.
+:::
+
+Sơ đồ xương sống của bài này — pipeline một request:
+
+```{mermaid}
+%%| label: fig-request-pipeline
+%%| fig-cap: "Pipeline end-to-end của một inference request. Các section sau sẽ tô sáng từng giai đoạn."
+%%| fig-width: 7
+%%| fig-align: "center"
 flowchart LR
-
-subgraph SIMPLE["SIMPLIFIED VIEW"]
-direction LR
-
-A[Input]
---> B[Model]
---> C[Output]
-
-end
+  R([Request]) --> V([Validate])
+  V --> P([Preprocess])
+  P --> B([Batch])
+  B --> H([H2D])
+  H --> G([GPU])
+  G --> D([D2H])
+  D --> O([Post + Response])
+  classDef stage fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef compute fill:#EAF3FF,stroke:#4A90E2,stroke-width:2px,color:#1F3A5F
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class R,V,P,B,O stage
+  class G compute
+  class H,D io
 ```
 
-Trong production, dòng đúng hơn là:
+**Latency** (thời gian xử lý một request) end-to-end là tổng các giai đoạn: network, queue, preprocess, **H2D** (host-to-device), GPU execute, **D2H** (device-to-host), postprocess, serialize.
 
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart LR
+### Latency budget
 
-subgraph PROD["PRODUCTION INFERENCE WORLD"]
-direction TB
-
-R[Request]
---> Q[Queue]
---> P[Preprocess]
---> T1[Transfer]
---> E[Execute model]
---> T2[Transfer]
---> Post[Postprocess]
---> Resp[Response]
-
-end
-
-subgraph NOTE["Hidden costs"]
-direction TB
-
-N1[Queue latency]
-N2[CPU/GPU transfer]
-N3[Batching]
-N4[Serialization]
-N5[Postprocessing logic]
-
-end
-
-Q -. affects .-> N1
-T1 -. affects .-> N2
-T2 -. affects .-> N2
-E -. may include .-> N3
-Resp -. includes .-> N4
-Post -. includes .-> N5
-```
-
-Nếu chỉ tối ưu `execute` mà bottleneck thật nằm ở `queue` hoặc `preprocess`, service vẫn chậm.
-
-
-## Anatomy of one inference request
-
-Hãy xem một request image classification đi qua service như sau:
-
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart TB
-
-C["Client"]
---> API["API server"]
-
-API
---> PRE["Preprocessing"]
-
-PRE
---> BATCH["Batching / scheduling"]
-
-BATCH
---> H2D["CPU RAM → GPU VRAM"]
-
-H2D
---> GPU["GPU execution"]
-
-GPU
---> D2H["GPU VRAM → CPU RAM"]
-
-D2H
---> POST["Postprocessing"]
-
-POST
---> RESP["Response"]
-
-
-%% Optional annotations
-
-API -. "HTTP/gRPC<br/>schema validation" .-> PRE
-
-PRE -. "decode / resize / normalize" .-> BATCH
-
-BATCH -. "dispatch policy" .-> H2D
-
-GPU -. "conv / matmul / activation" .-> D2H
-
-POST -. "softmax / top-k / serialization" .-> RESP
-```
-
-End-to-end latency có thể được tách thành:
-
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart LR
-
-REQ["Request latency"]
---> NET["Network"]
---> QUEUE["Queue"]
---> PRE["Preprocess"]
---> H2D["Host → Device"]
---> GPU["GPU execute"]
---> D2H["Device → Host"]
---> POST["Postprocess"]
---> SER["Serialize"]
-
-%% Formula relationship
-
-TOTAL["L_total"]
--. "sum of all stages" .-> REQ
-
-%% Optional annotations
-
-NET -. "L_network" .-> QUEUE
-QUEUE -. "L_queue" .-> PRE
-PRE -. "L_preprocess" .-> H2D
-H2D -. "L_host_to_device" .-> GPU
-GPU -. "L_gpu_execute" .-> D2H
-D2H -. "L_device_to_host" .-> POST
-POST -. "L_postprocess" .-> SER
-SER -. "L_serialize" .-> TOTAL
-```
-
-Trong nhiều demo, bạn chỉ đo `L_gpu_execute`. Trong production, user cảm nhận `L_total`.
-
-### Ví dụ latency budget
-
-Giả sử SLO của service là:
-
-```text
-p99 latency < 100 ms
-```
-
-Một budget ban đầu có thể là:
+Giả sử SLO là p99 latency < 100 ms. Một budget ban đầu:
 
 | Thành phần | Budget |
-|---|---:|
+|:-----------|------:|
 | Network + API parsing | 5 ms |
 | Queueing | 10 ms |
 | Preprocessing | 15 ms |
@@ -327,1007 +246,601 @@ Một budget ban đầu có thể là:
 | Safety margin | 10 ms |
 | Total | 100 ms |
 
-Nếu preprocessing thực tế là 45 ms, TensorRT có giảm GPU execution từ 40 ms xuống 20 ms thì tổng vẫn có thể vượt SLO. Đây là lý do inference optimization cần nhìn cả hệ thống, không chỉ nhìn model.
+Nếu preprocessing thực tế là 45 ms, TensorRT giảm GPU execution từ 40 ms xuống 20 ms thì tổng vẫn có thể vượt SLO. Inference optimization cần nhìn cả hệ thống, không chỉ nhìn model.
 
+::: {.callout-tip icon=false collapse="true"}
+## Con số cụ thể: model nhanh 2.67× nhưng service chỉ cải thiện 9.8%
 
-## GPU mental model
+Service image classification có breakdown latency đo được:
 
-### GPU không phải là CPU nhanh hơn
+| Thành phần | Trước TensorRT | Sau TensorRT |
+|:-----------|------:|------:|
+| API parse | 2 ms | 2 ms |
+| Image decode + resize | 35 ms | 35 ms |
+| H2D copy | 3 ms | 3 ms |
+| GPU execution | 8 ms | **3 ms** |
+| D2H copy | 1 ms | 1 ms |
+| Postprocessing | 2 ms | 2 ms |
+| **Total** | **51 ms** | **46 ms** |
 
-CPU và GPU được thiết kế cho hai kiểu workload khác nhau.
+Tính cụ thể: `2 + 35 + 3 + 3 + 1 + 2 = 46 ms`. TensorRT đã tăng tốc GPU execution **2.67×** (từ 8 ms xuống 3 ms), nhưng end-to-end chỉ cải thiện **9.8%** (từ 51 ms xuống 46 ms).
 
-CPU mạnh ở:
+Kết luận: bottleneck thật là image decode + resize (35 ms), không phải GPU execution. Tiếp tục tối ưu model sẽ không mang lại nhiều. Cần song song hoá preprocessing, dùng thư viện decode nhanh hơn (libjpeg-turbo, DALI), hoặc đẩy preprocessing lên GPU.
 
-- Single-thread performance.
-- Branching phức tạp.
-- Control flow nhiều điều kiện.
-- Low-latency task nhỏ.
-- Hệ điều hành, networking, orchestration.
-
-GPU mạnh ở:
-
-- Data parallelism.
-- Matrix multiplication.
-- Tensor operations.
-- Throughput cao.
-- Memory bandwidth lớn.
-- Chạy hàng nghìn thread song song.
-
-Deep learning inference chủ yếu là các phép toán tensor như convolution, matrix multiplication, attention, normalization và elementwise operations. Đây là những workload có tính song song rất cao, nên phù hợp với GPU.
-
-Một mental model đơn giản:
-
-```text
-CPU = ít worker, mỗi worker rất linh hoạt và mạnh với logic phức tạp.
-GPU = rất nhiều worker, mỗi worker đơn giản hơn, nhưng tổng throughput rất lớn nếu công việc được chia đều.
+```{mermaid}
+%%| label: fig-preprocess-hot
+%%| fig-cap: "Cùng pipeline xương sống, tô sáng Preprocess — nơi chiếm phần lớn thời gian trong ví dụ trên."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  R([Request]) --> V([Validate])
+  V --> P([Preprocess])
+  P --> B([Batch])
+  B --> H([H2D])
+  H --> G([GPU])
+  G --> D([D2H])
+  D --> O([Post + Response])
+  classDef stage fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef compute fill:#EAF3FF,stroke:#4A90E2,stroke-width:2px,color:#1F3A5F
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
+  class R,V,B,O stage
+  class G compute
+  class H,D io
+  class P hot
 ```
+:::
 
-### Host và device
 
-Trong CUDA-style programming, hệ thống thường được nhìn thành:
+## GPU mental model {#sec-gpu-mental-model}
 
-```text
-Host   = CPU + system RAM
-Device = GPU + GPU memory / VRAM
-```
+> GPU có phải là CPU nhanh hơn — và inference trên GPU thực chất là chuỗi thao tác gì?
 
-Thông thường:
+::: {.callout-important icon=false}
+## Ý chính
+GPU là **throughput machine**: rất nhiều worker đơn giản chạy song song. Deep learning inference là chuỗi **kernel** launches và memory operations trên device, không phải một phép tính kỳ diệu duy nhất.
+:::
 
-- Request được nhận ở host.
-- Preprocessing thường bắt đầu ở host.
-- Tensor input cần nằm ở device memory để GPU tính toán.
-- GPU chạy các CUDA kernels.
-- Output có thể được copy về host để postprocess hoặc trả response.
+### GPU không phải CPU nhanh hơn
 
-Một source latency hay bị bỏ qua là data transfer:
+CPU và GPU được thiết kế cho hai kiểu workload khác nhau:
 
-```text
-CPU RAM <-> GPU VRAM
-```
+| | CPU | GPU |
+|:--|:----|:----|
+| Thiết kế cho | Ít worker linh hoạt, logic phức tạp | Rất nhiều worker, công việc chia đều |
+| Mạnh ở | Branching, control flow, task nhỏ latency thấp | Data parallelism, matmul, tensor ops, bandwidth lớn |
+| Phù hợp | OS, networking, orchestration | Convolution, attention, elementwise song song |
 
-Nếu tensor nhỏ, overhead transfer và kernel launch có thể chiếm tỷ lệ lớn. Nếu tensor lớn, bandwidth giữa host và device có thể trở thành bottleneck.
+Deep learning inference chủ yếu là phép toán tensor — convolution, matrix multiplication, attention, normalization, elementwise — có tính song song rất cao, nên phù hợp GPU.
 
-### CUDA kernel
+Một mental model đơn giản: CPU là ít worker rất linh hoạt và mạnh với logic phức tạp; GPU là rất nhiều worker đơn giản hơn, nhưng tổng throughput rất lớn nếu công việc được chia đều.
 
-CUDA kernel là một function chạy song song trên GPU. Khi deep learning runtime chạy một layer như convolution, matmul hoặc activation, runtime thường gọi một hoặc nhiều kernel đã được tối ưu.
+### Host, device và transfer
 
-Ví dụ ở mức khái niệm:
+Trong CUDA-style programming:
 
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
+- **Host** = CPU + system RAM
+- **Device** = GPU + GPU memory / VRAM
+
+Request thường được nhận và preprocess trên host. Tensor input cần nằm ở device memory để GPU tính. Output có thể được copy về host để postprocess. Nguồn latency hay bị bỏ qua là transfer `CPU RAM ↔ GPU VRAM`: tensor nhỏ thì overhead transfer và kernel launch chiếm tỷ lệ lớn; tensor lớn thì bandwidth host–device có thể trở thành bottleneck.
+
+### Kernel, SM, warp
+
+**CUDA kernel** là function chạy song song trên GPU. Khi runtime chạy convolution, matmul hoặc activation, nó thường gọi một hoặc nhiều kernel đã tối ưu từ thư viện cuDNN, cuBLAS hoặc kernel custom.
+
+```{mermaid}
+%%| label: fig-kernel-stack
+%%| fig-cap: "Từ framework xuống phần cứng: kernel được schedule thành blocks trên SM và thực thi theo warp."
+%%| fig-width: 5.5
+%%| fig-align: "center"
 flowchart TB
-
-FRAMEWORK["PyTorch / ONNX Runtime / TensorRT"]
---> CUDA["cuDNN / cuBLAS / custom CUDA kernels"]
---> GPU["GPU SMs execute many threads in parallel"]
-
-%% Optional annotations
-
-FRAMEWORK -. "high-level inference frameworks" .-> CUDA
-
-CUDA -. "dispatch optimized GPU kernels" .-> GPU
-
-GPU -. "massively parallel execution" .-> FRAMEWORK
+  FRAMEWORK(["PyTorch / ORT / TensorRT"]) -->|"dispatch"| CUDA(["cuDNN / cuBLAS / kernels"])
+  CUDA -->|"launch"| KERNEL(["Kernel launch"])
+  KERNEL -->|"tạo grid"| GRID(["Grid of thread blocks"])
+  GRID -->|"scheduler phân phối"| SCHED(["Blocks trên SM"])
+  SCHED -->|"SIMT · 32 thread/warp"| WARPS(["Warps thực thi"])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef mid fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hard fill:#E8F5E9,stroke:#43A047,stroke-width:2px,color:#1B5E20
+  class FRAMEWORK,CUDA soft
+  class KERNEL,GRID mid
+  class SCHED,WARPS hard
 ```
 
-Bạn chưa cần viết CUDA kernel ở giai đoạn này. Nhưng bạn cần hiểu rằng một model inference thực chất là một chuỗi kernel launches và memory operations.
+Một GPU NVIDIA gồm nhiều **SM** (Streaming Multiprocessor) — đơn vị thực thi chính. CUDA chia công việc thành thread; thread được nhóm thành **block**; GPU schedule các block lên SM. Ở mức thực thi phần cứng, thread chạy theo nhóm gọi là **warp** — thường là 32 thread cùng lúc theo mô hình SIMT (Single Instruction, Multiple Threads).
 
-### Streaming Multiprocessor, warp, block
+Bạn chưa cần viết CUDA kernel. Nhưng bạn cần hiểu: một model inference thực chất là chuỗi kernel launches và memory operations. Hiểu mô hình này giúp đọc các khái niệm **occupancy**, memory bandwidth, **kernel fusion** và launch overhead.
 
-Một GPU NVIDIA gồm nhiều Streaming Multiprocessors, thường gọi tắt là SM. Có thể hình dung:
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: SM, warp và occupancy
 
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart TB
+Mỗi SM có một số lượng hữu hạn register, shared memory và warp slot. **Occupancy** là tỷ lệ warp đang active trên SM so với tối đa có thể. Occupancy cao không luôn đồng nghĩa performance tốt — đôi khi một kernel tận dụng tốt shared memory và compute ngay cả khi occupancy thấp.
 
-GPU["GPU"]
-
-GPU
---> SM0["SM 0"]
-
-GPU
---> SM1["SM 1"]
-
-GPU
---> SM2["SM 2"]
-
-GPU
---> DOTS["..."]
-
-GPU
---> SMN["SM N"]
-
-%% Optional annotations
-
-GPU -. "collection of Streaming Multiprocessors" .-> SM1
-
-SM1 -. "parallel execution unit" .-> SMN
-```
-
-CUDA chia công việc thành các thread. Thread được nhóm thành blocks, và GPU schedule các blocks lên SM. Ở mức thực thi, thread thường được thực thi theo nhóm gọi là warp.
-
-
-
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart TB
-
-KERNEL["Kernel launch"]
---> GRID["Grid of thread blocks"]
---> SCHED["Blocks scheduled onto SMs"]
---> WARPS["Warps execute instructions"]
-
-%% Optional annotations
-
-KERNEL -. "launch CUDA work" .-> GRID
-
-GRID -. "collection of thread blocks" .-> SCHED
-
-SCHED -. "hardware scheduling across SMs" .-> WARPS
-
-WARPS -. "SIMT execution model" .-> KERNEL
-```
-
-Với deep learning inference, bạn không trực tiếp điều phối thread/block nếu dùng TensorRT hoặc ONNX Runtime. Runtime và các thư viện kernel sẽ làm việc đó. Tuy nhiên, hiểu mô hình này giúp bạn hiểu các khái niệm như occupancy, memory bandwidth, kernel fusion và launch overhead.
+Với deep learning inference dùng TensorRT hoặc ONNX Runtime, runtime và thư viện kernel sẽ điều phối thread/block. Bạn không trực tiếp viết scheduling. Tuy nhiên, hiểu mô hình này giúp đọc profiler (như Nsight Systems/Compute) khi cần chẩn đoán tại sao một kernel chạy chậm hơn kỳ vọng.
+:::
 
 ### Memory hierarchy
 
-GPU có nhiều tầng bộ nhớ. Tốc độ và dung lượng thường đánh đổi nhau:
+| Bộ nhớ | Đặc điểm | Ghi chú |
+|:-------|:---------|:--------|
+| Registers | Rất nhanh, rất nhỏ | Riêng cho thread |
+| Shared memory | Nhanh, nhỏ | Chia sẻ trong một block |
+| L1/L2 cache | Trung gian | Giảm global memory access |
+| Global memory / VRAM | Lớn, chậm hơn register/shared | Tensors, weights, activations |
+| Host memory | RAM phía CPU | Cần transfer nếu GPU cần dữ liệu |
 
-| Bộ nhớ               | Đặc điểm                      | Ghi chú                            |
-|:---------------------|:------------------------------|:-----------------------------------|
-| Registers            | Rất nhanh, rất nhỏ            | Riêng cho thread                   |
-| Shared memory        | Nhanh, nhỏ                    | Chia sẻ trong một block            |
-| L1/L2 cache          | Trung gian                    | Giúp giảm global memory access     |
-| Global memory / VRAM | Lớn, chậm hơn register/shared | Chứa tensors, weights, activations |
-| Host memory          | RAM phía CPU                  | Cần transfer nếu GPU cần dữ liệu   |
+Nhiều model không bị giới hạn bởi số phép tính mà bởi tốc độ đọc/ghi bộ nhớ — gọi là **memory-bound**. Ngược lại, model bị giới hạn bởi số phép tính gọi là **compute-bound**.
 
-Nhiều model không bị giới hạn bởi số phép tính, mà bị giới hạn bởi tốc độ đọc/ghi bộ nhớ. Đây gọi là memory-bound workload.
+Ví dụ thực tế:
 
-Ví dụ:
-
-- Large matrix multiplication thường có thể tận dụng compute tốt.
-- Một chuỗi elementwise operations nhỏ có thể bị memory bandwidth và kernel launch overhead chi phối.
-- Attention decode trong LLM thường bị ảnh hưởng nặng bởi memory access tới KV cache.
+- Large matrix multiplication thường có thể tận dụng compute tốt (compute-bound).
+- Chuỗi elementwise operations nhỏ bị chi phối bởi memory bandwidth và kernel launch overhead (memory-bound).
+- Attention decode trong LLM thường bị ảnh hưởng nặng bởi memory access tới KV cache (memory-bound).
 
 ### Tensor Cores
 
-Tensor Cores là phần cứng chuyên dụng trong GPU NVIDIA để tăng tốc các phép matrix/tensor math ở một số precision nhất định, ví dụ FP16, BF16, TF32, INT8 hoặc FP8 tùy kiến trúc GPU.
+**Tensor Cores** là phần cứng chuyên dụng trong GPU NVIDIA để tăng tốc các phép matrix/tensor math ở một số precision nhất định. Tùy kiến trúc GPU: FP16, BF16, TF32, INT8, FP8.
 
-Vì deep learning dùng rất nhiều matmul/convolution, Tensor Cores là lý do các precision thấp như FP16, BF16, INT8, FP8 có thể tăng tốc mạnh. Nhưng đổi precision không chỉ là bật một flag. Bạn phải kiểm tra:
+Vì deep learning dùng rất nhiều matmul và convolution, Tensor Cores là lý do các precision thấp như FP16, BF16, INT8 có thể tăng tốc mạnh. Nhưng đổi precision không chỉ là bật một flag. Cần kiểm tra:
 
-- Hardware có hỗ trợ precision đó không.
-- Runtime có kernel tối ưu cho operator đó không.
-- Accuracy có bị giảm không.
-- Shape có phù hợp để kernel chạy hiệu quả không.
+- Hardware có hỗ trợ precision đó không
+- Runtime có kernel tối ưu cho operator đó không
+- Accuracy có bị giảm không
+- Shape có phù hợp để kernel chạy hiệu quả không (ví dụ: alignment 8 hoặc 16 thường cần thiết)
 
 ### CUDA streams và concurrency
 
-CUDA stream là một hàng đợi công việc trên GPU. Các operation trong cùng một stream thường giữ thứ tự. Các stream khác nhau có thể cho phép overlap một số công việc, tùy hardware, runtime và dependency.
-
-Ví dụ:
+**CUDA stream** là hàng đợi công việc trên GPU. Operation trong cùng một stream thường giữ thứ tự. Các stream khác nhau có thể cho phép overlap một số công việc, tùy hardware, runtime và dependency.
 
 ```text
-Stream A: H2D copy request 1 -> execute request 1 -> D2H copy request 1
-Stream B: H2D copy request 2 -> execute request 2 -> D2H copy request 2
+Stream A: H2D copy req 1 → execute req 1 → D2H copy req 1
+Stream B: H2D copy req 2 → execute req 2 → D2H copy req 2
 ```
 
-Nếu được thiết kế tốt, service có thể overlap data transfer, compute và nhiều request. Tuy nhiên, concurrency không tự động tạo performance tốt. Quá nhiều concurrency có thể làm queue dài, tăng memory pressure và làm p99 latency xấu đi.
+Nếu thiết kế tốt, service có thể overlap data transfer, compute và nhiều request. Tuy nhiên, concurrency không tự động tạo performance tốt. Quá nhiều concurrency có thể làm queue dài, tăng memory pressure và làm p99 xấu đi.
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: GPU nằm đâu trên pipeline xương sống?
+Trên sơ đồ ở @fig-request-pipeline, giai đoạn **GPU** là nơi kernel, SM, warp và Tensor Cores hoạt động. Giai đoạn **H2D** và **D2H** hai bên là transfer host↔device — thường bị bỏ quên khi chỉ đo model latency bằng cách đặt timer bao quanh `session.run()`. Để đo đúng H2D/D2H, cần profiler như Nsight Systems.
+:::
 
 
-## Inference as graph execution
+## Inference stack: ONNX, Runtime, TensorRT, Triton {#sec-inference-stack}
 
-Một neural network có thể được nhìn như computation graph:
+> ONNX, ONNX Runtime, TensorRT và Triton khác nhau thế nào — và vì sao không thể thay thế lẫn nhau?
 
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
+::: {.callout-important icon=false}
+## Ý chính
+ONNX là **representation**. ONNX Runtime là **runtime** đa backend. TensorRT là **compiler + runtime** tối ưu sâu cho GPU NVIDIA. Triton là **serving server**. Nhầm vai trò là nguyên nhân phổ biến của thiết kế stack sai.
+:::
+
+Một neural network là **computation graph**: mỗi node là operation, mỗi edge là tensor. Khi train bằng PyTorch bạn thường làm việc với Python objects và dynamic execution. Khi deploy, runtime muốn graph rõ ràng hơn để tối ưu — đây là nơi ONNX, ONNX Runtime và TensorRT xuất hiện.
+
+Ví dụ đồ thị khái niệm: `Input → Conv → BatchNorm → ReLU → MaxPool → Linear → Softmax → Output`. Mỗi node là operation, mỗi edge là tensor flow giữa các operation.
+
+### Vai trò từng lớp
+
+| Công nghệ | Vai trò chính | Không nên hiểu nhầm là |
+|:----------|:--------------|:-----------------------|
+| ONNX | Model representation / interchange format | Một serving server |
+| ONNX Runtime | Runtime chạy ONNX trên nhiều backend | Chỉ dành cho CPU |
+| TensorRT | NVIDIA inference compiler + runtime | Chỉ là Python wrapper |
+| Triton | Inference serving server | Một model optimizer |
+| CUDA | Programming/runtime layer cho NVIDIA GPU | Một deep learning framework |
+
+**ONNX** định nghĩa file format và tập operator chung để model đi qua nhiều framework, runtime và hardware backend. Nó trả lời: graph gồm những node, tensor, operator, shape, dtype nào — không phải GPU runtime.
+
+**ONNX Runtime** chạy ONNX model, áp dụng graph optimizations và dùng Execution Providers (CPU, CUDA, TensorRT, OpenVINO, CoreML, DirectML, QNN, …).
+
+**TensorRT** nhận model (thường qua ONNX) và tạo optimized engine cho GPU NVIDIA. Không chỉ là runtime — TensorRT có phần compiler/optimizer rất quan trọng.
+
+**Triton** không thay thế ONNX hay TensorRT. Nó phụ trách model repository, multi-model serving, dynamic batching, concurrent execution, versioning, metrics, HTTP/gRPC và backend integration.
+
+### Putting the stack together
+
+Không có stack duy nhất đúng. Tùy use case:
+
+| Stack | Khi nào dùng |
+|:------|:-------------|
+| PyTorch → ONNX → TensorRT → Triton | Production NVIDIA GPU, cần throughput tối đa |
+| PyTorch → ONNX → ORT (CUDA EP) → FastAPI | Cần flexibility, không muốn TRT build time |
+| PyTorch → Torch-TensorRT → TensorRT → Triton | Tránh ONNX export, tích hợp trực tiếp TRT vào PyTorch |
+| PyTorch eager → Triton Python backend | Prototype nhanh, chưa cần tối ưu sâu |
+
+```{mermaid}
+%%| label: fig-inference-stack
+%%| fig-cap: "Stack phổ biến nhất: training → interchange → compile/optimize → serve."
+%%| fig-width: 6.5
+%%| fig-align: "center"
 flowchart LR
-
-INPUT["Input"]
---> CONV["Conv"]
---> BN["BatchNorm"]
---> RELU["ReLU"]
---> POOL["MaxPool"]
---> FC["Linear"]
---> SOFTMAX["Softmax"]
---> OUTPUT["Output"]
-
-%% Optional annotations
-
-CONV -. "feature extraction" .-> BN
-
-BN -. "normalize activations" .-> RELU
-
-RELU -. "non-linear activation" .-> POOL
-
-POOL -. "spatial downsampling" .-> FC
-
-FC -. "classification logits" .-> SOFTMAX
-
-SOFTMAX -. "probability distribution" .-> OUTPUT
+  TRAIN(["PyTorch"]) -->|"export"| ONNX(["ONNX"])
+  ONNX -->|"compile"| TRT(["TensorRT"])
+  TRT -->|"load"| TRITON(["Triton"])
+  TRITON -->|"HTTP/gRPC"| CLIENT(["Clients"])
+  classDef train fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef format fill:#FFF8E1,stroke:#F9A825,stroke-width:1.5px,color:#5C3B10
+  classDef engine fill:#E8F5E9,stroke:#43A047,stroke-width:2px,color:#1B5E20
+  classDef serve fill:#E0F7FA,stroke:#00838F,stroke-width:1.5px,color:#004D40
+  classDef client fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  class TRAIN train
+  class ONNX format
+  class TRT engine
+  class TRITON serve
+  class CLIENT client
 ```
 
-Mỗi node là một operation. Mỗi edge là tensor đi từ operation này sang operation khác.
+Điều quan trọng là hiểu vai trò từng lớp, không bắt buộc một stack cố định. Ví dụ, ONNX Runtime với CUDA Execution Provider đủ dùng cho nhiều service không cần tối ưu cực đại của TensorRT.
 
-Khi bạn train bằng PyTorch, bạn thường làm việc với Python objects và dynamic execution. Nhưng khi deploy, runtime thường muốn một graph rõ ràng hơn để tối ưu.
+### Vì sao TensorRT tồn tại?
 
-Đây là nơi ONNX, ONNX Runtime và TensorRT xuất hiện.
+Framework training như PyTorch rất linh hoạt, nhưng linh hoạt không luôn tối ưu nhất cho inference production. TensorRT biến model đã train thành execution plan tối ưu hơn cho GPU NVIDIA qua các bước:
 
-### ONNX là gì trong stack?
+| Khả năng | Ý nghĩa thực tế |
+|:---------|:----------------|
+| Graph cleanup | Bỏ node dư thừa; đơn giản hóa pattern |
+| Layer fusion | Gộp nhiều layer để giảm memory access và kernel launch |
+| Precision optimization | FP16/BF16/INT8/FP8: giảm bandwidth, tăng tốc Tensor Cores |
+| Tactic selection | Chọn kernel/thuật toán tốt nhất theo GPU, shape, precision |
+| Memory planning | Lập kế hoạch buffer intermediate, tái sử dụng memory |
+| Dynamic shape profiles | Tối ưu cho range shape thay vì một shape cố định |
+| Engine serialization | Lưu engine để tái sử dụng, tránh build lại |
 
-ONNX là một open format để biểu diễn machine learning model. Nó định nghĩa một file format và một tập operator chung để model có thể đi qua nhiều framework, runtime, compiler và hardware backend khác nhau.
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: từng loại tối ưu của TensorRT
 
+**Graph cleanup và constant folding**
 
-
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart LR
-
-SRC["PyTorch model / TensorFlow model"]
---> ONNX["ONNX graph"]
---> BACKEND["Runtime backend"]
-
-%% Optional annotations
-
-SRC -. "export / convert" .-> ONNX
-
-ONNX -. "run / optimize / compile" .-> BACKEND
-
-BACKEND -. "ONNX Runtime / TensorRT / OpenVINO / etc." .-> ONNX
-```
-
-ONNX không phải là GPU runtime. ONNX là representation. Nó trả lời câu hỏi:
-
-> Graph của model gồm những node nào, tensor nào, operator nào, shape nào, dtype nào?
-
-### ONNX Runtime là gì?
-
-ONNX Runtime là một runtime để chạy ONNX model. Nó có thể áp dụng graph optimizations và dùng các Execution Providers để chạy trên hardware khác nhau.
-
-Ví dụ Execution Providers:
-
-- CPU Execution Provider.
-- CUDA Execution Provider.
-- TensorRT Execution Provider.
-- OpenVINO Execution Provider.
-- CoreML, DirectML, QNN, v.v.
-
-
-
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart LR
-
-MODEL["ONNX model"]
---> SESSION["ONNX Runtime session"]
---> BACKEND["CPU / CUDA / TensorRT / other backend"]
-
-%% Optional annotations
-
-SESSION -. "graph optimization" .-> BACKEND
-
-SESSION -. "graph partitioning" .-> BACKEND
-
-SESSION -. "execution provider selection" .-> BACKEND
-```
-
-### TensorRT là gì?
-
-TensorRT là một SDK của NVIDIA để tối ưu và tăng tốc deep learning inference trên GPU NVIDIA. Nó có thể nhận model từ PyTorch, TensorFlow, ONNX và tạo ra optimized runtime engine.
-
-TensorRT có thể thực hiện nhiều loại tối ưu:
-
-- Graph optimization.
-- Layer fusion.
-- Precision selection như FP32, FP16, BF16, FP8, INT8 tùy phần cứng và model.
-- Kernel/tactic selection.
-- Memory planning.
-- Dynamic shape optimization profiles.
-- Engine serialization.
-
-
-
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart LR
-
-ONNX["ONNX model"]
---> BUILDER["TensorRT builder"]
---> ENGINE["TensorRT engine"]
---> RUNTIME["TensorRT runtime on NVIDIA GPU"]
-
-%% Optional annotations
-
-BUILDER -. "parse graph" .-> ENGINE
-
-BUILDER -. "choose precision" .-> ENGINE
-
-BUILDER -. "choose tactics / kernels" .-> ENGINE
-
-BUILDER -. "plan memory" .-> ENGINE
-
-RUNTIME -. "execute optimized engine" .-> ENGINE
-```
-
-TensorRT không chỉ là runtime. Nó có phần compiler/optimizer rất quan trọng. Khi bạn build engine, TensorRT đang quyết định cách graph sẽ được thực thi hiệu quả trên GPU cụ thể.
-
-### Triton Inference Server là gì?
-
-Triton là serving layer. Nó không thay thế ONNX hoặc TensorRT, mà giúp quản lý và phục vụ model ở production.
-
-Triton thường phụ trách:
-
-- Model repository.
-- Multi-model serving.
-- Dynamic batching.
-- Concurrent model execution.
-- Versioning.
-- Metrics.
-- HTTP/gRPC endpoint.
-- Backend integration: TensorRT, ONNX Runtime, PyTorch, Python backend, v.v.
-
-
-
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart LR
-
-CLIENT["Client requests"]
---> TRITON["Triton Inference Server"]
---> BACKEND["TensorRT / ONNX Runtime / PyTorch backend"]
---> EXEC["GPU / CPU execution"]
-
-%% Optional annotations
-
-TRITON -. "scheduling" .-> BACKEND
-
-TRITON -. "dynamic batching" .-> BACKEND
-
-TRITON -. "model versioning" .-> BACKEND
-
-TRITON -. "backend selection" .-> BACKEND
-```
-
-## Putting the stack together
-
-Một inference stack phổ biến có thể như sau:
-
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart LR
-
-TRAIN["Training framework<br/>PyTorch"]
---> ONNX["Model interchange format<br/>ONNX"]
---> TRT["Optimized inference runtime<br/>TensorRT engine"]
---> TRITON["Serving layer<br/>Triton Inference Server"]
---> CLIENT["Production clients"]
-
-%% Optional annotations
-
-TRAIN -. "torch.onnx.export" .-> ONNX
-
-ONNX -. "parse / optimize / compile" .-> TRT
-
-TRT -. "load engine" .-> TRITON
-
-TRITON -. "HTTP/gRPC" .-> CLIENT
-```
-
-Một stack khác có thể không dùng TensorRT:
-
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart LR
-
-PYTORCH["PyTorch"]
---> ONNX["ONNX"]
---> ORT["ONNX Runtime<br/>CUDA Execution Provider"]
---> API["Custom FastAPI service"]
-```
-
-Một stack khác nữa có thể không dùng ONNX:
-
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart LR
-
-PYTORCH["PyTorch"]
---> TORCH_TRT["Torch-TensorRT"]
---> TRT["TensorRT engine"]
---> TRITON["Triton"]
-```
-
-Điều quan trọng là hiểu vai trò:
-
-| Công nghệ    | Vai trò chính                              | Không nên hiểu nhầm là             |
-|:-------------|:-------------------------------------------|:-----------------------------------|
-| ONNX         | Model representation / interchange format  | Một serving server                 |
-| ONNX Runtime | Runtime chạy ONNX model trên nhiều backend | Chỉ dành cho CPU                   |
-| TensorRT     | NVIDIA inference compiler + runtime        | Chỉ là một thư viện Python wrapper |
-| Triton       | Inference serving server                   | Một model optimizer                |
-| CUDA         | Programming/runtime layer cho NVIDIA GPU   | Một deep learning framework        |
-
-
-## Latency, throughput và tail behavior
-
-### Latency
-
-Latency là thời gian để xử lý một request.
+Một graph có thể có node dư thừa từ quá trình export:
 
 ```text
-request sent -> response received
+Trước: x → Identity → y
+Sau:   x → y
 ```
 
-Có nhiều cách nhìn latency:
+Hoặc một số phép tính chỉ dùng constant có thể được tính trước (constant folding), giảm compute lúc inference.
 
-| Metric          | Ý nghĩa                           |
-|:----------------|:----------------------------------|
+**Layer fusion**
+
+Nhiều layer liên tiếp được fuse để giảm số kernel launches và số lần đọc/ghi global memory. Ví dụ:
+
+```text
+Conv → BatchNorm → ReLU
+```
+
+Có thể được thực thi hiệu quả hơn dưới dạng một fused operation. Tương tự:
+
+```text
+MatMul → Add (bias) → Activation
+```
+
+Thay vì ba kernel riêng, TensorRT có thể map sang một kernel/tactic tối ưu hơn.
+
+**Precision optimization**
+
+Thay vì FP32 mọi nơi, inference có thể dùng precision thấp hơn. Lợi ích: giảm memory bandwidth, giảm footprint, tăng tốc Tensor Cores. Rủi ro: accuracy giảm, operator không hỗ trợ, calibration không tốt.
+
+**Tactic selection**
+
+Với cùng operation như convolution hay matmul, có nhiều thuật toán/kernel. TensorRT có thể benchmark hoặc chọn tactic phù hợp với GPU architecture, tensor shape, precision, workspace memory limit và dynamic shape profile. Đây là lý do engine có thể phụ thuộc vào hardware, shape range và config build.
+
+**Memory planning**
+
+TensorRT lập kế hoạch memory cho intermediate tensors: giảm allocation runtime, tái sử dụng buffer hiệu quả. Quan trọng khi GPU memory hữu hạn, multi-model serving cần chia sẻ GPU, hoặc batch size lớn làm activation memory tăng.
+
+Engine tối ưu trên GPU này chưa chắc tối ưu trên GPU khác — đây là lý do thường phải build engine trên cùng hardware sẽ chạy inference.
+:::
+
+
+## Latency, throughput và trade-off batching {#sec-metrics}
+
+> Vì sao tăng throughput bằng batching lại có thể làm p99 latency xấu đi?
+
+::: {.callout-important icon=false}
+## Ý chính
+Production quan tâm **p99** hơn average. Batching tăng **throughput** nhưng thêm queue delay — luôn tune theo SLO, không theo "GPU bận hơn".
+:::
+
+### Latency, throughput, utilization, concurrency
+
+Latency là thời gian từ request sent tới response received.
+
+| Metric | Ý nghĩa |
+|:-------|:--------|
 | Average latency | Trung bình, dễ bị che bởi outlier |
-| Median / p50    | 50% request nhanh hơn giá trị này |
-| p95             | 95% request nhanh hơn giá trị này |
-| p99             | 99% request nhanh hơn giá trị này |
-| Max             | Request chậm nhất quan sát được   |
+| Median / p50 | 50% request nhanh hơn giá trị này |
+| p95 | 95% request nhanh hơn giá trị này |
+| p99 | 99% request nhanh hơn giá trị này |
+| Max | Request chậm nhất quan sát được |
 
-Production service thường quan tâm p95 hoặc p99 vì user không chỉ cảm nhận request trung bình. Một phần nhỏ request chậm có thể phá trải nghiệm hoặc làm downstream system timeout.
+Production thường quan tâm p95 hoặc p99 vì một phần nhỏ request chậm có thể phá trải nghiệm hoặc làm downstream system timeout.
 
-### Throughput
-
-Throughput là số request xử lý được trong một đơn vị thời gian.
-
+**Throughput** là số request xử lý được mỗi đơn vị thời gian:
 
 $$\text{throughput} = \frac{\text{completed requests}}{\text{second}}$$
 
+Đơn vị thường gặp: RPS, QPS, images/sec, tokens/sec (LLM).
 
-Đơn vị thường gặp:
+GPU utilization cao không luôn nghĩa service tốt: GPU có thể bận vì queue dài, p99 xấu, kernel kém hiệu quả, hoặc memory-bound. Utilization thấp cũng không luôn là lỗi: batch size = 1 với SLO latency rất chặt, traffic thưa, hoặc bottleneck nằm ở CPU/network.
 
-- RPS: requests per second.
-- QPS: queries per second.
-- images/sec.
-- tokens/sec đối với LLM.
+**Concurrency** là số request đang trong hệ thống cùng lúc. Rule-of-thumb từ queueing theory:
 
-### Utilization
+$$\text{concurrency} \approx \text{throughput} \times \text{latency}$$
 
-GPU utilization cho biết GPU đang bận đến mức nào. Nhưng chỉ số này cần đọc cẩn thận.
+Ví dụ: 500 RPS × 100 ms = khoảng 50 request đồng thời. Đây chỉ là trực giác ban đầu; với p99, burst traffic, batching và queueing, behavior phức tạp hơn nhiều.
 
-GPU utilization cao không luôn đồng nghĩa service tốt:
+### Latency–throughput trade-off
 
-- GPU có thể bận vì queue quá dài.
-- GPU có thể bận nhưng p99 latency xấu.
-- GPU có thể bận vì kernel kém hiệu quả.
-- GPU có thể memory-bound, không phải compute-bound.
+| | Batch size = 1 | Batch size lớn |
+|:--|:---------------|:---------------|
+| Ưu | Không chờ gom batch; latency đơn request thường thấp; dễ reasoning | Tăng arithmetic intensity; tận dụng GPU tốt; throughput cao |
+| Nhược | GPU có thể under-utilized; launch overhead lớn; matmul nhỏ kém hiệu quả | Phải chờ batch/timeout; memory tăng; p99 có thể xấu |
 
-GPU utilization thấp cũng không luôn là lỗi:
-
-- Service batch size = 1 và SLO rất thấp latency.
-- Workload nhỏ, request thưa.
-- Bottleneck nằm ở CPU preprocessing hoặc network.
-
-### Concurrency
-
-Concurrency là số request đang ở trong hệ thống cùng lúc. Một rule-of-thumb từ queueing theory:
-
-
-$$\text{concurrency} \approx \text{throughput} * \text{latency}$$
-
-
-Ví dụ, nếu service xử lý 500 requests/second và mỗi request mất trung bình 100 ms:
-
-$$\text{concurrency} \approx 500 * 0.1 = 50 \space \text{requests}$$
-
-
-Đây chỉ là trực giác ban đầu, không thay thế benchmark. Với p99, burst traffic, batching và queueing, behavior phức tạp hơn nhiều.
-
-
-## The latency-throughput trade-off
-
-Inference serving luôn có trade-off:
-
-```mermaid
-%%| echo: false
-%%| fig-width: 6
-%%| fig-align: center
-flowchart LR
-
-LATENCY["Low latency"]
-<--> 
-THROUGHPUT["High throughput"]
-```
-
-### Batch size = 1
-
-Ưu điểm:
-
-- Request không phải chờ gom batch.
-- Latency đơn request thấp hơn trong nhiều trường hợp.
-- Dễ reasoning.
-
-Nhược điểm:
-
-- GPU có thể không được tận dụng hết.
-- Kernel launch overhead chiếm tỷ lệ lớn.
-- Matrix multiplication nhỏ có thể kém hiệu quả.
-
-### Batch size lớn
-
-Ưu điểm:
-
-- Tăng arithmetic intensity.
-- Tận dụng GPU tốt hơn.
-- Throughput cao hơn.
-
-Nhược điểm:
-
-- Request phải chờ batch đầy hoặc timeout.
-- Memory usage tăng.
-- p99 latency có thể xấu.
-- Không phù hợp với mọi workload.
-
-### Dynamic batching
-
-Dynamic batching là kỹ thuật server chờ một khoảng rất ngắn để gom nhiều request độc lập thành một batch.
-
-Ví dụ:
+**Dynamic batching** là kỹ thuật server chờ một khoảng rất ngắn để gom nhiều request độc lập thành một batch:
 
 ```text
-Request arrival timeline:
-
 0.0 ms: request A arrives
 0.7 ms: request B arrives
 1.2 ms: request C arrives
 1.5 ms: dispatch batch [A, B, C]
 ```
 
-Nếu model chạy batch size 3 hiệu quả hơn nhiều so với chạy 3 request batch size 1, throughput tăng. Nhưng nếu chờ quá lâu, latency tăng.
+Nếu batch size 3 hiệu quả hơn nhiều so với ba lần batch size 1, throughput tăng. Nếu chờ quá lâu, latency tăng. Cấu hình thường gồm: max batch size, max queue delay, preferred batch sizes, number of instances, SLO target. Chi tiết khi tới Triton.
 
-Vì vậy, dynamic batching thường cần cấu hình:
+::: {.callout-tip icon=false collapse="true"}
+## Con số cụ thể: batching tăng throughput 2.6× nhưng p99 vượt SLO
 
-- Max batch size.
-- Max queue delay.
-- Preferred batch sizes.
-- Number of instances.
-- SLO target.
-
-Chúng ta sẽ học kỹ phần này khi tới Triton.
-
-
-## Where time goes: các loại bottleneck phổ biến
-
-### Compute-bound
-
-Dấu hiệu:
-
-- GPU compute utilization cao.
-- Tensor Cores bận.
-- Model gồm nhiều matmul/convolution lớn.
-- Tăng batch size cải thiện throughput.
-
-Cách tối ưu thường gặp:
-
-- FP16/BF16/INT8/FP8 nếu phù hợp.
-- TensorRT engine.
-- Kernel fusion.
-- Shape alignment.
-- Tối ưu architecture model.
-
-### Memory-bound
-
-Dấu hiệu:
-
-- GPU memory bandwidth cao.
-- Compute utilization không quá cao.
-- Nhiều operation đọc/ghi tensor lớn nhưng ít tính toán.
-- Elementwise chain hoặc attention decode có thể rơi vào nhóm này.
-
-Cách tối ưu thường gặp:
-
-- Kernel fusion để giảm đọc/ghi intermediate tensors.
-- Layout tối ưu.
-- Quantization để giảm footprint.
-- KV cache optimization với LLM.
-
-### Transfer-bound
-
-Dấu hiệu:
-
-- Thời gian H2D/D2H đáng kể.
-- Input/output tensor lớn.
-- Model execution nhanh nhưng end-to-end latency vẫn cao.
-
-Cách tối ưu thường gặp:
-
-- Giảm số lần copy.
-- Dùng pinned/page-locked memory nếu phù hợp.
-- Giữ postprocessing trên GPU khi có lợi.
-- Overlap transfer với compute bằng stream.
-- Tránh copy output không cần thiết.
-
-### Preprocessing-bound
-
-Dấu hiệu:
-
-- CPU usage cao.
-- GPU idle nhiều.
-- Decode ảnh, resize, tokenization hoặc feature extraction chiếm thời gian lớn.
-
-Cách tối ưu thường gặp:
-
-- Parallel preprocessing.
-- Move một phần preprocessing lên GPU.
-- Cache kết quả nếu input lặp.
-- Dùng thư viện tối ưu hơn.
-- Giảm overhead serialization/deserialization.
-
-### Queueing-bound
-
-Dấu hiệu:
-
-- Latency tăng mạnh khi traffic tăng.
-- Model execution ổn nhưng p99 xấu.
-- Queue length tăng.
-- Timeout hoặc retry làm hệ thống tệ hơn.
-
-Cách tối ưu thường gặp:
-
-- Điều chỉnh batching delay.
-- Tăng số instance hoặc replicas.
-- Autoscaling.
-- Admission control.
-- Backpressure.
-- Load shedding nếu cần.
-
-
-## Vì sao TensorRT tồn tại?
-
-Framework training như PyTorch rất linh hoạt. Nhưng linh hoạt không phải lúc nào cũng tối ưu nhất cho inference production.
-
-TensorRT tồn tại để biến model đã train thành một execution plan tối ưu hơn cho GPU NVIDIA. Ở mức khái niệm, nó làm các việc như:
-
-### Graph cleanup và optimization
-
-Ví dụ, một graph có thể có node dư thừa hoặc pattern có thể đơn giản hóa:
-
-```text
-x -> Identity -> y
-```
-
-có thể thành:
-
-```text
-x -> y
-```
-
-### Layer fusion
-
-Nhiều layer liên tiếp có thể được fuse để giảm memory access và kernel launch.
-
-Ví dụ:
-
-```text
-Conv -> BatchNorm -> ReLU
-```
-
-có thể được thực thi hiệu quả hơn dưới dạng một fused operation hoặc một sequence đã tối ưu.
-
-Tương tự:
-
-```text
-MatMul -> Add -> Activation
-```
-
-có thể map sang kernel/tactic tối ưu hơn.
-
-### Precision optimization
-
-Thay vì dùng FP32 mọi nơi, inference có thể dùng precision thấp hơn:
-
-- FP16.
-- BF16.
-- INT8.
-- FP8 trên phần cứng phù hợp.
-
-Lợi ích:
-
-- Giảm memory bandwidth.
-- Giảm memory footprint.
-- Tăng tốc nhờ Tensor Cores.
-
-Rủi ro:
-
-- Accuracy giảm.
-- Operator không hỗ trợ precision mong muốn.
-- Calibration hoặc quantization không tốt.
-
-### Tactic selection
-
-Với cùng một operation như convolution hoặc matrix multiplication, có nhiều thuật toán/kernel khác nhau. TensorRT có thể benchmark hoặc chọn tactic phù hợp với:
-
-- GPU architecture.
-- Tensor shape.
-- Precision.
-- Workspace memory limit.
-- Dynamic shape profile.
-
-Đây là lý do engine có thể phụ thuộc vào hardware, shape range và config build.
-
-### Memory planning
-
-TensorRT có thể lập kế hoạch memory cho intermediate tensors để giảm allocation runtime và tái sử dụng buffer hiệu quả hơn.
-
-Trong production, memory planning quan trọng vì:
-
-- GPU memory hữu hạn.
-- Multi-model serving cần chia sẻ GPU.
-- Batch size lớn làm activation memory tăng.
-- Dynamic shape có thể cần profile rõ ràng.
-
-
-## A practical mental model for optimization
-
-Khi tối ưu inference, đừng bắt đầu bằng câu:
-
-> Làm sao dùng TensorRT?
-
-Hãy bắt đầu bằng câu:
-
-> Bottleneck hiện tại của hệ thống là gì?
-
-Một workflow chuẩn:
-
-```text
-1. Define target
-   - p99 latency?
-   - throughput?
-   - cost/request?
-   - GPU type?
-   - accuracy constraint?
-
-2. Measure baseline
-   - End-to-end latency
-   - Model-only latency
-   - Preprocessing latency
-   - Queueing latency
-   - GPU utilization
-   - CPU utilization
-   - Memory usage
-
-3. Identify bottleneck
-   - Compute?
-   - Memory?
-   - Transfer?
-   - Preprocessing?
-   - Queueing?
-
-4. Apply targeted optimization
-   - TensorRT?
-   - Quantization?
-   - Batching?
-   - Preprocessing optimization?
-   - More replicas?
-
-5. Validate
-   - Accuracy
-   - p50/p95/p99 latency
-   - Throughput under load
-   - Stability
-   - Memory footprint
-
-6. Roll out safely
-   - Canary
-   - A/B test
-   - Shadow traffic
-   - Rollback plan
-```
-Nếu bỏ qua baseline, bạn dễ tối ưu nhầm chỗ.
-
-
-## Worked examples
-
-### Example 1: model nhanh nhưng service chậm
-
-Giả sử một image classification service có latency như sau:
-
-| Thành phần            | Latency |
-|:----------------------|:--------|
-| API parse             | 2 ms    |
-| Image decode + resize | 35 ms   |
-| H2D copy              | 3 ms    |
-| GPU execution         | 8 ms    |
-| D2H copy              | 1 ms    |
-| Postprocessing        | 2 ms    |
-| Total                 | 51 ms   |
-
-Bạn dùng TensorRT và giảm GPU execution từ 8 ms xuống 3 ms.
-
-Latency mới:
-
-```text
-2 + 35 + 3 + 3 + 1 + 2 = 46 ms
-```
-
-Bạn đã tăng tốc model 2.67x, nhưng end-to-end latency chỉ cải thiện từ 51 ms xuống 46 ms, tức khoảng 9.8%.
-
-Kết luận: bottleneck thật là preprocessing, không phải GPU execution.
-
-### Example 2: batch size tăng throughput nhưng làm p99 xấu
+**Example 2 — batch throughput vs p99 SLO**
 
 Service object detection có traffic không đều. Bạn bật dynamic batching với max queue delay = 20 ms.
 
-Kết quả:
-
 | Metric | Trước batching | Sau batching |
-|---|---:|---:|
+|:-------|------:|----:|
 | Throughput | 200 RPS | 520 RPS |
 | Average latency | 30 ms | 42 ms |
 | p99 latency | 70 ms | 145 ms |
 
-Nếu SLO là p99 < 100 ms, cấu hình batching này không đạt dù throughput tăng mạnh.
+Throughput tăng **2.6×** — nhưng nếu SLO là p99 < 100 ms, cấu hình này không đạt dù throughput tăng mạnh. Lý do: với max queue delay = 20 ms, một request có thể chờ gần 20 ms chỉ để vào batch, chưa tính model execution và các giai đoạn khác. Tail latency tăng vọt.
 
-Có thể cần:
+Hướng xử lý:
 
-- Giảm max queue delay.
-- Chọn preferred batch size nhỏ hơn.
-- Tăng number of instances.
-- Tách traffic theo priority.
-- Autoscale nhiều replicas hơn.
+- Giảm max queue delay (ví dụ xuống 5 ms) để giảm queueing tail
+- Chọn preferred batch size nhỏ hơn (ví dụ 4 thay vì 8)
+- Tăng number of instances để xử lý song song nhiều batch hơn
+- Tách traffic theo priority: request latency-sensitive xử lý riêng
+- Autoscale nhiều replicas hơn khi traffic tăng
+:::
 
-### Example 3: GPU utilization thấp không nhất thiết là xấu
+::: {.callout-tip icon=false collapse="true"}
+## Con số cụ thể: GPU utilization thấp không nhất thiết là xấu
+
+**Example 3 — low GPU utilization với SLO rất chặt**
 
 Một real-time fraud detection service yêu cầu p99 < 20 ms. Model nhỏ, batch size = 1. GPU utilization chỉ 25%.
 
-Điều này có thể chấp nhận được nếu:
+Đây có thể chấp nhận được nếu:
 
-- Latency đạt SLO.
-- Cost chấp nhận được.
-- Traffic không đủ lớn để batch.
-- Business ưu tiên phản hồi nhanh hơn throughput.
+- Latency đạt SLO (p99 < 20 ms đạt được)
+- Cost chấp nhận được
+- Traffic không đủ lớn để batch có lợi
+- Business ưu tiên phản hồi nhanh hơn throughput
 
-Tối ưu utilization lên 90% nhưng làm p99 thành 80 ms là thất bại.
+Tối ưu utilization lên 90% bằng cách bật dynamic batching max delay = 50 ms sẽ làm p99 thành 80 ms — vượt SLO 4×. Đó là thất bại dù nhìn "hiệu quả hơn" trên dashboard.
 
-## Design principles cho inference engineer
-
- **1: Measure end-to-end, then measure model-only**
-
-Luôn tách:
-
-- End-to-end latency.
-- Model execution latency.
-- Queue latency.
-- Preprocess/postprocess latency.
-- Transfer latency.
-
-Nếu không tách, bạn không biết tối ưu ở đâu.
-
- **2: p99 quan trọng hơn average trong production**
-
-Average latency có thể đẹp nhưng p99 xấu. User và downstream system thường bị ảnh hưởng bởi tail latency.
-
- **3: Batching là con dao hai lưỡi**
-
-Batching có thể tăng throughput, nhưng có thể làm latency tăng. Luôn tune batching theo SLO.
-
- **4: Precision thấp cần validation**
-
-FP16/INT8/FP8 có thể nhanh hơn nhưng cần kiểm tra accuracy và numerical stability.
-
- **5: Runtime optimization không thay thế model design**
-
-Một model quá lớn, shape không phù hợp hoặc architecture kém inference-friendly vẫn có thể khó tối ưu.
-
- **6: Optimize bottleneck, not the tool you like**
-
-TensorRT rất mạnh, nhưng nếu bottleneck nằm ở tokenization hoặc image decode, TensorRT không giải quyết gốc vấn đề.
-
- **7: Hardware matters**
-
-Engine, precision và tactic có thể phụ thuộc vào GPU architecture. Một engine tối ưu trên GPU này chưa chắc tối ưu trên GPU khác.
-
- **8: Production inference cần rollout strategy**
-
-Mọi optimization đều có rủi ro. Cần canary, rollback và monitoring.
+Bài học: GPU utilization là phương tiện, không phải mục tiêu. Mục tiêu là đạt SLO với cost hợp lý.
+:::
 
 
-## 16. Mini-lab: worksheet tư duy hệ thống
+## Bottleneck và workflow tối ưu {#sec-bottlenecks}
 
-### Lab 1: vẽ pipeline latency
+> Bước đầu tiên khi tối ưu inference là gì — dùng TensorRT, hay hỏi bottleneck nằm ở đâu?
 
-Hãy chọn một model bạn quen thuộc, ví dụ:
+::: {.callout-important icon=false}
+## Ý chính
+Đừng bắt đầu bằng "làm sao dùng TensorRT?". Hãy bắt đầu bằng "bottleneck hiện tại là gì?". Đo baseline end-to-end trước, rồi mới chọn tool.
+:::
 
-- Image classification.
-- Object detection.
-- Text embedding.
-- Speech-to-text.
+### Các loại bottleneck phổ biến
 
-Vẽ pipeline:
-
-```text
-request -> validation -> preprocessing -> batching -> H2D -> GPU execute -> D2H -> postprocessing -> response
+```{mermaid}
+%%| label: fig-bottleneck-pipeline
+%%| fig-cap: "Khi chẩn đoán, tô sáng từng giai đoạn pipeline thay vì chỉ nhìn GPU utilization."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  R([Request]) --> V([Validate])
+  V --> P([Preprocess])
+  P --> B([Batch])
+  B --> H([H2D])
+  H --> G([GPU])
+  G --> D([D2H])
+  D --> O([Post + Response])
+  classDef stage fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef compute fill:#EAF3FF,stroke:#4A90E2,stroke-width:2px,color:#1F3A5F
+  classDef warn fill:#FFE082,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef hot fill:#FFCC80,stroke:#EF6C00,stroke-width:3px,color:#5C3B10
+  class R,V,O stage
+  class G compute
+  class P,H warn
+  class B hot
 ```
 
-Sau đó tự điền latency giả định:
+| Loại bottleneck | Dấu hiệu nhận biết | Cần đo gì | Hướng xử lý |
+|:----------------|:-------------------|:----------|:------------|
+| Compute-bound | GPU compute cao, Tensor Cores bận, tăng batch thì throughput tăng | GPU SM active %, Tensor Core utilization | FP16/BF16/INT8, TensorRT, kernel fusion, shape alignment, đổi architecture |
+| Memory-bound | Bandwidth cao nhưng compute thấp; nhiều elementwise / attention decode | GPU memory bandwidth util | Kernel fusion, layout tối ưu, quantization, KV cache |
+| Transfer-bound | H2D/D2H đáng kể; model nhanh nhưng e2e vẫn chậm | H2D/D2H duration trong profiler | Giảm số lần copy, pinned memory, overlap bằng stream, giữ postprocess trên GPU |
+| Preprocess-bound | CPU cao, GPU idle; decode/tokenize tốn thời gian | CPU utilization per core, preprocessing p99 | Song song hoá, đẩy lên GPU, cache, đổi thư viện, giảm serialization |
+| Queue-bound | Latency tăng vọt khi traffic tăng; p99 xấu; queue dài | Queue length, queueing latency p99 | Chỉnh batching delay, thêm instance, autoscale, admission control, backpressure |
 
-| Stage             | Latency estimate |
-|:------------------|:-----------------|
-| Validation        | ?                |
-| Preprocessing     | ?                |
-| Queueing/batching | ?                |
-| H2D               | ?                |
-| GPU execution     | ?                |
-| D2H               | ?                |
-| Postprocessing    | ?                |
-| Total             | ?                |
+### Workflow chuẩn
+
+1. **Define target** — p99 latency, throughput, cost/request, GPU type, accuracy constraint
+2. **Measure baseline** — end-to-end, model-only, preprocess, queueing, GPU/CPU util, memory
+3. **Identify bottleneck** — compute / memory / transfer / preprocess / queueing
+4. **Apply targeted optimization** — TensorRT, quantization, batching, preprocess, replicas
+5. **Validate** — accuracy, p50/p95/p99, throughput under load, stability, memory footprint
+6. **Roll out safely** — canary, A/B, shadow traffic, rollback plan
+
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Bỏ qua baseline rồi tối ưu bằng cảm giác hoặc vì tool nghe mạnh — dễ tối ưu nhầm chỗ. TensorRT không giải quyết bottleneck ở tokenization, image decode, network hay queueing.
+:::
+
+
+## Worked examples {#sec-worked}
+
+> Nhìn vào số đo, làm sao biết mình đang tối ưu đúng chỗ — trước khi mở terminal hay benchmark?
+
+::: {.callout-important icon=false}
+## Ý chính
+Ba ví dụ dưới đây minh hoạ ba bẫy phổ biến: tối ưu nhầm chỗ, bật batching không đúng cấu hình, và nhầm GPU utilization thấp là vấn đề. Tất cả đều có nguyên nhân là không đo đúng trước khi quyết định.
+:::
+
+### Example 1: model nhanh nhưng service chậm {.unnumbered}
+
+Service image classification đo được:
+
+| Thành phần | Latency |
+|:-----------|--------:|
+| API parse | 2 ms |
+| Image decode + resize | 35 ms |
+| H2D copy | 3 ms |
+| GPU execution | 8 ms |
+| D2H copy | 1 ms |
+| Postprocessing | 2 ms |
+| **Total** | **51 ms** |
+
+Bạn dùng TensorRT và giảm GPU execution từ 8 ms xuống 3 ms. Latency mới: `2 + 35 + 3 + 3 + 1 + 2 = 46 ms`.
+
+Bạn đã tăng tốc model **2.67×**, nhưng end-to-end latency chỉ cải thiện từ 51 ms xuống 46 ms — tức khoảng **9.8%**.
+
+Kết luận: bottleneck thật là image decode + resize (35 ms), không phải GPU execution. Tiếp tục tối ưu model sẽ không mang lại nhiều. Bước tiếp theo đúng là: profile preprocessing, thử libjpeg-turbo thay libjpeg chuẩn, hoặc đẩy resize lên GPU với DALI.
+
+### Example 2: batch size tăng throughput nhưng làm p99 xấu {.unnumbered}
+
+Service object detection có traffic không đều. Bạn bật dynamic batching với max queue delay = 20 ms.
+
+| Metric | Trước batching | Sau batching |
+|:-------|------:|----:|
+| Throughput | 200 RPS | 520 RPS |
+| Average latency | 30 ms | 42 ms |
+| p99 latency | 70 ms | 145 ms |
+
+Nếu SLO là p99 < 100 ms, cấu hình batching này không đạt dù throughput tăng **2.6×**. Với max queue delay = 20 ms, request đến lúc queue vắng vẫn phải chờ gần 20 ms trước khi vào batch — chưa tính model execution và các giai đoạn khác. Tail latency vọt lên 145 ms.
+
+Điều chỉnh hợp lý: giảm max queue delay xuống 5 ms, thử preferred batch size 4 thay vì 8, thêm instance, hoặc tách traffic priority cao xử lý riêng với batch size = 1. Sau khi điều chỉnh, re-benchmark và kiểm tra p99 trước khi rollout.
+
+### Example 3: GPU utilization thấp không nhất thiết là xấu {.unnumbered}
+
+Real-time fraud detection yêu cầu p99 < 20 ms. Model nhỏ, batch size = 1 vì mỗi transaction cần phản hồi ngay. GPU utilization chỉ 25%.
+
+Điều này hoàn toàn chấp nhận được nếu:
+
+- p99 latency đạt SLO (< 20 ms)
+- Cost hợp lý với business
+- Traffic không đủ lớn để batch có lợi
+- Business ưu tiên phản hồi nhanh hơn throughput tối đa
+
+Nếu bạn tối ưu utilization lên 90% bằng cách bật batching với max delay = 50 ms, p99 có thể tăng lên 80 ms — vượt SLO **4×**. Đó là thất bại dù dashboard GPU trông "hiệu quả hơn".
+
+Bài học: GPU utilization là phương tiện đo lường, không phải mục tiêu. Tối ưu theo SLO, không theo utilization.
+
+::: {.callout-tip icon=false collapse="true"}
+## Tám nguyên tắc thiết kế cho inference engineer
+
+**1. Measure end-to-end, then measure model-only**
+
+Luôn tách: end-to-end latency, model execution latency, queue latency, preprocess/postprocess latency, transfer latency. Nếu không tách, bạn không biết tối ưu ở đâu. Ba ví dụ trên đều có thể tránh được nếu đo đúng từ đầu.
+
+**2. p99 quan trọng hơn average trong production**
+
+Average latency có thể đẹp nhưng p99 xấu. User và downstream system thường bị ảnh hưởng bởi tail latency — một request retry từ downstream do timeout có thể gây cascade failure. Monitor p95 và p99, đặt SLO theo p99.
+
+**3. Batching là con dao hai lưỡi**
+
+Batching có thể tăng throughput, nhưng có thể làm latency tăng — đặc biệt là tail latency. Luôn tune batching theo SLO: thử nhiều max queue delay, đo p99 thực tế dưới load thực. Đừng chỉ đo average.
+
+**4. Precision thấp cần validation**
+
+FP16/BF16/INT8/FP8 có thể nhanh hơn nhưng cần kiểm tra accuracy và numerical stability. Một số operator có thể không hỗ trợ precision mong muốn, hoặc cần calibration cẩn thận cho INT8. Luôn chạy accuracy check trên representative dataset trước khi deploy precision thấp.
+
+**5. Runtime optimization không thay thế model design**
+
+Một model quá lớn, shape không phù hợp, hoặc architecture kém inference-friendly (ví dụ: nhiều dynamic control flow, operator không hỗ trợ) vẫn khó tối ưu dù dùng TensorRT. Model architecture phải được thiết kế với inference efficiency trong đầu từ đầu.
+
+**6. Optimize bottleneck, not the tool you like**
+
+TensorRT rất mạnh, nhưng nếu bottleneck nằm ở tokenization hoặc image decode, TensorRT không giải quyết gốc vấn đề. Chọn tool dựa trên kết quả đo, không dựa trên xu hướng hoặc quen thuộc.
+
+**7. Hardware matters**
+
+Engine, precision và tactic có thể phụ thuộc vào GPU architecture. TensorRT engine build trên A100 không nhất thiết tối ưu trên T4 hay H100. Luôn build và benchmark engine trên hardware mà service sẽ chạy thực tế.
+
+**8. Production inference cần rollout strategy**
+
+Mọi optimization đều có rủi ro: accuracy regression, memory spike, cold-start latency spike, behavior thay đổi khi load cao. Cần canary, rollback và monitoring trước khi đưa ra toàn bộ traffic.
+:::
+
+
+## Mini-lab {.unnumbered}
+
+::: {.callout-note icon=false}
+## Thực hành — worksheet tư duy hệ thống
+Làm lần lượt Lab 1 → 3. Không cần GPU. Mục tiêu là luyện cách nhìn bottleneck trước khi chọn tool.
+:::
+
+### Lab 1: vẽ pipeline latency {.unnumbered}
+
+Chọn một model quen thuộc (image classification, object detection, text embedding, speech-to-text). Vẽ theo pipeline xương sống ở @fig-request-pipeline, rồi điền latency giả định:
+
+| Stage | Latency estimate |
+|:------|:-----------------|
+| Validation | ? |
+| Preprocessing | ? |
+| Queueing/batching | ? |
+| H2D | ? |
+| GPU execution | ? |
+| D2H | ? |
+| Postprocessing | ? |
+| Total | ? |
 
 Câu hỏi:
 
 1. Stage nào có khả năng là bottleneck?
-2. Nếu dùng TensorRT làm GPU execution nhanh hơn 2x, total latency giảm bao nhiêu?
+2. Nếu TensorRT làm GPU execution nhanh hơn 2×, total latency giảm bao nhiêu?
 3. Nếu bật batching, stage nào tăng và stage nào giảm?
 
-### Lab 2: chọn strategy theo SLO
+### Lab 2: chọn strategy theo SLO {.unnumbered}
 
-Bạn có service với yêu cầu:
+Yêu cầu: p99 < 80 ms, throughput ≥ 300 RPS.
 
-```text
-p99 < 80 ms
-throughput >= 300 RPS
-```
+| Metric | Value |
+|:-------|------:|
+| Average latency | 45 ms |
+| p99 latency | 120 ms |
+| Throughput max | 280 RPS |
+| GPU utilization | 55% |
+| CPU utilization | 85% |
+| Preprocessing latency p99 | 60 ms |
 
-Baseline:
+Bạn ưu tiên gì?
 
-| Metric                    | Value   |
-|:--------------------------|:--------|
-| Average latency           | 45 ms   |
-| p99 latency               | 120 ms  |
-| Throughput max            | 280 RPS |
-| GPU utilization           | 55%     |
-| CPU utilization           | 85%     |
-| Preprocessing latency p99 | 60 ms   |
+**A.** Build TensorRT engine ngay  
+**B.** Tăng batch size thật lớn  
+**C.** Profile và tối ưu preprocessing/CPU path trước  
+**D.** Chỉ nhìn GPU utilization  
 
-Bạn sẽ ưu tiên gì?
+Đáp án hợp lý nhất: **C.** p99 preprocessing đã 60 ms, CPU utilization cao (85%), throughput chưa đạt, GPU utilization 55% chưa quá cao. Bottleneck ban đầu có vẻ nằm ở CPU/preprocessing và queueing — không phải model execution. Build TensorRT lúc này gần như không giải quyết được root cause.
 
-**A.** Build TensorRT engine ngay.\
-**B.** Tăng batch size thật lớn.\
-**C.** Profile và tối ưu preprocessing/CPU path trước.\
-**D.** Chỉ nhìn GPU utilization.
-
-Đáp án hợp lý nhất: **C.**
-
-Lý do: p99 preprocessing đã 60 ms, CPU utilization cao, throughput chưa đạt, GPU utilization chưa quá cao. Bottleneck ban đầu có vẻ nằm ở CPU/preprocessing và queueing, không chắc là model execution.
-
-### Lab 3: batching trade-off
-
-Giả sử model có latency theo batch size:
+### Lab 3: batching trade-off {.unnumbered}
 
 | Batch size | Model latency | Images/sec |
-|:-----------|:--------------|:-----------|
-| 1          | 5 ms          | 200        |
-| 2          | 7 ms          | 286        |
-| 4          | 11 ms         | 364        |
-| 8          | 20 ms         | 400        |
-| 16         | 42 ms         | 381        |
-
-Câu hỏi:
+|:-----------|--------------:|-----------:|
+| 1 | 5 ms | 200 |
+| 2 | 7 ms | 286 |
+| 4 | 11 ms | 364 |
+| 8 | 20 ms | 400 |
+| 16 | 42 ms | 381 |
 
 1. Batch size nào có throughput tốt nhất?
 2. Batch size nào có latency model thấp nhất?
@@ -1335,134 +848,116 @@ Câu hỏi:
 
 Gợi ý đáp án:
 
-1. Batch size 8 có images/sec cao nhất trong bảng.
-2. Batch size 1 có model latency thấp nhất.
-3. Không chắc. Cần tính thêm queueing delay, arrival pattern và p99 latency end-to-end.
+1. Batch size 8 có images/sec cao nhất (400).
+2. Batch size 1 có model latency thấp nhất (5 ms).
+3. Không chắc. Số trong bảng là model latency, chưa gồm queueing delay (chờ gom batch), arrival pattern (traffic đến đều hay burst), và p99 end-to-end. Cần benchmark dưới load thực với dynamic batching bật.
 
 
-## Checkpoint questions
+## Checkpoint questions {.unnumbered}
 
-**1. Vì sao trained model artifact chưa phải production service?**
+::: {.callout-tip icon=false collapse="true"}
+## Tự kiểm (mở từng câu khi cần)
 
-Vì artifact chỉ lưu graph/weights hoặc model representation. Production service còn cần API, validation, preprocessing, scheduling, batching, runtime execution, postprocessing, monitoring, scaling, versioning và rollout.
+1. **Vì sao trained model artifact chưa phải production service?**  
+   Vì artifact chỉ lưu graph/weights hoặc model representation. Production service còn cần API, validation, preprocessing, scheduling, batching, runtime execution, postprocessing, monitoring, scaling, versioning và rollout. Artifact trả lời "model đã học gì", service trả lời "làm sao phục vụ ổn định".
 
-**2. ONNX có phải là runtime không?**
+2. **ONNX có phải là runtime không?**  
+   Không. ONNX chủ yếu là format/representation cho model. Runtime như ONNX Runtime hoặc TensorRT mới là thứ thực thi model.
 
-Không. ONNX chủ yếu là format/representation cho model. Runtime như ONNX Runtime hoặc TensorRT mới là thứ thực thi model.
+3. **ONNX Runtime khác TensorRT thế nào?**  
+   ONNX Runtime là runtime đa backend cho ONNX model, có thể chạy qua nhiều Execution Providers như CPU, CUDA, TensorRT, OpenVINO. TensorRT là NVIDIA inference compiler/runtime tối ưu sâu cho GPU NVIDIA, có phần compiler quan trọng riêng.
 
-**3. ONNX Runtime khác TensorRT thế nào?**
+4. **TensorRT engine là gì?**  
+   Execution plan đã optimize/compile cho một model, một tập shape/profile, precision config và hardware target nhất định. Không phải "file model nhanh hơn một chút" — nó là kết quả của quá trình compile/tactic selection.
 
-ONNX Runtime là runtime đa backend cho ONNX model, có thể chạy qua nhiều Execution Providers như CPU, CUDA, TensorRT, OpenVINO, v.v. TensorRT là NVIDIA inference compiler/runtime tối ưu sâu cho GPU NVIDIA.
+5. **Vì sao batch size lớn có thể tăng throughput?**  
+   Batch size lớn giúp GPU có nhiều công việc song song, matrix operations lớn hơn, giảm tỷ lệ kernel launch overhead trên mỗi sample. Nhưng memory và queueing latency có thể tăng, làm p99 xấu.
 
-**4. TensorRT engine là gì?**
+6. **Vì sao p99 latency quan trọng?**  
+   p99 phản ánh tail behavior. Average đẹp vẫn có thể gây timeout hoặc trải nghiệm xấu nếu 1% request chậm bất thường. Downstream service thường timeout dựa trên tail, không dựa trên average.
 
-Ở mức khái niệm, TensorRT engine là execution plan đã được optimize/compile cho một model, một tập shape/profile, precision config và hardware target nhất định.
+7. **GPU utilization thấp có luôn là vấn đề không?**  
+   Không. Nếu đạt latency SLO, traffic thấp, workload nhỏ hoặc business ưu tiên phản hồi nhanh, utilization thấp có thể chấp nhận được. Ví dụ fraud detection với batch size = 1 và p99 < 20 ms.
 
-**5. Vì sao batch size lớn có thể tăng throughput?**
+8. **Kernel fusion giúp gì?**  
+   Giảm số kernel launches và giảm đọc/ghi intermediate tensors vào global memory. Điều này cải thiện latency và memory bandwidth efficiency, đặc biệt với chuỗi elementwise operations.
 
-Batch size lớn giúp GPU có nhiều công việc song song hơn, làm matrix operations lớn hơn và giảm tỷ lệ overhead trên mỗi sample. Nhưng batch lớn cũng có thể tăng memory usage và queueing latency.
+9. **Khi nào TensorRT không giải quyết được bottleneck?**  
+   Khi bottleneck nằm ngoài model execution: preprocessing, network latency, queueing, serialization, H2D/D2H transfer, hoặc CPU tokenization. TensorRT chỉ tối ưu giai đoạn GPU execution.
 
-**6. Vì sao p99 latency quan trọng?**
-
-Vì p99 phản ánh tail behavior. Một service có average latency tốt vẫn có thể gây timeout hoặc trải nghiệm xấu nếu 1% request chậm bất thường.
-
-**7. GPU utilization thấp có luôn là vấn đề không?**
-
-Không. Nếu service đạt latency SLO và traffic thấp hoặc workload nhỏ, utilization thấp có thể chấp nhận được. Optimization cần dựa trên mục tiêu business và SLO.
-
-**8. Kernel fusion giúp gì?**
-
-Kernel fusion giảm số kernel launches và giảm đọc/ghi intermediate tensors vào global memory. Điều này có thể cải thiện latency và memory bandwidth efficiency.
-
-**9. Khi nào TensorRT không giải quyết được bottleneck?**
-
-Khi bottleneck nằm ngoài model execution, ví dụ preprocessing, network, queueing, serialization, H2D/D2H transfer hoặc CPU tokenization.
-
-**10. Bước đầu tiên khi tối ưu inference là gì?**
-
-Xác định target và đo baseline end-to-end. Không nên tối ưu bằng cảm giác hoặc chỉ vì một tool nghe có vẻ mạnh.
+10. **Bước đầu tiên khi tối ưu inference là gì?**  
+    Xác định target (p99, throughput, accuracy constraint) và đo baseline end-to-end. Không nên tối ưu bằng cảm giác hoặc chỉ vì một tool nghe có vẻ mạnh.
+:::
 
 
-## Glossary
+## Glossary {.unnumbered}
 
-| Thuật ngữ          | Giải thích ngắn                                                          |
-|:-------------------|:-------------------------------------------------------------------------|
-| Inference          | Quá trình dùng model đã train để tạo prediction/output                   |
-| Model artifact     | File hoặc object chứa weights/graph/model sau training                   |
-| Runtime            | Thành phần thực thi model, ví dụ ONNX Runtime hoặc TensorRT runtime      |
-| Compiler/optimizer | Thành phần biến graph thành execution plan tối ưu hơn                    |
-| ONNX               | Open model format để biểu diễn ML model và operator graph                |
-| ONNX Runtime       | Runtime để chạy ONNX model với nhiều Execution Providers                 |
-| TensorRT           | NVIDIA SDK để tối ưu và tăng tốc deep learning inference trên GPU NVIDIA |
-| Triton             | Inference server để serve nhiều model/backend ở production               |
-| CUDA               | Platform/programming model cho GPU NVIDIA                                |
-| Kernel             | Function chạy song song trên GPU                                         |
-| Stream             | Queue công việc trên GPU, dùng để quản lý thứ tự và concurrency          |
-| SM                 | Streaming Multiprocessor, đơn vị thực thi chính trong GPU NVIDIA         |
-| Warp               | Nhóm thread được thực thi cùng nhau ở mức phần cứng                      |
-| H2D                | Host-to-device transfer, copy từ CPU RAM sang GPU memory                 |
-| D2H                | Device-to-host transfer, copy từ GPU memory về CPU RAM                   |
-| Latency            | Thời gian xử lý một request                                              |
-| Throughput         | Số request/sample xử lý mỗi giây                                         |
-| p99                | 99th percentile latency                                                  |
-| Dynamic batching   | Gom request đến gần nhau thành batch để tăng throughput                  |
-| Quantization       | Giảm precision của weight/activation để giảm memory/compute cost         |
-| Kernel fusion      | Gộp nhiều operation thành ít kernel hơn                                  |
-| Memory-bound       | Bottleneck do bandwidth/memory access                                    |
-| Compute-bound      | Bottleneck do số phép tính                                               |
+| Thuật ngữ | Giải thích ngắn |
+|:----------|:----------------|
+| Inference | Quá trình dùng model đã train để tạo prediction/output |
+| Model artifact | File hoặc object chứa weights/graph/model sau training |
+| Runtime | Thành phần thực thi model, ví dụ ONNX Runtime hoặc TensorRT runtime |
+| Compiler/optimizer | Thành phần biến graph thành execution plan tối ưu hơn |
+| ONNX | Open model format để biểu diễn ML model và operator graph |
+| ONNX Runtime | Runtime để chạy ONNX model với nhiều Execution Providers |
+| TensorRT | NVIDIA SDK để tối ưu và tăng tốc deep learning inference trên GPU NVIDIA |
+| Triton | Inference server để serve nhiều model/backend ở production |
+| CUDA | Platform/programming model cho GPU NVIDIA |
+| Kernel | Function chạy song song trên GPU |
+| Stream | Queue công việc trên GPU, dùng để quản lý thứ tự và concurrency |
+| SM | Streaming Multiprocessor, đơn vị thực thi chính trong GPU NVIDIA |
+| Warp | Nhóm 32 thread được thực thi cùng nhau theo mô hình SIMT |
+| Tensor Cores | Phần cứng chuyên dụng trên GPU NVIDIA tăng tốc matmul ở FP16/BF16/INT8/FP8 |
+| H2D | Host-to-device transfer, copy từ CPU RAM sang GPU memory |
+| D2H | Device-to-host transfer, copy từ GPU memory về CPU RAM |
+| Latency | Thời gian xử lý một request từ khi gửi đến khi nhận response |
+| Throughput | Số request/sample xử lý mỗi giây |
+| p99 | 99th percentile latency — 99% request nhanh hơn giá trị này |
+| Dynamic batching | Gom request đến gần nhau thành batch để tăng throughput |
+| Quantization | Giảm precision của weight/activation để giảm memory/compute cost |
+| Kernel fusion | Gộp nhiều operation thành ít kernel hơn để giảm memory access |
+| Memory-bound | Bottleneck do băng thông bộ nhớ, không phải số phép tính |
+| Compute-bound | Bottleneck do số phép tính, không phải băng thông bộ nhớ |
+| SLO | Service Level Objective — mục tiêu chất lượng dịch vụ (latency, availability, …) |
+| Tail latency | Phần latency ở đuôi phân phối (thường p95/p99), phản ánh request chậm nhất |
+| Occupancy | Tỷ lệ warp active trên SM so với tối đa có thể, dùng trong GPU profiling |
 
 
-## Summary
-
-Bài này xây nền tảng cho toàn bộ quá trình học ONNX và TensorRT.
-
-Các ý quan trọng nhất:
+## Summary {.unnumbered}
 
 1. Inference production không chỉ là `model(input)`.
-2. Latency end-to-end gồm nhiều phần: queueing, preprocessing, transfer, GPU execution, postprocessing.
-3. GPU là throughput machine, không phải CPU nhanh hơn.
-4. Deep learning inference là graph execution qua nhiều kernels và memory operations.
-5. ONNX là representation, ONNX Runtime là runtime đa backend, TensorRT là NVIDIA inference compiler/runtime, Triton là serving server.
-6. Batching tăng throughput nhưng có thể làm p99 latency xấu.
-7. Tối ưu inference cần đo baseline, tìm bottleneck, tối ưu đúng chỗ, validate accuracy và rollout an toàn.
+2. Latency end-to-end gồm queueing, preprocessing, H2D transfer, GPU execution, D2H transfer, postprocessing — user cảm nhận tổng, không chỉ phần GPU.
+3. GPU là throughput machine, không phải CPU nhanh hơn. Phù hợp với data-parallel tensor ops, không phải branching phức tạp.
+4. Deep learning inference là chuỗi kernel launches và memory operations trên SM qua warp, tận dụng Tensor Cores khi dùng precision thấp.
+5. ONNX là representation; ONNX Runtime là runtime đa backend; TensorRT là NVIDIA compiler/runtime tối ưu sâu (graph cleanup, fusion, precision, tactic selection, memory planning); Triton là serving server.
+6. Batching tăng throughput nhưng có thể làm p99 xấu — luôn tune theo SLO.
+7. Tối ưu inference: đo baseline end-to-end → tìm bottleneck đúng loại → tối ưu đúng chỗ → validate accuracy + p99 → rollout an toàn.
 
-Nếu bạn nắm chắc bài này, các bài sau về ONNX graph, ONNX Runtime Execution Providers, TensorRT engine, quantization và Triton dynamic batching sẽ dễ hiểu hơn nhiều.
+Nếu bạn nắm chắc bài này, các bài sau về ONNX graph, Execution Providers, TensorRT engine, quantization và Triton dynamic batching sẽ dễ hiểu hơn nhiều.
 
 
-## Preview bài tiếp theo
+## Preview bài tiếp theo {.unnumbered}
 
-Lesson 2 là: **ONNX Fundamentals: Model Graph, Operators, Opset and Export Pipeline**
+Lesson 2: **ONNX Fundamentals: Model Graph, Operators, Opset and Export Pipeline**
 
-Nội dung chính:
+- ONNX là intermediate representation như thế nào
+- Node, edge, tensor, initializer
+- Opset version
+- Static shape vs dynamic axes
+- Export từ PyTorch sang ONNX
+- Inspect graph bằng Netron
+- Validate model bằng ONNX checker
+- Chạy model bằng ONNX Runtime
+- Các lỗi export phổ biến
 
-- ONNX là intermediate representation như thế nào.
-- Node, edge, tensor, initializer.
-- Opset version.
-- Static shape vs dynamic axes.
-- Export từ PyTorch sang ONNX.
-- Inspect graph bằng Netron.
-- Validate model bằng ONNX checker.
-- Chạy model bằng ONNX Runtime.
-- Các lỗi export phổ biến.
 
-## reference
+## References {.unnumbered}
 
 Tài liệu dưới đây không bắt buộc phải đọc ngay, nhưng là nguồn chính thức để đối chiếu khi cần:
 
-1. NVIDIA TensorRT Documentation  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/index.html
-
-2. NVIDIA TensorRT Developer page  
-   https://developer.nvidia.com/tensorrt
-
-3. ONNX official website  
-   https://onnx.ai/
-
-4. ONNX Runtime documentation  
-   https://onnxruntime.ai/docs/
-
-5. ONNX Runtime Execution Providers  
-   https://onnxruntime.ai/docs/execution-providers/
-
-6. NVIDIA CUDA C++ Programming Guide  
-   https://docs.nvidia.com/cuda/cuda-c-programming-guide/contents.html
+1. [NVIDIA TensorRT Documentation](https://docs.nvidia.com/deeplearning/tensorrt/latest/index.html)
+2. [NVIDIA TensorRT Developer page](https://developer.nvidia.com/tensorrt)
+3. [ONNX official website](https://onnx.ai/)
+4. [ONNX Runtime documentation](https://onnxruntime.ai/docs/)
+5. [ONNX Runtime Execution Providers](https://onnxruntime.ai/docs/execution-providers/)
+6. [NVIDIA CUDA C++ Programming Guide](https://docs.nvidia.com/cuda/cuda-c-programming-guide/contents.html)

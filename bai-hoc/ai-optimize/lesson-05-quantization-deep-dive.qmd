@@ -7,147 +7,127 @@ series: ai-optimize
 order: 5
 description: "PTQ, QAT, calibration, Q/DQ, INT8/FP8 — giảm memory/compute."
 role: "PTQ, QAT, calibration, Q/DQ, INT8/FP8 — giảm memory/compute"
+aliases:
+  - /bai-hoc/ai-optimize/lesson_5_quantization_deep_dive.html
 ---
 
 ::: {.callout-note icon=false}
 ## Mục tiêu bài học
-Mục tiêu của bài này là giúp bạn hiểu **quantization** không chỉ như một flag `--int8`, mà như một quá trình thiết kế số học, compiler graph, calibration data, hardware kernel và accuracy recovery. Sau bài này, bạn cần đọc được ONNX Q/DQ graph, hiểu vì sao một model INT8 có thể nhanh hơn nhưng cũng có thể chậm hơn, biết khi nào nên dùng PTQ, khi nào cần QAT, và biết cách debug accuracy drop sau quantization.
+Hiểu **quantization** không chỉ như một flag `--int8`, mà như một quá trình thiết kế số học, compiler graph, calibration data, hardware kernel và accuracy recovery. Sau bài, bạn đọc được ONNX Q/DQ graph, biết vì sao INT8 có thể nhanh hơn *và* có thể chậm hơn, khi nào dùng PTQ, khi nào cần QAT, và cách debug accuracy drop có hệ thống. Bài **không** dạy Triton serving (Lesson 6) hay LLM-specific quantization sâu (Lesson 9).
 :::
 
-## Vị trí của Lesson 5 trong chuỗi học
+::: {.callout-note icon=false}
+## Lộ trình bài học
 
-Ở Lesson 1, bạn đã học inference system ở mức kiến trúc:
+| # | Phần | Trả lời câu hỏi | Thời lượng |
+|:--|:-----|:----------------|:-----------|
+| 1 | Vì sao quantization quan trọng | Giảm latency, bandwidth, memory thế nào? | 10 phút |
+| 2 | Nền tảng số học | Scale, zero-point, affine formula là gì? | 15 phút |
+| 3 | Symmetric vs asymmetric | Chọn cái nào cho weight / activation? | 10 phút |
+| 4 | Rounding vs clamping error | Trade-off scale là gì? Outlier ảnh hưởng thế nào? | 10 phút |
+| 5 | Granularity | Per-tensor / per-channel / per-block khác gì? | 15 phút |
+| 6 | PTQ + calibration | Dataset cần gì? MinMax / Entropy / Percentile? | 20 phút |
+| 7 | QAT | Fake quantization là gì? Khi nào cần? Pitfalls? | 15 phút |
+| 8 | ONNX Q/DQ + TensorRT | QOperator vs Q/DQ; explicit quantization? | 20 phút |
+| 9 | INT8 / FP8 trong TensorRT | Formula, calib, `trtexec`, FP8 khi nào? | 15 phút |
+| 10 | Accuracy recovery + debug | 8 bước, failure modes, decision tree, checklist | 25 phút |
+| 11 | Mini-lab | Labs 1–7: NumPy → ORT → TRT | 60–90 phút |
 
-```text
-request -> preprocessing -> batching -> runtime -> GPU execution -> postprocessing -> response
+Đọc tối thiểu: phần 1–9. Phần 10 và Mini-lab nên hoàn thành trước production deployment.
+:::
+
+::: {.reading-modes}
+**Đọc nhanh:** callout *Ý chính* + bảng + sơ đồ xương sống.  
+**Đọc đủ:** mở tip đào sâu, làm Mini-lab và Checkpoint.
+:::
+
+
+## Bối cảnh {.unnumbered}
+
+Lesson 1 → kiến trúc inference. Lesson 2 → ONNX graph. Lesson 3 → ONNX Runtime. Lesson 4 → TensorRT như inference compiler. Lesson 5: **quantization** — kỹ thuật giảm precision, giảm latency và memory, nhưng chỉ phát huy khi runtime + hardware + graph được cấu hình đúng.
+
+```{mermaid}
+%%| label: fig-l5-spine
+%%| fig-cap: "Sơ đồ xương sống Lesson 5: FP32 model → chọn scheme và calibrate → tạo Q/DQ graph → build engine → validate accuracy + latency."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  FP([FP32/FP16\nModel]) -->|"chọn scheme\ngranularity"| CAL([Calibrate\nor QAT])
+  CAL -->|"scale +\nzero_point"| QDQ([Q/DQ Graph\nONNX])
+  QDQ -->|"build + fuse"| ENG([Engine\n/ plan])
+  ENG -->|"validate accuracy\n+ latency"| VAL([Production\nCandidate])
+  classDef stage fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef good fill:#E8F5E9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20
+  class FP stage
+  class CAL hot
+  class QDQ,ENG ok
+  class VAL good
 ```
 
-Ở Lesson 2, bạn đã học ONNX graph:
-
-```text
-model = graph + operators + tensors + initializers + opset
-```
-
-Ở Lesson 3, bạn đã học ONNX Runtime:
-
-```text
-ONNX model -> graph optimization -> Execution Providers -> kernels
-```
-
-Ở Lesson 4, bạn đã học TensorRT như một inference compiler:
-
-```text
-ONNX -> TensorRT NetworkDefinition -> optimized engine -> GPU execution
-```
-
-Lesson 5 tập trung vào quantization:
-
-```text
-FP32 / FP16 model
-   |
-   | choose quantization scheme
-   | choose scale granularity
-   | calibrate or train with fake quantization
-   v
-Q/DQ graph or quantized engine
-   |
-   | build / optimize / fuse
-   v
-lower precision inference
-   |
-   | validate latency + accuracy
-   v
-production candidate
-```
-
-Tư duy quan trọng nhất của bài này:
+Tư duy cốt lõi:
 
 ```text
 Quantization is not just compression.
-Quantization is a numerical approximation problem constrained by hardware and compiler behavior.
+Quantization is a numerical approximation problem
+constrained by hardware and compiler behavior.
 ```
 
 
-## Learning outcomes
+## Learning outcomes {.unnumbered}
 
-Sau bài này, bạn cần giải thích và thực hành được:
-
-1. Quantization là gì và khác gì với pruning, distillation, compilation.
-2. Vì sao lower precision có thể giảm latency, memory footprint và memory bandwidth.
-3. Vì sao quantization có thể làm accuracy giảm.
-4. Scale, zero-point, clipping/clamping và rounding là gì.
-5. Symmetric vs asymmetric quantization.
-6. Per-tensor, per-channel, per-axis và per-block quantization khác nhau thế nào.
-7. Weight quantization khác activation quantization thế nào.
-8. Dynamic quantization khác static quantization thế nào.
-9. PTQ là gì và khi nào dùng.
-10. QAT là gì và khi nào cần.
-11. Calibration dataset là gì và vì sao nó phải đại diện cho production data.
-12. MinMax, Entropy/KL và Percentile calibration khác nhau thế nào.
-13. QOperator format và Q/DQ format trong ONNX khác nhau thế nào.
-14. ONNX `QuantizeLinear` và `DequantizeLinear` biểu diễn điều gì.
-15. Vì sao TensorRT hiện đại ưu tiên explicit quantization bằng Q/DQ nodes.
-16. Vì sao không nên đưa calibration table ngoài vào model đã có Q/DQ nodes.
-17. INT8 inference trong TensorRT hoạt động ở mức graph và kernel như thế nào.
-18. FP8 là gì, khác INT8 thế nào, và vì sao không nên xem FP8 là drop-in replacement.
-19. Cách xác định layer nhạy cảm với quantization.
-20. Cách phục hồi accuracy bằng calibration tốt hơn, mixed precision, layer exclusion hoặc QAT.
-21. Cách benchmark đúng: accuracy, latency, throughput, memory và fallback.
-22. Cách debug lỗi thường gặp: accuracy collapse, engine build fail, unsupported Q/DQ, model chậm hơn FP16, CPU fallback, sai axis per-channel.
+1. Quantization là gì, khác pruning / distillation / compilation thế nào
+2. Scale, zero-point, clipping/clamping, rounding là gì và trade-off ra sao
+3. Symmetric vs asymmetric; per-tensor / per-channel / per-block
+4. Weight quantization vs activation quantization
+5. Dynamic vs static quantization; khi nào chọn cái nào
+6. PTQ workflow và yêu cầu calibration data + ba calibration methods
+7. QAT: fake quantization, khi nào cần, pitfalls nếu pipeline sai
+8. ONNX QOperator vs Q/DQ; `QuantizeLinear` / `DequantizeLinear`
+9. TensorRT explicit vs implicit quantization; Q/DQ fusion; placement
+10. INT8 formula + calibration flow trong TRT; FP8 khi nào / khi nào không
+11. 8 bước accuracy recovery; debug decision tree; production checklist; misconceptions
 
 
-## Prerequisites
+## Prerequisites {.unnumbered}
 
-Bạn nên đã nắm:
+- Tensor shape, ONNX graph, opset, `InferenceSession` (Lessons 2–3)
+- TensorRT engine, optimization profile, `trtexec` (Lesson 4)
+- GPU kernel, Tensor Core, host/device memory (Lesson 1)
+- Python cơ bản; PyTorch cơ bản nếu muốn làm phần QAT
 
-- Tensor shape và broadcasting.
-- ONNX graph, initializer, operator và opset.
-- ONNX Runtime `InferenceSession`.
-- TensorRT engine, optimization profile và `trtexec`.
-- Khái niệm GPU kernel, Tensor Cores, host/device memory.
-- Python cơ bản.
-- PyTorch cơ bản nếu muốn làm phần QAT.
-
-Phần thực hành có hai nhóm:
-
-1. **CPU / generic ONNX Runtime labs**: có thể chạy trên laptop.
-2. **TensorRT / GPU labs**: cần NVIDIA GPU, CUDA, TensorRT và driver phù hợp.
+**Lab groups:** Labs 1–5 chạy được trên CPU / laptop. Labs 6–7 cần NVIDIA GPU + TensorRT.
 
 
+## Vì sao quantization quan trọng? {#sec-why}
 
-## 3. Vì sao quantization quan trọng?
+> Tại sao giảm precision của số có thể giúp inference nhanh hơn, và khi nào nó không giúp?
 
-Một model inference thường bị giới hạn bởi một hoặc nhiều yếu tố:
+::: {.callout-important icon=false}
+## Ý chính
+Quantization giảm số byte mỗi weight/activation, từ đó giảm memory bandwidth và kích hoạt low-precision kernel trên hardware hỗ trợ. Tuy nhiên, **không tự động nhanh hơn** — chỉ nhanh hơn khi runtime, compiler và hardware thật sự sử dụng được low-precision kernels hiệu quả.
+:::
 
-```text
-1. Compute throughput
-2. Memory bandwidth
-3. GPU memory capacity
-4. CPU overhead
-5. Kernel launch overhead
-6. Data transfer overhead
-```
+Model inference thường bị giới hạn bởi một hoặc nhiều bottleneck:
 
-Quantization chủ yếu giúp ở ba điểm:
+| Bottleneck | Mô tả |
+|:-----------|:------|
+| Compute throughput | TFLOPS bị bão hòa |
+| Memory bandwidth | Di chuyển weights/activations quá chậm |
+| GPU memory capacity | Model không vừa VRAM |
+| Kernel launch overhead | Launch nhiều kernel nhỏ dominate |
+| Data transfer overhead | H2D/D2H hoặc copy giữa host/device |
+| CPU / kernel overhead | Launch overhead dominate, model quá nhỏ |
 
-```text
-FP32 weight/activation -> INT8/FP8/INT4/FP4 representation
-      |
-      +-> ít bytes hơn
-      +-> giảm memory bandwidth
-      +-> dùng low-precision kernels nhanh hơn trên hardware hỗ trợ
-```
+Quantization chủ yếu giúp ở **memory bandwidth** và **compute throughput** khi có low-precision kernel:
 
-Ví dụ kích thước mỗi số:
-
-|           Type | Approx bytes/value |                                        Ghi chú |
-|---------------:|-------------------:|-----------------------------------------------:|
-|           FP32 |            4 bytes |                        Baseline high precision |
-|    FP16 / BF16 |            2 bytes |              Mixed precision phổ biến trên GPU |
-|     INT8 / FP8 |             1 byte |              Thường dùng để tăng tốc inference |
-|     INT4 / FP4 |           0.5 byte | Thường dùng cho weight-only hoặc model rất lớn |
-
-Mental model:
+| Type | Bytes/value | Ghi chú |
+|-----:|------------:|:--------|
+| FP32 | 4 | Baseline high precision |
+| FP16 / BF16 | 2 | Mixed precision phổ biến trên GPU |
+| INT8 / FP8 | 1 | Thường dùng để tăng tốc inference |
+| INT4 / FP4 | 0.5 | Weight-only hoặc model rất lớn |
 
 ```text
 Nếu model bị memory bandwidth bound:
@@ -156,315 +136,202 @@ Nếu model bị overhead bound hoặc layer không có low-precision kernel:
     quantization có thể không giúp, thậm chí chậm hơn.
 ```
 
-Điểm quan trọng:
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: Quantization không phải pruning / distillation / compilation
+
+Bốn kỹ thuật này đều giảm cost inference nhưng hoạt động hoàn toàn khác:
+
+| Kỹ thuật | Cơ chế | Thay đổi structure? | Thay đổi precision? |
+|:---------|:-------|:-------------------:|:-------------------:|
+| **Pruning** | Xóa weight / neuron / head / channel | Có | Không |
+| **Distillation** | Train model nhỏ theo model lớn | Có (model khác) | Không |
+| **Compilation** | Tối ưu schedule, fusion, layout | Không | Không |
+| **Quantization** | Giảm numeric precision | Không | Có |
+
+Production thường kết hợp cả bốn nhóm:
 
 ```text
-Quantization không tự động nhanh hơn.
-Nó chỉ nhanh hơn khi runtime/compiler/hardware thật sự dùng được low-precision kernels hiệu quả.
+training → distillation / pruning
+export → ONNX
+optimization → quantization + compilation
+serving → batching + scheduling + monitoring
 ```
+:::
 
 
+## Nền tảng số học {#sec-arithmetic}
 
-## Quantization không phải là gì?
+> Scale, zero-point và affine formula nghĩa là gì trong thực tế?
 
-### Không phải pruning
+::: {.callout-important icon=false}
+## Ý chính
+Quantization ánh xạ FP32 sang integer bằng công thức affine: `q = round(x / scale + zero_point)`, rồi dequantize về `x_approx = scale × (q − zero_point)`. **Scale và zero-point xác định toàn bộ độ chính xác và range biểu diễn.**
+:::
 
-Pruning xóa bớt weights, neurons, heads hoặc channels.
+Công thức affine chuẩn:
+
+$$q = \operatorname{round}\!\left(\frac{x}{\text{scale}} + \text{zero\_point}\right)$$
+
+$$x_{\text{approx}} = \text{scale} \times (q - \text{zero\_point})$$
+
+| Ký hiệu | Ý nghĩa |
+|:--------|:--------|
+| `x` | Giá trị gốc FP32 / FP16 |
+| `q` | Giá trị đã quantize INT8 / UINT8 |
+| `scale` | Hệ số ánh xạ real value → integer range |
+| `zero_point` | Integer đại diện cho giá trị 0.0 |
+| `round` | Làm tròn sang mức biểu diễn gần nhất |
+| `clip / clamp` | Cắt giá trị vượt representable range |
+
+**Range biểu diễn:**
+
+- INT8 signed: `q ∈ [−128, 127]` — 256 mức
+- UINT8: `q ∈ [0, 255]` — 256 mức
+
+Với **symmetric INT8** (`zero_point = 0`):
+
+$$q = \operatorname{clamp}\!\left(\operatorname{round}\!\left(\frac{x}{\text{scale}}\right),\; -128,\; 127\right)$$
+
+$$x_{\text{approx}} = q \times \text{scale}$$
+
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: Tại sao zero_point quan trọng?
+
+`zero_point` đảm bảo giá trị 0.0 trong FP32 được biểu diễn chính xác bằng một giá trị integer. Điều này quan trọng vì:
+
+- Padding tensor dùng 0 — sai zero là sai toàn bộ padding
+- ReLU output bắt đầu từ 0 — nếu 0 bị biểu diễn sai, sai số lan qua toàn mạng
+- Activation sau ReLU (luôn ≥ 0): UINT8 có thể biểu diễn hiệu quả hơn INT8 signed
+
+Với asymmetric UINT8: `zero_point ∈ [0, 255]`, zero-point "dịch" toàn bộ range để căn với phân phối lệch của activation.
+:::
+
+
+## Symmetric vs asymmetric quantization {#sec-sym-asym}
+
+> Nên dùng symmetric hay asymmetric cho weights và activations?
+
+::: {.callout-important icon=false}
+## Ý chính
+**Symmetric** (`zero_point = 0`) đơn giản hơn, tốt cho hardware acceleration và phù hợp với weights vì phân phối weights thường đối xứng quanh 0. **Asymmetric** dùng zero-point để căn phân phối lệch, tốt hơn cho activations sau ReLU. TensorRT hiện đại thường dùng symmetric INT8 cho weights qua Q/DQ workflow.
+:::
+
+| Đặc điểm | Symmetric | Asymmetric |
+|:---------|:---------:|:----------:|
+| `zero_point` | 0 (hoặc gần 0) | Giá trị bất kỳ trong range |
+| Công thức | `q = round(x / scale)` | `q = round(x / scale + zp)` |
+| Ưu điểm | Đơn giản, hardware tốt | Tốt hơn cho phân phối lệch |
+| Nhược điểm | Có thể lãng phí range nếu lệch | Phức tạp hơn, support kém hơn |
+| Dùng cho | **Weights** (phân phối đối xứng) | **Activations** (thường lệch) |
+
+**Quy tắc thực tế:**
 
 ```text
-Pruning: remove parameters / structure
-Quantization: keep structure, reduce numeric precision
+Weights:      symmetric + per-channel (phân phối thường đối xứng quanh 0)
+Activations:  per-tensor; symmetric hoặc asymmetric tùy backend
+TensorRT:     ưu tiên explicit Q/DQ graph với scale rõ ràng
 ```
 
-### 4.2 Không phải distillation
-
-Distillation train một model nhỏ học theo model lớn.
-
-```text
-Distillation: change model capacity
-Quantization: change numeric representation
-```
-
-### 4.3 Không phải compilation
-
-Compilation tối ưu graph/kernels/layout.
-
-```text
-Compilation: optimize computation schedule
-Quantization: change numeric format and arithmetic
-```
-
-Trong production, bạn thường dùng cả ba nhóm kỹ thuật:
-
-```text
-training -> distillation/pruning
-export -> ONNX
-optimization -> quantization + compilation
-serving -> batching + scheduling + monitoring
-```
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Một số backend/hardware hỗ trợ kém asymmetric quantization cho activations — có thể fallback FP32 hoặc không có kernel tốt. Luôn kiểm tra layer profile sau khi build engine.
+:::
 
 
+## Rounding error và clamping error {#sec-errors}
 
-## Nền tảng số học của quantization
+> Quantization gây lỗi ở đâu và hai loại lỗi trade-off với nhau thế nào?
 
-Quantization ánh xạ một giá trị high precision sang low precision.
+::: {.callout-important icon=false}
+## Ý chính
+Có hai nguồn lỗi chính: **rounding error** (mức biểu diễn quá thô) và **clamping error** (giá trị vượt range bị cắt mất). Scale lớn giảm clamping nhưng tăng rounding; scale nhỏ giảm rounding nhưng tăng clamping. **Calibration là quá trình chọn scale cân bằng tối ưu hai loại lỗi này dựa trên distribution thực tế.**
+:::
 
-Công thức affine phổ biến:
-
-```text
-q = round(x / scale + zero_point)
-x_approx = scale * (q - zero_point)
-```
-
-Trong đó:
-
-|      Ký hiệu |                                             Ý nghĩa |
-|-------------:|----------------------------------------------------:|
-|          `x` |                  Giá trị gốc, thường FP32 hoặc FP16 |
-|          `q` |               Giá trị đã quantize, ví dụ INT8/UINT8 |
-|      `scale` |    Hệ số scale để map real value sang integer range |
-| `zero_point` |               Điểm integer đại diện cho giá trị 0.0 |
-|      `round` |                                            Làm tròn |
-| `clip/clamp` |               Cắt giá trị vượt khỏi range biểu diễn |
-
-Ví dụ INT8 signed:
-
-```text
-q range = [-128, 127]
-```
-
-Ví dụ UINT8:
-
-```text
-q range = [0, 255]
-```
-
-Nếu dùng symmetric INT8, thường:
-
-```text
-zero_point = 0
-q = round(x / scale)
-q = clamp(q, -128, 127)
-x_approx = q * scale
-```
-
-
-
-## Symmetric vs asymmetric quantization
-
-### Symmetric quantization
-
-Symmetric quantization đặt zero-point bằng 0 hoặc gần 0.
-
-```text
-q = round(x / scale)
-x_approx = q * scale
-```
-
-Ưu điểm:
-
-- Đơn giản.
-- Tốt cho hardware acceleration.
-- Tốt cho weights vì weight distribution thường gần đối xứng quanh 0.
-
-Nhược điểm:
-
-- Nếu dữ liệu không đối xứng, có thể lãng phí một phần range.
-
-### Asymmetric quantization
-
-Asymmetric quantization dùng zero-point để biểu diễn chính xác giá trị 0.
-
-```text
-q = round(x / scale + zero_point)
-x_approx = scale * (q - zero_point)
-```
-
-Ưu điểm:
-
-- Tốt hơn khi activation distribution lệch về một phía.
-- Có thể giảm lỗi khi range không đối xứng.
-
-Nhược điểm:
-
-- Phức tạp hơn.
-- Một số backend/hardware có performance hoặc support kém hơn.
-
-### Quy tắc thực tế
-
-```text
-Weights:
-    thường dùng symmetric + per-channel.
-
-Activations:
-    thường dùng per-tensor.
-    có thể symmetric hoặc asymmetric tùy backend.
-
-TensorRT explicit quantization:
-    thường ưu tiên Q/DQ graph với scale rõ ràng.
-```
-
-
-
-## Hai nguồn lỗi chính: rounding error và clamping error
-
-Quantization gây lỗi vì số lượng mức biểu diễn giảm.
-
-### Rounding error
-
-Rounding error xảy ra khi nhiều giá trị thực khác nhau bị map vào cùng một giá trị quantized.
-
-Ví dụ:
+**Rounding error** xảy ra khi nhiều giá trị thực khác nhau bị map vào cùng một integer:
 
 ```text
 scale = 0.1
-
-x = 1.04 -> q = round(10.4) = 10 -> x_approx = 1.0
-x = 1.06 -> q = round(10.6) = 11 -> x_approx = 1.1
+x = 1.04  →  q = round(10.4) = 10  →  x_approx = 1.0   (lỗi: 0.04)
+x = 1.06  →  q = round(10.6) = 11  →  x_approx = 1.1   (lỗi: 0.04)
 ```
 
-Lỗi này tăng khi scale quá lớn.
+Scale lớn → mỗi step rộng → rounding error lớn hơn.
+
+**Clamping error** xảy ra khi giá trị vượt range biểu diễn INT8:
 
 ```text
-scale lớn -> mỗi step rộng -> rounding error lớn
+q = clamp(round(x / scale), -128, 127)
+Nếu x / scale > 127: q bị kẹt ở 127 → thông tin bị mất hoàn toàn
 ```
 
-### Clamping error
+Scale nhỏ → representable range hẹp → dễ clamp outliers.
 
-Clamping error xảy ra khi giá trị vượt khỏi range biểu diễn.
+| Scale | Rounding error | Clamping error |
+|:------|:--------------:|:--------------:|
+| Lớn | Cao | Thấp |
+| Nhỏ | Thấp | Cao |
+| **Optimal (calibration)** | **Cân bằng** | **Cân bằng** |
 
-Ví dụ INT8:
+::: {.callout-tip icon=false collapse="true"}
+## Ví dụ trực giác: vector FP32 → INT8 có và không có outlier `20.0`
 
-```text
-q = round(x / scale)
-q = clamp(q, -128, 127)
-```
-
-Nếu `x / scale > 127`, giá trị bị clamp về 127.
-
-```text
-scale nhỏ -> representable range hẹp -> dễ clamp outliers
-```
-
-### Trade-off quan trọng
-
-Chọn scale là bài toán cân bằng:
-
-```text
-scale nhỏ:
-    rounding error nhỏ
-    nhưng clamping error lớn
-
-scale lớn:
-    clamping error nhỏ
-    nhưng rounding error lớn
-```
-
-Calibration chính là quá trình chọn scale tốt dựa trên distribution của activation/weight.
-
-
-
-## 8. Ví dụ trực giác: một vector FP32 sang INT8
-
-Giả sử vector:
-
+**Không có outlier:**
 ```text
 x = [-1.0, -0.5, 0.0, 0.5, 1.0]
+scale = max(abs(x)) / 127 = 1.0 / 127 ≈ 0.00787
+
+q     = [-127, -64, 0, 64, 127]
+x_hat ≈ [-1.0, -0.504, 0.0, 0.504, 1.0]
+MAE nhỏ — biểu diễn tốt cho toàn bộ vector.
 ```
 
-Chọn symmetric INT8 với:
-
-```text
-scale = max(abs(x)) / 127 = 1.0 / 127
-```
-
-Quantize:
-
-```text
-q = round(x / scale)
-q = [-127, -64, 0, 64, 127]
-```
-
-Dequantize:
-
-```text
-x_approx = q * scale
-x_approx ≈ [-1.0, -0.504, 0.0, 0.504, 1.0]
-```
-
-Sai số nhỏ.
-
-Nhưng nếu production có outlier:
-
+**Có outlier `20.0`:**
 ```text
 x = [-1.0, -0.5, 0.0, 0.5, 20.0]
+scale = 20.0 / 127 ≈ 0.1575
+
+0.5 / scale ≈ 3.175  →  q = 3  →  x_approx ≈ 0.472
+(giá trị nhỏ bị biểu diễn thô hơn rất nhiều — mất 5.6% giá trị gốc)
 ```
 
-Scale sẽ bị outlier kéo lên:
+Outlier `20.0` kéo scale lên **20×**, làm toàn bộ phân phối chính bị rounding thô. Đây là lý do Entropy/Percentile calibration hữu ích: loại bỏ ảnh hưởng của outliers hiếm để tối ưu cho phần lớn distribution.
+:::
 
-```text
-scale = 20.0 / 127
+
+## Granularity {#sec-granularity}
+
+> Per-tensor, per-channel, per-block khác nhau thế nào và khi nào dùng?
+
+::: {.callout-important icon=false}
+## Ý chính
+**Granularity** xác định có bao nhiêu scale/zero-point được dùng cho một tensor. Per-channel cho weights thường tốt hơn per-tensor về accuracy vì từng channel có range khác nhau. Per-tensor cho activations phổ biến vì đơn giản và kernel dễ hỗ trợ.
+:::
+
+```{mermaid}
+%%| label: fig-l5-granularity
+%%| fig-cap: "Ba mức granularity: per-tensor (1 scale), per-channel (1 scale/channel), per-block (1 scale/block)."
+%%| fig-width: 6.5
+%%| fig-align: "center"
+flowchart TB
+  T([Per-tensor\nscale: \[\]])
+  C([Per-channel\nscale: \[out_C\]])
+  B([Per-block\nscale: \[M, ⌈K/bs⌉\]])
+  T --> USE1([Activations\nphổ biến, đơn giản])
+  C --> USE2([Conv/GEMM weights\naccuracy tốt hơn])
+  B --> USE3([LLM weights\nINT4/INT8 weight-only])
+  classDef node fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef use fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  class T,C,B node
+  class USE1,USE2,USE3 use
 ```
 
-Các giá trị nhỏ sẽ bị biểu diễn thô hơn:
+| Granularity | Scale shape | Ưu điểm | Nhược điểm |
+|:------------|:------------|:--------|:-----------|
+| Per-tensor | `[]` (scalar) | Đơn giản, runtime overhead thấp | Kém nếu channels có range rất khác nhau |
+| Per-channel | `[out_channels]` | Accuracy tốt cho weights, giảm ảnh hưởng outlier channel | Scale nhiều hơn; kernel cần support per-channel |
+| Per-block | `[M, ceil(K/bs)]` | Cân bằng accuracy/overhead cho LLM | Phức tạp; backend support khác nhau |
 
-```text
-0.5 / scale ≈ 3.175 -> q = 3 -> x_approx ≈ 0.472
-```
-
-Với neural network, outlier có thể làm một số layer bị quantize rất tệ.
-
-
-
-## Quantization granularity
-Granularity là cách áp dụng scale.
-
-### Per-tensor quantization
-
-Một scale cho toàn bộ tensor.
-
-```text
-tensor shape: [C, H, W]
-scale shape: []
-```
-
-Ưu điểm:
-
-- Đơn giản.
-- Runtime overhead thấp.
-- Phù hợp cho activation.
-
-Nhược điểm:
-
-- Nếu các channel có range rất khác nhau, accuracy có thể giảm.
-
-### Per-channel / per-axis quantization
-
-Mỗi channel hoặc mỗi axis có một scale riêng.
-
-Ví dụ convolution weight:
-
-```text
-weight shape: [out_channels, in_channels, kH, kW]
-scale shape: [out_channels]
-```
-
-Ưu điểm:
-
-- Tốt cho weights.
-- Giảm ảnh hưởng của channel có outlier lớn.
-- Accuracy thường tốt hơn per-tensor.
-
-Nhược điểm:
-
-- Scale metadata nhiều hơn.
-- Kernel cần hỗ trợ per-channel.
-
-### Per-block quantization
-
-Tensor được chia thành các block, mỗi block có scale riêng.
-
-Ví dụ:
+Per-block thường dùng block size **64 hoặc 128**:
 
 ```text
 weight matrix: [M, K]
@@ -472,1103 +339,851 @@ block size: 64 hoặc 128
 scale shape: [M, ceil(K / block_size)]
 ```
 
-Ưu điểm:
-
-- Tốt cho weight-only quantization và model lớn.
-- Cân bằng giữa accuracy và metadata overhead.
-
-Nhược điểm:
-
-- Phức tạp hơn.
-- Backend support khác nhau giữa hardware/runtime.
-
-### Quy tắc thực tế
+**Quy tắc thực tế:**
 
 ```text
-CNN / Conv weights:
-    per-channel weight quantization thường tốt.
-
-Activations:
-    per-tensor thường phổ biến.
-
-LLM / large GEMM weights:
-    per-channel hoặc per-block weight-only quantization thường quan trọng.
-
-TensorRT:
-    per-tensor activations + per-channel weights là cấu hình rất đáng thử đầu tiên.
+CNN Conv weights:      per-channel (axis = out_channel)
+Activations:           per-tensor
+LLM / large GEMM:     per-channel hoặc per-block weight-only
+TensorRT khởi đầu:     per-tensor activation + per-channel weight
 ```
 
+::: {.callout-tip icon=false collapse="true"}
+## Đào sâu: Weight quantization vs activation quantization
+
+**Weight quantization** dễ hơn — weights là constants sau training:
+- Scan toàn bộ weight tensor offline, tính scale chính xác một lần
+- Dùng per-channel / per-block dễ
+- Ổn định: không phụ thuộc vào input distribution
+
+**Activation quantization** phụ thuộc input:
+- Distribution = function(input data) → cần calibration dataset đại diện
+- Phải dùng static scale (offline calibration) hoặc dynamic scale (runtime)
+- Nhạy với distribution shift giữa calibration và production
+- Là nguyên nhân lớn nhất gây accuracy drop trong PTQ
+
+Kết hợp phổ biến nhất: **weight quantization per-channel + activation quantization per-tensor**.
+:::
 
 
-## Weight quantization vs activation quantization
+## Dynamic quantization vs static quantization {#sec-dyn-static}
 
-### Weight quantization
+> Tính scale lúc inference hay offline — cái nào phù hợp khi nào?
 
-Weights là constants sau training.
+::: {.callout-important icon=false}
+## Ý chính
+**Dynamic quantization** tính scale activation tại runtime — không cần calibration data nhưng có overhead. **Static quantization** tính scale offline từ calibration dataset — inference nhanh hơn nhưng đòi hỏi data đại diện. CNN serving trên GPU nên ưu tiên static + Q/DQ; CPU NLP workload có thể thử dynamic.
+:::
 
-```text
-weights known offline
-```
-
-Vì vậy bạn có thể:
-
-- Scan toàn bộ weight tensor.
-- Tính scale chính xác.
-- Dùng per-channel/per-block dễ hơn.
-- Quantize một lần trước deployment.
-
-Weight quantization thường ổn định hơn activation quantization.
-
-### Activation quantization
-
-Activations phụ thuộc input.
-
-```text
-activation distribution = function(input data)
-```
-
-Vì vậy bạn cần:
-
-- Calibration data đại diện.
-- Runtime dynamic scale, hoặc static scale từ calibration.
-- Theo dõi outliers.
-- Cẩn thận với distribution shift.
-
-Activation quantization là nguyên nhân lớn gây accuracy drop trong PTQ.
-
-
-
-## Dynamic quantization vs static quantization
-
-### Dynamic quantization
-
-Dynamic quantization tính scale/zero-point cho activation trong lúc inference.
+Mental model dynamic:
 
 ```text
 for each input:
     compute activation scale dynamically
-    quantize
-    run low precision op
-    dequantize if needed
+    quantize → run low precision op → dequantize if needed
 ```
 
-Ưu điểm:
+| Tiêu chí | Dynamic | Static |
+|:---------|:--------|:-------|
+| Scale activation | Runtime, mỗi input | Offline, cố định sau calibration |
+| Calibration data cần | Không (activation) | Có |
+| Inference overhead | Cao hơn | Thấp hơn |
+| Accuracy | Thường tốt hơn theo từng input | Phụ thuộc chất lượng calibration |
+| Phù hợp | RNN / Transformer CPU | CNN / GPU serving |
 
-- Không cần calibration dataset cho activation.
-- Có thể chính xác hơn static vì scale theo từng input.
-- Hay dùng với một số RNN/Transformer CPU workloads.
+| Model / Workload | Gợi ý ban đầu |
+|:----------------|:-------------|
+| CNN image classification / detection | Static PTQ trước |
+| RNN / một số NLP CPU | Dynamic PTQ có thể thử |
+| Transformer / LLM GPU | Framework-specific PTQ / QAT / weight-only / FP8 |
+| Accuracy target rất chặt | QAT hoặc mixed precision |
+| Không có calibration data | Dynamic hoặc weight-only quantization |
 
-Nhược điểm:
 
-- Có runtime overhead để tính scale.
-- Không phải backend nào cũng tăng tốc tốt.
-- Trên GPU/TensorRT, cách làm phổ biến hơn thường là explicit Q/DQ hoặc calibration workflow phù hợp backend.
+## PTQ: Post-Training Quantization {#sec-ptq}
 
-### Static quantization
+> Quantize sau khi model đã train xong hoạt động thế nào và cần gì?
 
-Static quantization tính scale/zero-point offline bằng calibration dataset.
+::: {.callout-important icon=false}
+## Ý chính
+**PTQ** không retrain model — chỉ thu thập thống kê activation từ calibration data, tính scale/zero-point, rồi tạo quantized graph. Nhanh và không cần training data đầy đủ, nhưng accuracy phụ thuộc hoàn toàn vào chất lượng calibration data và phương pháp calibration.
+:::
 
-```text
-calibration data -> activation statistics -> fixed scales -> quantized model
+```{mermaid}
+%%| label: fig-l5-ptq
+%%| fig-cap: "PTQ workflow: FP32 model → calibration dataset → activation statistics → Q/DQ ONNX → build engine → validate."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  FP([FP32 model]) -->|"1. baseline"| BAS([accuracy\n+ latency])
+  FP -->|"2. run forward\ncollect stats"| CAL([Calibration\ndataset])
+  CAL --> STAT([Activation\nstatistics])
+  STAT -->|"3. compute\nscale/zero_point"| QDQ([Q/DQ ONNX\ngraph])
+  QDQ -->|"4. build"| ENG([Engine\n/ plan])
+  ENG -->|"5. validate"| RES([Accuracy +\nLatency report])
+  classDef stage fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5C3B10
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef good fill:#E8F5E9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20
+  class FP,BAS stage
+  class CAL,STAT hot
+  class QDQ,ENG ok
+  class RES good
 ```
 
-Ưu điểm:
+**Khi nào dùng PTQ:**
 
-- Runtime nhanh hơn vì scale đã biết.
-- Phù hợp CNN và production serving.
-- Dễ tối ưu graph hơn.
+- Deploy nhanh, không có budget retraining
+- Không có full training data
+- Model có kiến trúc quantization-friendly (CNN vision phổ biến)
+- Accuracy drop chấp nhận được trong ngưỡng business
 
-Nhược điểm:
+**PTQ workflow tiêu chuẩn (10 bước):**
 
-- Cần calibration dataset đại diện.
-- Nếu data distribution thay đổi, accuracy có thể giảm.
-- Sensitive với preprocessing và sample coverage.
+1. Chọn baseline model FP32/FP16 → đo accuracy + latency
+2. Chuẩn bị calibration dataset (xem yêu cầu bên dưới)
+3. Chạy graph preprocessing/fusion nếu framework yêu cầu
+4. Chạy calibration → tính scale/zero-point
+5. Tạo quantized model (Q/DQ ONNX hoặc QOperator)
+6. Validate accuracy trên validation set thật
+7. Benchmark latency/throughput/memory
+8. Debug layer gây lỗi (xem @sec-accuracy)
+9. Exclude sensitive layers hoặc thử calibration method khác
+10. Nếu vẫn không đạt → chuyển sang QAT hoặc mixed precision
 
-### Quy tắc chọn nhanh
+**Calibration dataset — yêu cầu:**
 
-|                   Model / workload |                                        Gợi ý ban đầu |
-|-----------------------------------:|-----------------------------------------------------:|
-| CNN image classification/detection |                                     Static PTQ trước |
-|  RNN hoặc một số NLP CPU workloads |                          Dynamic PTQ có thể đáng thử |
-|                Transformer/LLM GPU |   Framework-specific PTQ/QAT/weight-only/FP8 recipes |
-|           Accuracy target rất chặt |                             QAT hoặc mixed precision |
-|          Không có calibration data |   Dynamic quantization hoặc weight-only quantization |
-
-
-
-## PTQ: Post-Training Quantization
-
-PTQ là quantization sau khi model đã train xong, không retrain toàn bộ model.
-
-```text
-trained FP32/FP16 model
-   |
-   | calibration or weight statistics
-   v
-quantized model
-```
-
-### Khi nào dùng PTQ?
-
-PTQ phù hợp khi:
-
-- Bạn cần deploy nhanh.
-- Không có budget retraining.
-- Không có full training data.
-- Accuracy drop chấp nhận được.
-- Model có kiến trúc tương đối quantization-friendly.
-
-### PTQ workflow tiêu chuẩn
-
-```text
-1. Chọn baseline model FP32/FP16.
-2. Đo baseline accuracy + latency.
-3. Chuẩn bị calibration dataset.
-4. Chạy graph preprocessing/fusion nếu cần.
-5. Chạy calibration.
-6. Tạo quantized model hoặc Q/DQ model.
-7. Validate accuracy.
-8. Benchmark latency/throughput/memory.
-9. Debug layer nào gây lỗi.
-10. Exclude sensitive layers hoặc thử calibration method khác.
-11. Nếu vẫn không đạt, chuyển sang QAT hoặc mixed precision.
-```
-
-### Calibration dataset
-
-Calibration dataset không nhất thiết cần label, nhưng phải đại diện cho distribution inference.
-
-Ví dụ image classification:
+Calibration data không cần label, nhưng phải **đại diện cho distribution inference** và phải đi qua **đúng preprocessing pipeline production**:
 
 ```text
 Tốt:
-    ảnh production thật
-    đủ class
-    đủ lighting/scale/camera/source
-    preprocessing giống production
+    ảnh production thật, đủ class, đủ lighting / scale / source
+    preprocessing: resize → center crop → normalize(mean/std) → NCHW
+    đúng như production inference
 
 Không tốt:
-    ảnh random noise
-    ảnh train bị normalize khác production
-    chỉ một class
-    sample quá ít
-    input shape khác production
+    ảnh random noise                input shape khác production
+    chỉ một class                   normalize khác production
+    sample quá ít                   augmented data quá khác inference
 ```
 
-Điểm quan trọng:
+**Ba calibration methods:**
 
-```text
-Calibration data phải đi qua cùng preprocessing pipeline với production inference.
-```
+| Method | Cơ chế | Ưu điểm | Nhược điểm |
+|:-------|:-------|:--------|:-----------|
+| **MinMax** | `range = [min_act, max_act]` | Đơn giản, nhanh, giữ toàn range | Rất nhạy với outlier |
+| **Entropy / KL** | Chọn threshold tối ưu hóa KL divergence | Tốt cho CNN, giảm ảnh hưởng outlier | Chậm hơn; tệ nếu outlier thật sự quan trọng |
+| **Percentile** | `threshold = percentile(abs(act), p)` | Dễ hiểu, cân bằng min-max và entropy | `p` là hyperparameter; quá thấp → clamping lớn |
 
-Nếu production dùng:
-
-```text
-resize -> center crop -> normalize(mean/std) -> NCHW
-```
-
-thì calibration cũng phải dùng đúng như vậy.
-
-
-
-## Calibration methods
-
-Calibration chọn scale dựa trên distribution của activation.
-
-### MinMax calibration
-
-MinMax dùng min/max quan sát được:
-
-```text
-range = [min_activation, max_activation]
-```
-
-Ưu điểm:
-
-- Đơn giản.
-- Nhanh.
-- Giữ toàn bộ range.
-
-Nhược điểm:
-
-- Rất nhạy với outlier.
-- Nếu có vài giá trị cực lớn, scale sẽ lớn, làm phần lớn giá trị nhỏ bị rounding thô.
-
-Phù hợp khi:
-
-- Distribution ít outlier.
-- NLP model hoặc layer mà outlier quan trọng.
-- Cần bảo toàn range.
-
-### Entropy / KL calibration
-
-Entropy/KL calibration chọn threshold sao cho distribution sau quantization giữ được thông tin tốt hơn.
-
-Ý tưởng:
-
-```text
-Không nhất thiết giữ mọi outlier.
-Chọn clipping threshold tối ưu hơn cho distribution chính.
-```
-
-Ưu điểm:
-
-- Thường tốt với CNN.
-- Có thể giảm ảnh hưởng outlier.
-
-Nhược điểm:
-
-- Chậm hơn MinMax.
-- Có thể không tốt nếu outlier thật sự quan trọng.
-
-### Percentile calibration
-
-Percentile calibration bỏ qua một phần cực nhỏ outliers.
-
-Ví dụ:
+Công thức Percentile thường gặp trong thực hành:
 
 ```text
 threshold = percentile(abs(activation), 99.99%)
 ```
 
-Ưu điểm:
+`p = 99.99` là điểm khởi đầu phổ biến; quá thấp → clamping lớn trên tail thật sự quan trọng.
 
-- Dễ hiểu.
-- Cân bằng giữa MinMax và Entropy.
-- Hữu ích khi outliers hiếm nhưng gây scale quá lớn.
-
-Nhược điểm:
-
-- Percentile là hyperparameter.
-- Nếu chọn quá thấp, clamping error lớn.
-
-### Calibration method không có đáp án chung
-
-Quy tắc thực tế:
+Không có calibration method “luôn thắng”:
 
 ```text
-Start:
-    MinMax hoặc Entropy tùy backend/model.
-
-If accuracy drops:
-    thử method khác.
-    thử per-channel weights.
-    thử exclude sensitive layers.
-    kiểm tra preprocessing.
-    tăng calibration data.
-    chuyển sang QAT nếu cần.
+Bắt đầu: MinMax hoặc Entropy tùy backend / model
+Nếu accuracy kém:
+  → thử method khác (Entropy / Percentile / MinMax)
+  → per-channel weights → exclude sensitive layers
+  → kiểm tra preprocessing → tăng calibration data
+  → chuyển sang QAT nếu cần
 ```
 
 
+## QAT: Quantization-Aware Training {#sec-qat}
 
-## QAT: Quantization-Aware Training
+> Khi nào PTQ không đủ tốt và cần training lại với fake quantization?
 
-QAT mô phỏng quantization trong quá trình training hoặc fine-tuning.
+::: {.callout-important icon=false}
+## Ý chính
+**QAT** chèn **fake quantization** vào training graph: forward pass mô phỏng quantization noise, backward pass dùng Straight-Through Estimator. Model học cách robust với rounding/clamping, phục hồi accuracy gần FP32 mà PTQ không thể đạt. Cần training compute budget và full training/fine-tuning data.
+:::
 
-```text
-FP32 training graph
-   |
-   | insert fake quantization
-   v
-train/fine-tune with quantization noise
-   |
-   v
-model learns to be robust to low precision
-```
-
-### Fake quantization là gì?
-
-Trong QAT, forward pass mô phỏng quantization:
+**Fake quantization là gì:**
 
 ```text
-x_fp32 -> quantize -> dequantize -> x_fake_quant_fp32
+Forward pass:
+    x_fp32 → quantize → dequantize → x_fake_quant_fp32
+    (model thấy lỗi quantization, học để minimize nó)
+
+Backward pass:
+    Gradient đi qua Straight-Through Estimator (STE)
+    Optimizer cập nhật weights để giảm quantization error
 ```
 
-Nhưng backward pass vẫn dùng gradient approximation.
+**Vì sao QAT giúp accuracy:**
 
-Mental model:
+PTQ chỉ thay đổi representation sau training — model không có cơ hội thích nghi với rounding/clamping. QAT cho model fine-tune với quantization noise nên có thể:
+
+- Giảm sensitivity của weights với quantization
+- Điều chỉnh activation distribution về range dễ quantize hơn
+- Giảm lỗi tại layer nhạy cảm
+- Khôi phục accuracy gần FP32 hơn nhiều so với PTQ
+
+**Khi nào cần QAT:**
+
+- PTQ accuracy drop vượt ngưỡng chấp nhận
+- Model nhỏ, capacity thấp (ít parameter chịu được quantization hơn)
+- Activation distribution khó calibrate (irregular, long-tail)
+- Object detection / segmentation bị giảm mAP nhiều
+- Accuracy target rất chặt (medical, finance)
+- Có training / fine-tuning data và compute budget
+
+**QAT workflow tiêu chuẩn:**
+
+1. Start từ pretrained FP32/FP16 model
+2. Fuse modules nếu framework yêu cầu (BatchNorm + Conv)
+3. Insert observers / fake quant modules
+4. Fine-tune vài epoch với learning rate nhỏ
+5. Freeze observer sau khi scale ổn định
+6. Freeze batch norm statistics nếu cần
+7. Convert / export sang quantized graph hoặc ONNX Q/DQ graph
+8. Validate accuracy → build TensorRT engine → benchmark thật
+
+::: {.callout-warning icon=false}
+## Bẫy thường gặp với QAT
+
+QAT vẫn fail nếu pipeline sai:
+
+- Fake quant config không khớp backend thật (per-channel axis sai, dtype khác)
+- Preprocessing training ≠ production
+- Export ONNX không giữ đúng Q/DQ nodes
+- Observer chưa ổn định (scale còn dao động khi convert)
+- Layer sensitive bị ép quantize trong khi backend không fuse tốt
+- Không validate engine thật — chỉ đo accuracy trong PyTorch
+
+**Bắt buộc:** export ONNX Q/DQ sớm trong QAT và validate TensorRT/ORT engine ngay trong quá trình fine-tuning.
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## PyTorch QAT skeleton (conceptual)
+
+```python
+import torch
+from torch.ao.quantization import get_default_qat_qconfig_mapping
+from torch.ao.quantization.quantize_fx import prepare_qat_fx, convert_fx
+
+
+model = MyModel()
+model.train()
+
+example_inputs = (torch.randn(1, 3, 224, 224),)
+qconfig_mapping = get_default_qat_qconfig_mapping("fbgemm")
+
+prepared = prepare_qat_fx(model, qconfig_mapping, example_inputs)
+
+for epoch in range(num_epochs):
+    prepared.train()
+    for images, labels in train_loader:
+        optimizer.zero_grad()
+        outputs = prepared(images)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+    validate(prepared, val_loader)
+
+prepared.eval()
+quantized = convert_fx(prepared)
+```
+
+**Lưu ý quan trọng:** PyTorch quantized model ≠ TensorRT-ready. Phải kiểm tra export ONNX Q/DQ, TensorRT parsing và accuracy sau khi build engine thật.
+:::
+
+
+## ONNX quantization representation {#sec-onnx-repr}
+
+> ONNX biểu diễn quantization bằng cách nào và tại sao Q/DQ tốt hơn QOperator?
+
+::: {.callout-important icon=false}
+## Ý chính
+ONNX có hai format: **QOperator** (thay op gốc bằng quantized op chuyên biệt như `QLinearConv`) và **Q/DQ** (chèn `QuantizeLinear`/`DequantizeLinear` quanh tensor, giữ op gốc). TensorRT hiện đại ưu tiên Q/DQ vì cho phép compiler kiểm soát precision boundary rõ ràng và fuse pattern hiệu quả.
+:::
+
+**QOperator format:**
 
 ```text
-Forward:
-    model thấy lỗi quantization.
-
-Backward:
-    optimizer cập nhật weights để giảm lỗi đó.
+Conv    → QLinearConv
+MatMul  → MatMulInteger / QLinearMatMul
 ```
 
-### Vì sao QAT giúp accuracy?
+Graph nhìn ngắn hơn, phù hợp một số CPU backend. Nhưng phụ thuộc hoàn toàn vào support từng quantized op type.
 
-PTQ chỉ thay đổi representation sau training. Model không có cơ hội thích nghi với rounding/clamping.
-
-QAT cho model học với quantization noise, nên có thể:
-
-- Giảm sensitivity của weights.
-- Điều chỉnh activation distribution.
-- Giảm lỗi tại layer nhạy cảm.
-- Khôi phục accuracy gần FP32 hơn.
-
-### Khi nào cần QAT?
-
-QAT đáng dùng khi:
-
-- PTQ accuracy drop vượt ngưỡng.
-- Model nhỏ và capacity thấp.
-- Activation distribution khó calibrate.
-- Object detection/segmentation bị giảm metric nhiều.
-- Accuracy target rất chặt.
-- Bạn có training/fine-tuning data và compute budget.
-
-### QAT workflow tiêu chuẩn
-
-```text
-1. Start từ pretrained FP32/FP16 model.
-2. Fuse modules nếu framework yêu cầu.
-3. Insert observers/fake quant modules.
-4. Train/fine-tune vài epoch với learning rate nhỏ.
-5. Freeze observer sau khi scale ổn định.
-6. Freeze batch norm statistics nếu cần.
-7. Convert/export sang quantized graph hoặc ONNX Q/DQ graph.
-8. Validate accuracy.
-9. Build TensorRT engine hoặc chạy ORT backend.
-10. Benchmark latency.
-```
-
-### QAT không tự động tốt hơn nếu pipeline sai
-
-QAT vẫn có thể fail nếu:
-
-- Fake quant config không khớp backend thật.
-- Per-channel axis khác cách TensorRT parse GEMM/Conv.
-- Preprocessing training khác production.
-- Export ONNX không giữ đúng Q/DQ nodes.
-- Layer sensitive bị ép quantize trong khi backend không fuse tốt.
-- Calibration/fake quant observer chưa ổn định.
-
-
-
-## ONNX quantization representation
-
-ONNX có hai cách phổ biến để biểu diễn model quantized:
-
-```text
-1. QOperator format
-2. Q/DQ format
-```
-
-### QOperator format
-
-QOperator thay operator gốc bằng operator quantized chuyên biệt.
-
-Ví dụ:
-
-```text
-Conv -> QLinearConv
-MatMul -> MatMulInteger / QLinearMatMul
-```
-
-Mental model:
-
-```text
-QOperator = quantized operator has its own op type
-```
-
-Ưu điểm:
-
-- Graph nhìn ngắn hơn.
-- Có thể phù hợp với một số CPU backend.
-
-Nhược điểm:
-
-- Phụ thuộc support của từng quantized operator.
-- Kém linh hoạt hơn Q/DQ khi compiler muốn quyết định fusion/placement.
-
-### Q/DQ format
-
-Q/DQ giữ operator gốc, nhưng thêm cặp `QuantizeLinear` và `DequantizeLinear`.
-
-Ví dụ:
+**Q/DQ format** giữ operator gốc, chèn precision boundary:
 
 ```text
 x_fp32
-  |
-QuantizeLinear
-  |
+  ↓  QuantizeLinear(scale, zero_point)
 x_int8
-  |
-DequantizeLinear
-  |
+  ↓  DequantizeLinear(scale, zero_point)
 x_fp32_approx
-  |
-Conv
+  ↓  Conv (FP32 op gốc)
+  ↓  QuantizeLinear → y_int8 → DequantizeLinear → y_fp32_approx
 ```
 
-Ở runtime/compiler, pattern này có thể được fuse thành low-precision kernel:
+Backend (TensorRT / ORT) nhận ra pattern `DQ → Conv → Q` và fuse thành INT8 Conv kernel.
 
-```text
-DQ -> Conv -> Q
+Mental model: **Q/DQ = tensor-oriented quantization annotation** (không thay đổi op gốc). `QuantizeLinear` / `DequantizeLinear` trên ONNX hỗ trợ nhiều version theo opset — version mới hỗ trợ nhiều dtype/granularity hơn.
+
+```{mermaid}
+%%| label: fig-l5-qdq
+%%| fig-cap: "Q/DQ graph: QuantizeLinear/DequantizeLinear bao quanh op gốc; TensorRT fuse DQ+Conv+Q thành INT8 kernel."
+%%| fig-width: 6
+%%| fig-align: "center"
+flowchart TB
+  IN([x_fp32\ninput]) -->|"QuantizeLinear\nscale, zero_point"| Q1([x_int8])
+  Q1 -->|"DequantizeLinear"| DQ1([x_fp32_approx])
+  DQ1 --> CONV([Conv\nFP32 op gốc])
+  CONV -->|"QuantizeLinear"| Q2([y_int8])
+  Q2 -->|"DequantizeLinear"| OUT([y_fp32_approx\nnext layer])
+  CONV -.->|"TRT fuses\nDQ+Conv+Q"| TRT([INT8 Conv\nkernel])
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  classDef op fill:#EAF3FF,stroke:#4A90E2,stroke-width:2px,color:#1F3A5F
+  classDef fuse fill:#E8F5E9,stroke:#388E3C,stroke-width:1.5px,color:#1B5E20
+  class IN,OUT,DQ1,Q2 io
+  class Q1,CONV op
+  class TRT fuse
 ```
 
-có thể được TensorRT/ORT backend hiểu là:
+**ONNX operators:**
 
-```text
-INT8 Conv kernel
-```
+`QuantizeLinear` (opset 13+):
 
-Mental model:
+$$y = \operatorname{saturate}\!\left(\operatorname{round}\!\left(\frac{x}{y\_\text{scale}}\right) + y\_\text{zero\_point}\right)$$
 
-```text
-Q/DQ = tensor-oriented quantization annotation.
-```
+`DequantizeLinear`:
 
-Ưu điểm:
+$$y = (x - x\_\text{zero\_point}) \times x\_\text{scale}$$
 
-- Rõ scale nằm ở đâu.
-- Dễ kiểm soát precision theo tensor.
-- Phù hợp với explicit quantization.
-- TensorRT hiện đại ưu tiên hướng này.
+**Tại sao Q/DQ rồi dequantize ngay?**
 
-Nhược điểm:
+Graph vẫn biểu diễn toán học ở dạng FP32 approximation, nhưng backend nhận ra pattern và thay bằng low-precision kernel. Lợi ích: compiler tự quyết định fuse hay không theo hardware capability; precision boundary rõ ràng dễ debug.
 
-- Graph nhiều node hơn.
-- Q/DQ placement sai có thể làm graph chậm hoặc accuracy giảm.
-- Backend cần pattern matching/fusion tốt.
+| Tiêu chí | QOperator | Q/DQ |
+|:---------|:---------:|:----:|
+| Graph ngắn gọn | Có | Ít hơn |
+| Precision control | Thấp | Cao |
+| TensorRT fusion | Giới hạn | Tốt |
+| CPU backend support | Tốt | Tùy provider |
+| Kiểm soát sensitive layer | Khó | Dễ |
+| Hướng phát triển TRT | Legacy | Ưu tiên |
 
-
-
-## ONNX QuantizeLinear và DequantizeLinear
-
-### QuantizeLinear
-
-`QuantizeLinear` nhận tensor high precision, scale và zero-point để tạo tensor quantized.
-
-Công thức:
-
-```text
-y = saturate(round(x / y_scale) + y_zero_point)
-```
-
-Trong ONNX docs, `QuantizeLinear` hỗ trợ nhiều version theo opset. Các version mới hỗ trợ nhiều kiểu dữ liệu và granularity hơn.
-
-### DequantizeLinear
-
-`DequantizeLinear` nhận tensor quantized, scale và zero-point để tái tạo tensor high precision gần đúng.
-
-Công thức:
-
-```text
-y = (x - x_zero_point) * x_scale
-```
-
-### Q/DQ pair
-
-Một cặp Q/DQ thường biểu diễn:
-
-```text
-High precision tensor
-   |
-   | QuantizeLinear(scale, zero_point)
-   v
-Low precision tensor
-   |
-   | DequantizeLinear(scale, zero_point)
-   v
-High precision approximation
-```
-
-Tại sao lại quantize rồi dequantize ngay?
-
-Vì graph vẫn có thể biểu diễn toán học ở dạng high precision approximation, nhưng backend có thể nhận ra pattern và thay bằng low-precision kernel.
-
-
-
-## Explicit vs implicit quantization trong TensorRT
-
-### Implicit quantization
-
-Implicit quantization để TensorRT builder tự quyết định tensor/layer nào chạy INT8 dựa trên:
-
-```text
-model + calibration data/dynamic range + builder flags
-```
-
-Đặc điểm:
-
-- Chỉ áp dụng cho INT8.
-- Phụ thuộc weak typing.
-- Ít kiểm soát hơn.
-- Hướng cũ, không nên là workflow chính để học production hiện đại.
-
-### Explicit quantization
-
-Explicit quantization biểu diễn quantize/dequantize trực tiếp trong graph bằng Q/DQ nodes.
-
-```text
-model with Q/DQ nodes -> TensorRT parses Q/DQ -> engine
-```
-
-Đặc điểm:
-
-- Scale được encode trong model.
-- Kiểm soát precision rõ ràng hơn.
-- Hỗ trợ nhiều quantized data types hơn.
-- Phù hợp với strong typing.
-- Là hướng nên ưu tiên khi bạn build pipeline mới.
-
-### Quy tắc rất quan trọng
-
-```text
-Nếu model đã có Q/DQ nodes:
-    không đưa external INT8 calibration table vào TensorRT.
-
-Nếu model chưa có Q/DQ nodes:
-    cần calibration/dynamic range nếu muốn implicit INT8.
-```
-
-Lý do:
-
-```text
-Q/DQ graph đã chứa scale.
-Calibration table ngoài sẽ xung đột với explicit quantization.
-```
-
-
-
-## TensorRT xử lý Q/DQ graph như thế nào?
-
-Khi TensorRT thấy Q/DQ nodes, nó hiểu rằng graph đang chỉ định vị trí quantization/dequantization.
-
-Ví dụ conceptual:
-
-```text
-input
-  |
-Q
-  |
-DQ
-  |
-Conv
-  |
-Q
-  |
-DQ
-  |
-Relu
-```
-
-TensorRT không nhất thiết execute từng Q/DQ như operator riêng. Nó cố gắng:
-
-```text
-1. Propagate Q backward.
-2. Propagate DQ forward.
-3. Fuse DQ + quantizable op + Q.
-4. Tăng phần graph chạy low precision.
-5. Giữ arithmetic correctness trong phạm vi optimization hợp lệ.
-```
-
-Mental model:
-
-```text
-Q/DQ nodes are precision boundaries.
-Compiler tries to move and fuse them safely.
-```
-
-Q/DQ placement ảnh hưởng trực tiếp đến:
-
-- Layer nào chạy INT8/FP8.
-- Có fuse được hay không.
-- Có fallback về FP16/FP32 hay không.
-- Accuracy có giảm mạnh hay không.
-
-
-
+::: {.callout-tip icon=false collapse="true"}
 ## Q/DQ placement recommendations
 
-### Quantize inputs của weighted ops
-
-Weighted ops gồm:
+**Quantize inputs của weighted ops:**
 
 ```text
-Conv
-GEMM
-MatMul
-FullyConnected
-Transposed Conv
+Conv, GEMM, MatMul, FullyConnected, Transposed Conv
+→ Q/DQ trước activation input + weight input của các op này
+
+Payoff khi fuse được:
+  lower precision weights + activations
+    → giảm bandwidth
+    → dùng low precision matrix/conv kernels
 ```
 
-Các op này thường có lợi lớn từ quantization vì:
+**Cấu hình khởi đầu đáng thử:**
 
 ```text
-lower precision weights + activations
-    -> giảm bandwidth
-    -> dùng low precision matrix/conv kernels
+weights:     per-channel / per-axis
+activations: per-tensor
 ```
 
-### Per-channel weights, per-tensor activations
-
-Cấu hình khởi đầu rất đáng thử:
+**Cẩn thận với activation nhạy cảm:**
 
 ```text
-weights:
-    per-channel / per-axis
-
-activations:
-    per-tensor
-```
-
-Lý do:
-
-- Weights biết trước và từng channel có range khác nhau.
-- Activations thay đổi theo input nên per-tensor đơn giản và dễ kernel support.
-
-### Cẩn thận với activation functions nhạy cảm
-
-Một số activation hoặc pattern có thể nhạy:
-
-```text
-SiLU / Swish
-Softmax
-LayerNorm
-GELU
-Attention score
-Small residual values
+SiLU / Swish     Softmax        LayerNorm
+GELU             Attention score matmul
+Small residual add values
 ```
 
 Không phải lúc nào cũng nên ép mọi thứ chạy INT8/FP8.
 
-### Residual connections
-
-Skip connection có thể ảnh hưởng fusion.
-
-Ví dụ:
+**Residual connections cần chú ý:**
 
 ```text
-main branch -> Conv -> Add -> output
-skip branch --^
+main branch → Conv → Add → output
+skip branch ─────────^
 ```
 
-Nếu một nhánh quantized và nhánh kia high precision, compiler có thể không fuse tốt.
+Nếu một nhánh quantized và nhánh kia FP16, compiler có thể không fuse tốt. Kiểm tra precision của cả hai input vào Add và output của Add — và xem có Q/DQ dư thừa quanh Add không.
 
-Cần kiểm tra:
+**Không thêm Q/DQ quá aggressive:**
 
-```text
-- precision của cả hai input vào Add
-- output của Add
-- có Q/DQ dư thừa quanh Add không
-```
-
-### Không thêm Q/DQ quá nhiều một cách mù quáng
-
-Thêm Q/DQ quá aggressive có thể:
-
-- Làm graph nhiều conversion.
-- Chặn fusion.
-- Gây accuracy drop.
-- Gây build fail nếu layer không có low-precision implementation.
-
-Quy tắc:
+Thêm quá nhiều Q/DQ → graph nhiều conversion → chặn fusion → accuracy drop → build fail nếu không có low-precision kernel.
 
 ```text
 Quantize where it pays off.
 Keep sensitive regions higher precision.
 ```
+:::
 
 
+## Explicit vs implicit quantization trong TensorRT {#sec-trt-quant}
 
-## INT8 trong TensorRT
+> TRT explicit quantization với Q/DQ khác gì implicit calibration?
 
-### INT8 quantization formula
+::: {.callout-important icon=false}
+## Ý chính
+**Explicit quantization** encode scale/zero_point trong graph bằng Q/DQ nodes — TensorRT đọc và fuse chúng, kiểm soát precision rõ ràng, hỗ trợ nhiều dtype. **Implicit quantization** để TRT tự quyết dựa trên external calibration table. Pipeline mới phải dùng explicit Q/DQ; **không** đưa external calibration table vào model đã có Q/DQ nodes.
+:::
 
-Trong TensorRT, INT8 symmetric quantization có thể hiểu như:
+| Đặc điểm | Implicit quantization | Explicit quantization |
+|:---------|:---------------------:|:---------------------:|
+| Scale nằm ở đâu | Calibration table ngoài | Q/DQ nodes trong graph |
+| Kiểm soát precision | Thấp (weak typing) | Cao |
+| Dtype support | Chỉ INT8 | INT8, FP8, INT4, ... |
+| Strong typing | Không | Có (`stronglyTyped` mode) |
+| Hướng phát triển | Legacy — không nên là workflow chính | Ưu tiên workflow mới |
 
-```text
-x_q = roundWithTiesToEven(clip(x / scale, -128, 127))
-x   = x_q * scale
-```
-
-Trong đó:
-
-```text
-x_q: INT8 value
-scale: FP16/FP32/BF16 scale
-```
-
-### INT8 không chỉ giảm model size
-
-INT8 giúp khi TensorRT có thể chọn low-precision implementation:
+**Quy tắc quan trọng nhất:**
 
 ```text
-Conv INT8
-GEMM INT8
-MatMul INT8
+Model đã có Q/DQ nodes:
+    → KHÔNG đưa external INT8 calibration table vào TensorRT.
+    Lý do: scale đã encode trong graph; calibration table ngoài
+    sẽ xung đột và gây lỗi hoặc override không mong muốn.
+
+Model chưa có Q/DQ nodes:
+    → Cần calibration / dynamic range cho implicit INT8.
+    Hoặc: dùng quantization tool tạo Q/DQ graph trước.
 ```
 
-Nhưng nếu graph bị nhiều dequantize/quantize xen kẽ:
+**TRT xử lý Q/DQ graph:**
+
+Khi TensorRT thấy Q/DQ nodes, compiler cố gắng:
+
+1. Propagate Q backward (đẩy quantization sớm hơn trong graph)
+2. Propagate DQ forward (đẩy dequantization muộn hơn)
+3. Fuse `DQ + quantizable_op + Q` thành INT8/FP8 kernel
+4. Tăng phần graph chạy low precision
+5. Giữ arithmetic correctness trong phạm vi optimization hợp lệ
 
 ```text
-INT8 -> FP32 -> INT8 -> FP32
+Q/DQ nodes are precision boundaries.
+Compiler moves and fuses them safely.
 ```
 
-thì overhead có thể ăn hết lợi ích.
+**Q/DQ placement ảnh hưởng trực tiếp đến:**
 
-### INT8 calibration trong TensorRT implicit mode
+- Layer nào chạy INT8/FP8 thật sự
+- Có fuse được hay không
+- Có fallback về FP16/FP32 hay không
+- Accuracy có giảm mạnh hay không
 
-Với non-QDQ model, TensorRT có thể dùng calibrator để thu thập activation statistics.
 
-Conceptual flow:
+## INT8 trong TensorRT và FP8 {#sec-int8-fp8}
+
+> INT8 trong TensorRT hoạt động thế nào và FP8 khi nào nên dùng?
+
+::: {.callout-important icon=false}
+## Ý chính
+INT8 trong TensorRT dùng symmetric quantization với `roundWithTiesToEven`. **Nhanh hơn không chỉ vì size nhỏ hơn** — phải có low-precision kernel được fuse và chạy thật. `trtexec --int8` không có Q/DQ hoặc calibration đúng chỉ benchmark tốc độ, không phải accuracy validation. FP8 cần hardware mới hơn và không phải drop-in replacement cho INT8.
+:::
+
+**INT8 symmetric quantization formula trong TensorRT:**
+
+$$x_q = \operatorname{roundWithTiesToEven}\!\left(\operatorname{clip}\!\left(\frac{x}{\text{scale}},\; -128,\; 127\right)\right)$$
+
+$$x = x_q \times \text{scale}$$
+
+Trong đó `scale` là FP16/FP32/BF16 per-tensor hoặc per-channel.
+
+**INT8 giúp khi TensorRT có thể fuse low-precision kernel:**
 
 ```text
-1. Build FP32 engine tạm.
-2. Run calibration dataset.
-3. Ghi histogram/statistics cho activation tensors.
-4. Tạo calibration table chứa scale.
-5. Build INT8 engine dùng calibration table.
+DQ → Conv → Q       →  INT8 Conv (Tensor Core)
+DQ → MatMul → Q     →  INT8 GEMM kernel
 ```
 
-Calibration có thể cache để tránh chạy lại mỗi lần build.
-
-Nhưng workflow mới nên ưu tiên:
+Nhưng nếu graph bị nhiều conversion xen kẽ:
 
 ```text
-framework / Model Optimizer / quantization tool
-    -> Q/DQ ONNX
-    -> TensorRT explicit quantization
+INT8 → FP32 → INT8 → FP32
 ```
 
-### `trtexec --int8` không đủ để đảm bảo accuracy
+overhead có thể ăn hết lợi ích của low precision.
 
-Nếu bạn chạy:
-
-```bash
-trtexec --onnx=model.onnx --int8
-```
-
-mà không có Q/DQ graph hoặc calibration cache/data phù hợp, kết quả benchmark có thể không phản ánh accuracy thực tế.
-
-Mục tiêu đúng:
+**Implicit INT8 calibration flow trong TensorRT (legacy / không-Q/DQ):**
 
 ```text
-Performance benchmark:
-    measure speed.
-
-Accuracy validation:
-    run real validation set with the exact quantized engine/model.
+1. Build FP32 engine tạm
+2. Run calibration dataset qua engine
+3. Ghi histogram/statistics cho activation tensors
+4. Tạo calibration table chứa scale values
+5. Build INT8 engine dùng calibration table
 ```
 
+Calibration cache để tránh chạy lại mỗi lần build. **Workflow mới nên dùng Q/DQ ONNX → TensorRT explicit quantization.**
 
+**FP8 vs INT8:**
 
-## FP8: hiểu đúng trước khi dùng
+| Tiêu chí | INT8 | FP8 (E4M3) |
+|:---------|:----:|:----------:|
+| Type | Integer | Floating point |
+| Bit format | 8-bit uniform | 1 sign + 4 exp + 3 mantissa |
+| Value spacing | Uniform theo scale | Non-uniform (nhiều giá trị gần zero) |
+| Cần scale | Có | Có (trong TRT Q/DQ workflow) |
+| Hardware support | GPU đời rộng hơn | Thường cần Hopper+ (H100) |
+| Use case phổ biến | CNN / GEMM / activation | Transformer / LLM / diffusion hiện đại |
 
-FP8 là floating-point 8-bit, không phải integer quantization.
+**Khi nào nên quan tâm FP8:**
 
-Một format phổ biến là E4M3:
+- GPU hỗ trợ FP8 tốt (Hopper+)
+- Đang làm Transformer / LLM / VLM / diffusion inference
+- Dùng TensorRT hoặc TensorRT-LLM / Model Optimizer workflow
+- Cần throughput cao với accuracy tốt hơn một số INT8 path
+
+FP8 **không phải magic** — vẫn có:
 
 ```text
-1 sign bit
-4 exponent bits
-3 mantissa bits
+range limitation, rounding, clipping,
+scale selection, hardware constraints, backend constraints
 ```
 
-So với INT8:
-
-|          Tiêu chí |                                      INT8 |                                                   FP8 |
-|------------------:|------------------------------------------:|------------------------------------------------------:|
-|              Type |                                   Integer |                                        Floating point |
-|     Value spacing |                        Uniform theo scale |                                           Non-uniform |
-| Near zero density |       Không đặc biệt cao nếu affine scale |                            Nhiều giá trị gần zero hơn |
-|             Scale |                          Thường cần scale |           Vẫn cần scale trong TensorRT Q/DQ workflows |
-|  Hardware support |                           Tùy GPU/backend |                                Thường cần GPU mới hơn |
-|          Use case | CNN/GEMM/activation quantization phổ biến |    Transformer/LLM/GEMM hiện đại, nếu hardware hỗ trợ |
-
-### FP8 không phải magic
-
-FP8 vẫn có:
-
-- Range limitation.
-- Rounding.
-- Clipping.
-- Scale selection.
-- Hardware support constraints.
-- Backend support constraints.
-
-### 21.2 Khi nào nên quan tâm FP8?
-
-Nên học FP8 khi:
-
-- Bạn deploy trên GPU hỗ trợ FP8 tốt.
-- Bạn làm Transformer/LLM/VLM/diffusion inference.
-- Bạn dùng TensorRT hoặc TensorRT-LLM/Model Optimizer workflow.
-- Bạn cần throughput cao nhưng muốn accuracy tốt hơn một số INT8 path.
-
-###Khi nào chưa cần FP8?
-
-Nếu bạn đang học nền tảng ONNX/TensorRT, thứ tự tốt là:
+**Thứ tự học đúng:**
 
 ```text
 1. FP32 baseline
 2. FP16 baseline
-3. INT8 PTQ/QAT
+3. INT8 PTQ / QAT
 4. Q/DQ graph debugging
 5. FP8
 ```
 
 Đừng học FP8 trước khi hiểu scale, calibration, Q/DQ và accuracy recovery.
 
+::: {.callout-warning icon=false}
+## Bẫy: `trtexec --int8` không đủ để đảm bảo accuracy
 
-
-## Accuracy recovery: quy trình khôi phục accuracy sau quantization
-
-Khi quantized model bị giảm accuracy, đừng đoán. Hãy debug có hệ thống.
-
-### Bước 1: xác nhận baseline
-
-Bạn cần có baseline rõ:
-
-```text
-FP32/FP16 model accuracy
-FP32/FP16 latency
-preprocessing version
-dataset version
-input shape
-opset
-runtime version
-hardware
+```bash
+trtexec --onnx=model.onnx --int8
 ```
 
-Nếu baseline không ổn định, mọi so sánh sau đó vô nghĩa.
-
-### Bước 2: kiểm tra preprocessing
-
-Rất nhiều lỗi INT8 đến từ preprocessing sai.
-
-Checklist:
+Nếu không có Q/DQ graph hoặc calibration cache/data phù hợp, kết quả benchmark **không phản ánh accuracy thực tế**. Cần validate riêng:
 
 ```text
-[ ] resize giống production
-[ ] crop giống production
-[ ] RGB/BGR đúng
-[ ] normalize mean/std đúng
-[ ] NCHW/NHWC đúng
-[ ] dtype đúng
-[ ] batch dimension đúng
-[ ] dynamic shape đúng
-[ ] calibration dùng cùng preprocessing
+Performance benchmark: đo speed với trtexec
+Accuracy validation:   chạy real validation set qua đúng quantized engine
+```
+:::
+
+
+## Accuracy recovery {#sec-accuracy}
+
+> Khi quantized model bị accuracy drop, debug và phục hồi thế nào?
+
+::: {.callout-important icon=false}
+## Ý chính
+Đừng đoán — debug có hệ thống theo 8 bước: xác nhận baseline → kiểm tra preprocessing → cải thiện calibration data → thử calibration method khác → so sánh activation tensors → exclude sensitive layers → mixed precision → QAT. Hầu hết production accuracy drop đến từ **preprocessing sai** hoặc **calibration data không đại diện**.
+:::
+
+**Bước 1 — Xác nhận baseline:**
+
+```text
+[ ] FP32/FP16 model accuracy được ghi lại
+[ ] FP32/FP16 baseline latency được ghi lại
+[ ] preprocessing version, dataset version, input shape, opset, runtime, hardware
 ```
 
-### Bước 3: tăng chất lượng calibration data
+Nếu baseline không ổn định, mọi so sánh sau vô nghĩa.
 
-Kiểm tra:
+**Bước 2 — Kiểm tra preprocessing:**
 
 ```text
-[ ] Calibration samples đủ đa dạng
-[ ] Không chỉ lấy vài batch đầu
-[ ] Có edge cases production
+[ ] resize giống production          [ ] RGB/BGR đúng
+[ ] crop giống production            [ ] normalize mean/std đúng
+[ ] NCHW/NHWC đúng                   [ ] dtype đúng (float32)
+[ ] batch dimension đúng             [ ] dynamic shape đúng
+[ ] calibration dùng cùng preprocessing với production
+```
+
+Rất nhiều lỗi INT8 đến từ preprocessing sai — kiểm tra đây trước.
+
+**Bước 3 — Cải thiện calibration data:**
+
+```text
+[ ] Đủ đa dạng (không chỉ vài batch đầu)
+[ ] Có edge cases của production
 [ ] Không dùng augmented data quá khác inference
-[ ] Không dùng random/noise data
+[ ] Không dùng random / noise data
 [ ] Batch order randomized
 [ ] Số sample đủ cho activation statistics
 ```
 
-Không có con số universal. Với CNN classification, vài trăm sample có thể đủ cho thử nghiệm ban đầu, nhưng production nên validate bằng ablation theo số sample:
+Không có con số universal. Với CNN classification, vài trăm sample có thể đủ cho thử nghiệm ban đầu — ablation theo số sample:
 
 ```text
-50 -> 100 -> 250 -> 500 -> 1000 -> 2000
+50 → 100 → 250 → 500 → 1000 → 2000
+vẽ curve:
+  calibration_size vs validation_accuracy
+  calibration_size vs p99_latency
 ```
 
-Vẽ curve:
+**Bước 4 — Thử calibration method khác:**
 
 ```text
-calibration_size vs validation_accuracy
-calibration_size vs p99_latency
+MinMax fail?  →  thử Entropy / KL
+Entropy fail? →  thử MinMax cho transformer/NLP-like layers
+              →  thử Percentile
+              →  thử exclude attention / softmax / layer norm
+Thêm:         →  per-channel weights
+              →  reduce_range nếu CPU backend cần
 ```
 
-### Bước 4: thử calibration method khác
+**Bước 5 — So sánh activation tensors:**
 
-Nếu MinMax fail:
-
-```text
-try Entropy/KL
-try Percentile
-try per-channel weights
-try reduce_range if CPU backend cần
-```
-
-Nếu Entropy fail:
-
-```text
-try MinMax for transformer/NLP-like layers
-try exclude attention softmax/layer norm regions
-```
-
-### Bước 5: so sánh activation tensors
-
-Bạn cần tìm layer đầu tiên nơi error bùng lên.
-
-Workflow:
+Tìm layer đầu tiên nơi error bùng lên:
 
 ```text
 FP32 model intermediate outputs
 vs
 Quantized model intermediate outputs
-```
 
-Metric gợi ý:
+Metric: MAE, max abs error, cosine similarity, KL divergence,
+        relative error, top-k agreement
 
-```text
-mean absolute error
-max absolute error
-cosine similarity
-relative error
-KL divergence
-top-k agreement
-```
-
-Pseudo-code:
-
-```text
 for each matched activation:
     error[layer] = compare(fp32_activation, int8_activation)
-
 sort layers by error descending
 inspect first large divergence
 ```
 
-### Bước 6: exclude sensitive layers
-
-Không cần quantize mọi layer.
-
-Candidate layers nên giữ FP16/FP32:
+**Bước 6 — Exclude sensitive layers:**
 
 ```text
-first conv / stem
-last classifier
-softmax
-layer norm
-attention score matmul
-small residual add
-custom op
-activation functions nhạy
+Candidate layers nên giữ FP16 / FP32:
+  first conv / stem         softmax
+  last classifier           layer norm
+  attention score matmul    small residual add
+  custom op                 SiLU / GELU nhạy
+
+Quy tắc: start aggressive → dequantize sensitive layers dần
+         cho đến khi accuracy phục hồi.
 ```
 
-Quy tắc:
+**Bước 7 — Mixed precision:**
 
 ```text
-Start with aggressive quantization.
-Then dequantize sensitive layers until accuracy recovers.
+some layers → INT8 / FP8
+some layers → FP16
+some layers → FP32
+
+Thực tế production:
+  80% compute-heavy layers → low precision
+  20% sensitive layers → high precision
 ```
 
-### Bước 7: mixed precision
-
-Mixed precision có nghĩa:
+**Bước 8 — QAT:**
 
 ```text
-some layers INT8/FP8
-some layers FP16
-some layers FP32
+PTQ + calibration tuning + layer exclusion vẫn không đạt:
+    → QAT với fake quantization
+    → Kèm theo: validation metric sát production,
+      same quant config với backend,
+      export ONNX Q/DQ sớm và test,
+      benchmark TRT/ORT thật — không chỉ đo PyTorch
 ```
 
-Đây thường là cách production thực tế đạt cân bằng tốt hơn:
-
-```text
-80% compute-heavy layers low precision
-20% sensitive layers high precision
-```
-
-### Bước 8: QAT
-
-Nếu PTQ + calibration tuning + layer exclusion vẫn không đạt:
-
-```text
-Use QAT or fine-tuning with fake quantization.
-```
-
-QAT nên đi kèm:
-
-- Validation metric sát production.
-- Same quantization config với backend.
-- Export test sang ONNX Q/DQ sớm.
-- Benchmark TensorRT/ORT thật, không chỉ đo trong PyTorch.
-
-
-
+::: {.callout-tip icon=false collapse="true"}
 ## Benchmark quantized model đúng cách
 
-### Đừng chỉ đo latency
+**Đo đủ bốn chiều — không chỉ latency:**
 
-Cần đo ít nhất:
+| Chiều | Metric cần đo |
+|:------|:-------------|
+| Accuracy | top-1/top-5, mAP, F1, BLEU, WER, exact match |
+| Latency | p50, p90, p95, p99 |
+| Throughput | requests/sec, samples/sec |
+| Memory | GPU memory, model size, activation memory |
+| Runtime | CPU util, GPU util, kernel time, H2D/D2H copy time |
 
-```text
-accuracy metric:
-    top-1/top-5, mAP, F1, BLEU, WER, exact match, etc.
+**Template bảng kết quả:**
 
-latency:
-    p50, p90, p95, p99
+| Variant | Accuracy | Drop | p50 ms | p99 ms | Throughput | GPU Mem | Notes |
+|:--------|:--------:|:----:|:------:|:------:|:----------:|:-------:|:------|
+| FP32 ORT | | 0 | | | | | |
+| FP16 TRT | | | | | | | |
+| INT8 PTQ TRT | | | | | | | |
+| INT8 QAT TRT | | | | | | | |
+| FP8 TRT | | | | | | | |
 
-throughput:
-    requests/sec
-    samples/sec
-
-memory:
-    GPU memory
-    model size
-    activation memory
-
-runtime:
-    CPU utilization
-    GPU utilization
-    kernel time
-    H2D/D2H copy time
-```
-
-### Luôn benchmark các baseline
-
-Bảng nên có:
-
-|                   Variant | Accuracy | p50 | p99 | Throughput | GPU mem | Notes |
-|--------------------------:|---------:|----:|----:|-----------:|--------:|------:|
-| FP32 ONNX Runtime CPU/GPU |          |     |     |            |         |       |
-|             FP16 TensorRT |          |     |     |            |         |       |
-|         INT8 PTQ TensorRT |          |     |     |            |         |       |
-|         INT8 QAT TensorRT |          |     |     |            |         |       |
-|              FP8 TensorRT |          |     |     |            |         |       |
-
-### Warmup và repeat
-
-Benchmark nên có:
+**Warmup và repeat bắt buộc:**
 
 ```text
-warmup iterations
-measured iterations
-fixed batch size
-fixed input shape or profile
-fixed GPU clocks if possible
-same driver/CUDA/TensorRT versions
+warmup iterations (≥20)    measured iterations (≥100)
+fixed batch size            fixed input shape / profile
+fixed GPU clocks nếu có    same driver/CUDA/TRT versions
 same preprocessing
 ```
 
-### Watch for fallback
+**Watch for fallback:** một số nodes có thể chạy CPU, CUDA FP32 thay vì TRT INT8. Kiểm tra provider assignment (ORT profiling) hoặc layer info/profile (`--dumpLayerInfo` TRT).
+:::
 
-Quantized graph có thể chậm vì fallback:
+::: {.callout-tip icon=false collapse="true"}
+## Debug decision tree và failure modes
+
+**Debug decision tree khi accuracy xấu:**
 
 ```text
-some nodes run CPU
-some nodes run CUDA FP32
-some nodes run TensorRT INT8
-extra Q/DQ conversions
+Quantized model có accuracy xấu?
+│
+├─ FP32 exported ONNX có match PyTorch không?
+│    No → fix export trước.
+│    Yes ↓
+├─ FP16/TRT có match ONNX không?
+│    No → TRT parse/precision issue.
+│    Yes ↓
+├─ Calibration preprocessing có match production không?
+│    No → fix preprocessing.
+│    Yes ↓
+├─ Calibration data có đại diện không?
+│    No → cải thiện data.
+│    Yes ↓
+├─ Layer nào diverge đầu tiên?
+│    Sensitive layer → exclude hoặc giữ FP16.
+│    Nhiều layer → thử calib method / per-channel / QAT.
+└─ Vẫn xấu → dùng QAT hoặc mixed precision.
 ```
 
-Với ONNX Runtime, kiểm tra provider assignment và profiling. Với TensorRT, kiểm tra layer info và profile.
+**Failure mode: INT8 accuracy collapse (FP32 92% → INT8 10%)**
+
+Nguyên nhân phổ biến: preprocessing sai; calibration data không đại diện; activation outlier làm scale xấu; per-channel axis sai; Q/DQ export sai; `trtexec --int8` không có calibration đúng; eval pipeline dùng input khác training/inference; layer nhạy bị quantize.
+
+```text
+Cách xử lý:
+1. Compare FP32 vs INT8 output on same input.
+2. Check preprocessing.
+3. Inspect Q/DQ graph.
+4. Increase calibration data.
+5. Try other calibration methods.
+6. Exclude sensitive layers.
+7. Try per-channel weights.
+8. Use QAT.
+```
+
+**Failure mode: INT8 chậm hơn FP16**
+
+Nguyên nhân: hardware không có INT8 acceleration; model nhỏ overhead dominate; Q/DQ conversion quá nhiều; TRT không fuse được; CPU fallback trong ORT; batch size/shape không phù hợp; dynamic shape profile quá rộng; layer support kém.
+
+```text
+Cách xử lý:
+1. Dump layer profile.
+2. Check precision per layer.
+3. Compare with FP16 engine.
+4. Remove excessive Q/DQ.
+5. Use larger batch if throughput target.
+6. Tune optimization profile.
+7. Check provider fallback.
+```
+
+**Failure mode: TRT build fail "could not find implementation"**
+
+Nguyên nhân: layer bị ép quantize nhưng không có low-precision kernel; Q/DQ placement không hợp lệ; unsupported op; plugin thiếu; dynamic shape/profile không hợp lệ.
+
+```text
+Cách xử lý:
+1. Build FP16 first.
+2. Build Q/DQ model with detailed logs.
+3. Find failing layer.
+4. Remove Q/DQ around that layer.
+5. Keep that layer FP16/FP32.
+6. Add plugin if custom op.
+```
+
+**Failure mode: ONNX Runtime quantized không nhanh**
+
+Nguyên nhân: CPU ISA không hỗ trợ; quantized op không được support; QDQ format không phù hợp provider; graph optimization chưa chạy; model nhỏ; I/O overhead lớn.
+
+```text
+Cách xử lý:
+1. Enable ORT profiling.
+2. Check operator assignment.
+3. Try QDQ vs QOperator.
+4. Try static vs dynamic.
+5. Try provider-specific recommendations.
+6. Benchmark with real batch sizes.
+```
+
+**Failure mode: FP8 không build hoặc không nhanh**
+
+Nguyên nhân: GPU không hỗ trợ FP8; TRT version không phù hợp; ONNX FP8 opset/domain không được toolchain hỗ trợ; scale/Q/DQ không đúng; layer không có FP8 tactic tốt.
+
+```text
+Cách xử lý:
+1. Verify GPU architecture.
+2. Verify TensorRT version.
+3. Start from official TensorRT/Model Optimizer recipe.
+4. Build FP16 baseline.
+5. Build FP8 only after Q/DQ graph is valid.
+6. Check layer precision and fallback.
+```
+:::
+
+::: {.callout-tip icon=false collapse="true"}
+## Những hiểu lầm cần tránh
+
+**Hiểu lầm 1: INT8 luôn nhanh hơn FP16**
+
+Sai. INT8 chỉ nhanh hơn nếu hardware, runtime, graph fusion và workload phù hợp.
+
+**Hiểu lầm 2: Calibration data càng nhiều càng luôn tốt**
+
+Không hẳn. Data phải đại diện; nhiều data nhưng preprocessing sai vẫn gây hỏng.
+
+**Hiểu lầm 3: Quantize toàn bộ graph là tối ưu nhất**
+
+Sai. Một số layer nên giữ FP16/FP32 để bảo toàn accuracy và cho phép fusion.
+
+**Hiểu lầm 4: Q/DQ node là overhead chắc chắn**
+
+Không hẳn. Backend như TensorRT có thể fuse Q/DQ pattern thành low-precision kernel — overhead gần bằng 0.
+
+**Hiểu lầm 5: Accuracy PyTorch QAT tốt → TensorRT engine tốt**
+
+Chưa chắc. Phải export ONNX Q/DQ, build engine và validate engine thật.
+
+**Production checklist:**
+
+```text
+[ ] FP32/FP16 baseline accuracy và latency đã được lưu
+[ ] Calibration dataset versioned
+[ ] Calibration preprocessing giống production
+[ ] Quantization config versioned
+[ ] ONNX opset, TRT/ORT/CUDA/driver versions recorded
+[ ] Hardware target recorded
+[ ] Q/DQ graph inspected (operator counts, scale shapes)
+[ ] Sensitive layers reviewed
+[ ] Accuracy validated on full validation set
+[ ] Accuracy validated by important segments / slices
+[ ] Latency p50/p95/p99 measured
+[ ] Throughput measured under target concurrency
+[ ] GPU memory measured
+[ ] Layer profile inspected — no unexpected CPU fallback
+[ ] Engine cache strategy defined
+[ ] Engine portability assumptions documented
+[ ] Rollback plan exists
+[ ] Canary / A-B / shadow strategy planned
+[ ] Monitoring metrics defined
+```
+:::
 
 
+## Mini-lab {.unnumbered}
 
-## Lab 1 — Viết quantization từ đầu bằng NumPy
+::: {.callout-note icon=false}
+## Thực hành — Quantize, inspect và benchmark một model
+Bảy lab sau đi từ viết quantization từ đầu bằng NumPy, qua ONNX Runtime PTQ, Q/DQ inspection, benchmark, đến TensorRT engine và accuracy validation. Làm tuần tự — mỗi lab mở rộng kiến thức lab trước. Gợi ý tên file: `lab1_manual_quant.py` … `lab7_accuracy_val.py`; chạy bằng `python labN_....py`. Labs 1–5 chạy được trên CPU; Labs 6–7 cần NVIDIA GPU + TensorRT.
+:::
 
-Mục tiêu:
+### Lab 1: Manual quantization bằng NumPy {.unnumbered}
 
-- Hiểu scale.
-- Hiểu rounding/clamping.
-- Nhìn error trực tiếp.
-
-Tạo file `lab1_manual_quant.py`:
+Mục tiêu: hiểu scale, rounding/clamping error trực tiếp qua code, thấy ảnh hưởng của outlier.
 
 ```python
 import numpy as np
@@ -1589,7 +1204,6 @@ def symmetric_int8_quantize(x: np.ndarray):
 
 def report(name: str, x: np.ndarray):
     q, x_hat, scale = symmetric_int8_quantize(x)
-
     mae = np.mean(np.abs(x - x_hat))
     max_err = np.max(np.abs(x - x_hat))
 
@@ -1606,40 +1220,21 @@ x1 = np.array([-1.0, -0.5, 0.0, 0.5, 1.0], dtype=np.float32)
 x2 = np.array([-1.0, -0.5, 0.0, 0.5, 20.0], dtype=np.float32)
 
 report("without outlier", x1)
-report("with outlier", x2)
+report("with outlier   ", x2)
 ```
 
-Chạy:
+**Câu hỏi:**
 
-```bash
-python lab1_manual_quant.py
-```
-
-Câu hỏi:
-
-1. Scale của `x2` lớn hơn `x1` bao nhiêu?
+1. Scale của `x2` lớn hơn `x1` bao nhiêu lần?
 2. Vì sao các giá trị nhỏ trong `x2` kém chính xác hơn?
-3. Nếu dùng percentile thay vì max, outlier `20.0` sẽ ảnh hưởng thế nào?
+3. Nếu dùng `percentile(abs(x), 99)` thay vì `max`, outlier `20.0` ảnh hưởng thế nào?
 
 
+### Lab 2: Dynamic quantization bằng ONNX Runtime {.unnumbered}
 
-## Lab 2 — Dynamic quantization bằng ONNX Runtime
+Mục tiêu: tạo quantized ONNX model bằng `quantize_dynamic`, inspect và so sánh output FP32 vs INT8.
 
-Mục tiêu:
-
-- Tạo quantized ONNX model bằng `quantize_dynamic`.
-- Inspect model sau quantization.
-- So sánh output FP32 vs dynamic quantized.
-
-Giả sử bạn đã có `model.onnx`.
-
-Cài đặt:
-
-```bash
-pip install onnx onnxruntime numpy
-```
-
-Tạo file `lab2_ort_dynamic_quant.py`:
+Cài đặt: `pip install onnx onnxruntime numpy`
 
 ```python
 import numpy as np
@@ -1656,7 +1251,6 @@ quantize_dynamic(
     model_output=int8_model,
     weight_type=QuantType.QInt8,
 )
-
 print("Saved:", int8_model)
 
 m = onnx.load(int8_model)
@@ -1666,7 +1260,7 @@ for node in m.graph.node:
 
 print("Operator counts:")
 for k, v in sorted(op_counts.items()):
-    print(f"{k}: {v}")
+    print(f"  {k}: {v}")
 
 
 def run(model_path: str, x: np.ndarray):
@@ -1675,7 +1269,7 @@ def run(model_path: str, x: np.ndarray):
     return sess.run(None, {input_name: x})
 
 
-# Điều chỉnh shape theo model của bạn.
+# Điều chỉnh shape theo model của bạn
 x = np.random.randn(1, 3, 224, 224).astype(np.float32)
 
 y_fp32 = run(fp32_model, x)
@@ -1687,27 +1281,19 @@ for i, (a, b) in enumerate(zip(y_fp32, y_int8)):
     print(f"output {i}: mae={mae:.6f}, max_err={max_err:.6f}")
 ```
 
-Câu hỏi:
+**Câu hỏi:**
 
-1. Model sau dynamic quantization có operator nào mới?
+1. Model sau dynamic quantization có operator nào mới xuất hiện?
 2. Weight có bị quantize không?
 3. Activation scale được tính offline hay runtime?
-4. Dynamic quantization có chắc nhanh hơn FP32 không?
+4. Dynamic quantization có chắc nhanh hơn FP32 không? Vì sao?
 
 
+### Lab 3: Static quantization bằng ONNX Runtime {.unnumbered}
 
-## Lab 3 — Static quantization bằng ONNX Runtime
-
-Mục tiêu:
-
-- Dùng calibration data reader.
-- Tạo Q/DQ model.
-- Hiểu calibration data phải giống production preprocessing.
-
-Tạo file `lab3_ort_static_quant.py`:
+Mục tiêu: dùng `CalibrationDataReader`, tạo Q/DQ model, hiểu `CalibrationMethod`.
 
 ```python
-import os
 import numpy as np
 import onnx
 from onnxruntime.quantization import (
@@ -1720,7 +1306,7 @@ from onnxruntime.quantization import (
 
 
 class NumpyCalibrationDataReader(CalibrationDataReader):
-    def __init__(self, input_name: str, samples: list[np.ndarray]):
+    def __init__(self, input_name: str, samples: list):
         self.input_name = input_name
         self.samples = samples
         self.index = 0
@@ -1728,7 +1314,6 @@ class NumpyCalibrationDataReader(CalibrationDataReader):
     def get_next(self):
         if self.index >= len(self.samples):
             return None
-
         sample = self.samples[self.index]
         self.index += 1
         return {self.input_name: sample}
@@ -1746,7 +1331,6 @@ samples = [
     np.random.randn(1, 3, 224, 224).astype(np.float32)
     for _ in range(32)
 ]
-
 reader = NumpyCalibrationDataReader(input_name, samples)
 
 quantize_static(
@@ -1759,34 +1343,20 @@ quantize_static(
     calibrate_method=CalibrationMethod.MinMax,
     per_channel=True,
 )
-
 print("Saved:", qdq_model)
 ```
 
-Chạy:
-
-```bash
-python lab3_ort_static_quant.py
-```
-
-Câu hỏi:
+**Câu hỏi:**
 
 1. Tại sao random data không dùng được cho production calibration?
-2. `QuantFormat.QDQ` tạo graph khác gì `QOperator`?
+2. `QuantFormat.QDQ` tạo graph khác gì `QuantFormat.QOperator`?
 3. `per_channel=True` ảnh hưởng chủ yếu đến weights hay activations?
-4. Nếu đổi `CalibrationMethod.MinMax` sang `Entropy` hoặc `Percentile`, bạn kỳ vọng gì?
+4. Nếu đổi `CalibrationMethod.MinMax` sang `CalibrationMethod.Entropy` **hoặc Percentile**, bạn kỳ vọng gì?
 
 
+### Lab 4: Inspect Q/DQ graph {.unnumbered}
 
-## Lab 4 — Inspect Q/DQ graph
-
-Mục tiêu:
-
-- Đếm số Q/DQ nodes.
-- Xem scale/zero-point initializers.
-- Hiểu vị trí Q/DQ trong graph.
-
-Tạo file `lab4_inspect_qdq.py`:
+Mục tiêu: đếm Q/DQ nodes, xem scale/zero-point initializers, hiểu vị trí Q/DQ trong graph.
 
 ```python
 import onnx
@@ -1802,15 +1372,15 @@ for node in model.graph.node:
 
 print("Operator counts:")
 for op, count in sorted(op_counts.items()):
-    print(f"{op}: {count}")
+    print(f"  {op}: {count}")
 
 print("\nFirst 30 Q/DQ nodes:")
 n = 0
 for node in model.graph.node:
     if node.op_type in ("QuantizeLinear", "DequantizeLinear"):
-        print(f"{node.name or '<unnamed>'}: {node.op_type}")
-        print("  inputs :", list(node.input))
-        print("  outputs:", list(node.output))
+        print(f"  {node.name or '<unnamed>'}: {node.op_type}")
+        print("    inputs :", list(node.input))
+        print("    outputs:", list(node.output))
         n += 1
         if n >= 30:
             break
@@ -1828,30 +1398,24 @@ for node in model.graph.node:
             scale_name = node.input[1]
             if scale_name in initializer_map:
                 scale = initializer_map[scale_name]
-                print(f"{scale_name}: shape={scale.shape}, values_sample={scale.flatten()[:8]}")
+                print(f"  {scale_name}: shape={scale.shape}, "
+                      f"sample={scale.flatten()[:8]}")
                 shown += 1
                 if shown >= 10:
                     break
 ```
 
-Câu hỏi:
+**Câu hỏi:**
 
-1. Scale tensor có shape scalar hay vector?
-2. Những layer nào có per-channel scale?
-3. Có Q/DQ nodes quanh layer nhạy cảm không?
-4. Bạn có thấy Q/DQ quá dày đặc không?
+1. Scale tensor có shape scalar hay vector? Tại sao khác nhau giữa các layer?
+2. Những layer nào có per-channel scale (shape vector)?
+3. Có Q/DQ nodes quanh layer nhạy cảm (softmax, layer norm) không?
+4. Bạn có thấy Q/DQ quá dày đặc ở nơi nào không?
 
 
+### Lab 5: Benchmark FP32 vs INT8 bằng ONNX Runtime {.unnumbered}
 
-## Lab 5 — Benchmark FP32 vs INT8 bằng ONNX Runtime
-
-Mục tiêu:
-
-- Benchmark có warmup.
-- So sánh latency.
-- Tránh kết luận từ một lần chạy.
-
-Tạo file `lab5_benchmark_ort.py`:
+Mục tiêu: benchmark có warmup và repeat, so sánh latency, tránh kết luận từ một lần chạy.
 
 ```python
 import time
@@ -1859,7 +1423,8 @@ import numpy as np
 import onnxruntime as ort
 
 
-def benchmark(model_path: str, x: np.ndarray, providers: list[str], warmup=20, repeat=100):
+def benchmark(model_path: str, x: np.ndarray,
+              providers: list, warmup: int = 20, repeat: int = 100):
     sess = ort.InferenceSession(model_path, providers=providers)
     input_name = sess.get_inputs()[0].name
 
@@ -1885,48 +1450,35 @@ def benchmark(model_path: str, x: np.ndarray, providers: list[str], warmup=20, r
 x = np.random.randn(1, 3, 224, 224).astype(np.float32)
 providers = ["CPUExecutionProvider"]
 
-for model in ["model.onnx", "model.dynamic.int8.onnx", "model.static.qdq.int8.onnx"]:
-    print("\n", model)
+for model in ["model.onnx",
+              "model.dynamic.int8.onnx",
+              "model.static.qdq.int8.onnx"]:
+    print(f"\n{model}")
     print(benchmark(model, x, providers))
 ```
 
-Câu hỏi:
+**Câu hỏi:**
 
 1. INT8 có nhanh hơn FP32 không?
 2. Nếu không nhanh hơn, có thể do operator support, overhead, CPU ISA hay graph format?
-3. p99 có ổn định không?
-4. Bạn đã benchmark bằng validation input thật hay random input?
+3. p99 có ổn định qua nhiều lần chạy không?
+4. Random input có đại diện production distribution không?
 
 
+### Lab 6: Build TensorRT engine từ Q/DQ ONNX {.unnumbered}
 
-## Lab 6 — Build TensorRT engine từ Q/DQ ONNX
-
-Mục tiêu:
-
-- Dùng TensorRT với explicit Q/DQ model.
-- Đọc layer info/profile.
-- Không nhầm `--int8` với accuracy validation.
-
-Giả sử bạn đã có:
-
-```text
-model.static.qdq.int8.onnx
-```
-
-Build engine:
+Mục tiêu: dùng TensorRT **explicit quantization** với Q/DQ model, đọc layer info và profile. **Không nhầm** `trtexec --int8` (không Q/DQ / calibration) với accuracy validation.
 
 ```bash
+# Build với Q/DQ model đã tạo từ Lab 3
 trtexec \
   --onnx=model.static.qdq.int8.onnx \
   --saveEngine=model.static.qdq.int8.plan \
   --profilingVerbosity=detailed \
   --dumpLayerInfo \
   --dumpProfile
-```
 
-Nếu model có dynamic shape:
-
-```bash
+# Nếu model có dynamic shape:
 trtexec \
   --onnx=model.static.qdq.int8.onnx \
   --saveEngine=model.static.qdq.int8.plan \
@@ -1936,19 +1488,8 @@ trtexec \
   --profilingVerbosity=detailed \
   --dumpLayerInfo \
   --dumpProfile
-```
 
-Câu hỏi:
-
-1. TensorRT có parse được Q/DQ nodes không?
-2. Layer nào chạy INT8?
-3. Có layer nào fallback FP16/FP32 không?
-4. Có Q/DQ conversion quá nhiều không?
-5. Engine có nhanh hơn FP16 engine không?
-
-So sánh với FP16 baseline:
-
-```bash
+# So sánh với FP16 baseline:
 trtexec \
   --onnx=model.onnx \
   --saveEngine=model.fp16.plan \
@@ -1957,316 +1498,87 @@ trtexec \
   --dumpProfile
 ```
 
+**Câu hỏi:**
+
+1. TensorRT có parse được Q/DQ nodes không?
+2. Layer nào chạy INT8 thật sự? Layer nào fallback FP16/FP32?
+3. Có Q/DQ conversion quá nhiều không (thấy trong layer name)?
+4. Engine INT8 có nhanh hơn FP16 engine không?
+5. Có layer nào fail build và cần exclude không?
 
 
-## Lab 7 — Accuracy validation cho quantized model
+### Lab 7: Accuracy validation cho quantized model {.unnumbered}
 
-Mục tiêu:
-
-- Không chỉ benchmark latency.
-- Validate accuracy trên dataset thật.
-
-Pseudo-code:
+Mục tiêu: validate accuracy thật trên dataset — không chỉ benchmark latency.
 
 ```python
-def evaluate(model, dataloader):
+import numpy as np
+import onnxruntime as ort
+
+
+def evaluate_ort(model_path: str, dataloader,
+                 providers=None) -> float:
+    """
+    dataloader: iterable of (images: np.ndarray, labels: np.ndarray)
+    Trả về top-1 accuracy.
+    """
+    if providers is None:
+        providers = ["CPUExecutionProvider"]
+
+    sess = ort.InferenceSession(model_path, providers=providers)
+    input_name = sess.get_inputs()[0].name
+
     correct = 0
     total = 0
-
     for images, labels in dataloader:
-        outputs = model(images)
-        preds = outputs.argmax(axis=1)
-
-        correct += (preds == labels).sum()
+        outputs = sess.run(None, {input_name: images})
+        preds = np.argmax(outputs[0], axis=1)
+        correct += int((preds == labels).sum())
         total += len(labels)
 
-    return correct / total
+    return correct / total if total > 0 else 0.0
+
+
+# Thay dataloader bằng dataloader thật của bạn
+# fp32_acc  = evaluate_ort("model.onnx", val_loader)
+# int8_acc  = evaluate_ort("model.static.qdq.int8.onnx", val_loader)
+# print(f"FP32 accuracy:  {fp32_acc:.4f}")
+# print(f"INT8 accuracy:  {int8_acc:.4f}")
+# print(f"Accuracy drop:  {fp32_acc - int8_acc:.4f}")
 ```
 
-So sánh:
+**Template bảng kết quả:**
 
-```text
-FP32 accuracy
-FP16 TensorRT accuracy
-INT8 PTQ accuracy
-INT8 QAT accuracy
-```
+| Variant | Accuracy | Drop | p50 ms | p99 ms |
+|:--------|:--------:|:----:|:------:|:------:|
+| FP32 ORT | | 0 | | |
+| FP16 TRT | | | | |
+| INT8 PTQ ORT | | | | |
+| INT8 PTQ TRT | | | | |
+| INT8 QAT TRT | | | | |
 
-Bảng kết quả:
-
-|  Variant | Accuracy | Accuracy drop | p50 latency | p99 latency |
-|---------:|---------:|--------------:|------------:|------------:|
-|     FP32 |          |             0 |             |             |
-|     FP16 |          |               |             |             |
-| INT8 PTQ |          |               |             |             |
-| INT8 QAT |          |               |             |             |
-
-Quy tắc production:
+**Quy tắc production:**
 
 ```text
 Một model quantized chỉ được coi là tốt nếu:
-    accuracy drop trong budget
-    latency/throughput cải thiện thật
-    memory giảm thật
-    không có fallback nguy hiểm
-    chạy ổn với production input distribution
+  accuracy drop trong budget
+  latency / throughput cải thiện thật
+  memory giảm thật
+  không có fallback nguy hiểm
+  chạy ổn với production input distribution
 ```
 
+::: {.callout-tip icon=false collapse="true"}
+## Mini project: Quantize an image classifier end-to-end
 
-
-## PyTorch QAT conceptual skeleton
-
-Phần này không phải một full training script, nhưng cho bạn thấy flow.
-
-```python
-import torch
-from torch.ao.quantization import get_default_qat_qconfig_mapping
-from torch.ao.quantization.quantize_fx import prepare_qat_fx, convert_fx
-
-
-model = MyModel()
-model.train()
-
-example_inputs = (torch.randn(1, 3, 224, 224),)
-
-qconfig_mapping = get_default_qat_qconfig_mapping("fbgemm")
-
-prepared = prepare_qat_fx(
-    model,
-    qconfig_mapping,
-    example_inputs,
-)
-
-# Fine-tune
-for epoch in range(num_epochs):
-    prepared.train()
-    for images, labels in train_loader:
-        optimizer.zero_grad()
-        outputs = prepared(images)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-
-    validate(prepared, val_loader)
-
-prepared.eval()
-quantized = convert_fx(prepared)
-```
-
-Điểm cần nhớ:
+**Mục tiêu:**
 
 ```text
-PyTorch quantized model không đồng nghĩa TensorRT-ready model.
-Bạn vẫn phải kiểm tra export ONNX Q/DQ, TensorRT parsing và accuracy sau build engine.
+PyTorch model → ONNX → FP32 baseline → ORT PTQ → Q/DQ graph
+→ TensorRT engine → benchmark + accuracy report
 ```
 
-
-
-## Common failure modes
-
-### INT8 accuracy collapse
-
-Triệu chứng:
-
-```text
-FP32 accuracy: 92%
-INT8 accuracy: 10%
-```
-
-Nguyên nhân thường gặp:
-
-- Calibration data sai preprocessing.
-- Calibration data không đại diện.
-- Activation outlier làm scale xấu.
-- Layer nhạy bị quantize.
-- Per-channel axis sai.
-- Q/DQ export sai.
-- Dùng `trtexec --int8` không có calibration đúng.
-- Eval pipeline dùng input khác training/inference.
-
-Cách xử lý:
-
-```text
-1. Compare FP32 vs INT8 output on same input.
-2. Check preprocessing.
-3. Inspect Q/DQ graph.
-4. Increase calibration data.
-5. Try other calibration methods.
-6. Exclude sensitive layers.
-7. Try per-channel weights.
-8. Use QAT.
-```
-
-### INT8 chậm hơn FP16
-
-Nguyên nhân thường gặp:
-
-- Hardware không có INT8 acceleration tốt.
-- Model nhỏ, overhead dominate.
-- Q/DQ conversions quá nhiều.
-- Layer support kém.
-- TensorRT không fuse được.
-- CPU fallback trong ONNX Runtime.
-- Batch size/shape không phù hợp.
-- Dynamic shape profile quá rộng.
-
-Cách xử lý:
-
-```text
-1. Dump layer profile.
-2. Check precision per layer.
-3. Compare with FP16 engine.
-4. Remove excessive Q/DQ.
-5. Use larger batch if throughput target.
-6. Tune optimization profile.
-7. Check provider fallback.
-```
-
-### TensorRT build fail: could not find implementation
-
-Nguyên nhân:
-
-- Layer bị ép quantize nhưng không có low-precision kernel.
-- Q/DQ placement không hợp lệ.
-- Unsupported operator.
-- Dynamic shape/profile không hợp lệ.
-- Plugin thiếu.
-
-Cách xử lý:
-
-```text
-1. Build FP16 first.
-2. Build Q/DQ model with detailed logs.
-3. Find failing layer.
-4. Remove Q/DQ around that layer.
-5. Keep that layer FP16/FP32.
-6. Add plugin if custom op.
-```
-
-### ONNX Runtime quantized model không nhanh
-
-Nguyên nhân:
-
-- CPU ISA không hỗ trợ tốt.
-- Quantized op không được support.
-- QOperator/QDQ format không phù hợp provider.
-- Graph optimization chưa chạy.
-- Model nhỏ.
-- I/O overhead lớn.
-
-Cách xử lý:
-
-```text
-1. Enable ORT profiling.
-2. Check operator assignment.
-3. Try QDQ vs QOperator.
-4. Try static vs dynamic.
-5. Try provider-specific recommendations.
-6. Benchmark with real batch sizes.
-```
-
-### FP8 engine không build hoặc không nhanh
-
-Nguyên nhân:
-
-- GPU không hỗ trợ FP8 tốt.
-- TensorRT version/hardware không phù hợp.
-- ONNX FP8 opset/custom domain không được toolchain hỗ trợ.
-- Scale/Q/DQ không đúng.
-- Layer không có FP8 tactic tốt.
-
-Cách xử lý:
-
-```text
-1. Verify GPU architecture.
-2. Verify TensorRT version.
-3. Start from official TensorRT/Model Optimizer recipe.
-4. Build FP16 baseline.
-5. Build FP8 only after Q/DQ graph is valid.
-6. Check layer precision and fallback.
-```
-
-
-
-## Debug decision tree
-
-```text
-Quantized model has bad accuracy?
-|
-+-- Does FP32 exported ONNX match PyTorch?
-|   |
-|   +-- No -> fix export first.
-|   +-- Yes
-|
-+-- Does FP16/TensorRT match ONNX?
-|   |
-|   +-- No -> TensorRT parse/precision issue.
-|   +-- Yes
-|
-+-- Does calibration preprocessing match production?
-|   |
-|   +-- No -> fix preprocessing.
-|   +-- Yes
-|
-+-- Is calibration data representative?
-|   |
-|   +-- No -> improve data.
-|   +-- Yes
-|
-+-- Which layer diverges first?
-|   |
-|   +-- Sensitive layer -> exclude or keep FP16.
-|   +-- Many layers -> try calibration method/per-channel/QAT.
-|
-+-- Still bad?
-    |
-    +-- Use QAT or mixed precision.
-```
-
-
-
-## Production checklist
-
-Trước khi đưa quantized model vào production:
-
-```text
-[ ] FP32/FP16 baseline accuracy đã được lưu.
-[ ] FP32/FP16 baseline latency đã được lưu.
-[ ] Calibration dataset versioned.
-[ ] Calibration preprocessing giống production.
-[ ] Quantization config versioned.
-[ ] ONNX opset version recorded.
-[ ] TensorRT/ORT/CUDA/driver versions recorded.
-[ ] Hardware target recorded.
-[ ] Q/DQ graph inspected.
-[ ] Sensitive layers reviewed.
-[ ] Accuracy validated on full validation set.
-[ ] Accuracy validated by important segments/slices.
-[ ] Latency p50/p95/p99 measured.
-[ ] Throughput measured under target concurrency.
-[ ] GPU memory measured.
-[ ] Layer profile inspected.
-[ ] No unexpected CPU fallback.
-[ ] Engine cache strategy defined.
-[ ] Engine portability assumptions documented.
-[ ] Rollback plan exists.
-[ ] Canary/A-B/shadow strategy planned.
-[ ] Monitoring metrics defined.
-```
-
-
-
-## Mini project — Quantize an image classifier end-to-end
-
-Mục tiêu:
-
-```text
-PyTorch model -> ONNX -> FP32 baseline -> ONNX Runtime PTQ -> Q/DQ graph -> TensorRT engine -> benchmark + accuracy report
-```
-
-### Deliverables
-
-Bạn cần tạo:
+**Artifacts cần tạo:**
 
 ```text
 artifacts/
@@ -2274,277 +1586,240 @@ artifacts/
   model.static.qdq.int8.onnx
   model.fp16.plan
   model.int8.plan
-  calibration_manifest.json
+  calibration_manifest.json      (số sample, source, preprocessing version)
   benchmark_results.csv
   accuracy_report.md
   layer_profile.txt
 ```
 
-### Report template
+**Report template (`accuracy_report.md`):**
 
-
+```markdown
 # Quantization Report
 
 ## Model
-
-- Architecture:
-- Dataset:
-- Input shape:
-- Preprocessing:
-- ONNX opset:
-- Runtime:
-- Hardware:
+- Architecture / Dataset / Input shape / Preprocessing
+- ONNX opset / Runtime / Hardware
 
 ## Baseline
-
-|       Variant | Accuracy |   p50 |  p95 |  p99 | Throughput | GPU Mem |
-|--------------:|---------:|------:|-----:|-----:|-----------:|--------:|
-|     FP32 ONNX |          |       |      |      |            |         |
-| FP16 TensorRT |          |       |      |      |            |         |
+| Variant | Accuracy | p50 | p95 | p99 | Throughput | GPU Mem |
+|--------:|---------:|----:|----:|----:|-----------:|--------:|
+| FP32 ONNX | | | | | | |
+| FP16 TensorRT | | | | | | |
 
 ## Quantized Candidates
-
-|          Variant |        Calibration | Accuracy | Drop | p50 | p99 | Notes |
-|-----------------:|-------------------:|---------:|-----:|----:|----:|------:|
-|  INT8 PTQ MinMax |        500 samples |          |      |     |     |       |
-| INT8 PTQ Entropy |        500 samples |          |      |     |     |       |
-|         INT8 QAT | fine-tune 3 epochs |          |      |     |     |       |
+| Variant | Calibration | Accuracy | Drop | p50 | p99 | Notes |
+|--------:|------------:|---------:|-----:|----:|----:|------:|
+| INT8 PTQ MinMax | 500 samples | | | | | |
+| INT8 PTQ Entropy | 500 samples | | | | | |
+| INT8 QAT | fine-tune 3 epochs | | | | | |
 
 ## Findings
-
-- Best candidate:
-- Main bottleneck:
-- Sensitive layers:
-- Accuracy recovery steps:
-- Production recommendation:
-
-
-
-
-## One-page cheat sheet
-
-```text
-Quantization:
-    lower precision representation for weights/activations.
-
-Scale:
-    maps real values to quantized range.
-
-Zero-point:
-    quantized value representing real zero.
-
-Rounding error:
-    loss from discrete steps.
-
-Clamping error:
-    loss from out-of-range values.
-
-PTQ:
-    quantize after training, no retraining.
-
-QAT:
-    train/fine-tune with fake quantization.
-
-Calibration:
-    estimate activation scales from representative data.
-
-Dynamic quantization:
-    activation scales computed at runtime.
-
-Static quantization:
-    activation scales computed offline.
-
-QOperator:
-    replace op with quantized op.
-
-Q/DQ:
-    insert QuantizeLinear and DequantizeLinear around tensors.
-
-Explicit quantization:
-    Q/DQ nodes encode quantization in the model.
-
-Implicit quantization:
-    builder/calibrator decides INT8 ranges outside the graph.
-
-TensorRT modern recommendation:
-    prefer explicit Q/DQ workflow.
-
-INT8:
-    uniform integer quantization, often symmetric in TensorRT.
-
-FP8:
-    8-bit floating point, non-uniform distribution, hardware/backend dependent.
-
-Accuracy recovery:
-    better calibration -> per-channel weights -> exclude sensitive layers -> mixed precision -> QAT.
+- Best candidate / Main bottleneck / Sensitive layers
+- Accuracy recovery steps / Production recommendation
 ```
+:::
 
 
+## Checkpoint questions {.unnumbered}
 
-## Checkpoint questions
+::: {.callout-tip icon=false collapse="true"}
+## Tự kiểm tra — 20 câu hỏi và đáp án ngắn
 
-Bạn nên tự trả lời được:
+1. **Vì sao INT8 có thể nhanh hơn FP32?**  
+   Ít bytes → giảm memory bandwidth; low-precision Tensor Core kernel nhanh hơn với throughput cao hơn.
 
-1. Vì sao INT8 có thể nhanh hơn FP32?
-2. Vì sao INT8 có thể chậm hơn FP16?
-3. Scale và zero-point dùng để làm gì?
-4. Symmetric quantization khác asymmetric ở đâu?
-5. Vì sao zero phải biểu diễn chính xác trong nhiều CNN?
-6. Rounding error và clamping error trade-off như thế nào?
-7. Calibration dataset cần label không?
-8. Calibration dataset cần đại diện production data không?
-9. Dynamic quantization khác static quantization như thế nào?
-10. Vì sao PTQ thường dễ hơn QAT?
-11. Vì sao QAT thường chính xác hơn PTQ?
-12. ONNX QOperator khác Q/DQ format như thế nào?
-13. `QuantizeLinear` và `DequantizeLinear` biểu diễn gì?
-14. Vì sao TensorRT explicit quantization nên dùng Q/DQ graph?
-15. Vì sao không đưa calibration table vào model đã có Q/DQ nodes?
-16. Per-channel quantization thường áp dụng cho weights hay activations?
-17. Layer nào thường nhạy với quantization?
-18. Khi INT8 accuracy collapse, bạn debug theo thứ tự nào?
-19. Khi INT8 chậm hơn FP16, bạn kiểm tra gì?
-20. Vì sao FP8 không phải drop-in replacement cho INT8?
+2. **Vì sao INT8 có thể chậm hơn FP16?**  
+   Hardware không có INT8 acceleration tốt, model nhỏ overhead dominate, Q/DQ quá nhiều, fallback FP32.
 
+3. **Scale và zero-point dùng để làm gì?**  
+   `scale` ánh xạ real value sang integer range; `zero_point` xác định integer đại diện 0.0.
 
+4. **Symmetric khác asymmetric ở đâu?**  
+   Symmetric: `zero_point = 0`; asymmetric: `zero_point` bất kỳ để căn phân phối lệch.
 
-## Glossary
+5. **Vì sao zero phải biểu diễn chính xác trong CNN?**  
+   Padding, ReLU output bắt đầu từ 0; sai zero → sai số lan truyền toàn mạng.
 
-| Term                  |                                                               Meaning |
-|-----------------------|----------------------------------------------------------------------:|
-| Quantization          |                                Giảm precision của weights/activations |
-| Dequantization        |            Chuyển low precision value về high precision approximation |
-| Scale                 |                          Hệ số ánh xạ real value sang quantized range |
-| Zero-point            |                                  Integer value đại diện cho real zero |
-| Clipping / clamping   |                                                Cắt giá trị vượt range |
-| Rounding              |                          Làm tròn giá trị sang mức biểu diễn gần nhất |
-| PTQ                   |                                            Post-Training Quantization |
-| QAT                   |                                           Quantization-Aware Training |
-| Calibration           |                          Thu thập activation statistics để chọn scale |
-| QOperator             |                                        ONNX quantized operator format |
-| Q/DQ                  |                QuantizeLinear/DequantizeLinear tensor-oriented format |
-| Explicit quantization |                                  Quantization được encode trong graph |
-| Implicit quantization | Runtime/compiler chọn quantization dựa trên calibration/dynamic range |
-| Per-tensor            |                                               Một scale cho cả tensor |
-| Per-channel           |                                        Một scale cho mỗi channel/axis |
-| Per-block             |                                               Một scale cho mỗi block |
-| INT8                  |                                            8-bit integer quantization |
-| FP8                   |                                     8-bit floating point quantization |
-| WoQ                   |                                              Weight-only quantization |
-| Mixed precision       |               Một số layer low precision, một số layer high precision |
+6. **Rounding và clamping trade-off thế nào?**  
+   Scale lớn: ít clamping, nhiều rounding. Scale nhỏ: ít rounding, nhiều clamping. Calibration tìm điểm cân bằng.
 
+7. **Calibration dataset cần label không?**  
+   Không cần label — chỉ cần đại diện distribution và đúng preprocessing.
 
+8. **Calibration dataset cần đại diện production data không?**  
+   Có — nếu không đại diện, scale sẽ sai và accuracy sẽ drop.
 
-## Những hiểu lầm cần tránh
+9. **Dynamic vs static quantization khác nhau thế nào?**  
+   Dynamic: scale activation tính lúc runtime. Static: scale tính offline từ calibration data.
 
-### Hiểu lầm 1: INT8 luôn nhanh hơn FP16
+10. **Vì sao PTQ thường dễ hơn QAT?**  
+    PTQ không cần retrain — chỉ cần calibration data và build graph. Không cần training pipeline.
 
-Sai. INT8 chỉ nhanh hơn nếu hardware, runtime, graph fusion và workload phù hợp.
+11. **Vì sao QAT thường chính xác hơn PTQ?**  
+    Model fine-tune với fake quantization noise, học cách robust với rounding/clamping.
 
-### Hiểu lầm 2: Calibration data càng nhiều càng luôn tốt
+12. **ONNX QOperator khác Q/DQ thế nào?**  
+    QOperator thay op gốc bằng quantized op type chuyên biệt. Q/DQ giữ op gốc, chèn precision boundary.
 
-Không hẳn. Data phải đại diện. Nhiều data nhưng preprocessing sai vẫn gây hỏng.
+13. **`QuantizeLinear` và `DequantizeLinear` biểu diễn gì?**  
+    `QuantizeLinear`: FP32 → INT8 bằng scale + zero_point. `DequantizeLinear`: INT8 → FP32 approximation.
 
-### Hiểu lầm 3: Quantize toàn bộ graph là tối ưu nhất
+14. **Vì sao TensorRT explicit quantization dùng Q/DQ graph?**  
+    Scale encode trong graph, compiler fuse Q/DQ với op, precision boundary rõ ràng, hỗ trợ nhiều dtype.
 
-Sai. Một số layer nên giữ FP16/FP32 để bảo toàn accuracy và fusion.
+15. **Vì sao không đưa calibration table vào model đã có Q/DQ nodes?**  
+    Q/DQ đã có scale; external calibration table xung đột, override sai hoặc gây build lỗi.
 
-### Hiểu lầm 4: Q/DQ node là overhead chắc chắn
+16. **Per-channel quantization thường áp cho weights hay activations?**  
+    Weights (per output channel); activations thường per-tensor.
 
-Không hẳn. Backend như TensorRT có thể fuse Q/DQ pattern thành low-precision kernels.
+17. **Layer nào thường nhạy với quantization?**  
+    Softmax, LayerNorm, GELU, SiLU, attention score matmul, first/last layer, residual add nhỏ.
 
-### Hiểu lầm 5: Accuracy PyTorch QAT tốt nghĩa là TensorRT engine tốt
+18. **INT8 accuracy collapse — debug theo thứ tự nào?**  
+    Preprocessing → calibration data → calibration method → activation tensor comparison → exclude layer → QAT.
 
-Chưa chắc. Bạn phải export ONNX Q/DQ, build engine và validate engine thật.
+19. **INT8 chậm hơn FP16 — kiểm tra gì trước tiên?**  
+    Layer profile → precision per layer → fallback nodes → Q/DQ count → có fuse không.
+
+20. **FP8 không phải drop-in replacement cho INT8 — vì sao?**  
+    FP8 cần hardware mới hơn (Hopper+), non-uniform spacing, scale khác, không phải mọi op có FP8 kernel tốt.
+:::
 
 
+## Cheat sheet {.unnumbered}
 
-## Lesson summary
+::: {.callout-tip icon=false collapse="true"}
+## Cheat sheet nhanh — một trang
 
-Quantization là một kỹ thuật trung tâm của high-performance inference, nhưng không nên học như một flag hoặc recipe cố định.
+| Khái niệm | Ý nghĩa ngắn |
+|:----------|:-------------|
+| Quantization | Giảm precision weights / activations |
+| Scale | Ánh xạ real value → quantized range |
+| Zero-point | Integer đại diện 0.0 |
+| Rounding error | Mất mát từ discrete steps quá thô |
+| Clamping error | Mất mát từ giá trị vượt range bị cắt |
+| PTQ | Quantize sau training, không retrain |
+| QAT | Fine-tune với fake quantization |
+| Fake quantization | Simulate Q+DQ trong forward, STE backward |
+| Calibration | Ước tính activation scale từ representative data |
+| CalibrationMethod | MinMax / Entropy / Percentile |
+| Dynamic quant | Scale tính lúc runtime |
+| Static quant | Scale tính offline từ calibration data |
+| QOperator | Thay op gốc bằng op quantized chuyên biệt |
+| Q/DQ | Chèn QuantizeLinear / DequantizeLinear quanh tensor |
+| Explicit quant | Q/DQ nodes encode quantization trong graph |
+| Implicit quant | Builder / calibrator quyết định INT8 ngoài graph |
+| stronglyTyped | TRT mode enforce dtype chặt theo Q/DQ |
+| INT8 | Uniform integer, thường symmetric trong TRT |
+| FP8 | 8-bit float, non-uniform, cần hardware mới hơn |
+| Accuracy recovery | Better calib → per-channel → exclude → mixed → QAT |
 
-Bản chất của quantization gồm bốn lớp:
-
-```text
-1. Numerical layer:
-    scale, zero-point, rounding, clamping, error.
-
-2. Graph layer:
-    QOperator, Q/DQ, placement, fusion.
-
-3. Runtime/compiler layer:
-    ONNX Runtime, TensorRT, TensorRT EP, kernel selection.
-
-4. Production layer:
-    calibration data, accuracy validation, p99 latency, fallback, monitoring.
-```
-
-Workflow tốt nhất để học và làm thực tế:
-
-```text
-1. Build FP32/FP16 baseline.
-2. Quantize bằng PTQ.
-3. Inspect Q/DQ graph.
-4. Benchmark latency + validate accuracy.
-5. Debug accuracy drop.
-6. Exclude sensitive layers / tune calibration.
-7. Nếu cần, dùng QAT.
-8. Build TensorRT engine.
-9. Validate production constraints.
-```
-
-Khi bạn hiểu Lesson 5, các bài sau về Triton, dynamic batching, model repository và production rollout sẽ có nền tảng vững hơn vì bạn đã biết model artifact không chỉ là `model.onnx` hay `model.plan`, mà là một artifact gắn với precision, scale, hardware, runtime và validation protocol.
+TensorRT modern recommendation: **prefer explicit Q/DQ workflow** (không dùng implicit calibration làm path chính).
+:::
 
 
+## Glossary {.unnumbered}
 
-## Suggested next lesson
+| Thuật ngữ | Ý nghĩa |
+|:----------|:--------|
+| **Quantization** | Giảm precision của weights / activations |
+| **Dequantization** | Chuyển low-precision value về high-precision approximation |
+| **Scale** | Hệ số ánh xạ real value sang quantized range |
+| **Zero-point** | Integer value đại diện cho real zero (0.0) |
+| **Clipping / Clamping** | Cắt giá trị vượt representable range |
+| **Rounding** | Làm tròn sang mức biểu diễn gần nhất |
+| **PTQ** | Post-Training Quantization |
+| **QAT** | Quantization-Aware Training |
+| **Fake quantization** | Simulate Q+DQ trong training để model học robust với quant noise |
+| **Calibration** | Thu thập activation statistics để chọn scale / zero-point |
+| **CalibrationMethod** | MinMax, Entropy/KL, hoặc Percentile — ba phương pháp chọn range |
+| **QOperator** | ONNX format dùng quantized op type chuyên biệt |
+| **Q/DQ** | QuantizeLinear / DequantizeLinear — tensor-oriented precision boundary |
+| **QuantizeLinear** | ONNX op: FP32 → INT8 theo affine formula |
+| **DequantizeLinear** | ONNX op: INT8 → FP32 approximation |
+| **Explicit quantization** | Quantization encode trong graph bằng Q/DQ nodes |
+| **Implicit quantization** | Runtime/compiler chọn INT8 range từ calibration bên ngoài |
+| **Per-tensor** | Một scale / zero-point cho toàn bộ tensor |
+| **Per-channel** | Một scale / zero-point cho mỗi channel / axis |
+| **Per-block** | Một scale / zero-point cho mỗi block nhỏ |
+| **INT8** | 8-bit integer quantization |
+| **FP8** | 8-bit floating point quantization (E4M3 hoặc E5M2) |
+| **WoQ** | Weight-only Quantization |
+| **Mixed precision** | Một số layer low-precision, một số layer high-precision |
+| **stronglyTyped** | TensorRT mode enforce dtype chặt theo Q/DQ nodes trong graph |
+| **STE** | Straight-Through Estimator — gradient approximation trong QAT backward |
 
-**Lesson 6: NVIDIA Triton Inference Server — Model Repository, Backends, Dynamic Batching, Concurrent Execution and Production Serving**
 
-Nội dung nên học tiếp:
+## Summary {.unnumbered}
 
-```text
-1. Triton là gì và khác gì TensorRT.
-2. Model repository structure.
-3. TensorRT backend, ONNX Runtime backend, Python backend.
-4. config.pbtxt.
-5. Dynamic batching.
-6. Instance groups.
-7. Model versioning.
-8. Ensemble models.
-9. Metrics với Prometheus.
-10. Deploy TensorRT INT8/FP16 engine trong Triton.
-```
+Quantization là kỹ thuật trung tâm của high-performance inference, nhưng không nên học như một flag hay recipe cố định. Bản chất gồm bốn lớp:
+
+| Lớp | Nội dung |
+|:----|:---------|
+| Numerical | Scale, zero-point, rounding, clamping, outlier sensitivity |
+| Graph | QOperator, Q/DQ, placement, fusion, precision boundary |
+| Runtime / compiler | ONNX Runtime, TensorRT / TensorRT EP, kernel selection, fallback |
+| Production | Calibration data, accuracy validation, p99, fallback, monitoring |
+
+**Workflow tốt nhất:**
+
+1. FP32/FP16 baseline → đo accuracy + latency (không bỏ qua bước này)
+2. PTQ với calibration data đúng preprocessing
+3. Inspect Q/DQ graph (op counts, scale shapes)
+4. Benchmark latency + validate accuracy trên validation set thật
+5. Debug accuracy drop theo 8 bước có hệ thống
+6. Exclude sensitive layers / tune calibration method
+7. Nếu cần: QAT với same quant config như backend
+8. Build TensorRT engine → validate production constraints
+
+Khi hiểu Lesson 5, các bài về Triton, dynamic batching và production rollout sẽ có nền tảng vững hơn: model artifact không chỉ là `model.onnx` hay `model.plan`, mà là artifact gắn với precision, scale, hardware, runtime và validation protocol.
 
 
+## Preview bài tiếp theo {.unnumbered}
 
-##  References
+**Lesson 6: NVIDIA Triton Inference Server** — Model Repository, Backends, Dynamic Batching, Concurrent Execution và Production Serving.
 
-Các nguồn chính thức nên đọc khi cần tra cứu chi tiết API hoặc behavior mới nhất:
+Sau Lesson 5, bạn có INT8 TensorRT engine. Lesson 6 dạy cách deploy engine đó vào Triton, cấu hình `config.pbtxt`, bật dynamic batching, quản lý nhiều model versions, expose metrics cho Prometheus, và serve production với SLO latency.
+
+| Chủ đề Lesson 6 | Liên hệ với Lesson 5 |
+|:----------------|:---------------------|
+| TensorRT backend trong Triton | Deploy `.plan` file INT8 từ Lab 6 |
+| Model repository structure | Quản lý FP16 + INT8 versions |
+| Dynamic batching | Throughput của INT8 engine dưới tải thật |
+| Instance groups | Concurrent INT8 inference |
+| Ensemble / Python backend | Preprocess → INT8 classifier → postprocess |
+| Model versioning | Nhiều precision/version cạnh nhau, rollback |
+| `config.pbtxt` precision | Khai báo precision của engine |
+| Metrics với Prometheus | Monitor accuracy drift sau deploy |
+
+
+## References {.unnumbered}
 
 1. NVIDIA TensorRT Documentation — Working with Quantized Types  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/work-quantized-types.html
+   <https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/work-quantized-types.html>
 
 2. NVIDIA TensorRT Documentation — Accuracy Considerations  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/accuracy-considerations.html
+   <https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/accuracy-considerations.html>
 
 3. NVIDIA TensorRT Documentation — Command-Line Programs / `trtexec`  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/reference/command-line-programs.html
+   <https://docs.nvidia.com/deeplearning/tensorrt/latest/reference/command-line-programs.html>
 
 4. NVIDIA TensorRT Documentation — TensorRT Capabilities  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/architecture/capabilities.html
+   <https://docs.nvidia.com/deeplearning/tensorrt/latest/architecture/capabilities.html>
 
 5. ONNX Runtime Documentation — Quantize ONNX Models  
-   https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html
+   <https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html>
 
 6. ONNX Operator Documentation — QuantizeLinear  
-   https://onnx.ai/onnx/operators/onnx__QuantizeLinear.html
+   <https://onnx.ai/onnx/operators/onnx__QuantizeLinear.html>
 
 7. ONNX Operator Documentation — DequantizeLinear  
-   https://onnx.ai/onnx/operators/onnx__DequantizeLinear.html
+   <https://onnx.ai/onnx/operators/onnx__DequantizeLinear.html>
 
 8. PyTorch Documentation — Quantization API Reference  
-   https://docs.pytorch.org/docs/2.12/quantization-support.html
+   <https://docs.pytorch.org/docs/2.12/quantization-support.html>
 
 9. PyTorch Documentation — `prepare_qat_fx`  
-   https://docs.pytorch.org/docs/2.12/generated/torch.ao.quantization.quantize_fx.prepare_qat_fx.html
+   <https://docs.pytorch.org/docs/2.12/generated/torch.ao.quantization.quantize_fx.prepare_qat_fx.html>

@@ -6,43 +6,49 @@ toc: false
 
 :::: {.home-hero}
 ::: {.home-hero-copy}
-<p class="eyebrow">Ghi chú học tập</p>
+<p class="home-brand">dythanh22</p>
 
-# Xin chào, mình là Thanh
+# Chuỗi bài học · kiến trúc mô hình và tối ưu inference
 
-Chuỗi bài học đọc theo thứ tự — kiến trúc mô hình và tối ưu inference. Chọn một chuỗi, đi hết pipeline, rồi quay lại khi cần ôn.
+Chọn một lộ trình, đi hết pipeline, rồi quay lại khi cần ôn. Không phải blog rời — mỗi chuỗi là một đường đọc có thứ tự.
 
-[Xem bài học](bai-hoc/index.qmd){.btn .btn-primary .btn-lg role="button"}
-[Giới thiệu](about.qmd){.btn .btn-outline-secondary .btn-lg role="button"}
+[Xem bài học](bai-hoc/index.qmd){.btn .btn-primary .btn-lg .home-cta-primary role="button"}
+[Architecture Models](bai-hoc/architecture-models/index.qmd){.btn .btn-outline-secondary .btn-lg role="button"}
 :::
 
-::: {.home-hero-panel}
-<p class="eyebrow">Cách đọc</p>
-### Một chuỗi = một lộ trình
-
-Homepage chỉ hiện **chuỗi**, không trộn từng chương. Vào chuỗi để có mục lục, sidebar và nút bài trước / bài sau.
-
-[Mở mục Bài học →](bai-hoc/index.qmd)
+::: {.home-hero-visual}
+![Hai lộ trình: Architecture Models và AI Optimization](assets/img/home-pipeline.svg){fig-alt="Sơ đồ: CNN → Seq → Gen → Attention → U-Net; ONNX → TensorRT → Triton → LLM → Ops."}
 :::
 ::::
 
-## Chuỗi bài
+::: {#home-continue .home-continue aria-live="polite"}
+:::
+
+## Cách đọc
+
+Một **chuỗi** = một lộ trình. Homepage không trộn từng chương. Vào chuỗi để có mục lục, sidebar và nút bài trước / bài sau — rồi đọc theo `order`.
+
+## Hai chuỗi
 
 :::: {.series-grid}
-::: {.series-card}
-<p class="eyebrow">Kiến trúc · lộ trình</p>
+::: {.series-card .series-card--arch}
+<p class="eyebrow">Kiến trúc · 15 model</p>
 ### [Architecture Models](bai-hoc/architecture-models/index.qmd)
 
-CNN → sequence → generative (VAE/GAN/DDPM) → embeddings → attention → U-Net.
+CNN → sequence → generative (VAE / GAN / DDPM) → embeddings → attention → U-Net. Mỗi model tách thành các chương theo khối xây dựng.
+
+<p class="series-meta">~70 chương · công thức + sơ đồ SVG</p>
 
 [Mở Architecture Models →](bai-hoc/architecture-models/index.qmd)
 :::
 
-::: {.series-card}
-<p class="eyebrow">Serving · GPU</p>
+::: {.series-card .series-card--opt}
+<p class="eyebrow">Serving · GPU · 10 bài</p>
 ### [AI Optimization](bai-hoc/ai-optimize/index.qmd)
 
-10 bài: ONNX, TensorRT, Triton, LLM serving và vận hành production.
+Từ model artifact đến production: ONNX, TensorRT, Triton, profiling, rollout an toàn và LLM serving.
+
+<p class="series-meta">Lesson 1 → 10 · labs + checklist</p>
 
 [Mở AI Optimization →](bai-hoc/ai-optimize/index.qmd)
 :::

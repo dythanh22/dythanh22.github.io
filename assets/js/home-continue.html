@@ -1,0 +1,81 @@
+<script>
+(() => {
+  const isHome = () => {
+    const p = (location.pathname || "/").replace(/\/+$/, "") || "/";
+    if (p === "/" || p === "") return true;
+    if (/\/about(\.html)?$/i.test(p)) return false;
+    if (p.includes("/bai-hoc")) return false;
+    return /\/index(\.html)?$/i.test(p);
+  };
+
+  const SERIES = [
+    {
+      label: "Architecture Models",
+      match: /\/bai-hoc\/architecture-models\//,
+    },
+    {
+      label: "AI Optimization",
+      match: /\/bai-hoc\/ai-optimize\//,
+    },
+  ];
+
+  const collectReads = () => {
+    const reads = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k || !k.startsWith("read:")) continue;
+        const path = k.slice(5);
+        if (!path.includes("/bai-hoc/")) continue;
+        reads.push(path);
+      }
+    } catch (_) {
+      return [];
+    }
+    return reads;
+  };
+
+  const titleFromPath = (path) => {
+    const seg = path.replace(/\/$/, "").split("/").pop() || "";
+    return seg
+      .replace(/\.html?$/, "")
+      .replace(/^lesson-\d+-/, "")
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
+  const hrefFromStored = (path) => {
+    let p = path;
+    if (!p.startsWith("/")) p = "/" + p;
+    if (p.endsWith("/")) return p;
+    if (!/\.html?$/i.test(p)) p += ".html";
+    return p;
+  };
+
+  const inject = () => {
+    if (!isHome()) return;
+    const host = document.getElementById("home-continue");
+    if (!host) return;
+
+    const reads = collectReads();
+    if (reads.length < 1) return;
+
+    reads.sort((a, b) => b.length - a.length);
+    const last = reads[0];
+    const series = SERIES.find((s) => s.match.test(last));
+    const seriesLabel = series ? series.label : "Bài học";
+
+    host.classList.add("is-visible");
+    host.innerHTML =
+      `<p class="home-continue-label">Tiếp tục học</p>` +
+      `<a class="home-continue-link" href="${hrefFromStored(last)}">${titleFromPath(last)} →</a>` +
+      `<p class="home-continue-meta">${seriesLabel} · đã mở ${reads.length} trang trên trình duyệt này</p>`;
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", inject);
+  } else {
+    inject();
+  }
+})();
+</script>

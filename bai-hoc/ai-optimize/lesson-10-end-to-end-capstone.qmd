@@ -7,245 +7,260 @@ series: ai-optimize
 order: 10
 description: "Build, optimize, benchmark và vận hành một production inference service."
 role: "Build, optimize, benchmark và vận hành một production inference service"
+aliases:
+  - /bai-hoc/ai-optimize/lesson_10_end_to_end_capstone_project.html
+  - /bai-hoc/ai-optimize/lesson-10-end-to-end-capstone-project.html
 ---
 
 ::: {.callout-note icon=false}
 ## Mục tiêu bài học
-Mục tiêu của bài này là giúp bạn ghép toàn bộ 9 lesson trước thành một project hoàn chỉnh: từ model PyTorch ban đầu, export sang ONNX, tối ưu bằng TensorRT, serve bằng NVIDIA Triton, benchmark bằng `trtexec` và Perf Analyzer, monitor bằng Prometheus/Grafana, triển khai rollout an toàn, rồi viết runbook vận hành production.
+Ghép Lesson 1–9 thành **một project vận hành được**: PyTorch → ONNX → TensorRT → Triton (hoặc nhánh LLM: vLLM / TensorRT-LLM) → benchmark → Prometheus/Grafana → canary/rollback → cost + final report. Bài **không** dạy lại chi tiết từng tool — mà buộc bạn chứng minh service **đúng, đủ nhanh dưới SLO, quan sát được, rollback được**.
 :::
 
-## Vị trí của Lesson 10 trong chuỗi học
+::: {.callout-note icon=false}
+## Lộ trình bài học
 
-Ở 9 lesson trước, bạn đã học từng mảnh quan trọng của inference engineering:
+| # | Phần | Trả lời câu hỏi | Thời lượng |
+|:--|:-----|:----------------|:-----------|
+| 1 | Phạm vi + workload | CNN mặc định vs LLM optional? In/out scope? | 15 phút |
+| 2 | Architecture + contract | Repo, deliverables, SLO, kiến trúc mục tiêu? | 20 phút |
+| 3 | Export + optimize (+quant) | ONNX → validate → TRT FP16/INT8? | 35 phút |
+| 4 | Deploy + benchmark | Triton dual backend, Perf Analyzer, knee? | 35 phút |
+| 5 | Ops + canary | Metrics, alert, K8s, shadow/canary, runbook? | 30 phút |
+| 6 | Cost + report + rubric | $/1M, PRR, Level 1–8? | 20 phút |
+| 7 | Failure + mental models | Bug thường gặp? Mantra cả khóa? | 15 phút + labs |
 
-```text
-Lesson 1: Modern GPU Inference Architecture
-    inference pipeline, GPU execution, latency vs throughput
+Đọc tối thiểu: phần 1–4. Phần 5–7 + Mini-lab bắt buộc trước khi coi capstone “xong”.
+:::
 
-Lesson 2: ONNX Fundamentals
-    graph IR, operators, opset, export pipeline
+::: {.reading-modes}
+**Đọc nhanh:** callout *Ý chính* + bảng + sơ đồ xương sống.  
+**Đọc đủ:** mở tip (templates/scripts), làm Mini-lab theo phase, Checkpoint 20 câu.
+:::
 
-Lesson 3: ONNX Runtime Deep Dive
-    execution providers, graph optimization, I/O binding
 
-Lesson 4: TensorRT Internals
-    engine building, tactic selection, dynamic shapes, FP16/INT8
+## Bối cảnh {.unnumbered}
 
-Lesson 5: Quantization Deep Dive
-    PTQ, QAT, calibration, Q/DQ graphs, accuracy recovery
-
-Lesson 6: NVIDIA Triton Inference Server
-    model repository, backends, dynamic batching, production serving
-
-Lesson 7: Profiling and Benchmarking
-    trtexec, Perf Analyzer, Nsight Systems, p99, bottleneck analysis
-
-Lesson 8: Safe Rollouts and Production Operations
-    canary, A/B testing, shadow traffic, monitoring, autoscaling, incident response
-
-Lesson 9: Advanced LLM Inference Systems
-    KV cache, continuous batching, vLLM, TensorRT-LLM, token-level metrics
-```
-
-Lesson 10 là bài tổng hợp:
+Chín lesson trước là từng mảnh. Lesson 10 là **workflow thật** khi biến model nghiên cứu thành service:
 
 ```text
-trained model artifact
-    -> ONNX export
-    -> ONNX validation
-    -> baseline benchmark
-    -> TensorRT optimization
-    -> Triton serving
-    -> load testing
-    -> monitoring
-    -> rollout
-    -> incident response
-    -> final production report
+L1 GPU pipeline → L2 ONNX → L3 ORT → L4 TensorRT → L5 Quantization
+→ L6 Triton → L7 Profiling → L8 Safe rollouts → L9 LLM systems
+→ L10 Capstone (ghép end-to-end)
 ```
 
-Trong thực tế, đây là workflow mà một inference engineer hoặc ML systems engineer cần làm khi biến một model nghiên cứu thành một service có thể vận hành.
+```{mermaid}
+%%| label: fig-l10-spine
+%%| fig-cap: "Sơ đồ xương sống Lesson 10: PyTorch → ONNX → TRT → Triton → Bench → Monitor → Canary → Report."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  PT([PyTorch]) -->|"export"| ON([ONNX])
+  ON -->|"build"| TR([TRT])
+  TR -->|"serve"| TS([Triton])
+  TS -->|"Perf Analyzer"| BN([Bench])
+  BN -->|"Prom/Grafana"| MO([Monitor])
+  MO -->|"1→100%"| CA([Canary])
+  CA -->|"PRR + cost"| RP([Report])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2.5px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class PT,RP soft
+  class ON,TR ok
+  class TS,BN hot
+  class MO,CA io
+```
+
+Mantra:
+
+```text
+Capstone không chỉ “chạy được”.
+Capstone = correctness + SLO + observability + reversible rollout + cost.
+```
+
+::: {.callout-tip icon=false collapse="true"}
+## Chuỗi kiến thức Lesson 1–9 gắn vào phase nào?
+
+| Lesson | Gắn phase capstone |
+|:-------|:-------------------|
+| 1 GPU pipeline | Latency vs throughput; H2D/D2H vs compute |
+| 2 ONNX | Export, opset, dynamic batch, checker |
+| 3 ORT | Baseline CUDA/CPU; I/O binding mindset |
+| 4 TensorRT | `trtexec`, profiles, FP16 engine |
+| 5 Quantization | INT8 optional; calibration + accuracy gate |
+| 6 Triton | Model repo, `config.pbtxt`, dynamic batching |
+| 7 Profiling | Perf Analyzer, knee, bottleneck table |
+| 8 Rollouts | SLO, canary, shadow, runbook, HPA |
+| 9 LLM | Nhánh optional: TTFT/ITL/KV/vLLM |
+:::
 
 
+## Learning outcomes {.unnumbered}
 
-## Capstone objective
+1. Định nghĩa phạm vi, SLO và **model contract** trước khi tối ưu
+2. Export ONNX + validate semantic (PyTorch vs ORT) trước TensorRT
+3. Build TensorRT FP16 (và INT8 optional) với profile `min/opt/max` đúng traffic
+4. Serve dual backend (ORT + TRT) trên Triton; client HTTP/gRPC
+5. Benchmark hai lớp: model/server vs end-to-end API; tìm **knee point**
+6. Observability: Prometheus scrape, alert actionable, dashboard golden signals
+7. Rollout an toàn: shadow → canary → promote/rollback + incident runbook
+8. Cost per 1M inferences; production readiness review; tự chấm Level 1–8
+9. (Optional) Nhánh LLM: vLLM/TensorRT-LLM + metric token-level
+10. Mental models khóa học: artifact ≠ service; p99 > mean; config là code
 
-Bạn sẽ xây dựng một production inference service cho bài toán image classification.
 
-Ta chọn image classification làm project mặc định vì:
+## Prerequisites {.unnumbered}
 
-1. model đủ nhỏ để chạy trên laptop/GPU cloud;
-2. input/output dễ hiểu;
-3. metric correctness dễ kiểm tra;
-4. pipeline vẫn bao gồm đầy đủ các bước production: export, optimize, serve, benchmark, monitor, rollout;
-5. có thể mở rộng sang object detection, embedding service hoặc LLM serving sau khi hoàn thành.
+| Chủ đề | Cần nắm |
+|:-------|:--------|
+| Lessons 1–5 | Pipeline GPU, ONNX, ORT, TensorRT, quantization cơ bản |
+| Lesson 6 | Triton model repository, `config.pbtxt`, dynamic batching |
+| Lesson 7 | `trtexec`, Perf Analyzer, p50/p95/p99, bottleneck |
+| Lesson 8 | SLO, canary, shadow, runbook, HPA mindset |
+| Lesson 9 | Optional nếu làm nhánh LLM (TTFT/ITL/KV) |
+| Môi trường | Docker + GPU khuyến nghị; CPU vẫn làm được export/validate/ORT |
+
+::: {.callout-tip icon=false collapse="true"}
+## Hai track lab
+**Track A (mặc định):** image classification ResNet-50 / MobileNetV3 → Triton.  
+**Track B (optional):** LLM serving vLLM / TensorRT-LLM — chỉ sau khi Track A đạt ít nhất Level 6.  
+Không có GPU: làm contract, scripts, configs, report design, runbook; benchmark TRT/Triton đánh dấu “blocked by hardware”.
+:::
+
+
+## Phạm vi, mục tiêu và chọn workload {#sec-scope}
+
+> Capstone này “làm gì đủ” và khi nào nên chọn CNN mặc định thay vì nhảy thẳng sang LLM?
+
+::: {.callout-important icon=false}
+## Ý chính
+**Track mặc định** là image classification (ResNet-50 hoặc MobileNetV3) vì đủ nhỏ để lặp nhanh mà vẫn bao phủ full pipeline production. LLM là **nhánh mở rộng** — không thay deliverable chính trừ khi bạn đã hoàn thành Track A tới Level 6+.
+:::
+
+| Chiều | Track A — Classic CNN | Track B — LLM (optional) |
+|:------|:----------------------|:-------------------------|
+| Model | ResNet-50 / MobileNetV3 | HF causal LM nhỏ (7B nếu có GPU) |
+| IR / engine | ONNX → TensorRT `.plan` | Checkpoint → vLLM / TensorRT-LLM |
+| Serving | NVIDIA Triton | OpenAI-compatible API |
+| Metric chính | p99 latency, img/s, error rate | TTFT, ITL, tokens/s, KV util |
+| Correctness | logits/top-k vs PyTorch | smoke + quality sample / disagreement |
+| Rollout | shadow top-k + canary | canary + streaming stability |
+
+**In scope:** export → validate → optimize → serve → load test → monitor → canary → cost → final report.  
+**Out of scope:** train từ đầu, MLOps feature store đầy đủ, multi-region HA production thật.
 
 Project mặc định:
 
 ```text
 Task: Image classification
-Model: ResNet-50 hoặc MobileNetV3
-Framework gốc: PyTorch
-Intermediate representation: ONNX
-Optimization runtime: TensorRT
-Serving system: NVIDIA Triton Inference Server
-Benchmark tools: trtexec, Perf Analyzer, optional Nsight Systems
-Monitoring: Triton metrics + Prometheus + Grafana
-Deployment target: Docker Compose trước, Kubernetes optional
+Framework: PyTorch → ONNX → TensorRT
+Serve: Triton (ORT + TRT backends)
+Bench: trtexec + Perf Analyzer (+ Nsight optional)
+Ops: Prometheus + Grafana + rollout/runbook
+Deploy: Docker Compose trước; Kubernetes optional
 ```
 
-Bạn có thể thay model bằng model của riêng bạn, nhưng nên giữ workflow giống nhau.
+::: {.callout-tip icon=false collapse="true"}
+## Success criteria + ví dụ SLO (đặt trước khi tối ưu)
 
-
-
-## Final deliverables
-
-Khi hoàn thành capstone, bạn cần có các deliverables sau:
-
-```text
-1. Model artifacts
-   - model.onnx
-   - model_fp16.plan
-   - optional: model_int8.plan
-   - labels.txt
-
-2. Triton model repository
-   - models/resnet50_onnx/config.pbtxt
-   - models/resnet50_onnx/1/model.onnx
-   - models/resnet50_trt/config.pbtxt
-   - models/resnet50_trt/1/model.plan
-
-3. Validation scripts
-   - export_to_onnx.py
-   - validate_onnx.py
-   - compare_outputs.py
-
-4. Benchmark scripts
-   - benchmark_onnxruntime.py
-   - build_engine_trtexec.sh
-   - run_perf_analyzer.sh
-   - benchmark_report.md
-
-5. Serving scripts
-   - run_triton.sh
-   - client.py
-   - optional: gateway_fastapi.py
-
-6. Operations files
-   - prometheus.yml
-   - grafana_dashboard_notes.md
-   - alert_rules.yml
-   - rollout_plan.md
-   - incident_runbook.md
-
-7. Final report
-   - architecture
-   - latency/throughput numbers
-   - bottleneck analysis
-   - optimization decisions
-   - rollout and rollback strategy
-   - production readiness checklist
-```
-
-Capstone không chỉ yêu cầu "chạy được". Nó yêu cầu bạn chứng minh service có thể được vận hành.
-
-
-## Success criteria
-
-Bạn nên đặt mục tiêu định lượng trước khi bắt đầu.
-
-Ví dụ:
-
-| Category        | Target                                                             |
-|-----------------|--------------------------------------------------------------------|
-| Correctness     | ONNX output gần PyTorch output với max absolute difference nhỏ     |
-| Accuracy        | Accuracy drop so với baseline nhỏ hơn 1% nếu có dataset validation |
-| Latency         | p99 server-side latency nhỏ hơn 100 ms ở concurrency mục tiêu      |
-| Throughput      | đạt throughput mục tiêu ở latency budget cho phép                  |
-| Stability       | service không crash trong load test 10-30 phút                     |
-| Observability   | có metrics về request count, latency, error, GPU utilization       |
-| Rollout safety  | có kế hoạch canary + rollback                                      |
-| Reproducibility | có scripts để build lại artifacts từ đầu                           |
-
-Một production project tốt luôn bắt đầu bằng SLO.
+| Category | Target |
+|:---------|:-------|
+| Correctness | ONNX ≈ PyTorch (max abs diff nhỏ; assert `atol`/`rtol`) |
+| Accuracy | Drop vs baseline < 1% nếu có validation set |
+| Latency | p99 server-side < 100 ms ở concurrency mục tiêu |
+| Throughput | Đạt target trong latency budget |
+| Stability | Không crash load test 10–30 phút |
+| Observability | Request, latency, error, GPU util |
+| Rollout safety | Canary + rollback plan đã viết |
+| Reproducibility | Scripts rebuild artifacts từ đầu |
 
 Ví dụ SLO:
 
 ```text
-For image classification API:
-- availability: 99.9% monthly
-- p99 latency: < 100 ms for images of shape 3x224x224
-- error rate: < 0.1%
-- model correctness: top-1 prediction consistent with baseline for >= 99% sampled requests
+availability: 99.9% monthly
+p99 latency: < 100 ms for 3×224×224
+error rate: < 0.1%
+correctness: top-1 consistent with baseline ≥ 99% sampled
 ```
 
-Nếu không có SLO, bạn không biết "tối ưu đủ chưa".
+Không có SLO → không biết “tối ưu đủ chưa”.
+:::
 
 
+## Kiến trúc, contract và deliverables {#sec-architecture}
 
-## Target architecture
+> Service production cần những thành phần nào — và artifact nào phải bàn giao?
 
-Kiến trúc capstone mặc định:
+::: {.callout-important icon=false}
+## Ý chính
+Kiến trúc mục tiêu là **Client → (optional FastAPI gateway) → Triton → ORT và/hoặc TensorRT → GPU → metrics**. Deliverable không chỉ là `.onnx`/`.plan` mà là **repo scripts + configs + reports + ops** chứng minh service vận hành được.
+:::
+
+```{mermaid}
+%%| label: fig-l10-arch
+%%| fig-cap: "Kiến trúc capstone: Client → Gateway → Triton (ORT + TRT) → GPU → Observability."
+%%| fig-width: 6.5
+%%| fig-align: "center"
+flowchart TB
+  CL([Client]) --> GW([API Gateway])
+  GW --> TR([Triton scheduler])
+  TR --> OR([ORT backend])
+  TR --> TE([TRT backend])
+  OR --> GPU([NVIDIA GPU])
+  TE --> GPU
+  TR --> OB([Metrics/Logs/Traces])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFF8E1,stroke:#F9A825,stroke-width:2.5px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class CL,OB soft
+  class GW,TR io
+  class OR,TE ok
+  class GPU hot
+```
+
+So sánh runtime trong project:
+
+| Layer | Artifact | Vai trò |
+|:------|:---------|:--------|
+| Baseline | PyTorch eager / `torch.compile` | Tham chiếu correctness |
+| Intermediate | ONNX Runtime CPU/CUDA | Baseline portable |
+| Optimized | TensorRT FP16 `.plan` | Production path chính |
+| Optional | TensorRT INT8 `.plan` | Cost/latency nếu accuracy OK |
+
+**Model contract** (bắt buộc viết trước export):
 
 ```text
-                           ┌─────────────────────┐
-                           │      Client App      │
-                           └──────────┬──────────┘
-                                      │ HTTP/gRPC
-                                      ▼
-                           ┌─────────────────────┐
-                           │ Optional API Gateway │
-                           │ FastAPI / Flask      │
-                           └──────────┬──────────┘
-                                      │ Triton HTTP/gRPC client
-                                      ▼
-                           ┌─────────────────────┐
-                           │ NVIDIA Triton Server │
-                           │ model scheduler      │
-                           │ dynamic batching     │
-                           │ backend execution    │
-                           └──────────┬──────────┘
-                                      │
-                 ┌────────────────────┴────────────────────┐
-                 ▼                                         ▼
-      ┌─────────────────────┐                  ┌─────────────────────┐
-      │ ONNX Runtime Backend │                  │ TensorRT Backend     │
-      │ model.onnx           │                  │ model.plan           │
-      └─────────────────────┘                  └─────────────────────┘
-                                      │
-                                      ▼
-                           ┌─────────────────────┐
-                           │ NVIDIA GPU           │
-                           │ CUDA / Tensor Cores  │
-                           └─────────────────────┘
-                                      │
-                                      ▼
-                           ┌─────────────────────┐
-                           │ Metrics / Logs /     │
-                           │ Traces               │
-                           └─────────────────────┘
+input:  name=input, FP32, [N,3,224,224], NCHW, ImageNet normalize
+output: name=logits, FP32, [N,1000]
+pre: decode RGB → resize 256 → center crop 224 → normalize → NCHW
+post: optional softmax → top-k → labels.txt
 ```
 
-Trong capstone này, bạn nên triển khai cả ONNX Runtime backend và TensorRT backend để so sánh.
+Bug production thường nằm ở preprocess/postprocess, không phải “weights sai”.
 
-```text
-Baseline:
-    PyTorch eager or torch.compile
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+Notebook một file “chạy được trên máy tôi” ≠ production project. Capstone yêu cầu scripts đánh số, model repository, ops files và report tái tạo được.
+:::
 
-Intermediate baseline:
-    ONNX Runtime CPU/CUDA
+::: {.callout-tip icon=false collapse="true"}
+## Deliverables + repository layout + environment + model contract
 
-Optimized:
-    TensorRT FP16 engine
+**Deliverables checklist**
 
-Optional:
-    TensorRT INT8 engine
-```
+| # | Nhóm | Files chính |
+|:--|:-----|:------------|
+| 1 | Model artifacts | `model.onnx`, `model_fp16.plan`, optional INT8, `labels.txt` |
+| 2 | Triton repo | `resnet50_onnx/`, `resnet50_trt/` + `config.pbtxt` |
+| 3 | Validation | `01_export_to_onnx.py`, `02_validate_onnx.py`, `03_compare_outputs.py` |
+| 4 | Benchmark | `04_benchmark_onnxruntime.py`, `05_build_engine_trtexec.sh`, `08_run_perf_analyzer.sh`, `benchmark_report.md` |
+| 5 | Serving | `06_run_triton.sh`, `07_client.py`, optional `gateway_fastapi.py` |
+| 6 | Operations | `prometheus.yml`, `alert_rules.yml`, `rollout_plan.md`, `incident_runbook.md`, optional k8s |
+| 7 | Final report | architecture, numbers, bottleneck, rollout, PRR |
 
-
-
-## Repository layout
-
-Tạo project như sau:
+**Repo layout**
 
 ```text
 inference-capstone/
@@ -256,36 +271,16 @@ inference-capstone/
 │   └── docker-compose.yml
 ├── models/
 │   ├── labels.txt
-│   ├── resnet50_onnx/
-│   │   ├── config.pbtxt
-│   │   └── 1/
-│   │       └── model.onnx
-│   └── resnet50_trt/
-│       ├── config.pbtxt
-│       └── 1/
-│           └── model.plan
+│   ├── resnet50_onnx/{config.pbtxt, 1/model.onnx}
+│   └── resnet50_trt/{config.pbtxt, 1/model.plan}
 ├── scripts/
-│   ├── 01_export_to_onnx.py
-│   ├── 02_validate_onnx.py
-│   ├── 03_compare_outputs.py
-│   ├── 04_benchmark_onnxruntime.py
-│   ├── 05_build_engine_trtexec.sh
-│   ├── 06_run_triton.sh
-│   ├── 07_client.py
-│   ├── 08_run_perf_analyzer.sh
-│   └── 09_collect_metrics.sh
+│   ├── 01_export_to_onnx.py … 09_collect_metrics.sh
 ├── ops/
-│   ├── prometheus.yml
-│   ├── alert_rules.yml
-│   ├── rollout_plan.md
-│   ├── incident_runbook.md
-│   └── k8s/
-│       ├── triton-deployment.yaml
-│       ├── triton-service.yaml
-│       └── hpa.yaml
+│   ├── prometheus.yml, alert_rules.yml
+│   ├── rollout_plan.md, incident_runbook.md
+│   └── k8s/{triton-deployment,triton-service,hpa}.yaml
 ├── reports/
-│   ├── benchmark_report.md
-│   ├── bottleneck_analysis.md
+│   ├── benchmark_report.md, bottleneck_analysis.md
 │   └── production_readiness_review.md
 └── tests/
     ├── test_preprocessing.py
@@ -293,2804 +288,791 @@ inference-capstone/
     └── test_regression_predictions.py
 ```
 
-Đừng để project chỉ là một notebook. Production project cần scripts, configs, reproducible artifacts và report.
+**`requirements.txt`:** `numpy pillow torch torchvision onnx onnxruntime onnxsim tritonclient[http,grpc] fastapi uvicorn prometheus-client`. GPU: `pip install onnxruntime-gpu`. Pin Triton image tag.
 
-
-
-## Environment setup
-
-### Python dependencies
-
-`requirements.txt`:
-
-```text
-numpy
-pillow
-torch
-torchvision
-onnx
-onnxruntime
-onnxsim
-tritonclient[http,grpc]
-fastapi
-uvicorn
-prometheus-client
-```
-
-Nếu dùng GPU local, bạn cần cài bản ONNX Runtime GPU phù hợp với CUDA/cuDNN của môi trường:
-
-```bash
-pip install onnxruntime-gpu
-```
-
-Nếu chỉ chạy CPU để học workflow, bạn vẫn làm được phần export/validate/ORT CPU, nhưng không benchmark TensorRT được.
-
-### Docker image cho Triton
-
-Bạn có thể chạy Triton bằng container chính thức của NVIDIA.
-
-Ví dụ:
+Ports: `8000` HTTP, `8001` gRPC, `8002` metrics.
 
 ```bash
 docker run --rm --gpus all \
-  -p 8000:8000 \
-  -p 8001:8001 \
-  -p 8002:8002 \
+  -p 8000:8000 -p 8001:8001 -p 8002:8002 \
   -v "$PWD/models:/models" \
   nvcr.io/nvidia/tritonserver:<version>-py3 \
   tritonserver --model-repository=/models
 ```
 
-Các port mặc định thường dùng:
-
-```text
-8000: HTTP/REST
-8001: gRPC
-8002: metrics
-```
-
-Trong production, hãy pin version thay vì dùng tag quá chung chung.
-
-
-
-## Step 1 — Select model and define contract
-
-### Model selection
-
-Ta dùng ResNet-50 pretrained từ `torchvision`.
-
-Input contract:
-
-```text
-name: input
-shape: [batch, 3, 224, 224]
-dtype: FP32
-layout: NCHW
-preprocessing:
-    resize -> center crop -> normalize
-output:
-    logits
-shape: [batch, 1000]
-dtype: FP32
-postprocessing:
-    softmax optional
-    top-k labels
-```
-
-Điều quan trọng là contract phải rõ ràng. Rất nhiều bug production không nằm ở model mà nằm ở preprocessing/postprocessing.
-
-### Model contract template
-
-Tạo `reports/model_contract.md`:
+**`reports/model_contract.md` template**
 
 ```markdown
 # Model Contract
-
 ## Model
-
-- Name: resnet50
-- Task: image classification
-- Framework source: PyTorch torchvision
-- Export format: ONNX
-- Optimized format: TensorRT plan
-
+- Name: resnet50 | Task: image classification
+- Source: PyTorch torchvision | Export: ONNX | Optimized: TensorRT plan
 ## Input
-
-- Name: input
-- Type: FP32
-- Shape: [N, 3, 224, 224]
-- Layout: NCHW
-- Range: normalized ImageNet tensor
-
+- Name: input | FP32 | [N,3,224,224] | NCHW | ImageNet normalized
 ## Output
-
-- Name: logits
-- Type: FP32
-- Shape: [N, 1000]
-
+- Name: logits | FP32 | [N,1000]
 ## Preprocessing
-
-1. Decode image as RGB
-2. Resize short side to 256
-3. Center crop 224x224
-4. Convert to float32
-5. Normalize with ImageNet mean/std
-6. Convert NHWC to NCHW
-7. Add batch dimension
-
+1. Decode RGB  2. Resize short side 256  3. Center crop 224
+4. float32  5. ImageNet mean/std  6. NHWC→NCHW  7. Add batch
 ## Postprocessing
+1. Softmax optional  2. top-k  3. Map id → label
+```
+:::
 
-1. Compute softmax if probability is needed
-2. Take top-k classes
-3. Map class id to label
+
+## Phase A–B: Export, validate và tối ưu (+ quant) {#sec-export-optimize}
+
+> Làm sao đi từ weights PyTorch tới engine TensorRT mà không mang theo bug silent?
+
+::: {.callout-important icon=false}
+## Ý chính
+Thứ tự cứng: **export → ONNX checker → so sánh logits PyTorch vs ORT → (optional onnxsim) → baseline ORT → `trtexec` FP16 với profile khớp traffic**. Fail equivalence thì **không** build TensorRT. INT8 chỉ sau khi FP16 đạt SLO và accuracy gate.
+:::
+
+```{mermaid}
+%%| label: fig-l10-export-hot
+%%| fig-cap: "Xương sống tô sáng Phase A–B: PyTorch → ONNX → TRT."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  PT([PyTorch]) -->|"export"| ON([ONNX])
+  ON -->|"build"| TR([TRT])
+  TR --> TS([Triton])
+  TS --> BN([Bench])
+  BN --> MO([Monitor])
+  MO --> CA([Canary])
+  CA --> RP([Report])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class TS,BN,MO,CA,RP soft
+  class PT,ON,TR hot
 ```
 
+| Bước | Việc | Gate thoát |
+|:-----|:-----|:-----------|
+| A1 | Contract + chọn model | Contract đã ghi; shape/dtype cố định |
+| A2 | `torch.onnx.export` (opset 17, dynamic batch) | File `.onnx` tồn tại |
+| A3 | `onnx.checker` + inspect graph | Checker OK |
+| A4 | Compare PyTorch vs ORT | `assert_allclose` pass |
+| A5 | Optional `onnxsim` + re-validate | Semantic vẫn OK |
+| B1 | ORT CPU/CUDA baseline | Số liệu trong `benchmark_report.md` |
+| B2 | `trtexec --fp16` + profiles | Engine load + dumpProfile |
+| B3 | Optional INT8 | Accuracy delta chấp nhận được |
 
+Dynamic batch chỉ ở dim 0; H/W cố định 224 để giảm phức tạp profile. Profile gợi ý: `min=1, opt=8, max=32` — khớp dynamic batching Triton, không `max=1024`.
 
-## Step 2 — Export PyTorch model to ONNX
+::: {.callout-tip icon=false collapse="true"}
+## Scripts Phase A–B (export / validate / compare / ORT bench / trtexec)
 
-Create `scripts/01_export_to_onnx.py`:
+**Export** (`scripts/01_export_to_onnx.py`):
 
 ```python
 import argparse
 from pathlib import Path
-
 import torch
 import torchvision.models as models
-
 
 def export_resnet50(output_path: str, dynamic_batch: bool = True) -> None:
     model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
     model.eval()
-
     dummy_input = torch.randn(1, 3, 224, 224)
-
-    input_names = ["input"]
-    output_names = ["logits"]
-
     dynamic_axes = None
     if dynamic_batch:
-        dynamic_axes = {
-            "input": {0: "batch"},
-            "logits": {0: "batch"},
-        }
-
+        dynamic_axes = {"input": {0: "batch"}, "logits": {0: "batch"}}
     torch.onnx.export(
-        model,
-        dummy_input,
-        output_path,
-        export_params=True,
-        opset_version=17,
-        do_constant_folding=True,
-        input_names=input_names,
-        output_names=output_names,
+        model, dummy_input, output_path,
+        export_params=True, opset_version=17, do_constant_folding=True,
+        input_names=["input"], output_names=["logits"],
         dynamic_axes=dynamic_axes,
     )
-
     print(f"Exported ONNX model to: {output_path}")
-
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default="models/resnet50_onnx/1/model.onnx")
     parser.add_argument("--static-batch", action="store_true")
     args = parser.parse_args()
-
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     export_resnet50(args.output, dynamic_batch=not args.static_batch)
 
-
 if __name__ == "__main__":
     main()
 ```
 
-Run:
+```bash
+python scripts/01_export_to_onnx.py --output models/resnet50_onnx/1/model.onnx
+```
+
+**Validate** (`02_validate_onnx.py`): `onnx.load` + `onnx.checker.check_model`; in IR version, opset imports, graph name, inputs/outputs, initializer count, first 20 nodes.
+
+**Compare** (`03_compare_outputs.py`): seed cố định; PyTorch `no_grad` vs `ort.InferenceSession(..., providers=["CPUExecutionProvider"])`; in `max_abs_diff` / `max_rel_diff`; `np.testing.assert_allclose(..., atol=1e-4, rtol=1e-3)`. Fail → **không** sang TensorRT.
+
+**Simplify:**
 
 ```bash
-python scripts/01_export_to_onnx.py \
-  --output models/resnet50_onnx/1/model.onnx
-```
-
-### Why dynamic batch?
-
-Dynamic batch cho phép một model artifact xử lý batch size khác nhau:
-
-```text
-[1, 3, 224, 224]
-[8, 3, 224, 224]
-[32, 3, 224, 224]
-```
-
-Tuy nhiên, dynamic shape cũng khiến TensorRT cần optimization profile.
-
-Với bài này, dynamic dimension chỉ nằm ở batch dimension. Height/width giữ cố định để giảm độ phức tạp.
-
-
-
-## Step 3 — Validate ONNX model
-
-Create `scripts/02_validate_onnx.py`:
-
-```python
-import argparse
-
-import onnx
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model", required=True)
-    args = parser.parse_args()
-
-    model = onnx.load(args.model)
-    onnx.checker.check_model(model)
-
-    print("ONNX checker: OK")
-    print(f"IR version: {model.ir_version}")
-    print("Opset imports:")
-    for opset in model.opset_import:
-        print(f"  domain={opset.domain!r}, version={opset.version}")
-
-    graph = model.graph
-    print(f"Graph name: {graph.name}")
-    print(f"Inputs: {[x.name for x in graph.input]}")
-    print(f"Outputs: {[x.name for x in graph.output]}")
-    print(f"Initializers: {len(graph.initializer)}")
-    print(f"Nodes: {len(graph.node)}")
-
-    print("\nFirst 20 nodes:")
-    for node in graph.node[:20]:
-        print(f"  {node.op_type}: {list(node.input)} -> {list(node.output)}")
-
-
-if __name__ == "__main__":
-    main()
-```
-
-Run:
-
-```bash
-python scripts/02_validate_onnx.py \
-  --model models/resnet50_onnx/1/model.onnx
-```
-
-Expected result:
-
-```text
-ONNX checker: OK
-Opset imports:
-  domain='', version=17
-Inputs: ['input']
-Outputs: ['logits']
-```
-
-Validation ở đây chưa đủ để đảm bảo model đúng về semantic, nhưng là bước đầu bắt buộc.
-
-
-
-## Step 4 — Compare PyTorch and ONNX Runtime outputs
-
-Create `scripts/03_compare_outputs.py`:
-
-```python
-import argparse
-
-import numpy as np
-import onnxruntime as ort
-import torch
-import torchvision.models as models
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--onnx", required=True)
-    parser.add_argument("--atol", type=float, default=1e-4)
-    parser.add_argument("--rtol", type=float, default=1e-3)
-    args = parser.parse_args()
-
-    torch.manual_seed(0)
-    x = torch.randn(2, 3, 224, 224, dtype=torch.float32)
-
-    model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
-    model.eval()
-
-    with torch.no_grad():
-        y_torch = model(x).detach().cpu().numpy()
-
-    session = ort.InferenceSession(
-        args.onnx,
-        providers=["CPUExecutionProvider"],
-    )
-    y_onnx = session.run(["logits"], {"input": x.numpy()})[0]
-
-    abs_diff = np.max(np.abs(y_torch - y_onnx))
-    rel_diff = np.max(np.abs(y_torch - y_onnx) / (np.abs(y_torch) + 1e-8))
-
-    print(f"max_abs_diff: {abs_diff:.8f}")
-    print(f"max_rel_diff: {rel_diff:.8f}")
-
-    np.testing.assert_allclose(y_torch, y_onnx, atol=args.atol, rtol=args.rtol)
-    print("PyTorch vs ONNX Runtime: OK")
-
-
-if __name__ == "__main__":
-    main()
-```
-
-Run:
-
-```bash
-python scripts/03_compare_outputs.py \
-  --onnx models/resnet50_onnx/1/model.onnx
-```
-
-Nếu test fail, đừng đi tiếp sang TensorRT. Hãy fix export trước.
-
-
-
-## Step 5 — Simplify ONNX graph
-
-Optional nhưng nên làm:
-
-```bash
-python -m onnxsim \
-  models/resnet50_onnx/1/model.onnx \
+python -m onnxsim models/resnet50_onnx/1/model.onnx \
   models/resnet50_onnx/1/model_simplified.onnx
+# re-validate rồi mới mv replace
 ```
 
-Sau đó validate lại:
+**ORT bench** (`04_benchmark_onnxruntime.py`): warmup → vòng đo ms → mean/p50/p95/p99 + images/s. Chạy `CPUExecutionProvider` rồi `CUDAExecutionProvider`; ghi bảng Baseline trong `benchmark_report.md`.
 
-```bash
-python scripts/02_validate_onnx.py \
-  --model models/resnet50_onnx/1/model_simplified.onnx
-```
-
-Nếu simplified model đúng, bạn có thể replace:
-
-```bash
-mv models/resnet50_onnx/1/model_simplified.onnx \
-   models/resnet50_onnx/1/model.onnx
-```
-
-Trong production, mọi transform graph đều phải được validate lại.
-
-
-
-## Step 6 — Build ONNX Runtime baseline benchmark
-
-Create `scripts/04_benchmark_onnxruntime.py`:
-
-```python
-import argparse
-import statistics
-import time
-
-import numpy as np
-import onnxruntime as ort
-
-
-def percentile(values, p):
-    values = sorted(values)
-    k = int(round((len(values) - 1) * p / 100.0))
-    return values[k]
-
-
-def benchmark(model_path, provider, batch_size, warmup, iterations):
-    providers = [provider]
-    session = ort.InferenceSession(model_path, providers=providers)
-
-    input_name = session.get_inputs()[0].name
-    output_name = session.get_outputs()[0].name
-
-    x = np.random.randn(batch_size, 3, 224, 224).astype(np.float32)
-
-    for _ in range(warmup):
-        session.run([output_name], {input_name: x})
-
-    latencies_ms = []
-    start_total = time.perf_counter()
-
-    for _ in range(iterations):
-        start = time.perf_counter()
-        session.run([output_name], {input_name: x})
-        end = time.perf_counter()
-        latencies_ms.append((end - start) * 1000.0)
-
-    end_total = time.perf_counter()
-    total_s = end_total - start_total
-
-    total_images = iterations * batch_size
-    throughput = total_images / total_s
-
-    print(f"Provider: {provider}")
-    print(f"Batch size: {batch_size}")
-    print(f"Iterations: {iterations}")
-    print(f"Throughput: {throughput:.2f} images/s")
-    print(f"Latency mean: {statistics.mean(latencies_ms):.3f} ms")
-    print(f"Latency p50: {percentile(latencies_ms, 50):.3f} ms")
-    print(f"Latency p95: {percentile(latencies_ms, 95):.3f} ms")
-    print(f"Latency p99: {percentile(latencies_ms, 99):.3f} ms")
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model", required=True)
-    parser.add_argument("--provider", default="CPUExecutionProvider")
-    parser.add_argument("--batch-size", type=int, default=1)
-    parser.add_argument("--warmup", type=int, default=10)
-    parser.add_argument("--iterations", type=int, default=100)
-    args = parser.parse_args()
-
-    benchmark(
-        model_path=args.model,
-        provider=args.provider,
-        batch_size=args.batch_size,
-        warmup=args.warmup,
-        iterations=args.iterations,
-    )
-
-
-if __name__ == "__main__":
-    main()
-```
-
-CPU baseline:
-
-```bash
-python scripts/04_benchmark_onnxruntime.py \
-  --model models/resnet50_onnx/1/model.onnx \
-  --provider CPUExecutionProvider \
-  --batch-size 1 \
-  --iterations 100
-```
-
-GPU baseline:
-
-```bash
-python scripts/04_benchmark_onnxruntime.py \
-  --model models/resnet50_onnx/1/model.onnx \
-  --provider CUDAExecutionProvider \
-  --batch-size 1 \
-  --iterations 100
-```
-
-Record results in `reports/benchmark_report.md`.
-
-Example table:
-
-```markdown
-# Benchmark Report
-
-## Baseline
-```
-| Runtime           | Precision | Batch | Mean ms | p95 ms | p99 ms  | Throughput img/s |
-|-------------------|:----------|:------|:--------|:-------|:--------|:-----------------|
-| PyTorch           | FP32      | 1     | TBD     | TBD    | TBD     | TBD              |
-| ONNX Runtime CPU  | FP32      | 1     | TBD     | TBD    | TBD     | TBD              |
-| ONNX Runtime CUDA | FP32      | 1     | TBD     | TBD    | TBD     | TBD              |
-
-
-
-
-## Step 7 — Build TensorRT engine with trtexec
-
-Create `scripts/05_build_engine_trtexec.sh`:
+**`trtexec` build** (`05_build_engine_trtexec.sh`):
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
-
 ONNX_MODEL="${1:-models/resnet50_onnx/1/model.onnx}"
 ENGINE_OUTPUT="${2:-models/resnet50_trt/1/model.plan}"
-
 mkdir -p "$(dirname "$ENGINE_OUTPUT")"
-
 trtexec \
-  --onnx="$ONNX_MODEL" \
-  --saveEngine="$ENGINE_OUTPUT" \
+  --onnx="$ONNX_MODEL" --saveEngine="$ENGINE_OUTPUT" \
   --minShapes=input:1x3x224x224 \
   --optShapes=input:8x3x224x224 \
   --maxShapes=input:32x3x224x224 \
-  --fp16 \
-  --workspace=4096 \
-  --profilingVerbosity=detailed \
-  --dumpLayerInfo \
-  --dumpProfile
+  --fp16 --workspace=4096 \
+  --profilingVerbosity=detailed --dumpLayerInfo --dumpProfile
 ```
 
-Run:
+Flags cần hiểu: `--onnx`, `--saveEngine`, min/opt/max shapes, `--fp16`, `--workspace`, dump profile/layer. Profile xấu: `min=1,opt=1,max=1024`. Profile tốt khớp serving: `1/8/32`.
+
+**Validate engine:**
 
 ```bash
-chmod +x scripts/05_build_engine_trtexec.sh
-
-scripts/05_build_engine_trtexec.sh \
-  models/resnet50_onnx/1/model.onnx \
-  models/resnet50_trt/1/model.plan
+trtexec --loadEngine=models/resnet50_trt/1/model.plan \
+  --shapes=input:1x3x224x224 --warmUp=500 --duration=30 \
+  --iterations=1000 --dumpProfile
+# lặp với shapes ...:8x3x224x224
 ```
 
-Key flags:
+Ghi: Throughput, Latency, Enqueue, H2D, GPU Compute, D2H.
+
+| Symptom `trtexec` | Nghĩa thường gặp |
+|:------------------|:-----------------|
+| GPU Compute cao | Bottleneck model |
+| H2D / D2H cao | Transfer / preprocess |
+| Enqueue cao | CPU schedule / launch nhỏ |
+| Throughput thấp, latency thấp | Concurrency/batch thấp |
+| p99 ≫ p50 | Queue / contention / cold path |
+
+**INT8 extension:** calibration dataset → cache/QDQ → INT8 engine → validate accuracy → bench → bảng Precision comparison (Runtime | Precision | p99 | Throughput | Accuracy delta | Decision). Chỉ accept nếu latency/throughput↑ và accuracy/stability OK.
+:::
+
+
+## Phase C–D: Deploy Triton và benchmark {#sec-deploy-bench}
+
+> Engine nhanh với `trtexec` — làm sao chứng minh Triton + API cũng đạt SLO?
+
+::: {.callout-important icon=false}
+## Ý chính
+Serve **cả hai** backend (`resnet50_onnx` + `resnet50_trt`) để so sánh công bằng. Benchmark **hai lớp**: Perf Analyzer → Triton trực tiếp (model/server) và load test → gateway → Triton (E2E). Mục tiêu là tìm **knee**: concurrency trước khi p99 phá SLO.
+:::
+
+```{mermaid}
+%%| label: fig-l10-deploy-hot
+%%| fig-cap: "Xương sống tô sáng Phase C–D: Triton → Bench."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  PT([PyTorch]) --> ON([ONNX]) --> TR([TRT])
+  TR --> TS([Triton])
+  TS --> BN([Bench])
+  BN --> MO([Monitor]) --> CA([Canary]) --> RP([Report])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class PT,ON,TR,MO,CA,RP soft
+  class TS,BN hot
+```
+
+`config.pbtxt` phải khớp artifact — không đoán tên I/O:
+
+| Field | ONNX backend | TensorRT backend |
+|:------|:-------------|:-----------------|
+| name | `resnet50_onnx` | `resnet50_trt` |
+| backend/platform | `backend: "onnxruntime"` | `platform: "tensorrt_plan"` |
+| max_batch_size | 32 | 32 (≤ profile max) |
+| input dims | `[3,224,224]` FP32 | giống |
+| output dims | `[1000]` FP32 | giống |
+| dynamic_batching | `max_queue_delay_microseconds: 1000` | giống |
+| instance_group | `count: 1`, `KIND_GPU` | giống |
+
+| Mistake config | Hệ quả |
+|:---------------|:-------|
+| Sai input/output name | Request fail |
+| Sai dims / dtype | Shape mismatch |
+| `max_batch_size` lệch profile TRT | Runtime error batch lớn |
+| Sai backend/platform | Model load fail |
+
+Health: `/v2/health/live`, `/v2/health/ready`; metadata models; metrics `:8002/metrics`.
+
+Phân rã latency:
 
 ```text
---onnx
-    input ONNX model
-
---saveEngine
-    output serialized TensorRT engine
-
---minShapes / --optShapes / --maxShapes
-    dynamic shape optimization profile
-
---fp16
-    allow FP16 kernels where beneficial
-
---workspace
-    maximum workspace memory for tactic selection
-
---profilingVerbosity=detailed
-    enable detailed layer metadata
-
---dumpLayerInfo
-    print layer information
-
---dumpProfile
-    print per-layer runtime profile
+client latency ≈ network + queue + input + compute infer + output + transfer
 ```
 
-### Why min/opt/max shapes matter
+| Symptom Triton | Bottleneck | Action |
+|:---------------|:-----------|:-------|
+| Queue time cao | Overload / batch delay | Giảm concurrency, thêm instance, tune batch |
+| Compute infer cao | Model/GPU | TRT/precision/model nhỏ hơn |
+| Input/output cao | Pre/post / copy | Tối ưu preprocess, giảm output |
+| GPU util thấp, latency cao | CPU/client | Profile gateway |
+| GPU util cao, p99 cao | Saturation | Scale out / giảm delay |
+| p50 tốt, p99 xấu | Queue / noisy neighbor | Buffer capacity, isolate |
 
-TensorRT does not optimize dynamic shapes in an abstract way. It needs concrete ranges:
+::: {.callout-warning icon=false}
+## Bẫy thường gặp
+`Gateway latency ≠ model latency.` Triton TRT 5 ms nhưng API p99 90 ms → bottleneck ngoài engine (decode, Python, network, queue). Đo cả hai lớp.
+:::
 
-```text
-min: smallest shape allowed at runtime
-opt: shape most optimized during build
-max: largest shape allowed at runtime
-```
+::: {.callout-tip icon=false collapse="true"}
+## Triton configs, run, client, Perf Analyzer, gateway, report
 
-For this capstone:
-
-```text
-min batch = 1
-opt batch = 8
-max batch = 32
-```
-
-If production usually receives batch size 1, opt should be 1.  
-If dynamic batching usually forms batches around 8, opt should be 8.
-
-Bad profile:
-
-```text
-min=1, opt=1, max=1024
-```
-
-This may force TensorRT to choose kernels valid across a huge range, and memory requirement can increase.
-
-Good profile:
-
-```text
-min=1, opt=8, max=32
-```
-
-This matches expected serving behavior.
-
-
-
-## Step 8 — Validate TensorRT engine with trtexec
-
-Benchmark the engine:
-
-```bash
-trtexec \
-  --loadEngine=models/resnet50_trt/1/model.plan \
-  --shapes=input:1x3x224x224 \
-  --warmUp=500 \
-  --duration=30 \
-  --iterations=1000 \
-  --dumpProfile
-```
-
-Test a larger batch:
-
-```bash
-trtexec \
-  --loadEngine=models/resnet50_trt/1/model.plan \
-  --shapes=input:8x3x224x224 \
-  --warmUp=500 \
-  --duration=30
-```
-
-Record:
-
-```text
-Throughput
-Latency
-Enqueue Time
-H2D Latency
-GPU Compute Time
-D2H Latency
-```
-
-Important interpretation:
-
-| Symptom                        | Likely meaning                                             |
-|--------------------------------|------------------------------------------------------------|
-| GPU Compute Time high          | model compute is bottleneck                                |
-| H2D high                       | input transfer/preprocessing bottleneck                    |
-| D2H high                       | output transfer bottleneck                                 |
-| Enqueue Time high              | CPU scheduling overhead or too many small launches         |
-| Throughput low but latency low | concurrency/batching too low                               |
-| p99 much higher than p50       | queueing, resource contention, cold path, or unstable load |
-
-
-
-## Step 9 — Create Triton model repository
-
-### ONNX model config
-
-Create `models/resnet50_onnx/config.pbtxt`:
+**`models/resnet50_onnx/config.pbtxt`:**
 
 ```protobuf
 name: "resnet50_onnx"
 backend: "onnxruntime"
 max_batch_size: 32
-
-input [
-  {
-    name: "input"
-    data_type: TYPE_FP32
-    dims: [3, 224, 224]
-  }
-]
-
-output [
-  {
-    name: "logits"
-    data_type: TYPE_FP32
-    dims: [1000]
-  }
-]
-
-dynamic_batching {
-  max_queue_delay_microseconds: 1000
-}
-
-instance_group [
-  {
-    count: 1
-    kind: KIND_GPU
-  }
-]
+input [{ name: "input" data_type: TYPE_FP32 dims: [3, 224, 224] }]
+output [{ name: "logits" data_type: TYPE_FP32 dims: [1000] }]
+dynamic_batching { max_queue_delay_microseconds: 1000 }
+instance_group [{ count: 1 kind: KIND_GPU }]
 ```
 
-### TensorRT model config
+**`models/resnet50_trt/config.pbtxt`:** giống I/O/batching/instance; đổi `name: "resnet50_trt"` và `platform: "tensorrt_plan"` (không dùng `backend: onnxruntime`).
 
-Create `models/resnet50_trt/config.pbtxt`:
-
-```protobuf
-name: "resnet50_trt"
-platform: "tensorrt_plan"
-max_batch_size: 32
-
-input [
-  {
-    name: "input"
-    data_type: TYPE_FP32
-    dims: [3, 224, 224]
-  }
-]
-
-output [
-  {
-    name: "logits"
-    data_type: TYPE_FP32
-    dims: [1000]
-  }
-]
-
-dynamic_batching {
-  max_queue_delay_microseconds: 1000
-}
-
-instance_group [
-  {
-    count: 1
-    kind: KIND_GPU
-  }
-]
-```
-
-Triton model repository should look like:
+Layout:
 
 ```text
 models/
-├── resnet50_onnx/
-│   ├── config.pbtxt
-│   └── 1/
-│       └── model.onnx
-└── resnet50_trt/
-    ├── config.pbtxt
-    └── 1/
-        └── model.plan
+├── resnet50_onnx/config.pbtxt + 1/model.onnx
+└── resnet50_trt/config.pbtxt  + 1/model.plan
 ```
 
-### Common config mistakes
-
-| Mistake                                        | Result                         |
-|------------------------------------------------|--------------------------------|
-| wrong input name                               | request fails                  |
-| wrong output name                              | request fails                  |
-| wrong dims                                     | shape mismatch                 |
-| `max_batch_size` mismatch                      | batching behavior wrong        |
-| TensorRT profile max batch < Triton max batch  | runtime error for large batch  |
-| backend/platform wrong                         | model load fails               |
-
-A key rule:
-
-```text
-Triton config must match the actual model artifact.
-```
-
-Never guess input/output names. Inspect the ONNX model and TensorRT engine.
-
-
-
-## Step 10 — Run Triton locally
-
-Create `scripts/06_run_triton.sh`:
+**Run Triton** (`06_run_triton.sh`):
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-MODEL_REPOSITORY="${1:-$PWD/models}"
-TRITON_IMAGE="${TRITON_IMAGE:-nvcr.io/nvidia/tritonserver:<version>-py3}"
-
-docker run --rm --gpus all \
-  --name triton-capstone \
-  -p 8000:8000 \
-  -p 8001:8001 \
-  -p 8002:8002 \
-  -v "${MODEL_REPOSITORY}:/models" \
-  "${TRITON_IMAGE}" \
-  tritonserver \
-    --model-repository=/models \
-    --strict-model-config=true \
-    --log-verbose=1
+docker run --rm --gpus all --name triton-capstone \
+  -p 8000:8000 -p 8001:8001 -p 8002:8002 \
+  -v "${MODEL_REPOSITORY}:/models" "${TRITON_IMAGE}" \
+  tritonserver --model-repository=/models \
+    --strict-model-config=true --log-verbose=1
 ```
 
-Replace `<version>` with a real Triton container tag.
+Health: `curl localhost:8000/v2/health/live|ready`; models metadata; `curl localhost:8002/metrics`.
 
-Run:
+**Client** (`07_client.py`): random NCHW batch → `InferInput("input")` → `InferRequestedOutput("logits")` → in shape, client latency ms, top-5. Chạy `--model resnet50_onnx` rồi `resnet50_trt`.
+
+**Perf Analyzer** (`08_run_perf_analyzer.sh`):
 
 ```bash
-chmod +x scripts/06_run_triton.sh
-scripts/06_run_triton.sh
-```
-
-Check health:
-
-```bash
-curl -v localhost:8000/v2/health/live
-curl -v localhost:8000/v2/health/ready
-```
-
-Check models:
-
-```bash
-curl localhost:8000/v2/models/resnet50_onnx
-curl localhost:8000/v2/models/resnet50_trt
-```
-
-Check metrics:
-
-```bash
-curl localhost:8002/metrics
-```
-
-
-
-## Step 11 — Write Triton client
-
-Create `scripts/07_client.py`:
-
-```python
-import argparse
-import time
-
-import numpy as np
-import tritonclient.http as httpclient
-from tritonclient.utils import np_to_triton_dtype
-
-
-def preprocess_random(batch_size: int) -> np.ndarray:
-    return np.random.randn(batch_size, 3, 224, 224).astype(np.float32)
-
-
-def infer(url: str, model_name: str, batch_size: int):
-    client = httpclient.InferenceServerClient(url=url)
-
-    x = preprocess_random(batch_size)
-
-    inputs = [
-        httpclient.InferInput(
-            "input",
-            x.shape,
-            np_to_triton_dtype(x.dtype),
-        )
-    ]
-    inputs[0].set_data_from_numpy(x)
-
-    outputs = [
-        httpclient.InferRequestedOutput("logits")
-    ]
-
-    start = time.perf_counter()
-    result = client.infer(
-        model_name=model_name,
-        inputs=inputs,
-        outputs=outputs,
-    )
-    end = time.perf_counter()
-
-    logits = result.as_numpy("logits")
-
-    print(f"Model: {model_name}")
-    print(f"Input shape: {x.shape}")
-    print(f"Output shape: {logits.shape}")
-    print(f"Client observed latency: {(end - start) * 1000:.3f} ms")
-    print(f"Top-5 classes for first item: {np.argsort(logits[0])[-5:][::-1]}")
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--url", default="localhost:8000")
-    parser.add_argument("--model", default="resnet50_trt")
-    parser.add_argument("--batch-size", type=int, default=1)
-    args = parser.parse_args()
-
-    infer(args.url, args.model, args.batch_size)
-
-
-if __name__ == "__main__":
-    main()
-```
-
-Run:
-
-```bash
-python scripts/07_client.py \
-  --model resnet50_onnx \
-  --batch-size 1
-```
-
-Run optimized model:
-
-```bash
-python scripts/07_client.py \
-  --model resnet50_trt \
-  --batch-size 1
-```
-
-
-
-## Step 12 — Benchmark Triton with Perf Analyzer
-
-Create `scripts/08_run_perf_analyzer.sh`:
-
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-MODEL="${1:-resnet50_trt}"
-BATCH_SIZE="${2:-1}"
-
-perf_analyzer \
-  -m "$MODEL" \
-  -i http \
-  -u localhost:8000 \
-  -b "$BATCH_SIZE" \
-  --concurrency-range 1:32:2 \
-  --measurement-interval 5000 \
-  --percentile=99 \
-  --input-data random \
+perf_analyzer -m "$MODEL" -i http -u localhost:8000 -b "$BATCH_SIZE" \
+  --concurrency-range 1:32:2 --measurement-interval 5000 \
+  --percentile=99 --input-data random \
   -f "reports/${MODEL}_batch${BATCH_SIZE}_perf.csv"
 ```
 
-Run:
+Trước knee: throughput↑, p99 OK. Sau knee: throughput đứng, p99↑ → concurrency production gần knee.
 
-```bash
-chmod +x scripts/08_run_perf_analyzer.sh
+**Gateway FastAPI (optional):** ImageNet `Resize(256)+CenterCrop(224)+Normalize`; `/healthz`; `/predict` upload → stack batch → Triton → top-5 + `latency_ms`. `uvicorn scripts.gateway_fastapi:app --host 0.0.0.0 --port 8080`. Gateway = auth, validation, decode, preprocess, postprocess, routing, logging, tracing.
 
-scripts/08_run_perf_analyzer.sh resnet50_onnx 1
-scripts/08_run_perf_analyzer.sh resnet50_trt 1
-```
+**Benchmark report skeleton**
 
-Compare:
+| Mục | Ghi |
+|:----|:----|
+| Environment | GPU/CPU/RAM/CUDA/TRT/Triton/Driver/Model/shape/precision |
+| SLO | p99, throughput, max error |
+| ORT table | concurrency 1…32 × throughput × avg/p95/p99 |
+| TRT table | tương tự |
+| Interpretation | best backend, knee, recommendation, remaining bottleneck |
 
-```text
-resnet50_onnx:
-    concurrency 1, 2, 4, 8, 16, 32
-
-resnet50_trt:
-    concurrency 1, 2, 4, 8, 16, 32
-```
-
-Your goal is to find the knee point:
+Hai lớp:
 
 ```text
-Before knee:
-    throughput increases as concurrency increases
-    p99 latency remains acceptable
-
-After knee:
-    throughput barely increases
-    p99 latency grows sharply
+1) Model/server: perf_analyzer → Triton
+2) E2E API: load test → FastAPI → Triton → GPU
 ```
 
-The production concurrency target should usually be before or near the knee, not far after it.
+Số điển hình: Triton TRT 5 ms nhưng API p99 90 ms → bottleneck ngoài engine.
+:::
 
 
+## Phase E–F: Monitoring, rollout và vận hành {#sec-ops-rollout}
 
-##  Step 13 — Build latency-throughput curve
+> Service đã đạt số trên lab — làm sao đưa vào traffic thật mà vẫn rollback trong vài phút?
 
-Use the CSV output from Perf Analyzer.
+::: {.callout-important icon=false}
+## Ý chính
+Ops bắt đầu **trước** khi mở traffic: Prometheus scrape, alert actionable, Docker Compose (rồi K8s), **shadow → canary 1→10→50→100%** với gate, rollback triggers đã test, và runbook cho latency / error / quality. Canary ≠ A/B.
+:::
 
-Create `reports/benchmark_report.md`:
-
-```markdown
-# Benchmark Report
-
-## Environment
-
-- GPU:
-- CPU:
-- RAM:
-- CUDA:
-- TensorRT:
-- Triton:
-- Driver:
-- Model:
-- Input shape:
-- Precision:
-
-## SLO
-
-- p99 latency target:
-- throughput target:
-- max error rate:
-
-## ONNX Runtime backend results
+```{mermaid}
+%%| label: fig-l10-ops-hot
+%%| fig-cap: "Xương sống tô sáng Phase E–F: Monitor → Canary → Report."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  PT([PyTorch]) --> ON([ONNX]) --> TR([TRT]) --> TS([Triton]) --> BN([Bench])
+  BN --> MO([Monitor])
+  MO --> CA([Canary])
+  CA --> RP([Report])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class PT,ON,TR,TS,BN soft
+  class MO,CA,RP hot
 ```
 
-| Concurrency | Throughput infer/s | Avg latency ms | p95 ms | p99 ms |
-|:------------|:-------------------|:---------------|:-------|:-------|
-| 1           | TBD                | TBD            | TBD    | TBD    |
-| 2           | TBD                | TBD            | TBD    | TBD    |
-| 4           | TBD                | TBD            | TBD    | TBD    |
-| 8           | TBD                | TBD            | TBD    | TBD    |
-| 16          | TBD                | TBD            | TBD    | TBD    |
-| 32          | TBD                | TBD            | TBD    | TBD    |
+Dashboard tối thiểu: request rate, error rate, p50/p95/p99, queue duration, compute infer, GPU util/mem, model name/version, instance count.
 
-```markdown
-## TensorRT backend results
-```
+| Strategy | Mục tiêu | Khi dùng |
+|:---------|:---------|:---------|
+| Shadow | So sánh v2 không ảnh hưởng user | Trước canary |
+| Canary | An toàn, rollback nhanh | Mặc định production |
+| A/B | Đo business/quality impact | Ranking/LLM/moderation… |
 
-| Concurrency   | Throughput infer/s | Avg latency ms | p95 ms | p99 ms |
-|:--------------|:-------------------|:---------------|:-------|:-------|
-| 1             | TBD                | TBD            | TBD    | TBD    |
-| 2             | TBD                | TBD            | TBD    | TBD    |
-| 4             | TBD                | TBD            | TBD    | TBD    |
-| 8             | TBD                | TBD            | TBD    | TBD    |
-| 16            | TBD                | TBD            | TBD    | TBD    |
-| 32            | TBD                | TBD            | TBD    | TBD    |
+Shadow metrics: top-1 match, top-5 overlap, KL (optional), latency/error v1 vs v2. Không log raw user data nếu policy không cho.
 
-```markdown
-## Interpretation
+K8s: `readinessProbe` = nhận traffic; `livenessProbe` = restart; `startupProbe` = engine load chậm. HPA theo CPU thường **không đủ** cho GPU — ưu tiên queue/pending/RPS/replica (custom metrics / KEDA). Scale out khi queue cao vài phút; scale in chậm; giữ capacity buffer.
 
-- Best backend:
-- Best concurrency range:
-- Knee point:
-- Production recommendation:
-- Remaining bottleneck:
-```
+::: {.callout-tip icon=false collapse="true"}
+## Prometheus, alerts, Compose, K8s, rollout, runbook, CI/CD, tests
 
-A benchmark report is not just numbers. It must include interpretation.
-
-
-
-## Step 14 — Analyze Triton server-side metrics
-
-Triton exposes metrics on port `8002`.
-
-Inspect:
-
-```bash
-curl localhost:8002/metrics | head
-```
-
-Useful metric families include request count, request duration, queue duration, compute input, compute infer, compute output, and GPU utilization/memory metrics depending on Triton version and configuration.
-
-The important latency decomposition is:
-
-```text
-client latency
-    = network time
-    + server queue time
-    + input processing
-    + inference compute
-    + output processing
-    + response transfer
-```
-
-If p99 is bad, do not immediately blame TensorRT. Look at:
-
-```text
-queue duration
-compute infer duration
-input/output duration
-client-side overhead
-GPU utilization
-CPU utilization
-```
-
-### Symptoms and interpretation
-
-| Symptom                            | Likely bottleneck                    | Action                                           |
-|------------------------------------|--------------------------------------|--------------------------------------------------|
-| queue time high                    | overloaded service or batching delay | reduce concurrency, add instances, tune batching |
-| compute infer high                 | model/GPU compute                    | TensorRT, precision, smaller model, stronger GPU |
-| compute input high                 | input transfer/preprocessing         | optimize preprocessing, pin memory, avoid copies |
-| compute output high                | output copy/postprocessing           | reduce output size, move postprocessing          |
-| GPU utilization low, latency high  | CPU/client bottleneck                | profile client/gateway                           |
-| GPU utilization high, p99 high     | saturation                           | scale out, lower batch delay                     |
-| p50 good, p99 bad                  | queueing or noisy neighbor           | isolate, tune scheduler, capacity buffer         |
-
-
-
-## Step 15 — Add optional FastAPI gateway
-
-Triton can be called directly, but production systems often have an API gateway for:
-
-```text
-authentication
-request validation
-image decoding
-preprocessing
-postprocessing
-business logic
-routing
-logging
-tracing
-```
-
-Create `scripts/gateway_fastapi.py`:
-
-```python
-import io
-import time
-from typing import List
-
-import numpy as np
-from fastapi import FastAPI, File, UploadFile
-from PIL import Image
-import torchvision.transforms as T
-import tritonclient.http as httpclient
-from tritonclient.utils import np_to_triton_dtype
-
-app = FastAPI(title="Inference Capstone Gateway")
-
-TRITON_URL = "localhost:8000"
-MODEL_NAME = "resnet50_trt"
-
-client = httpclient.InferenceServerClient(url=TRITON_URL)
-
-transform = T.Compose([
-    T.Resize(256),
-    T.CenterCrop(224),
-    T.ToTensor(),
-    T.Normalize(
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225],
-    ),
-])
-
-
-def preprocess_image(data: bytes) -> np.ndarray:
-    image = Image.open(io.BytesIO(data)).convert("RGB")
-    tensor = transform(image).numpy().astype(np.float32)
-    return tensor
-
-
-@app.get("/healthz")
-def healthz():
-    return {"status": "ok"}
-
-
-@app.post("/predict")
-async def predict(files: List[UploadFile] = File(...)):
-    start = time.perf_counter()
-
-    batch = []
-    for file in files:
-        data = await file.read()
-        batch.append(preprocess_image(data))
-
-    x = np.stack(batch, axis=0)
-
-    inputs = [
-        httpclient.InferInput(
-            "input",
-            x.shape,
-            np_to_triton_dtype(x.dtype),
-        )
-    ]
-    inputs[0].set_data_from_numpy(x)
-
-    outputs = [httpclient.InferRequestedOutput("logits")]
-
-    result = client.infer(
-        model_name=MODEL_NAME,
-        inputs=inputs,
-        outputs=outputs,
-    )
-    logits = result.as_numpy("logits")
-    top5 = np.argsort(logits, axis=1)[:, -5:][:, ::-1].tolist()
-
-    end = time.perf_counter()
-
-    return {
-        "model": MODEL_NAME,
-        "batch_size": len(files),
-        "top5": top5,
-        "latency_ms": (end - start) * 1000.0,
-    }
-```
-
-Run:
-
-```bash
-uvicorn scripts.gateway_fastapi:app \
-  --host 0.0.0.0 \
-  --port 8080
-```
-
-Important note:
-
-```text
-Gateway latency != model latency.
-```
-
-Gateway includes image upload, decoding, preprocessing, Triton client overhead and postprocessing.
-
-Measure both.
-
-
-
-## Step 16 — Separate model benchmark from API benchmark
-
-You need two benchmark layers:
-
-```text
-1. Model/server benchmark:
-    perf_analyzer -> Triton directly
-
-2. End-to-end API benchmark:
-    load test -> FastAPI gateway -> Triton -> GPU
-```
-
-Why both?
-
-```text
-Triton direct benchmark answers:
-    Is the model backend fast?
-
-Gateway benchmark answers:
-    Is the user-facing API fast?
-```
-
-Common result:
-
-```text
-Triton TensorRT model latency: 5 ms
-End-to-end API p99: 90 ms
-```
-
-This means the bottleneck is likely outside TensorRT: image decoding, network, Python gateway, postprocessing, request serialization, or queueing.
-
-
-
-## Step 17 — Add Prometheus config
-
-Create `ops/prometheus.yml`:
+**`ops/prometheus.yml`:**
 
 ```yaml
 global:
   scrape_interval: 15s
-
 scrape_configs:
   - job_name: "triton"
     static_configs:
-      - targets: ["localhost:8002"]
-
+      - targets: ["triton:8002"]   # hoặc localhost:8002
   - job_name: "gateway"
     static_configs:
-      - targets: ["localhost:8080"]
+      - targets: ["gateway:8080"]
 ```
 
-If using Docker Compose, use service names instead of localhost:
+Verify: `curl localhost:8002/metrics | grep nv_inference` (tên metric đổi theo version).
 
-```yaml
-static_configs:
-  - targets: ["triton:8002"]
-```
+**`ops/alert_rules.yml` (ý tưởng):** `InferenceHighErrorRate` — failure/success > 0.01 for 10m (page); `InferenceHighQueueTime` — avg queue > 50 ms (warning); `InferenceHighComputeLatency` — avg compute infer > 50 ms (warning). Alert phải actionable.
 
-Metrics to dashboard:
+**Docker Compose:** `triton` (GPU, ports 8000–8002, mount models, strict config) + `prometheus` (yml + alert_rules) + `grafana:3000`. Cần NVIDIA Container Toolkit.
+
+**K8s Deployment:** 1× `nvidia.com/gpu`; args `tritonserver --model-repository=/models --strict-model-config=true`; readiness `/v2/health/ready`; liveness `/v2/health/live`; startupProbe dài cho engine lớn; PVC mount `/models`. Service expose 8000/8001/8002.
+
+**HPA:** minReplicas 1, maxReplicas 5. CPU utilization 70% chỉ là skeleton — production ưu tiên queue duration / pending requests / RPS/replica (custom metrics hoặc KEDA). Scale out khi queue cao vài phút; scale in chậm; giữ capacity buffer.
+
+**Rollout plan (`ops/rollout_plan.md`) pre-flight:** ONNX OK; TRT OK; PyTorch↔ONNX; ONNX↔TRT; offline accuracy; Perf Analyzer; p99 in SLO; dashboard; rollback artifact.
+
+Stages: Shadow → Canary 1% → 10% → 50% → 100% (mỗi bậc: no SLO violation, no alert, no quality regression).  
+Rollback triggers: error↑, p99↑, GPU OOM, quality↓, crash loop, queue↑, user-visible incident.  
+Procedure: stop v2 → 100% v1 → verify recover → freeze → incident review.
+
+**Shadow:**
 
 ```text
-Request rate
-Error rate
-p50/p95/p99 latency
-Queue duration
-Compute infer duration
-GPU utilization
-GPU memory usage
-Model version
-Model name
-Instance count
+prod request → v1 = real response
+            → v2 = copy; log/compare only
 ```
 
-
-
-## Step 18 — Define alert rules
-
-Create `ops/alert_rules.yml`:
-
-```yaml
-groups:
-  - name: inference-service-alerts
-    rules:
-      - alert: InferenceHighErrorRate
-        expr: rate(nv_inference_request_failure[5m]) / rate(nv_inference_request_success[5m]) > 0.01
-        for: 10m
-        labels:
-          severity: page
-        annotations:
-          summary: "High inference error rate"
-          description: "Inference error rate is above 1% for 10 minutes."
-
-      - alert: InferenceHighQueueTime
-        expr: rate(nv_inference_queue_duration_us[5m]) / rate(nv_inference_request_success[5m]) > 50000
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High inference queue duration"
-          description: "Average queue duration is above 50 ms for 10 minutes."
-
-      - alert: InferenceHighComputeLatency
-        expr: rate(nv_inference_compute_infer_duration_us[5m]) / rate(nv_inference_request_success[5m]) > 50000
-        for: 10m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High inference compute latency"
-          description: "Average compute infer duration is above 50 ms for 10 minutes."
-```
-
-Metric names can vary by Triton version. Always verify with:
-
-```bash
-curl localhost:8002/metrics | grep nv_inference
-```
-
-A good alert is actionable. Avoid alerting on every small metric movement.
-
-
-
-## Step 19 — Add Docker Compose
-
-Create `docker/docker-compose.yml`:
-
-```yaml
-services:
-  triton:
-    image: nvcr.io/nvidia/tritonserver:<version>-py3
-    command:
-      - tritonserver
-      - --model-repository=/models
-      - --strict-model-config=true
-      - --log-verbose=1
-    ports:
-      - "8000:8000"
-      - "8001:8001"
-      - "8002:8002"
-    volumes:
-      - ../models:/models
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: ["gpu"]
-
-  prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - ../ops/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ../ops/alert_rules.yml:/etc/prometheus/alert_rules.yml
-    ports:
-      - "9090:9090"
-
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-```
-
-Run:
-
-```bash
-cd docker
-docker compose up
-```
-
-Note: GPU support in Docker Compose requires NVIDIA Container Toolkit and a compatible compose/runtime setup.
-
-
-
-## Step 20 — Kubernetes deployment
-
-Production often runs inference services on Kubernetes.
-
-Create `ops/k8s/triton-deployment.yaml`:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: triton-resnet50
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: triton-resnet50
-  template:
-    metadata:
-      labels:
-        app: triton-resnet50
-    spec:
-      containers:
-        - name: triton
-          image: nvcr.io/nvidia/tritonserver:<version>-py3
-          args:
-            - "tritonserver"
-            - "--model-repository=/models"
-            - "--strict-model-config=true"
-          ports:
-            - containerPort: 8000
-              name: http
-            - containerPort: 8001
-              name: grpc
-            - containerPort: 8002
-              name: metrics
-          resources:
-            limits:
-              nvidia.com/gpu: 1
-          readinessProbe:
-            httpGet:
-              path: /v2/health/ready
-              port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 2
-            failureThreshold: 6
-          livenessProbe:
-            httpGet:
-              path: /v2/health/live
-              port: 8000
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 2
-            failureThreshold: 3
-          startupProbe:
-            httpGet:
-              path: /v2/health/ready
-              port: 8000
-            periodSeconds: 10
-            failureThreshold: 30
-          volumeMounts:
-            - name: model-repository
-              mountPath: /models
-      volumes:
-        - name: model-repository
-          persistentVolumeClaim:
-            claimName: triton-models-pvc
-```
-
-Create `ops/k8s/triton-service.yaml`:
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: triton-resnet50
-spec:
-  selector:
-    app: triton-resnet50
-  ports:
-    - name: http
-      port: 8000
-      targetPort: 8000
-    - name: grpc
-      port: 8001
-      targetPort: 8001
-    - name: metrics
-      port: 8002
-      targetPort: 8002
-```
-
-Important:
-
-```text
-readinessProbe controls whether the pod receives traffic.
-livenessProbe controls whether the container should be restarted.
-startupProbe gives slow-starting services time to initialize.
-```
-
-For large TensorRT engines, startup can be slow. Use startup probe to avoid killing the container before it loads.
-
-
-
-## Step 21 — Autoscaling strategy
-
-Create `ops/k8s/hpa.yaml`:
-
-```yaml
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: triton-resnet50-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: triton-resnet50
-  minReplicas: 1
-  maxReplicas: 5
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
-```
-
-CPU-based HPA is often not enough for GPU inference. Better metrics:
-
-```text
-request rate per replica
-p95/p99 latency
-queue duration
-GPU utilization
-GPU memory usage
-in-flight requests
-```
-
-For production, use custom metrics adapter or KEDA-like patterns.
-
-Autoscaling rules should avoid oscillation:
-
-```text
-Scale out:
-    when queue duration or request rate is high for several minutes
-
-Scale in:
-    slowly, only after sustained low load
-
-Capacity buffer:
-    keep enough spare capacity to absorb traffic spikes
-```
-
-
-
-## Step 22 — Safe rollout plan
-
-Create `ops/rollout_plan.md`:
-
-```markdown
-# Rollout Plan
-
-## Objective
-
-Roll out resnet50_trt v2 to production with minimal risk.
-
-## Pre-rollout checks
-
-- [ ] ONNX validation passed
-- [ ] TensorRT engine build succeeded
-- [ ] PyTorch vs ONNX output comparison passed
-- [ ] ONNX vs TensorRT output comparison passed
-- [ ] Offline accuracy regression passed
-- [ ] Perf Analyzer benchmark passed
-- [ ] p99 latency within SLO
-- [ ] metrics dashboard available
-- [ ] rollback artifact available
-
-## Rollout stages
-
-### Stage 0 — Shadow
-
-- Route production-like traffic to v2 without affecting user responses.
-- Compare top-k predictions against v1.
-- Monitor latency, errors, GPU memory, queue duration.
-
-Promotion criteria:
-- error rate does not increase
-- prediction mismatch within accepted threshold
-- no GPU OOM
-- p99 within SLO
-
-### Stage 1 — Canary 1%
-
-- Send 1% live traffic to v2.
-- Monitor for at least one full traffic cycle.
-
-Promotion criteria:
-- no SLO violation
-- no alert firing
-- no quality regression
-
-### Stage 2 — Canary 10%
-
-Same checks.
-
-### Stage 3 — Canary 50%
-
-Same checks.
-
-### Stage 4 — Full rollout
-
-Send 100% traffic to v2.
-
-## Rollback triggers
-
-- error rate > threshold
-- p99 latency > threshold
-- GPU OOM
-- accuracy/quality regression
-- crash loop
-- elevated queue duration
-- user-visible incident
-
-## Rollback procedure
-
-1. Stop routing traffic to v2.
-2. Route 100% traffic to v1.
-3. Verify p99/error rate recover.
-4. Freeze rollout.
-5. Open incident review.
-```
-
-Safe rollout is not a deployment command. It is a risk management process.
-
-
-
-##Step 23 — Shadow traffic design
-
-Shadow traffic means:
-
-```text
-production request
-    -> v1 produces real response
-    -> v2 receives copied request
-    -> v2 response is logged/compared, not returned
-```
-
-Comparison metrics:
-
-```text
-top-1 match rate
-top-5 overlap
-KL divergence of probability distribution
-latency v1 vs v2
-error rate v1 vs v2
-```
-
-For classification, a simple comparator:
+So sánh: top-1 match, top-5 overlap, KL optional, latency/error. Không log raw PII.
 
 ```python
 def compare_topk(logits_v1, logits_v2, k=5):
     top_v1 = set(logits_v1.argsort()[-k:])
     top_v2 = set(logits_v2.argsort()[-k:])
-    overlap = len(top_v1.intersection(top_v2)) / k
-    return overlap
+    return len(top_v1 & top_v2) / k
 ```
 
-For production, do not log raw user data unless privacy policy allows it. Log metadata and sampled outputs.
+**A/B ≠ canary:** canary = safety; A/B = sticky bucketing + primary metric + guardrails + statistical power + duration. Ví dụ INT8 vs FP16; primary = completion rate; guardrails = p99, error, human sample. Classification API ít cần A/B; ranking/LLM/moderation thì trung tâm.
 
+**Runbook (`ops/incident_runbook.md`)**
 
+| Incident | Symptoms | Check ngay | Mitigate | Root candidates |
+|:---------|:---------|:-----------|:---------|:----------------|
+| High latency | p99↑, queue↑, timeout | RPS, queue, compute, GPU, recent change | Rollback / scale / tắt canary / giảm postprocess | spike, batch delay, thiếu instance, GPU sat, CPU preprocess |
+| Error spike | 5xx, model unavailable | load status, logs, OOM, shape/dtype | Rollback, drain pod, disable canary | bad config, engine/GPU mismatch, corrupt artifact |
+| Quality regression | shadow mismatch, complaints | preprocess, labels, version, drift, INT8 | Rollback, FP16 path, sample | wrong labels, calibration, silent mapping |
 
-# Step 24 — A/B testing design
-
-A/B testing is not the same as canary.
+**CI/CD:**
 
 ```text
-Canary:
-    safety-focused
-    goal: detect regressions
-
-A/B test:
-    product/quality-focused
-    goal: measure user/business impact
+PR: lint + unit + ONNX export/validate/compare (CPU)
+Build: export → sim → validate → TRT (GPU runner) → trtexec smoke → upload
+Staging: deploy Triton → integration → Perf smoke → shadow sample
+Prod: canary 1→10→50→100 + monitor
 ```
 
-For image classification API, A/B may be less relevant unless the model affects user experience. For recommendation, ranking, search, OCR, LLM assistant or moderation systems, A/B is central.
+GitHub Actions skeleton: checkout → setup-python 3.11 → `pip install -r requirements.txt` → export → validate → compare. CPU CI không giả validate TRT performance.
 
-A/B test requirements:
+**Tests:** `test_output_schema` (shape `(N,1000)` FP32); `test_preprocessing` (NCHW); regression top-k ảnh biết trước; equivalence; accuracy drop threshold.
+:::
 
-```text
-stable user bucketing
-clear success metric
-guardrail metrics
-statistical power
-experiment duration
-rollback triggers
+
+## Cost, báo cáo cuối và rubric {#sec-cost-report}
+
+> Tối ưu “đủ” nghĩa là gì khi nhìn cost, PRR và Level tự đánh giá?
+
+::: {.callout-important icon=false}
+## Ý chính
+Cost không chỉ là GPU-giờ tại peak throughput — phải tính **operating point đạt SLO** + idle buffer + HA + gateway + observability. Final report + production readiness review biến số liệu thành **quyết định** (demo / staging / limited / full production). Aim **Level 6+**.
+:::
+
+Công thức cơ bản:
+
+$$
+\text{cost per 1M} = \frac{\text{hourly GPU cost}}{\text{sustained inferences/hour}} \times 10^{6}
+$$
+
+Ví dụ: \$2/h, 500 req/s → 1.8M req/h → **\$1.11 / 1M**. Production còn idle buffer, replication, gateway, logging, egress, on-call.
+
+```{mermaid}
+%%| label: fig-l10-report-hot
+%%| fig-cap: "Xương sống tô sáng kết thúc: Canary → Report (cost + PRR + quyết định production)."
+%%| fig-width: 7
+%%| fig-align: "center"
+flowchart LR
+  PT([PyTorch]) --> ON([ONNX]) --> TR([TRT]) --> TS([Triton]) --> BN([Bench]) --> MO([Monitor])
+  MO --> CA([Canary])
+  CA --> RP([Report])
+  classDef soft fill:#F7FAFC,stroke:#7B8A9A,stroke-width:1.5px,color:#243447
+  classDef ok fill:#EAF3FF,stroke:#4A90E2,stroke-width:1.5px,color:#1F3A5F
+  classDef hot fill:#FFE082,stroke:#F57F17,stroke-width:3px,color:#5C3B10
+  classDef io fill:#FFF4E5,stroke:#E09B3D,stroke-width:1.5px,color:#5C3B10
+  class PT,ON,TR,TS,BN,MO soft
+  class CA,RP hot
 ```
 
-Example:
+| Lever | Effect | Risk |
+|:------|:-------|:-----|
+| FP16 | Nhanh / ít mem | Sai số nhỏ |
+| INT8 | Rẻ hơn | Accuracy drop |
+| Dynamic batching | Throughput↑ | Latency↑ |
+| Smaller model | Cost↓ | Quality↓ |
+| Autoscaling | Idle↓ | Cold start |
+| Multi-model share | Util↑ | Contention |
+| CPU serve | Rẻ (model nhỏ) | Có thể miss SLO |
 
-```text
-Treatment:
-    TensorRT INT8 model
+Bottleneck framework (dùng trong report):
 
-Control:
-    TensorRT FP16 model
+| Observation | Evidence | Likely bottleneck | Next action |
+|:------------|:---------|:------------------|:------------|
+| p99↑ sau concurrency 16 | Perf Analyzer | Queue/saturation | Target ≤16 hoặc scale |
+| GPU util thấp, latency cao | Triton metrics | CPU/client | Profile gateway |
+| H2D cao | `trtexec` | Transfer | Input placement |
+| TRT ≉ nhanh hơn ORT | Bench | Unsupported op / model nhỏ | Inspect layers |
+| INT8 accuracy kém | Validation | Calibration | Cải calibration |
+| First request chậm | Trace | Cold start | Warmup |
 
-Primary metric:
-    successful classification completion rate
+::: {.callout-tip icon=false collapse="true"}
+## Final report template + PRR + rubric + LLM extension + portfolio
 
-Guardrails:
-    p99 latency
-    error rate
-    human-reviewed accuracy sample
-```
-
-
-
-## Step 25 — Incident runbook
-
-Create `ops/incident_runbook.md`:
+**`reports/final_capstone_report.md` — 13 mục**
 
 ```markdown
-# Incident Runbook — Inference Service
-
-## 1. High latency incident
-
-### Symptoms
-
-- p99 latency above SLO
-- queue duration rising
-- user-facing timeout increase
-
-### Immediate checks
-
-- Check request rate
-- Check Triton queue duration
-- Check compute infer duration
-- Check GPU utilization
-- Check GPU memory
-- Check recent deployment/change
-- Check downstream dependencies
-
-### Mitigation
-
-- Roll back recent model/config
-- Reduce traffic to affected version
-- Scale replicas if capacity-related
-- Disable expensive postprocessing
-- Increase timeout only as temporary mitigation
-- Disable canary if canary version is affected
-
-### Root cause candidates
-
-- traffic spike
-- dynamic batching delay too high
-- insufficient instances
-- GPU saturation
-- CPU preprocessing bottleneck
-- model version slower than expected
-- noisy neighbor
-```
-
-Add runbook for error spike:
-
-```markdown
-## 2. Error spike incident
-
-### Symptoms
-
-- request failure rate elevated
-- Triton model unavailable
-- HTTP 5xx increase
-
-### Immediate checks
-
-- model load status
-- container logs
-- GPU OOM
-- shape mismatch errors
-- input dtype mismatch
-- recent artifact/config change
-
-### Mitigation
-
-- rollback to previous model version
-- route traffic away from failing pod
-- disable problematic canary
-- restart if safe and root cause is transient
-
-### Root cause candidates
-
-- bad config.pbtxt
-- incompatible TensorRT engine and GPU
-- wrong input shape
-- model artifact corrupted
-- version mismatch
-```
-
-Add runbook for quality regression:
-
-```markdown
-## 3. Quality regression incident
-
-### Symptoms
-
-- shadow comparison mismatch
-- customer/user complaints
-- offline validation passed but production quality degraded
-
-### Immediate checks
-
-- preprocessing differences
-- label mapping differences
-- model version
-- input distribution shift
-- quantization accuracy drop
-- image decoding/crop changes
-
-### Mitigation
-
-- rollback model
-- disable INT8 path
-- route to FP16/ONNX baseline
-- collect sampled examples for analysis
-
-### Root cause candidates
-
-- changed preprocessing
-- wrong labels file
-- calibration dataset mismatch
-- dynamic input distribution
-- silent output mapping bug
-```
-
-
-
-## Step 26 — Build production readiness review
-
-Create `reports/production_readiness_review.md`:
-
-```markdown
-# Production Readiness Review
-
-## 1. Service overview
-
-- Service name:
-- Model:
-- Runtime:
-- Serving system:
-- Owner:
-- On-call:
-- Dependencies:
-
-## 2. Model artifact
-
-- Source training run:
-- ONNX artifact:
-- TensorRT engine:
-- Precision:
-- Input contract:
-- Output contract:
-
-## 3. Validation
-
-- ONNX checker:
-- PyTorch vs ONNX:
-- ONNX vs TensorRT:
-- Offline accuracy:
-- Regression test:
-
-## 4. Performance
-
-- p50 latency:
-- p95 latency:
-- p99 latency:
-- throughput:
-- GPU utilization:
-- memory:
-- capacity limit:
-- knee point:
-
-## 5. SLO
-
-- Availability:
-- Latency:
-- Error rate:
-- Quality:
-- Error budget:
-
-## 6. Observability
-
-- Metrics:
-- Logs:
-- Traces:
-- Dashboards:
-- Alerts:
-
-## 7. Rollout
-
-- Shadow plan:
-- Canary plan:
-- A/B plan:
-- Rollback plan:
-
-## 8. Risks
-```
-
-| Risk            | Impact           | Mitigation                 |
-|-----------------|------------------|----------------------------|
-| GPU OOM         | service failure  | max batch, memory test     |
-| accuracy drop   | poor predictions | validation, shadow         |
-| traffic spike   | high latency     | autoscale, capacity buffer |
-| bad artifact    | model load fail  | artifact validation        |
-
-```markdown
-## 9. Decision
-
-- [ ] Approved for production
-- [ ] Approved for limited rollout
-- [ ] Blocked
-
-Reviewer notes:
-```
-
-This document is a professional artifact. It turns engineering work into an operational decision.
-
-
-
-## Step 27 — CI/CD pipeline design
-
-A minimal CI/CD pipeline:
-
-```text
-Pull request:
-    lint scripts
-    run unit tests
-    validate ONNX export on CPU
-    compare PyTorch vs ONNX outputs
-
-Model build job:
-    export ONNX
-    simplify ONNX
-    validate ONNX
-    build TensorRT engine
-    run trtexec sanity benchmark
-    upload artifacts
-
-Staging deployment:
-    deploy Triton staging
-    run integration tests
-    run Perf Analyzer smoke benchmark
-    run shadow comparison on sample data
-
-Production rollout:
-    canary 1%
-    monitor
-    canary 10%
-    monitor
-    canary 50%
-    monitor
-    full rollout
-```
-
-Example GitHub Actions skeleton:
-
-```yaml
-name: inference-capstone-ci
-
-on:
-  pull_request:
-  push:
-    branches: [main]
-
-jobs:
-  validate-onnx:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Export ONNX
-        run: python scripts/01_export_to_onnx.py --output /tmp/model.onnx
-      - name: Validate ONNX
-        run: python scripts/02_validate_onnx.py --model /tmp/model.onnx
-      - name: Compare outputs
-        run: python scripts/03_compare_outputs.py --onnx /tmp/model.onnx
-```
-
-TensorRT engine build usually needs a GPU runner with compatible NVIDIA driver, CUDA and TensorRT. CPU-only CI should not pretend to validate TensorRT performance.
-
-
-
-## Step 28 — Accuracy and regression testing
-
-For classification:
-
-```text
-unit test:
-    input preprocessing shape/dtype is correct
-
-regression test:
-    known images produce expected top-k labels
-
-equivalence test:
-    PyTorch vs ONNX vs TensorRT are close enough
-
-accuracy test:
-    validation dataset accuracy drop within threshold
-```
-
-Create `tests/test_output_schema.py`:
-
-```python
-import numpy as np
-
-
-def test_output_schema():
-    logits = np.random.randn(2, 1000).astype(np.float32)
-    assert logits.shape == (2, 1000)
-    assert logits.dtype == np.float32
-```
-
-Create `tests/test_preprocessing.py`:
-
-```python
-import numpy as np
-
-
-def test_preprocessed_image_shape():
-    x = np.random.randn(1, 3, 224, 224).astype(np.float32)
-    assert x.shape == (1, 3, 224, 224)
-    assert x.dtype == np.float32
-```
-
-These tests look simple, but they catch many production bugs caused by wrong shape, dtype or layout.
-
-
-
-## Step 29 — Bottleneck analysis framework
-
-Use this table for your final report:
-
-| Observation                            | Evidence       | Likely bottleneck                      | Next action                              |
-|----------------------------------------|----------------|----------------------------------------|------------------------------------------|
-| p99 grows sharply after concurrency 16 | Perf Analyzer  | queueing/saturation                    | choose concurrency target <= 16 or scale |
-| GPU utilization low but latency high   | Triton metrics | CPU/client bottleneck                  | profile gateway                          |
-| H2D high in `trtexec`                  | trtexec output | data transfer                          | optimize input placement                 |
-| TensorRT not faster than ONNX          | benchmark      | unsupported op/fallback or small model | inspect engine/layers                    |
-| INT8 accuracy poor                     | validation     | bad calibration                        | improve calibration set                  |
-| first request slow                     | trace          | cold start/model load                  | warmup                                   |
-
-A good inference engineer does not just optimize blindly. They form hypotheses and test them.
-
-
-
-## Step 30 — Cost planning
-
-Even for a small image model, learn to estimate cost.
-
-Basic formula:
-
-```text
-cost per 1M inferences
-    = hourly GPU node cost / sustained inferences per hour * 1,000,000
-```
-
-Example:
-
-```text
-GPU node cost: $2/hour
-Sustained throughput: 500 requests/s
-
-Requests per hour:
-    500 * 3600 = 1,800,000
-
-Cost per 1M requests:
-    2 / 1,800,000 * 1,000,000 = $1.11
-```
-
-But production cost also includes:
-
-```text
-idle capacity buffer
-replication for availability
-gateway nodes
-monitoring/logging
-storage
-network egress
-engineering/on-call cost
-```
-
-Cost optimization options:
-
-| Lever               | Effect                   | Risk                        |
-|---------------------|--------------------------|-----------------------------|
-| FP16                | faster, lower memory     | small numerical differences |
-| INT8                | faster/lower cost        | accuracy drop               |
-| dynamic batching    | higher throughput        | higher latency              |
-| smaller model       | lower cost               | quality drop                |
-| autoscaling         | lower idle cost          | cold starts                 |
-| multi-model sharing | better utilization       | contention                  |
-| CPU serving         | cheaper for small models | may not meet latency        |
-
-
-
-## Step 31 — Optional INT8 extension
-
-After FP16 capstone works, add INT8.
-
-INT8 path:
-
-```text
-collect calibration dataset
-    -> build calibration cache or Q/DQ model
-    -> build TensorRT INT8 engine
-    -> validate accuracy
-    -> benchmark
-    -> compare cost/performance
-```
-
-Do not enable INT8 just because it is available. Use it only if:
-
-```text
-latency improves
-throughput improves
-accuracy drop is acceptable
-stability is good
-```
-
-Add this to benchmark report:
-
-## Precision comparison
-
-| Runtime  | Precision | p99 ms | Throughput | Accuracy delta | Decision      |
-|----------|-----------|:-------|:-----------|:---------------|---------------|
-| TensorRT | FP16      | TBD    | TBD        | 0              | baseline      |
-| TensorRT | INT8      | TBD    | TBD        | TBD            | accept/reject |
-
-
-
-
-## Step 32 — Optional LLM extension
-
-To connect Lesson 9, you can create a second capstone branch for LLM serving.
-
-LLM capstone architecture:
-
-```text
-client
-  -> OpenAI-compatible API
-  -> vLLM or TensorRT-LLM
-  -> streaming tokens
-  -> Prometheus metrics
-```
-
-Metrics:
-
-```text
-TTFT
-ITL / TPOT
-output tokens per second
-request throughput
-KV cache utilization
-GPU memory
-prefix cache hit rate
-```
-
-Rollout risk:
-
-```text
-quality regression
-latency regression
-cost per 1M tokens increase
-streaming instability
-long-tail prompts
-```
-
-For this Lesson 10, image classification is the main deliverable. LLM extension is optional because it requires larger GPU memory and different benchmarking methods.
-
-
-
-## Step 33 — Final capstone report template
-
-Create `reports/final_capstone_report.md`:
-
-```markdown
-# Final Capstone Report
-
 ## 1. Executive summary
-
-Describe what service you built, what model you used, what runtime performed best, and whether it meets the target SLO.
+Service / model / best runtime / có đạt SLO?
 
 ## 2. Architecture
-
-Include a diagram:
-
 client -> gateway -> Triton -> TensorRT -> GPU -> metrics
 
 ## 3. Model contract
-
-- Input:
-- Output:
-- Preprocessing:
-- Postprocessing:
-- Supported batch sizes:
-- Supported precision:
+Input / Output / Pre / Post / batch sizes / precision
 
 ## 4. Artifact pipeline
-
-Explain:
-
-PyTorch -> ONNX -> validation -> TensorRT engine -> Triton model repository
+PyTorch -> ONNX -> validation -> TensorRT -> Triton repo
 
 ## 5. Correctness validation
-```
+| Check | Result |
+| ONNX checker / PyTorch vs ONNX / ONNX vs TRT / offline accuracy | pass/fail |
 
-| Check            | Result    |
-|------------------|-----------|
-| ONNX checker     | pass/fail |
-| PyTorch vs ONNX  | pass/fail |
-| ONNX vs TensorRT | pass/fail |
-| offline accuracy | pass/fail |
-
-```markdown
 ## 6. Performance results
-
-Include tables and latency-throughput curve.
+Tables + latency-throughput curve
 
 ## 7. Bottleneck analysis
-
-Explain the bottleneck evidence and what you changed.
+Evidence + what you changed
 
 ## 8. Serving configuration
-
-Document:
-
-- config.pbtxt
-- dynamic batching
-- instance_group
-- max_batch_size
-- model versioning
+config.pbtxt, dynamic batching, instance_group, max_batch_size, versioning
 
 ## 9. Operations
-
-Document:
-
-- metrics
-- alerts
-- dashboards
-- health checks
-- autoscaling strategy
+metrics, alerts, dashboards, health checks, autoscaling
 
 ## 10. Rollout and rollback
-
-Document:
-
-- shadow
-- canary
-- full rollout
-- rollback triggers
+shadow, canary, full rollout, rollback triggers
 
 ## 11. Cost estimate
-
-Include cost per 1M requests.
+cost per 1M requests (operating point đạt SLO)
 
 ## 12. Risks and limitations
-
-Be honest about what is not solved.
+Honest about unsolved gaps
 
 ## 13. Final decision
-
-State whether this system is ready for:
-
-- local demo
-- staging
-- limited production
-- full production
+local demo / staging / limited production / full production
 ```
 
-The final report is what distinguishes a serious capstone from a tutorial.
+**`reports/production_readiness_review.md`**
 
+| Section | Nội dung |
+|:--------|:---------|
+| 1 Service overview | name, model, runtime, serving, owner, on-call, deps |
+| 2 Model artifact | training run, ONNX, plan, precision, I/O contract |
+| 3 Validation | checker, PyTorch↔ONNX, ONNX↔TRT, offline, regression |
+| 4 Performance | p50/p95/p99, throughput, GPU util/mem, capacity, knee |
+| 5 SLO | availability, latency, error, quality, error budget |
+| 6 Observability | metrics, logs, traces, dashboards, alerts |
+| 7 Rollout | shadow, canary, A/B, rollback |
+| 8 Risks | OOM / accuracy / spike / bad artifact + mitigation |
+| 9 Decision | Approved / Limited / Blocked + reviewer notes |
 
+**Rubric tự chấm**
 
-## Common failure modes
+| Level | Mô tả |
+|:------|:------|
+| 1 | Export ONNX + infer local |
+| 2 | TRT + `trtexec` |
+| 3 | Serve ORT + TRT trên Triton |
+| 4 | Perf Analyzer + report |
+| 5 | Monitoring + SLO + alerts + runbook |
+| 6 | Rollout/rollback plan |
+| 7 | Production readiness review |
+| 8 | INT8 và/hoặc LLM extension |
 
-### ONNX export succeeds but model is wrong
+Tối thiểu Level 6; 7–8 = portfolio mạnh.
 
-Symptoms:
+**LLM optional (Lesson 9):**
 
 ```text
-ONNX checker passes
-but predictions differ from PyTorch
+client → OpenAI-compatible API → vLLM or TensorRT-LLM
+      → streaming tokens → Prometheus
 ```
 
-Causes:
+Metrics: TTFT, ITL/TPOT, output tokens/s, RPS, KV util, GPU mem, prefix hit. Risks: quality/latency/cost/streaming/long-tail. Track A vẫn là deliverable chính.
+
+**Portfolio README gợi ý:** Overview (ONNX+TRT+Triton); Architecture diagram; Results table Backend×Precision×p99×Throughput; Key learnings với số; How to run (export→TRT→Triton→client→bench); Production readiness (SLO/monitor/rollout/runbook).
+:::
+
+
+## Failure modes và mental models cả khóa {#sec-failures-models}
+
+> Khi capstone “gãy”, bạn debug theo giả thuyết nào — và nhớ lại mantra gì từ Lesson 1–9?
+
+::: {.callout-important icon=false}
+## Ý chính
+Hầu hết failure modes là **mismatch** (export/eval, config vs artifact, `trtexec` vs Triton, mean vs p99) chứ không phải “TensorRT hỏng”. Mental model xuyên suốt: **artifact ≠ service**; tối ưu phải validate correctness; `config.pbtxt` là production code; benchmark phải trả lời quyết định SLO.
+:::
+
+| Failure | Symptoms | Causes điển hình | Fix |
+|:--------|:---------|:-----------------|:----|
+| ONNX “OK” nhưng sai | Checker pass, pred lệch PyTorch | `train` mode, opset, preprocess | `eval()`, compare, đổi opset |
+| TRT build fail | Unsupported op, shape/profile | Dynamic unbounded, plugin | Simplify, replace op, ORT fallback |
+| Triton load fail | Unavailable, config/backend error | Sai name/dims, engine GPU mismatch | Logs, metadata, rebuild cùng env |
+| `trtexec` nhanh, Triton chậm | p99 xấu | Queue, batch delay, gateway, instances | Perf Analyzer + tune queue/instances |
+| p99 ≫ p50 | 10 ms vs 200 ms | Burst, contention, cold, autoscale lag | Buffer capacity, đừng chạy max throughput |
+
+**Mental models mang theo sau khóa:**
 
 ```text
-unsupported export behavior
-training/eval mode mismatch
-dynamic control flow
-wrong preprocessing
-opset issue
+model artifact ≠ inference service ≠ monitored ≠ reliable
+mean latency tốt vẫn có thể phá UX nếu p99 xấu
+TensorRT phải verify: correctness, accuracy, latency, throughput, memory, compatibility
+config.pbtxt đổi batching / shapes / instances / backend / version_policy → coi như code
+Benchmark hỏi: "Concurrency nào đạt p99 < 100 ms và RPS an toàn?" — không chỉ "model nhanh bao nhiêu?"
+Ops trước deploy: no metrics → no diagnosis; no rollback → risky; no SLO → no reliability
 ```
 
-Fix:
+::: {.callout-tip icon=false collapse="true"}
+## Production-grade checklist đầy đủ
+
+**Model correctness:** export `eval`; I/O documented; checker; PyTorch↔ONNX; ONNX↔TRT; preprocess/postprocess tests; labels versioned.
+
+**Performance:** baselines; TRT; Perf Analyzer; latency-throughput curve; knee; p99 đo thật; batching + instances tuned; GPU util đo.
+
+**Serving:** repo valid; config khớp artifact; health; metadata; versioning; rollback artifact.
+
+**Observability:** Prometheus; dashboard; alerts; logs; traces planned; SLO dashboard.
+
+**Operations:** rollout written; rollback tested; runbook; owner/on-call; capacity + cost estimate.
+:::
+
+
+## Mini-lab {.unnumbered}
+
+::: {.callout-note icon=false}
+## Thực hành — Capstone end-to-end (Track A)
+Làm theo phase. Mỗi milestone tick được mới sang bước sau. Templates dài nằm trong tip phía dưới.
+:::
+
+### Phase 0 — Repo + contract {.unnumbered}
+Tạo layout `inference-capstone/`. Viết `reports/model_contract.md` và bảng SLO. Chọn ResNet-50 hoặc MobileNetV3.
+
+### Phase 1 — Export + validate {.unnumbered}
+Chạy `01_export` → `02_validate` → `03_compare`. Fail compare thì dừng. Optional `onnxsim` + re-validate.
+
+### Phase 2 — Optimize {.unnumbered}
+ORT baseline CPU/CUDA → `05_build_engine_trtexec.sh` FP16 → `trtexec --loadEngine` batch 1 và 8. Ghi số vào `benchmark_report.md`.
+
+### Phase 3 — Serve {.unnumbered}
+Viết hai `config.pbtxt`. `06_run_triton.sh`. Health + metadata. `07_client.py` gọi cả hai model.
+
+### Phase 4 — Benchmark + bottleneck {.unnumbered}
+Perf Analyzer concurrency 1…32 cả hai backend. Vẽ knee. Phân rã queue vs compute. Optional gateway + E2E bench. Viết `bottleneck_analysis.md`.
+
+### Phase 5 — Ops + rollout {.unnumbered}
+Prometheus/alerts (+ Compose). Rollout plan shadow→canary. Runbook 3 sự cố. Optional K8s probes + HPA design.
+
+### Phase 6 — Report + tự chấm {.unnumbered}
+Final report 13 mục + PRR decision. Tự chấm Level 1–8. Optional INT8 hoặc LLM nhánh.
+
+::: {.callout-tip icon=false collapse="true"}
+## Study tasks 20 bước + timeline 7 ngày
+
+1. Repo layout  
+2. Export ResNet-50 ONNX  
+3. Validate ONNX  
+4. Compare PyTorch vs ORT  
+5. Bench ORT CPU/CUDA  
+6. Build TRT FP16  
+7. Bench `trtexec`  
+8. Triton model repository  
+9. Serve ONNX  
+10. Serve TRT  
+11. Triton client  
+12. Perf Analyzer  
+13. Collect metrics  
+14. Benchmark report  
+15. Tune dynamic batching  
+16. Tune `instance_group`  
+17. Rollout plan  
+18. Incident runbook  
+19. Production readiness review  
+20. Present final report  
+
+**Timeline part-time:** D1 export/validate → D2 ORT+TRT → D3 Triton+client → D4 Perf+bottleneck → D5 tune batch/instances → D6 monitoring → D7 rollout+runbook+report. GPU sẵn: nén 2–3 ngày tập trung.
+:::
+
+
+## Checkpoint questions {.unnumbered}
+
+1. Vì sao so sánh PyTorch vs ONNX trước khi build TensorRT?
+2. Vì sao TensorRT cần `min/opt/max` shapes?
+3. `trtexec` latency khác Triton latency ở điểm nào?
+4. Dynamic batching tăng throughput nhưng có thể làm xấu p99 — vì sao?
+5. Queue duration Triton cao thường nghĩa là gì?
+6. Vì sao p99 quan trọng hơn mean cho online inference?
+7. Canary khác A/B testing thế nào?
+8. Vì sao phải rebuild engine khi đổi GPU/TensorRT version?
+9. Readiness probe dùng để làm gì?
+10. Điều gì nên trigger rollback?
+11. Ước lượng cost per 1M requests thế nào?
+12. Evidence nào cho thấy bottleneck là preprocessing, không phải compute?
+13. Deliverable nào chứng minh “reproducibility”?
+14. Dual backend ORT+TRT trên Triton giúp quyết định gì?
+15. Knee point trên latency-throughput curve là gì?
+16. Gateway latency gồm những thành phần nào ngoài model?
+17. Shadow traffic đo được gì và không đo được gì?
+18. Startup probe quan trọng với TensorRT engine lớn vì sao?
+19. INT8 được accept khi nào trong capstone?
+20. Level tối thiểu nên aim trên rubric là gì — và Level 8 thêm gì?
+
+::: {.callout-tip icon=false collapse="true"}
+## Tự kiểm — đáp án ngắn
+1. Bắt bug export/semantic trước; TRT che lỗi bằng tối ưu số học khác.
+2. TRT tối ưu theo profile cụ thể; range quá rộng chọn kernel kém / tốn mem.
+3. `trtexec` ≈ engine thuần; Triton thêm queue, batching, client, multi-model.
+4. Chờ gom batch → queue delay tăng tail latency.
+5. Request đến nhanh hơn xử lý — thiếu capacity hoặc batch delay cao.
+6. UX/SLO phụ thuộc đuôi phân phối, không phải trung bình.
+7. Canary = an toàn/rollback; A/B = đo impact sản phẩm, cần thiết kế thống kê.
+8. Engine gắn với GPU arch + TRT version; lệch → load fail / chậm.
+9. Pod chỉ nhận traffic khi model ready — tránh 5xx lúc load.
+10. Error↑, p99↑, OOM, quality↓, crash loop, queue↑, incident user-visible.
+11. (GPU \$/h) / (sustained req/h đạt SLO) × 1e6; cộng buffer/HA/ops.
+12. GPU util thấp + compute infer thấp + gateway/preprocess time cao / H2D cao.
+13. Scripts đánh số rebuild artifacts + pinned versions + report.
+14. So sánh công bằng cùng serving stack — chọn backend production.
+15. Điểm throughput gần bão hòa và p99 bắt đầu phá SLO.
+16. Upload, decode, preprocess, client overhead, postprocess, network.
+17. Đo latency/error/schema/GPU trên traffic thật; không đo conversion/CTR user.
+18. Load engine chậm — tránh liveness giết container trước khi ready.
+19. Latency/throughput cải thiện, accuracy delta chấp nhận, ổn định.
+20. Level 6 tối thiểu; Level 8 = INT8 và/hoặc LLM extension.
+:::
+
+
+## Glossary {.unnumbered}
+
+| Thuật ngữ | Định nghĩa |
+|:----------|:-----------|
+| **Canary** | Rollout dần traffic sang candidate với gate và rollback |
+| **Dynamic batching** | Triton gom request trong cửa sổ delay để tăng throughput |
+| **Knee point** | Điểm trên curve concurrency khi throughput bão hòa và p99 xấu đi |
+| **Model contract** | Đặc tả I/O, dtype, shape, preprocess/postprocess đã version |
+| **Optimization profile** | `min/opt/max` shapes TensorRT dùng khi build dynamic engine |
+| **Perf Analyzer** | Tool load-test Triton (concurrency, percentile, CSV) |
+| **Production readiness review (PRR)** | Tài liệu quyết định go/no-go production |
+| **p99 latency** | Latency tại percentile 99 — tail latency |
+| **Rollback** | Quay traffic/artifact về version ổn định trước |
+| **Shadow traffic** | Copy request tới candidate; không trả response cho user |
+| **SLO** | Mục tiêu định lượng (latency, error, availability, quality) |
+| **TensorRT plan** | Engine đã serialize (`.plan` / `.engine`) |
+| **Triton model repository** | Cây thư mục model + `config.pbtxt` + versions |
+| **trtexec** | CLI build/bench TensorRT |
+| **Warmup** | Synthetic requests trước traffic thật để tránh cold start |
+
+
+## Summary {.unnumbered}
+
+- Capstone = full loop: export → validate → optimize → serve → bench → monitor → canary → cost/report — không dừng ở “infer local”.
+- Track A (CNN + Triton) là deliverable chính; LLM là extension sau Level 6.
+- Gates cứng: equivalence trước TRT; config khớp artifact; dual-backend so sánh; hai lớp benchmark; knee trước khi chọn concurrency.
+- Ops là một nửa điểm: metrics/alerts, shadow/canary, runbook, probes, cost tại operating point đạt SLO.
+- Rubric Level 6+; PRR biến engineering thành quyết định vận hành.
 
 ```text
-set model.eval()
-compare outputs
-inspect graph
-try different opset
-avoid unsupported Python-side logic
+Serve under SLO, with evidence — not just maximize throughput on a quiet GPU.
 ```
 
-###  TensorRT build fails
 
-Symptoms:
+## Closing {.unnumbered}
+
+Lesson 10 chuyển bạn từ “biết từng tool” sang **tư duy hệ thống**. Inference engineer giỏi trả lời được:
 
 ```text
-unsupported operator
-shape inference error
-profile error
+Service đúng chưa? Nhanh hơn bao nhiêu, trong điều kiện nào?
+p99 ổn không? Bottleneck ở đâu?
+Rollback thế nào? Traffic ×2 thì sao?
+Accuracy giảm — phát hiện ra sao? Cost / 1M request?
 ```
 
-Causes:
-
-```text
-unsupported ONNX op
-dynamic shape not bounded
-plugin required
-bad graph simplification
-```
-
-Fix:
-
-```text
-simplify graph
-change opset
-replace op
-write plugin
-use ONNX Runtime backend fallback
-```
-
-### Triton model fails to load
-
-Symptoms:
-
-```text
-model unavailable
-config error
-backend error
-```
-
-Causes:
-
-```text
-wrong config.pbtxt
-wrong input/output names
-wrong dims
-TensorRT engine incompatible with GPU/TensorRT version
-bad repository layout
-```
-
-Fix:
-
-```text
-check logs
-inspect model metadata
-verify repository layout
-rebuild engine in matching environment
-```
-
-### TensorRT is faster in trtexec but not in Triton
-
-Symptoms:
-
-```text
-trtexec latency excellent
-Triton p99 poor
-```
-
-Causes:
-
-```text
-queueing
-dynamic batching delay
-client overhead
-Triton config mismatch
-gateway bottleneck
-insufficient model instances
-```
-
-Fix:
-
-```text
-benchmark direct Triton with Perf Analyzer
-inspect queue duration
-reduce max_queue_delay_microseconds
-tune instance_group
-separate gateway benchmark from model benchmark
-```
-
-### p99 is much worse than p50
-
-Symptoms:
-
-```text
-p50 = 10 ms
-p99 = 200 ms
-```
-
-Causes:
-
-```text
-queueing
-traffic bursts
-CPU pauses
-GPU contention
-cold path
-autoscaling delay
-```
-
-Fix:
-
-```text
-add capacity buffer
-reduce saturation
-tune batching
-profile gateway
-avoid running at max throughput
-```
-
-
-
-## Production-grade checklist
-
-### Model correctness
-
-- [ ] model exported from eval mode
-- [ ] input/output names documented
-- [ ] ONNX checker passes
-- [ ] PyTorch vs ONNX comparison passes
-- [ ] ONNX vs TensorRT comparison passes
-- [ ] preprocessing is tested
-- [ ] postprocessing is tested
-- [ ] label mapping is versioned
-
-### Performance
-
-- [ ] baseline benchmark recorded
-- [ ] TensorRT benchmark recorded
-- [ ] Triton Perf Analyzer benchmark recorded
-- [ ] latency-throughput curve created
-- [ ] knee point identified
-- [ ] p99 measured, not guessed
-- [ ] dynamic batching tuned
-- [ ] instance count tuned
-- [ ] GPU utilization measured
-
-### Serving
-
-- [ ] Triton model repository valid
-- [ ] config.pbtxt matches artifact
-- [ ] health endpoints working
-- [ ] model metadata available
-- [ ] versioning strategy defined
-- [ ] rollback artifact available
-
-### Observability
-
-- [ ] Prometheus scraping metrics
-- [ ] dashboard created
-- [ ] alerts defined
-- [ ] logs accessible
-- [ ] traces optional but planned
-- [ ] SLO dashboard available
-
-### Operations
-
-- [ ] rollout plan written
-- [ ] rollback plan tested
-- [ ] incident runbook written
-- [ ] owner/on-call documented
-- [ ] capacity estimate available
-- [ ] cost estimate available
-
-
-
-## Rubric for self-evaluation
-
-| Level     | Description                                               |
-|-----------|-----------------------------------------------------------|
-| Level 1   | Exported ONNX and ran inference locally                   |
-| Level 2   | Built TensorRT engine and benchmarked with trtexec        |
-| Level 3   | Served ONNX and TensorRT models with Triton               |
-| Level 4   | Benchmarked Triton with Perf Analyzer and produced report |
-| Level 5   | Added monitoring, SLO, alerts and runbook                 |
-| Level 6   | Designed rollout/rollback plan                            |
-| Level 7   | Demonstrated production readiness review                  |
-| Level 8   | Extended project with INT8 or LLM serving                 |
-
-Aim for Level 6 minimum. Level 7-8 is strong portfolio quality.
-
-
-
-## Study tasks
-
-Complete these tasks in order:
-
-1. Create project repository layout.
-2. Export ResNet-50 to ONNX.
-3. Validate ONNX.
-4. Compare PyTorch vs ONNX Runtime output.
-5. Benchmark ONNX Runtime CPU/CUDA.
-6. Build TensorRT FP16 engine.
-7. Benchmark TensorRT engine with `trtexec`.
-8. Create Triton model repository.
-9. Serve ONNX model with Triton.
-10. Serve TensorRT model with Triton.
-11. Write Triton client.
-12. Benchmark with Perf Analyzer.
-13. Collect Triton metrics.
-14. Create benchmark report.
-15. Tune dynamic batching.
-16. Tune instance group.
-17. Write rollout plan.
-18. Write incident runbook.
-19. Write production readiness review.
-20. Present final capstone report.
-
-
-
-##  What to present in a portfolio
-
-A strong GitHub README should include:
-
-```markdown
-# Production Inference Service Capstone
-
-## Overview
-
-This project demonstrates an end-to-end optimized inference service using ONNX, TensorRT and NVIDIA Triton.
-
-## Architecture
-
-Include diagram.
-
-## Results
-```
-
-| Backend       | Precision | p99 latency | Throughput |
-|---------------|-----------|:------------|:-----------|
-| ONNX Runtime  | FP32      | ...         | ...        |
-| TensorRT      | FP16      | ...         | ...        |
-
-```markdown
-## Key learnings
-
-- TensorRT reduced compute latency by ...
-- Dynamic batching improved throughput by ...
-- p99 increased after concurrency ...
-- The production configuration uses ...
-
-## How to run
-
-1. Export ONNX
-2. Build TensorRT
-3. Start Triton
-4. Run client
-5. Run benchmark
-
-## Production readiness
-
-- SLO
-- monitoring
-- rollout plan
-- runbook
-```
-
-This makes the project useful not only as learning material but also as career evidence.
-
-
-
-## Key mental models
-
-### Artifact is not a service
-
-A model file is not production.
-
-```text
-model artifact
-    != inference service
-    != monitored service
-    != reliable service
-```
-
-You need serving, monitoring, rollout, rollback and ownership.
-
-### Faster average latency is not enough
-
-Production systems care about tail latency.
-
-```text
-mean latency can look good
-while p99 breaks the user experience
-```
-
-Always report p95/p99.
-
-### TensorRT optimization must be validated
-
-TensorRT can improve speed, but you must verify:
-
-```text
-correctness
-accuracy
-latency
-throughput
-memory
-compatibility
-```
-
-### Triton configuration is part of the model
-
-`config.pbtxt` is not just boilerplate. It changes runtime behavior:
-
-```text
-batching
-shape handling
-instance count
-backend selection
-version policy
-```
-
-Treat it as production code.
-
-### Benchmarks must answer a decision
-
-Bad benchmark question:
-
-```text
-How fast is the model?
-```
-
-Good benchmark question:
-
-```text
-At what concurrency can this service meet p99 < 100 ms, and how many requests per second can it safely serve?
-```
-
-### Operations design starts before deployment
-
-Monitoring, alerts and runbooks should not be added after incidents.
-
-```text
-No metrics -> no diagnosis
-No rollback -> risky deployment
-No SLO -> no definition of reliability
-```
-
-
-
-## Final exam questions
-
-Answer these without looking:
-
-1. Why do you compare PyTorch output with ONNX output before building TensorRT?
-2. Why does TensorRT need `min/opt/max` shapes for dynamic input?
-3. What is the difference between `trtexec` latency and Triton latency?
-4. Why can dynamic batching improve throughput but hurt p99?
-5. What does high Triton queue duration usually mean?
-6. Why is p99 more important than mean latency for online inference?
-7. What is the difference between canary and A/B testing?
-8. Why should a TensorRT engine be rebuilt when the deployment GPU/TensorRT version changes?
-9. What is the purpose of readiness probe?
-10. What should trigger rollback during rollout?
-11. How do you estimate cost per 1M requests?
-12. What evidence would convince you that the bottleneck is preprocessing, not model compute?
-
-
-
-## Recommended final architecture diagram
-
-You can include this in the final report:
-
-```text
-                           ┌─────────────────────────────┐
-                           │ External Client / Load Test │
-                           └──────────────┬──────────────┘
-                                          │
-                                          ▼
-                           ┌─────────────────────────────┐
-                           │ API Gateway                  │
-                           │ - auth                       │
-                           │ - validation                 │
-                           │ - preprocessing              │
-                           │ - tracing                    │
-                           └──────────────┬──────────────┘
-                                          │
-                                          ▼
-                           ┌─────────────────────────────┐
-                           │ Triton Inference Server      │
-                           │ - model repository           │
-                           │ - scheduler                  │
-                           │ - dynamic batching           │
-                           │ - backend runtime            │
-                           └──────────────┬──────────────┘
-                                          │
-                       ┌──────────────────┴──────────────────┐
-                       ▼                                     ▼
-        ┌─────────────────────────────┐       ┌─────────────────────────────┐
-        │ resnet50_onnx                │       │ resnet50_trt                 │
-        │ ONNX Runtime Backend         │       │ TensorRT Backend             │
-        └─────────────────────────────┘       └─────────────────────────────┘
-                                          │
-                                          ▼
-                           ┌─────────────────────────────┐
-                           │ NVIDIA GPU                   │
-                           └──────────────┬──────────────┘
-                                          │
-                                          ▼
-                           ┌─────────────────────────────┐
-                           │ Observability                │
-                           │ - Prometheus                 │
-                           │ - Grafana                    │
-                           │ - logs                       │
-                           │ - traces                     │
-                           └─────────────────────────────┘
-```
-
-
-
-## Suggested timeline
-
-If you study part-time:
-
-```text
-Day 1:
-    repo layout, ONNX export, validation
-
-Day 2:
-    ONNX Runtime benchmark, TensorRT engine build
-
-Day 3:
-    Triton model repository, Triton client
-
-Day 4:
-    Perf Analyzer benchmark, bottleneck analysis
-
-Day 5:
-    dynamic batching tuning, instance tuning
-
-Day 6:
-    monitoring, Prometheus, alert rules
-
-Day 7:
-    rollout plan, incident runbook, final report
-```
-
-If you already have GPU environment ready, you can compress this into 2-3 focused days.
-
-
-
-## References
-
-Official references you should keep nearby while doing the capstone:
-
-1. NVIDIA TensorRT Documentation  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/
-
-2. TensorRT Performance Benchmarking with `trtexec`  
-   https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/benchmarking.html
-
-3. NVIDIA Triton Inference Server Documentation  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/
-
-4. Triton Model Repository  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_repository.html
-
-5. Triton Model Configuration  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_configuration.html
-
-6. Triton Perf Analyzer  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/perf_analyzer/README.html
-
-7. Triton Model Analyzer  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_analyzer.html
-
-8. Triton Metrics  
-   https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/metrics.html
-
-9. ONNX Runtime Performance Tuning  
-   https://onnxruntime.ai/docs/performance/tune-performance/
-
-10. ONNX Runtime Graph Optimizations  
-    https://onnxruntime.ai/docs/performance/model-optimizations/graph-optimizations.html
-
-11. ONNX Runtime I/O Binding  
-    https://onnxruntime.ai/docs/performance/tune-performance/iobinding.html
-
-12. Kubernetes Probes  
-    https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/
-
-13. Kubernetes Horizontal Pod Autoscaling  
-    https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/
-
-14. Google SRE Book — Service Level Objectives  
-    https://sre.google/sre-book/service-level-objectives/
-
-15. Google SRE Workbook — Error Budget Policy  
-    https://sre.google/workbook/error-budget-policy/
-
-16. Prometheus Alerting Rules  
-    https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
-
-17. OpenTelemetry Documentation  
-    https://opentelemetry.io/docs/
-
-
-
-## Closing note
-
-Lesson 10 là nơi bạn chuyển từ học từng công cụ sang tư duy hệ thống.
-
-Một inference engineer giỏi không chỉ biết:
-
-```text
-export ONNX
-build TensorRT
-start Triton
-```
-
-mà còn biết trả lời:
-
-```text
-Service này có đúng không?
-Nhanh hơn bao nhiêu?
-Nhanh trong điều kiện nào?
-p99 có ổn không?
-Bottleneck nằm ở đâu?
-Nếu deploy version mới bị lỗi thì rollback thế nào?
-Nếu traffic tăng gấp đôi thì hệ thống phản ứng ra sao?
-Nếu accuracy giảm thì phát hiện bằng cách nào?
-Chi phí mỗi 1M request là bao nhiêu?
-```
-
-Khi bạn hoàn thành capstone này, bạn không chỉ có kiến thức về ONNX, TensorRT và Triton. Bạn có một blueprint đầy đủ cho production inference systems.
+Hoàn thành capstone = blueprint production inference — không chỉ kiến thức ONNX / TensorRT / Triton rời rạc.
+
+
+## References {.unnumbered}
+
+1. [NVIDIA TensorRT Documentation](https://docs.nvidia.com/deeplearning/tensorrt/latest/)  
+2. [TensorRT Performance Benchmarking with `trtexec`](https://docs.nvidia.com/deeplearning/tensorrt/latest/performance/benchmarking.html)  
+3. [NVIDIA Triton Inference Server Documentation](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/)  
+4. [Triton Model Repository](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_repository.html)  
+5. [Triton Model Configuration](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_configuration.html)  
+6. [Triton Perf Analyzer](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/perf_analyzer/README.html)  
+7. [Triton Model Analyzer](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/model_analyzer.html)  
+8. [Triton Metrics](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/metrics.html)  
+9. [ONNX Runtime Performance Tuning](https://onnxruntime.ai/docs/performance/tune-performance/)  
+10. [ONNX Runtime Graph Optimizations](https://onnxruntime.ai/docs/performance/model-optimizations/graph-optimizations.html)  
+11. [ONNX Runtime I/O Binding](https://onnxruntime.ai/docs/performance/tune-performance/iobinding.html)  
+12. [Kubernetes Probes](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/)  
+13. [Kubernetes Horizontal Pod Autoscaling](https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/)  
+14. [Google SRE Book — Service Level Objectives](https://sre.google/sre-book/service-level-objectives/)  
+15. [Google SRE Workbook — Error Budget Policy](https://sre.google/workbook/error-budget-policy/)  
+16. [Prometheus Alerting Rules](https://prometheus.io/docs/prometheus/configuration/alerting_rules/)  
+17. [OpenTelemetry Documentation](https://opentelemetry.io/docs/)
 
 ::: {.callout-note icon=false}
 ## Bạn đã hoàn thành chuỗi AI Optimization
