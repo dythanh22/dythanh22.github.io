@@ -7,7 +7,11 @@ project:
   render:
     - index.qmd
     - about.qmd
-    - bai-hoc/**
+    # Whitelist: 3 chuỗi ổn định (Pha 5 — theory-ai đã đủ 15 chapter)
+    - bai-hoc/index.qmd
+    - bai-hoc/architecture-models/**
+    - bai-hoc/ai-optimize/**
+    - bai-hoc/theory-ai/**
     - "!du-an/**"
     - "!nghien-cuu/**"
   resources:
@@ -16,7 +20,7 @@ project:
 
 website:
   title: "dythanh22"
-  description: "Ghi chú học tập — kiến trúc mô hình và tối ưu inference"
+  description: "Ghi chú học tập — lý thuyết AI, kiến trúc mô hình và tối ưu inference"
   site-url: https://dythanh22.github.io
   repo-url: https://github.com/dythanh22/dythanh22.github.io
   repo-actions: [edit, issue]
@@ -44,6 +48,8 @@ website:
             text: Architecture Models
           - href: bai-hoc/ai-optimize/index.qmd
             text: AI Optimization
+          - href: bai-hoc/theory-ai/index.qmd
+            text: Theory AI
       - href: about.qmd
         text: Giới thiệu
 
@@ -102,6 +108,59 @@ website:
         - bai-hoc/ai-optimize/lesson-08-safe-model-rollouts.qmd
         - bai-hoc/ai-optimize/lesson-09-llm-inference-systems.qmd
         - bai-hoc/ai-optimize/lesson-10-end-to-end-capstone.qmd
+
+    - id: theory-ai
+      title: "Theory AI"
+      style: docked
+      search: true
+      collapse-level: 2
+      contents:
+        - bai-hoc/theory-ai/index.qmd
+        - section: "1. Probability"
+          contents:
+            - auto: bai-hoc/theory-ai/01-probability
+        - section: "2. Statistics"
+          contents:
+            - auto: bai-hoc/theory-ai/02-statistics
+        - section: "3. Linear Algebra"
+          contents:
+            - auto: bai-hoc/theory-ai/03-linear-algebra
+        - section: "4. Features"
+          contents:
+            - auto: bai-hoc/theory-ai/04-features
+        - section: "5. Classical ML"
+          contents:
+            - auto: bai-hoc/theory-ai/05-classical-ml
+        - section: "6. Metrics"
+          contents:
+            - auto: bai-hoc/theory-ai/06-metrics
+        - section: "7. Activations & Losses"
+          contents:
+            - auto: bai-hoc/theory-ai/07-activations-losses
+        - section: "8. Optimizers"
+          contents:
+            - auto: bai-hoc/theory-ai/08-optimizers
+        - section: "9. Deep Learning"
+          contents:
+            - auto: bai-hoc/theory-ai/09-deep-learning
+        - section: "10. Computer Vision"
+          contents:
+            - auto: bai-hoc/theory-ai/10-computer-vision
+        - section: "11. NLP"
+          contents:
+            - auto: bai-hoc/theory-ai/11-nlp
+        - section: "12. Reinforcement Learning"
+          contents:
+            - auto: bai-hoc/theory-ai/12-reinforcement-learning
+        - section: "13. Time Series"
+          contents:
+            - auto: bai-hoc/theory-ai/13-time-series
+        - section: "14. Recommender"
+          contents:
+            - auto: bai-hoc/theory-ai/14-recommender
+        - section: "15. MLOps"
+          contents:
+            - auto: bai-hoc/theory-ai/15-mlops
 
   page-footer:
     left: "© 2026 dythanh22 · Ghi chú học tập theo chuỗi"

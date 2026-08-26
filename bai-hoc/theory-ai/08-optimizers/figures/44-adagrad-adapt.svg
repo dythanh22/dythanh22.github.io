@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" role="img" aria-labelledby="adagrad-44-title">
+  <title id="adagrad-44-title">AdaGrad: G=[4, 0.01], lr_eff 0.25 vs 5.0, both Delta=0.5</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-soft { fill: #2F6FED; fill-opacity: 0.08; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-soft { fill: #C45C0A; fill-opacity: 0.08; stroke: #C45C0A; }
+    .card { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-soft { fill: #8AB4F8; fill-opacity: 0.12; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-soft { fill: #F9AB00; fill-opacity: 0.12; stroke: #F9AB00; }
+    }
+  </style>
+  <defs>
+    <marker id="adagrad-44-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="ink" stroke="none"/>
+    </marker>
+  </defs>
+
+  <text id="adagrad-44-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600">AdaGrad, &#x03B7; = 0.5</text>
+
+  <rect class="accent-soft card" x="32" y="52" width="268" height="248" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="166" y="80" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Parameter 1 (frequent)</text>
+  <text class="ink" x="52" y="116" font-size="13" stroke="none">w = 1.0,  g = 2.0</text>
+  <text class="ink" x="52" y="148" font-size="13" stroke="none">G = 2.0^2 = 4.0</text>
+  <text class="muted" x="52" y="184" font-size="13" stroke="none">lr_eff = 0.5 / 2.0 = 0.25</text>
+  <text class="ink" x="52" y="216" font-size="13" stroke="none">&#x0394; = 0.25 x 2.0 = 0.5</text>
+  <text class="accent" x="52" y="260" font-size="15" font-weight="600" stroke="none">w &#x2192; 0.5</text>
+
+  <rect class="hi-soft card" x="420" y="52" width="268" height="248" rx="8" stroke-width="1.5"/>
+  <text class="hi" x="554" y="80" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Parameter 2 (rare)</text>
+  <text class="ink" x="440" y="116" font-size="13" stroke="none">w = 2.0,  g = 0.1</text>
+  <text class="ink" x="440" y="148" font-size="13" stroke="none">G = 0.1^2 = 0.01</text>
+  <text class="muted" x="440" y="184" font-size="13" stroke="none">lr_eff = 0.5 / 0.1 = 5.0</text>
+  <text class="ink" x="440" y="216" font-size="13" stroke="none">&#x0394; = 5.0 x 0.1 = 0.5</text>
+  <text class="hi" x="440" y="260" font-size="15" font-weight="600" stroke="none">w &#x2192; 1.5</text>
+
+  <line class="ink" x1="310" y1="176" x2="404" y2="176" stroke-width="1.5" marker-end="url(#adagrad-44-arrow)"/>
+  <text class="ink" x="360" y="162" text-anchor="middle" font-size="12" font-weight="600" stroke="none">both &#x0394; = 0.5</text>
+
+  <text class="muted" x="360" y="340" text-anchor="middle" font-size="12" stroke="none">g differs 20x; G equalizes the step</text>
+</svg>

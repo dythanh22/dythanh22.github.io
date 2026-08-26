@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" role="img" aria-labelledby="adadelta-47-title">
+  <title id="adadelta-47-title">AdaDelta first step: w=2, g=1, dw approx -0.00316 to 1.99684</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-soft { fill: #2F6FED; fill-opacity: 0.08; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-soft { fill: #C45C0A; fill-opacity: 0.08; stroke: #C45C0A; }
+    .card { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-soft { fill: #8AB4F8; fill-opacity: 0.12; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-soft { fill: #F9AB00; fill-opacity: 0.12; stroke: #F9AB00; }
+    }
+  </style>
+  <defs>
+    <marker id="adadelta-47-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="ink" stroke="none"/>
+    </marker>
+  </defs>
+
+  <text id="adadelta-47-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600">AdaDelta step 1, &#x03C1; = 0.9, &#x03B5; = 10^-6</text>
+
+  <rect class="card ink" x="24" y="52" width="176" height="220" rx="8" fill="none" stroke-width="1.25"/>
+  <text class="ink" x="112" y="80" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Input</text>
+  <text class="ink" x="44" y="116" font-size="13" stroke="none">w = 2.0</text>
+  <text class="ink" x="44" y="148" font-size="13" stroke="none">g = 1.0</text>
+  <text class="muted" x="44" y="188" font-size="13" stroke="none">E[g^2] = 0</text>
+  <text class="muted" x="44" y="220" font-size="13" stroke="none">E[dw^2] = 0</text>
+
+  <line class="ink" x1="206" y1="162" x2="238" y2="162" stroke-width="1.5" marker-end="url(#adadelta-47-arrow)"/>
+
+  <rect class="accent-soft card" x="244" y="52" width="232" height="220" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="360" y="80" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Bootstrap RMS</text>
+  <text class="ink" x="264" y="116" font-size="13" stroke="none">E[g^2] = 0.1</text>
+  <text class="hi" x="264" y="148" font-size="14" font-weight="600" stroke="none">num = sqrt(&#x03B5;) = 0.001</text>
+  <text class="ink" x="264" y="184" font-size="13" stroke="none">den &#x2248; sqrt(0.1) = 0.3162</text>
+  <text class="accent" x="264" y="228" font-size="15" font-weight="600" stroke="none">dw &#x2248; -0.00316</text>
+
+  <line class="ink" x1="482" y1="162" x2="514" y2="162" stroke-width="1.5" marker-end="url(#adadelta-47-arrow)"/>
+
+  <rect class="hi-soft card" x="520" y="52" width="176" height="220" rx="8" stroke-width="1.5"/>
+  <text class="hi" x="608" y="80" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Update</text>
+  <text class="ink" x="540" y="128" font-size="13" stroke="none">2.0 + (-0.00316)</text>
+  <text class="hi" x="540" y="176" font-size="15" font-weight="600" stroke="none">w &#x2192; 1.99684</text>
+  <text class="muted" x="540" y="220" font-size="12" stroke="none">no &#x03B7; in the rule</text>
+
+  <text class="muted" x="360" y="316" text-anchor="middle" font-size="12" stroke="none">First step is tiny because the numerator starts at sqrt(&#x03B5;)</text>
+</svg>

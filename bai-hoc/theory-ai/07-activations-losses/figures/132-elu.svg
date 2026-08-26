@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="elu-132-title">
+  <title id="elu-132-title">ELU alpha=1; ELU(-1)~-0.632, saturates at -1</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="elu-132-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="16" font-weight="600">ELU, &#x03B1; = 1</text>
+
+  <line class="ink" x1="80" y1="50" x2="80" y2="330" stroke-width="1.25"/>
+  <line class="ink" x1="80" y1="245" x2="656" y2="245" stroke-width="1.25"/>
+  <line class="hi" x1="80" y1="310.5" x2="656" y2="310.5" stroke-width="1.25" stroke-dasharray="6 4"/>
+  <line class="grid" x1="440" y1="50" x2="440" y2="330" stroke-width="1" stroke-dasharray="4 4" opacity="0.55"/>
+
+  <path id="elu-132-curve" class="accent" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+        d="M 80.0,310.0 L 89.0,310.0 L 98.0,309.9 L 107.0,309.8 L 116.0,309.7
+           L 125.0,309.6 L 134.0,309.5 L 143.0,309.4 L 152.0,309.3 L 161.0,309.1
+           L 170.0,308.9 L 179.0,308.7 L 188.0,308.5 L 197.0,308.2 L 206.0,307.9
+           L 215.0,307.6 L 224.0,307.2 L 233.0,306.8 L 242.0,306.3 L 251.0,305.7
+           L 260.0,305.1 L 269.0,304.4 L 278.0,303.6 L 287.0,302.7 L 296.0,301.7
+           L 305.0,300.5 L 314.0,299.1 L 323.0,297.6 L 332.0,295.9 L 341.0,294.0
+           L 350.0,291.8 L 359.0,289.3 L 368.0,286.5 L 377.0,283.3 L 386.0,279.7
+           L 395.0,275.6 L 404.0,271.0 L 413.0,265.7 L 422.0,259.8 L 431.0,253.0
+           L 440.0,245.3 L 449.0,237.2 L 458.0,229.1 L 467.0,220.9 L 476.0,212.8
+           L 485.0,204.7 L 494.0,196.5 L 503.0,188.4 L 512.0,180.2 L 521.0,172.1
+           L 530.0,164.0 L 539.0,155.8 L 548.0,147.7 L 557.0,139.5 L 566.0,131.4
+           L 575.0,123.3 L 584.0,115.1 L 593.0,107.0 L 602.0,98.8 L 611.0,90.7
+           L 620.0,82.6 L 629.0,74.4 L 638.0,66.3 L 647.0,58.1 L 656.0,50.0"/>
+
+  <circle class="hi-fill" cx="368.0" cy="286.5" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="440.0" cy="245.3" r="4" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="584.0" cy="115.1" r="4" data-allow-overlap="1"/>
+
+  <text class="hi-fill" x="356" y="274" text-anchor="end" font-size="11" stroke="none">(-1, -0.632)</text>
+  <text class="muted" x="452" y="232" text-anchor="start" font-size="11">ELU(0)=0</text>
+  <text class="muted" x="584" y="102" text-anchor="middle" font-size="11">ELU(2)=2</text>
+  <text class="hi-fill" x="88" y="326" text-anchor="start" font-size="11" stroke="none">sat. -&#x03B1; = -1</text>
+
+  <text class="muted" x="80" y="348" text-anchor="middle" font-size="12">-5</text>
+  <text class="muted" x="224" y="348" text-anchor="middle" font-size="12">-3</text>
+  <text class="muted" x="368" y="348" text-anchor="middle" font-size="12">-1</text>
+  <text class="muted" x="440" y="348" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="584" y="348" text-anchor="middle" font-size="12">2</text>
+  <text class="ink" x="368" y="372" text-anchor="middle" font-size="13">x</text>
+
+  <text class="muted" x="70" y="315" text-anchor="end" font-size="12">-1</text>
+  <text class="muted" x="70" y="249" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="70" y="180" text-anchor="end" font-size="12">1</text>
+  <text class="muted" x="70" y="115" text-anchor="end" font-size="12">2</text>
+  <text class="muted" x="70" y="54" text-anchor="end" font-size="12">3</text>
+  <text class="ink" x="24" y="190" text-anchor="middle" font-size="13" transform="rotate(-90 24 190)">ELU(x)</text>
+</svg>

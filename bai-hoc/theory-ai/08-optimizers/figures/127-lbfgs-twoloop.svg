@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="lbfgs-127-title">
+  <title id="lbfgs-127-title">L-BFGS two-loop recursion result r=[2.19, 1.41]</title>
+  <style>
+    .ink { fill: #1A1A1A; }
+    .muted { fill: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-soft { fill: #2F6FED; fill-opacity: 0.08; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-soft { fill: #C45C0A; fill-opacity: 0.08; stroke: #C45C0A; }
+    .card { fill: none; stroke: #1A1A1A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; stroke: none; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; }
+      .muted { fill: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-soft { fill: #8AB4F8; fill-opacity: 0.12; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-soft { fill: #F9AB00; fill-opacity: 0.12; stroke: #F9AB00; }
+      .card { stroke: #E8EAED; }
+      #lbfgs-127-ah path { fill: #E8EAED; }
+    }
+  </style>
+  <defs>
+    <marker id="lbfgs-127-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1A1A1A"/>
+    </marker>
+  </defs>
+  <text id="lbfgs-127-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="16" font-weight="600">Two-loop recursion, m = 2</text>
+  <rect class="card" x="120" y="44" width="400" height="56" rx="8" stroke-width="1.4"/>
+  <text class="ink" x="320" y="68" text-anchor="middle" font-size="13" font-weight="600">Input q = [4, 6]</text>
+  <text class="muted" x="320" y="88" text-anchor="middle" font-size="12">(s0, y0), (s1, y1)</text>
+  <line class="ink" x1="320" y1="100" x2="320" y2="118" stroke-width="1.5" fill="none" marker-end="url(#lbfgs-127-ah)"/>
+  <rect class="accent-soft" x="120" y="124" width="400" height="72" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="320" y="148" text-anchor="middle" font-size="13" font-weight="600">Loop 1 backward (i = 1, then 0)</text>
+  <text class="ink" x="320" y="172" text-anchor="middle" font-size="13">alpha1 = 3.33, alpha0 = 0.33</text>
+  <text class="ink" x="320" y="190" text-anchor="middle" font-size="13">q &#x2192; [0, -1]</text>
+  <line class="ink" x1="320" y1="196" x2="320" y2="214" stroke-width="1.5" fill="none" marker-end="url(#lbfgs-127-ah)"/>
+  <rect class="card" x="120" y="220" width="400" height="56" rx="8" stroke-width="1.4"/>
+  <text class="ink" x="320" y="244" text-anchor="middle" font-size="13" font-weight="600">Middle: gamma = 0.3</text>
+  <text class="ink" x="320" y="264" text-anchor="middle" font-size="13">r = gamma q = [0, -0.3]</text>
+  <line class="ink" x1="320" y1="276" x2="320" y2="294" stroke-width="1.5" fill="none" marker-end="url(#lbfgs-127-ah)"/>
+  <rect class="hi-soft" x="120" y="300" width="400" height="72" rx="8" stroke-width="1.5"/>
+  <text class="hi" x="320" y="324" text-anchor="middle" font-size="13" font-weight="600">Loop 2 forward (i = 0, then 1)</text>
+  <text class="ink" x="320" y="348" text-anchor="middle" font-size="13">beta0 = -0.15, beta1 = -0.08</text>
+  <text class="hi" x="320" y="368" text-anchor="middle" font-size="15" font-weight="600">r = [2.19, 1.41]</text>
+  <text class="muted" x="320" y="404" text-anchor="middle" font-size="12">Search direction after two loops: r = [2.19, 1.41]</text>
+</svg>

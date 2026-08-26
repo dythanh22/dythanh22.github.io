@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="sil-24-title">
+  <title id="sil-24-title">Two clusters silhouette a=1.0 b~7.56</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+    }
+  </style>
+  <text id="sil-24-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="16" font-weight="600">Two clusters: a = 1.0, b &#x2248; 7.56 for (0,0)</text>
+
+  <!-- origin (0,0) at (88,340); scale 48 px/unit -->
+  <line class="axis" x1="88" y1="340" x2="400" y2="340" stroke-width="1.5"/>
+  <line class="axis" x1="88" y1="340" x2="88" y2="40" stroke-width="1.5"/>
+
+  <text class="muted" x="88" y="360" text-anchor="middle" font-size="11">0</text>
+  <text class="muted" x="136" y="360" text-anchor="middle" font-size="11">1</text>
+  <text class="muted" x="328" y="360" text-anchor="middle" font-size="11">5</text>
+  <text class="muted" x="376" y="360" text-anchor="middle" font-size="11">6</text>
+  <text class="muted" x="72" y="344" text-anchor="end" font-size="11">0</text>
+  <text class="muted" x="72" y="292" text-anchor="end" font-size="11">1</text>
+  <text class="muted" x="72" y="100" text-anchor="end" font-size="11">5</text>
+  <text class="muted" x="72" y="52" text-anchor="end" font-size="11">6</text>
+  <text class="ink" x="244" y="388" text-anchor="middle" font-size="13">x</text>
+  <text class="ink" x="36" y="190" text-anchor="middle" font-size="13" transform="rotate(-90 36 190)">y</text>
+
+  <!-- a links Cluster 0 -->
+  <line class="accent" x1="88" y1="340" x2="88" y2="292" stroke-width="1.5" stroke-dasharray="4 3" fill="none" opacity="0.75" data-allow-overlap="1"/>
+  <line class="accent" x1="88" y1="340" x2="136" y2="340" stroke-width="1.5" stroke-dasharray="4 3" fill="none" opacity="0.75" data-allow-overlap="1"/>
+
+  <!-- b links to Cluster 1 -->
+  <line class="hi" x1="88" y1="340" x2="328" y2="100" stroke-width="1.5" stroke-dasharray="5 4" fill="none" opacity="0.6" data-allow-overlap="1"/>
+  <line class="hi" x1="88" y1="340" x2="328" y2="52" stroke-width="1" stroke-dasharray="3 4" fill="none" opacity="0.35" data-allow-overlap="1"/>
+  <line class="hi" x1="88" y1="340" x2="376" y2="100" stroke-width="1" stroke-dasharray="3 4" fill="none" opacity="0.35" data-allow-overlap="1"/>
+
+  <!-- Cluster 0: (0,0),(0,1),(1,0) -->
+  <circle class="accent" cx="88" cy="340" r="8" data-allow-overlap="1"/>
+  <circle class="accent" cx="88" cy="292" r="7" data-allow-overlap="1"/>
+  <circle class="accent" cx="136" cy="340" r="7" data-allow-overlap="1"/>
+
+  <!-- Cluster 1: (5,5),(5,6),(6,5) -->
+  <circle class="hi" cx="328" cy="100" r="7" data-allow-overlap="1"/>
+  <circle class="hi" cx="328" cy="52" r="7" data-allow-overlap="1"/>
+  <circle class="hi" cx="376" cy="100" r="7" data-allow-overlap="1"/>
+
+  <text class="accent" x="108" y="366" text-anchor="start" font-size="11" stroke="none">(0,0)</text>
+  <text class="accent" x="108" y="288" text-anchor="start" font-size="11" stroke="none">(0,1)</text>
+  <text class="accent" x="148" y="358" text-anchor="start" font-size="11" stroke="none">(1,0)</text>
+  <text class="hi" x="328" y="122" text-anchor="middle" font-size="11" stroke="none">(5,5)</text>
+  <text class="hi" x="348" y="48" text-anchor="start" font-size="11" stroke="none">(5,6)</text>
+  <text class="hi" x="390" y="122" text-anchor="start" font-size="11" stroke="none">(6,5)</text>
+
+  <text class="accent" x="118" y="318" text-anchor="start" font-size="13" font-weight="600" stroke="none">a = 1.0</text>
+  <text class="hi" x="200" y="200" text-anchor="middle" font-size="13" font-weight="600" stroke="none">b &#x2248; 7.56</text>
+
+  <circle class="accent" cx="460" cy="120" r="6"/>
+  <text class="ink" x="476" y="124" text-anchor="start" font-size="13" stroke="none">Cluster 0</text>
+  <circle class="hi" cx="460" cy="152" r="6"/>
+  <text class="ink" x="476" y="156" text-anchor="start" font-size="13" stroke="none">Cluster 1</text>
+  <text class="muted" x="460" y="196" text-anchor="start" font-size="12" stroke="none">s(0,0) &#x2248; 0.87</text>
+  <text class="muted" x="460" y="220" text-anchor="start" font-size="12" stroke="none">overall S &#x2248; 0.79</text>
+</svg>

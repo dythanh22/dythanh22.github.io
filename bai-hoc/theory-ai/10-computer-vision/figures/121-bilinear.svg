@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 416" role="img" aria-labelledby="bilinear-121-title">
+  <title id="bilinear-121-title">Bilinear at (0.25, 0.75) equals 22.5</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .sq { fill: none; stroke: #1A1A1A; }
+    .cell { fill: #FFFFFF; stroke: #1A1A1A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .sq { stroke: #E8EAED; }
+      .cell { fill: #1E1E1E; stroke: #E8EAED; }
+    }
+  </style>
+
+  <text id="bilinear-121-heading" class="ink" x="350" y="24" text-anchor="middle" font-size="16" font-weight="600">Bilinear at (0.25, 0.75) = 22.5</text>
+
+  <!-- unit square: (210,96) to (450,336), 240px -->
+  <rect class="sq" x="210" y="96" width="240" height="240" stroke-width="1.6"/>
+
+  <circle class="accent" cx="210" cy="96" r="6"/>
+  <circle class="accent" cx="450" cy="96" r="6"/>
+  <circle class="hi" cx="210" cy="336" r="6"/>
+  <circle class="accent" cx="450" cy="336" r="6"/>
+
+  <!-- pixel values OUTSIDE the square -->
+  <text class="ink" x="210" y="58" text-anchor="middle" font-size="16" font-weight="700" stroke="none">10</text>
+  <text class="ink" x="450" y="58" text-anchor="middle" font-size="16" font-weight="700" stroke="none">30</text>
+  <text class="hi" x="210" y="372" text-anchor="middle" font-size="16" font-weight="700" stroke="none">20</text>
+  <text class="ink" x="450" y="372" text-anchor="middle" font-size="16" font-weight="700" stroke="none">40</text>
+
+  <!-- weights further outside, not on the value row -->
+  <text class="muted" x="118" y="100" text-anchor="middle" font-size="12" stroke="none">w=0.1875</text>
+  <text class="muted" x="542" y="100" text-anchor="middle" font-size="12" stroke="none">w=0.0625</text>
+  <text class="hi" x="118" y="340" text-anchor="middle" font-size="12" font-weight="600" stroke="none">w=0.5625</text>
+  <text class="muted" x="542" y="340" text-anchor="middle" font-size="12" stroke="none">w=0.1875</text>
+
+  <!-- query (0.25, 0.75): x=210+60=270, y=96+180=276 -->
+  <circle class="hi" cx="270" cy="276" r="7" data-allow-overlap="1"/>
+  <text class="hi" x="284" y="262" text-anchor="start" font-size="13" font-weight="600" stroke="none">(0.25, 0.75)</text>
+
+  <line class="muted" x1="270" y1="96" x2="270" y2="276" stroke-width="1" stroke-dasharray="4 3" fill="none" opacity="0.55"/>
+  <line class="muted" x1="210" y1="276" x2="270" y2="276" stroke-width="1" stroke-dasharray="4 3" fill="none" opacity="0.55"/>
+
+  <text class="muted" x="270" y="84" text-anchor="middle" font-size="11" stroke="none">dx=0.25</text>
+  <text class="muted" x="196" y="280" text-anchor="end" font-size="11" stroke="none">dy=0.75</text>
+
+  <rect class="cell" x="560" y="190" width="116" height="52" rx="4" stroke-width="1.5"/>
+  <text class="hi" x="618" y="222" text-anchor="middle" font-size="18" font-weight="700" stroke="none">v = 22.5</text>
+
+  <text class="muted" x="350" y="396" text-anchor="middle" font-size="12" stroke="none">closest neighbor is 20; result 22.5</text>
+</svg>

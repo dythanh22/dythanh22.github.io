@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 312" role="img" aria-labelledby="stream-72-title">
+  <title id="stream-72-title">Streaming min/max on [5, 2, 8, 1, 9, 3]</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .cell { fill: #FFFFFF; stroke: #1A1A1A; }
+    .upd { fill: #E8F0FE; stroke: #2F6FED; }
+    .upd-hi { fill: #F8E8D8; stroke: #C45C0A; }
+    .final { fill: #E8F0FE; stroke: #2F6FED; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .cell { fill: #1E1E1E; stroke: #E8EAED; }
+      .upd { fill: #1A2A44; stroke: #8AB4F8; }
+      .upd-hi { fill: #3A2A10; stroke: #F9AB00; }
+      .final { fill: #1A2A44; stroke: #8AB4F8; }
+    }
+  </style>
+  <text id="stream-72-heading" class="ink" x="320" y="26" text-anchor="middle" font-size="15" font-weight="600">Streaming min/max, stream [5, 2, 8, 1, 9, 3]</text>
+  <!-- columns at x=130, 210, 290, 370, 450, 530; width 72 -->
+  <text class="muted" x="70" y="58" text-anchor="middle" font-size="11">after</text>
+  <text class="muted" x="166" y="58" text-anchor="middle" font-size="12">5</text>
+  <text class="muted" x="246" y="58" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="326" y="58" text-anchor="middle" font-size="12">8</text>
+  <text class="muted" x="406" y="58" text-anchor="middle" font-size="12">1</text>
+  <text class="muted" x="486" y="58" text-anchor="middle" font-size="12">9</text>
+  <text class="muted" x="566" y="58" text-anchor="middle" font-size="12">3</text>
+  <text class="muted" x="70" y="98" text-anchor="middle" font-size="12">x</text>
+  <rect class="cell" x="130" y="74" width="72" height="36" stroke-width="1.2"/>
+  <rect class="cell" x="210" y="74" width="72" height="36" stroke-width="1.2"/>
+  <rect class="cell" x="290" y="74" width="72" height="36" stroke-width="1.2"/>
+  <rect class="cell" x="370" y="74" width="72" height="36" stroke-width="1.2"/>
+  <rect class="cell" x="450" y="74" width="72" height="36" stroke-width="1.2"/>
+  <rect class="cell" x="530" y="74" width="72" height="36" stroke-width="1.2"/>
+  <text class="ink" x="166" y="98" text-anchor="middle" font-size="14">5</text>
+  <text class="ink" x="246" y="98" text-anchor="middle" font-size="14">2</text>
+  <text class="ink" x="326" y="98" text-anchor="middle" font-size="14">8</text>
+  <text class="ink" x="406" y="98" text-anchor="middle" font-size="14">1</text>
+  <text class="ink" x="486" y="98" text-anchor="middle" font-size="14">9</text>
+  <text class="ink" x="566" y="98" text-anchor="middle" font-size="14">3</text>
+  <text class="accent" x="70" y="146" text-anchor="middle" font-size="12" stroke="none">min</text>
+  <rect class="cell" x="130" y="122" width="72" height="36" stroke-width="1.2"/>
+  <rect class="upd" x="210" y="122" width="72" height="36" stroke-width="1.5"/>
+  <rect class="cell" x="290" y="122" width="72" height="36" stroke-width="1.2"/>
+  <rect class="upd" x="370" y="122" width="72" height="36" stroke-width="1.5"/>
+  <rect class="cell" x="450" y="122" width="72" height="36" stroke-width="1.2"/>
+  <rect class="final" x="530" y="122" width="72" height="36" stroke-width="1.5"/>
+  <text class="ink" x="166" y="146" text-anchor="middle" font-size="14">5</text>
+  <text class="accent" x="246" y="146" text-anchor="middle" font-size="14" font-weight="600" stroke="none">2</text>
+  <text class="ink" x="326" y="146" text-anchor="middle" font-size="14">2</text>
+  <text class="accent" x="406" y="146" text-anchor="middle" font-size="14" font-weight="600" stroke="none">1</text>
+  <text class="ink" x="486" y="146" text-anchor="middle" font-size="14">1</text>
+  <text class="accent" x="566" y="146" text-anchor="middle" font-size="14" font-weight="600" stroke="none">1</text>
+  <text class="hi" x="70" y="194" text-anchor="middle" font-size="12" stroke="none">max</text>
+  <rect class="cell" x="130" y="170" width="72" height="36" stroke-width="1.2"/>
+  <rect class="cell" x="210" y="170" width="72" height="36" stroke-width="1.2"/>
+  <rect class="upd-hi" x="290" y="170" width="72" height="36" stroke-width="1.5"/>
+  <rect class="cell" x="370" y="170" width="72" height="36" stroke-width="1.2"/>
+  <rect class="upd-hi" x="450" y="170" width="72" height="36" stroke-width="1.5"/>
+  <rect class="final" x="530" y="170" width="72" height="36" stroke-width="1.5"/>
+  <text class="ink" x="166" y="194" text-anchor="middle" font-size="14">5</text>
+  <text class="ink" x="246" y="194" text-anchor="middle" font-size="14">5</text>
+  <text class="hi" x="326" y="194" text-anchor="middle" font-size="14" font-weight="600" stroke="none">8</text>
+  <text class="ink" x="406" y="194" text-anchor="middle" font-size="14">8</text>
+  <text class="hi" x="486" y="194" text-anchor="middle" font-size="14" font-weight="600" stroke="none">9</text>
+  <text class="hi" x="566" y="194" text-anchor="middle" font-size="14" font-weight="600" stroke="none">9</text>
+  <text class="ink" x="320" y="242" text-anchor="middle" font-size="13">final: min = 1, max = 9</text>
+  <text class="muted" x="320" y="268" text-anchor="middle" font-size="12">Blue cells: min update; amber cells: max update</text>
+  <text class="muted" x="320" y="290" text-anchor="middle" font-size="12">O(1) time and O(1) space per element</text>
+</svg>

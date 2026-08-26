@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="cosemb-135-title">
+  <title id="cosemb-135-title">Cosine embedding: aligned cos~0.994 L=0.006 vs orthogonal L=1</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .arc { fill: none; stroke: #5C6570; }
+    .wedge { fill: #C45C0A; fill-opacity: 0.12; stroke: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .arc { stroke: #9AA0A6; }
+      .wedge { fill: #F9AB00; fill-opacity: 0.18; }
+    }
+  </style>
+  <defs>
+    <marker id="cosemb-135-arrow-ink" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="ink" stroke="none"/>
+    </marker>
+    <marker id="cosemb-135-arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="accent" stroke="none"/>
+    </marker>
+    <marker id="cosemb-135-arrow-hi" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="hi" stroke="none"/>
+    </marker>
+  </defs>
+
+  <text id="cosemb-135-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="16" font-weight="600">Cosine embedding, y = 1</text>
+
+  <!-- Left: aligned. origin (80,300); scale 180. e1=[1,0], e2 unit [0.994,0.111] -->
+  <text class="ink" x="180" y="52" text-anchor="middle" font-size="13" font-weight="600">Similar, aligned</text>
+  <line class="axis" x1="80" y1="300" x2="310" y2="300" stroke-width="1.5" marker-end="url(#cosemb-135-arrow-ink)"/>
+  <line class="axis" x1="80" y1="300" x2="80" y2="100" stroke-width="1.5" marker-end="url(#cosemb-135-arrow-ink)"/>
+  <text class="muted" x="318" y="304" font-size="12" stroke="none">x</text>
+  <text class="muted" x="72" y="94" text-anchor="middle" font-size="12" stroke="none">y</text>
+
+  <!-- tiny wedge ~6.4 deg, r=48: end (80+48*cos6.4, 300-48*sin6.4)=(127.7, 294.6) -->
+  <path class="wedge" d="M80,300 L128,300 A48,48 0 0,0 127.7,294.6 Z"/>
+  <line class="accent" x1="80" y1="300" x2="260" y2="300" stroke-width="2.75" marker-end="url(#cosemb-135-arrow-accent)"/>
+  <line class="hi" x1="80" y1="300" x2="258.9" y2="280.0" stroke-width="2.75" marker-end="url(#cosemb-135-arrow-hi)"/>
+  <text class="accent" x="200" y="322" font-size="12" stroke="none">e1 = [1, 0, 0]</text>
+  <text class="hi" x="200" y="268" font-size="12" stroke="none">e2 ~ [0.994, 0.111, 0]</text>
+  <text class="ink" x="180" y="348" text-anchor="middle" font-size="13" stroke="none">cos &#x2248; 0.994</text>
+  <text class="accent" x="180" y="370" text-anchor="middle" font-size="13" font-weight="600" stroke="none">L = 0.006</text>
+
+  <!-- Right: orthogonal. origin (430,300); scale 150 -->
+  <text class="ink" x="540" y="52" text-anchor="middle" font-size="13" font-weight="600">Similar, orthogonal</text>
+  <line class="axis" x1="430" y1="300" x2="660" y2="300" stroke-width="1.5" marker-end="url(#cosemb-135-arrow-ink)"/>
+  <line class="axis" x1="430" y1="300" x2="430" y2="100" stroke-width="1.5" marker-end="url(#cosemb-135-arrow-ink)"/>
+  <text class="muted" x="668" y="304" font-size="12" stroke="none">x</text>
+  <text class="muted" x="422" y="94" text-anchor="middle" font-size="12" stroke="none">y</text>
+
+  <path class="wedge" d="M430,300 L478,300 A48,48 0 0,0 430,252 Z"/>
+  <path class="arc" d="M478,300 A48,48 0 0,0 430,252" stroke-width="1.5"/>
+  <line class="accent" x1="430" y1="300" x2="580" y2="300" stroke-width="2.75" marker-end="url(#cosemb-135-arrow-accent)"/>
+  <line class="hi" x1="430" y1="300" x2="430" y2="150" stroke-width="2.75" marker-end="url(#cosemb-135-arrow-hi)"/>
+  <text class="accent" x="500" y="322" font-size="12" stroke="none">e1 = [1, 0, 0]</text>
+  <text class="hi" x="444" y="168" font-size="12" stroke="none">e2 = [0, 1, 0]</text>
+  <text class="muted" x="500" y="270" font-size="12" stroke="none">90 deg</text>
+  <text class="ink" x="540" y="348" text-anchor="middle" font-size="13" stroke="none">cos = 0</text>
+  <text class="hi" x="540" y="370" text-anchor="middle" font-size="13" font-weight="600" stroke="none">L = 1</text>
+</svg>

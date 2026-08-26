@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" role="img" aria-labelledby="histeq-129-title">
+  <title id="histeq-129-title">CDF maps intensities 0-7; h(4)=4, CDF(7)=1</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .line { fill: none; stroke: #2F6FED; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .line { stroke: #8AB4F8; }
+    }
+  </style>
+  <text id="histeq-129-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="16" font-weight="600">Histogram equalization: CDF then map</text>
+
+  <text class="muted" x="100" y="50" text-anchor="middle" font-size="12">h(k)</text>
+  <text class="muted" x="500" y="50" text-anchor="middle" font-size="12">CDF(k) and s(k)</text>
+
+  <line class="axis" x1="48" y1="268" x2="344" y2="268" stroke-width="1.25"/>
+  <line class="axis" x1="48" y1="64" x2="48" y2="268" stroke-width="1.25"/>
+  <text class="muted" x="40" y="272" text-anchor="end" font-size="11">0</text>
+  <text class="muted" x="40" y="174" text-anchor="end" font-size="11">2</text>
+  <text class="muted" x="40" y="76" text-anchor="end" font-size="11">4</text>
+
+  <!-- bars: 1 count = 49 px; y = 268 - 49*h -->
+  <rect class="accent" x="60" y="219" width="26" height="49"/>
+  <rect class="accent" x="94" y="170" width="26" height="98"/>
+  <rect class="accent" x="128" y="121" width="26" height="147"/>
+  <rect class="accent" x="162" y="170" width="26" height="98"/>
+  <rect class="hi" x="196" y="72" width="26" height="196"/>
+  <rect class="accent" x="230" y="170" width="26" height="98"/>
+  <rect class="accent" x="264" y="219" width="26" height="49"/>
+  <rect class="accent" x="298" y="219" width="26" height="49"/>
+
+  <text class="hi" x="209" y="64" text-anchor="middle" font-size="11" stroke="none">h(4)=4</text>
+  <text class="ink" x="73" y="286" text-anchor="middle" font-size="11">0</text>
+  <text class="ink" x="107" y="286" text-anchor="middle" font-size="11">1</text>
+  <text class="ink" x="141" y="286" text-anchor="middle" font-size="11">2</text>
+  <text class="ink" x="175" y="286" text-anchor="middle" font-size="11">3</text>
+  <text class="ink" x="209" y="286" text-anchor="middle" font-size="11">4</text>
+  <text class="ink" x="243" y="286" text-anchor="middle" font-size="11">5</text>
+  <text class="ink" x="277" y="286" text-anchor="middle" font-size="11">6</text>
+  <text class="ink" x="311" y="286" text-anchor="middle" font-size="11">7</text>
+  <text class="ink" x="196" y="308" text-anchor="middle" font-size="12">k</text>
+
+  <line class="accent" x1="356" y1="168" x2="396" y2="168" stroke-width="2" fill="none"/>
+  <polygon class="accent" points="396,163 410,168 396,173" stroke="none"/>
+
+  <line class="axis" x1="428" y1="268" x2="696" y2="268" stroke-width="1.25"/>
+  <line class="axis" x1="428" y1="64" x2="428" y2="268" stroke-width="1.25"/>
+  <text class="muted" x="420" y="272" text-anchor="end" font-size="11">0</text>
+  <text class="muted" x="420" y="170" text-anchor="end" font-size="11">0.5</text>
+  <text class="muted" x="420" y="76" text-anchor="end" font-size="11">1</text>
+
+  <!-- CDF: y = 268 - 196*cdf; x = 448 + 32*k -->
+  <polyline class="line" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"
+            points="448,255.8 480,231.3 512,194.5 544,170 576,121 608,96.5 640,84.3 672,72"/>
+  <circle class="accent" cx="448" cy="255.8" r="3.5" stroke="none"/>
+  <circle class="accent" cx="480" cy="231.3" r="3.5" stroke="none"/>
+  <circle class="accent" cx="512" cy="194.5" r="3.5" stroke="none"/>
+  <circle class="accent" cx="544" cy="170" r="3.5" stroke="none"/>
+  <circle class="accent" cx="576" cy="121" r="3.5" stroke="none"/>
+  <circle class="accent" cx="608" cy="96.5" r="3.5" stroke="none"/>
+  <circle class="accent" cx="640" cy="84.3" r="3.5" stroke="none"/>
+  <circle class="hi" cx="672" cy="72" r="4.5" stroke="none"/>
+
+  <text class="muted" x="512" y="182" text-anchor="middle" font-size="10">s=3</text>
+  <text class="muted" x="576" y="108" text-anchor="middle" font-size="10">s=5</text>
+  <text class="hi" x="672" y="60" text-anchor="middle" font-size="11" stroke="none">CDF(7)=1</text>
+
+  <text class="ink" x="448" y="286" text-anchor="middle" font-size="11">0</text>
+  <text class="ink" x="480" y="286" text-anchor="middle" font-size="11">1</text>
+  <text class="ink" x="512" y="286" text-anchor="middle" font-size="11">2</text>
+  <text class="ink" x="544" y="286" text-anchor="middle" font-size="11">3</text>
+  <text class="ink" x="576" y="286" text-anchor="middle" font-size="11">4</text>
+  <text class="ink" x="608" y="286" text-anchor="middle" font-size="11">5</text>
+  <text class="ink" x="640" y="286" text-anchor="middle" font-size="11">6</text>
+  <text class="ink" x="672" y="286" text-anchor="middle" font-size="11">7</text>
+  <text class="ink" x="562" y="308" text-anchor="middle" font-size="12">k</text>
+
+  <text class="muted" x="360" y="348" text-anchor="middle" font-size="12">map s(k): 0&#x2192;0, 1&#x2192;1, 2&#x2192;3, 3&#x2192;4, 4&#x2192;5, 5&#x2192;6, 6&#x2192;7, 7&#x2192;7</text>
+</svg>

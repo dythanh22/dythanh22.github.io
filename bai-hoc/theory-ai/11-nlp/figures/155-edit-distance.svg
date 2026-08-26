@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 430" role="img" aria-labelledby="edit-155-title">
+  <title id="edit-155-title">Edit distance cat to cut; dp[3,3]=1</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .cell { fill: #FFFFFF; stroke: #1A1A1A; }
+    .match { fill: #E8F0FE; stroke: #2F6FED; }
+    .repl { fill: #F8E6D4; stroke: #C45C0A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .cell { fill: #1E1E1E; stroke: #E8EAED; }
+      .match { fill: #1A2A44; stroke: #8AB4F8; }
+      .repl { fill: #3A2A14; stroke: #F9AB00; }
+    }
+  </style>
+
+  <text id="edit-155-heading" class="ink" x="340" y="26" text-anchor="middle" font-size="15" font-weight="600">cat &#x2192; cut, dp[3,3] = 1</text>
+
+  <text class="muted" x="340" y="52" text-anchor="middle" font-size="12">s2</text>
+  <text class="muted" x="196" y="74" text-anchor="middle" font-size="13">&quot;&quot;</text>
+  <text class="ink" x="268" y="74" text-anchor="middle" font-size="14" font-weight="600">c</text>
+  <text class="ink" x="340" y="74" text-anchor="middle" font-size="14" font-weight="600">u</text>
+  <text class="ink" x="412" y="74" text-anchor="middle" font-size="14" font-weight="600">t</text>
+
+  <text class="muted" x="108" y="200" text-anchor="middle" font-size="12" transform="rotate(-90 108 200)">s1</text>
+  <text class="muted" x="148" y="114" text-anchor="end" font-size="13">&quot;&quot;</text>
+  <text class="ink" x="148" y="170" text-anchor="end" font-size="14" font-weight="600">c</text>
+  <text class="ink" x="148" y="226" text-anchor="end" font-size="14" font-weight="600">a</text>
+  <text class="ink" x="148" y="282" text-anchor="end" font-size="14" font-weight="600">t</text>
+
+  <!-- row "" -->
+  <rect class="match" x="160" y="84" width="72" height="56" stroke-width="1.8"/>
+  <rect class="cell" x="232" y="84" width="72" height="56" stroke-width="1.2"/>
+  <rect class="cell" x="304" y="84" width="72" height="56" stroke-width="1.2"/>
+  <rect class="cell" x="376" y="84" width="72" height="56" stroke-width="1.2"/>
+  <text class="accent" x="196" y="118" text-anchor="middle" font-size="16" font-weight="700" stroke="none">0</text>
+  <text class="muted" x="268" y="118" text-anchor="middle" font-size="16" stroke="none">1</text>
+  <text class="muted" x="340" y="118" text-anchor="middle" font-size="16" stroke="none">2</text>
+  <text class="muted" x="412" y="118" text-anchor="middle" font-size="16" stroke="none">3</text>
+
+  <!-- row c -->
+  <rect class="cell" x="160" y="140" width="72" height="56" stroke-width="1.2"/>
+  <rect class="match" x="232" y="140" width="72" height="56" stroke-width="1.8"/>
+  <rect class="cell" x="304" y="140" width="72" height="56" stroke-width="1.2"/>
+  <rect class="cell" x="376" y="140" width="72" height="56" stroke-width="1.2"/>
+  <text class="muted" x="196" y="174" text-anchor="middle" font-size="16" stroke="none">1</text>
+  <text class="accent" x="268" y="174" text-anchor="middle" font-size="16" font-weight="700" stroke="none">0</text>
+  <text class="muted" x="340" y="174" text-anchor="middle" font-size="16" stroke="none">1</text>
+  <text class="muted" x="412" y="174" text-anchor="middle" font-size="16" stroke="none">2</text>
+
+  <!-- row a -->
+  <rect class="cell" x="160" y="196" width="72" height="56" stroke-width="1.2"/>
+  <rect class="cell" x="232" y="196" width="72" height="56" stroke-width="1.2"/>
+  <rect class="repl" x="304" y="196" width="72" height="56" stroke-width="1.8"/>
+  <rect class="cell" x="376" y="196" width="72" height="56" stroke-width="1.2"/>
+  <text class="muted" x="196" y="230" text-anchor="middle" font-size="16" stroke="none">2</text>
+  <text class="muted" x="268" y="230" text-anchor="middle" font-size="16" stroke="none">1</text>
+  <text class="hi" x="340" y="230" text-anchor="middle" font-size="16" font-weight="700" stroke="none">1</text>
+  <text class="muted" x="412" y="230" text-anchor="middle" font-size="16" stroke="none">2</text>
+
+  <!-- row t -->
+  <rect class="cell" x="160" y="252" width="72" height="56" stroke-width="1.2"/>
+  <rect class="cell" x="232" y="252" width="72" height="56" stroke-width="1.2"/>
+  <rect class="cell" x="304" y="252" width="72" height="56" stroke-width="1.2"/>
+  <rect class="repl" x="376" y="252" width="72" height="56" stroke-width="2"/>
+  <text class="muted" x="196" y="286" text-anchor="middle" font-size="16" stroke="none">3</text>
+  <text class="muted" x="268" y="286" text-anchor="middle" font-size="16" stroke="none">2</text>
+  <text class="muted" x="340" y="286" text-anchor="middle" font-size="16" stroke="none">2</text>
+  <text class="hi" x="412" y="286" text-anchor="middle" font-size="16" font-weight="700" stroke="none">1</text>
+
+  <text class="muted" x="564" y="100" text-anchor="middle" font-size="12">s1 = cat</text>
+  <text class="muted" x="564" y="120" text-anchor="middle" font-size="12">s2 = cut</text>
+  <text class="hi" x="564" y="160" text-anchor="middle" font-size="13" font-weight="600" stroke="none">replace a &#x2192; u</text>
+  <text class="ink" x="564" y="188" text-anchor="middle" font-size="14" font-weight="700" stroke="none">dp[3,3] = 1</text>
+  <text class="muted" x="564" y="214" text-anchor="middle" font-size="12">cost 1</text>
+
+  <text class="accent" x="268" y="340" text-anchor="middle" font-size="12" stroke="none">match c</text>
+  <text class="hi" x="340" y="340" text-anchor="middle" font-size="12" stroke="none">replace a</text>
+  <text class="hi" x="412" y="340" text-anchor="middle" font-size="12" stroke="none">match t</text>
+
+  <text class="muted" x="340" y="378" text-anchor="middle" font-size="13">path 0 &#x2192; 0 &#x2192; 1 &#x2192; 1; one substitution</text>
+  <text class="muted" x="340" y="400" text-anchor="middle" font-size="12">4 &#x00D7; 4 table including empty prefixes</text>
+</svg>

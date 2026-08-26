@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 400" role="img" aria-labelledby="clip-43-title">
+  <title id="clip-43-title">Global-norm clip: g=[6,8], ||g||=10, max=5 to [3,4]</title>
+  <style>
+    .ink { fill: #1A1A1A; }
+    .muted { fill: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .guide { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; stroke: none; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; }
+      .muted { fill: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .guide { stroke: #9AA0A6; }
+      #clip-43-ah-ink path { fill: #E8EAED; }
+      #clip-43-ah-accent path { fill: #8AB4F8; }
+      #clip-43-ah-hi path { fill: #F9AB00; }
+    }
+  </style>
+  <defs>
+    <marker id="clip-43-ah-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1A1A1A"/>
+    </marker>
+    <marker id="clip-43-ah-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2F6FED"/>
+    </marker>
+    <marker id="clip-43-ah-hi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#C45C0A"/>
+    </marker>
+  </defs>
+  <text id="clip-43-heading" class="ink" x="250" y="28" text-anchor="middle" font-size="16" font-weight="600">Global-norm clip: ||g|| = 10, max = 5</text>
+  <!-- origin (150, 300); 20 px/unit; g=(6,8)->(270,140); clip=(3,4)->(210,220); R=5 -> 100 -->
+  <line class="axis" x1="150" y1="300" x2="430" y2="300" stroke-width="1.5" marker-end="url(#clip-43-ah-ink)"/>
+  <line class="axis" x1="150" y1="300" x2="150" y2="56" stroke-width="1.5" marker-end="url(#clip-43-ah-ink)"/>
+  <text class="muted" x="440" y="304" font-size="13">x</text>
+  <text class="muted" x="150" y="46" text-anchor="middle" font-size="13">y</text>
+  <text class="muted" x="138" y="318" text-anchor="end" font-size="12">O</text>
+  <path class="guide" d="M 250 300 A 100 100 0 0 0 150 200" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text class="muted" x="268" y="286" font-size="12">max_norm = 5</text>
+  <line class="accent" x1="150" y1="300" x2="265.2" y2="146.4" stroke-width="2.2" fill="none" marker-end="url(#clip-43-ah-accent)"/>
+  <circle class="accent" cx="270" cy="140" r="4" data-allow-overlap="1"/>
+  <text class="accent" x="282" y="132" font-size="13">g = [6, 8]</text>
+  <text class="accent" x="196" y="168" font-size="13" font-weight="600">||g|| = 10</text>
+  <line class="hi" x1="150" y1="300" x2="205.2" y2="226.4" stroke-width="2.6" fill="none" marker-end="url(#clip-43-ah-hi)"/>
+  <circle class="hi" cx="210" cy="220" r="4.5" data-allow-overlap="1"/>
+  <text class="hi" x="222" y="212" font-size="13">g_clip = [3, 4]</text>
+  <text class="hi" x="28" y="198" font-size="13" font-weight="600">||g_clip|| = 5</text>
+  <text class="muted" x="250" y="384" text-anchor="middle" font-size="12">Same direction; only the magnitude is scaled by 0.5</text>
+</svg>

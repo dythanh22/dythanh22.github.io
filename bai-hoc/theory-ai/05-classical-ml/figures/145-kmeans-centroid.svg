@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 440" role="img" aria-labelledby="kmeans-145-title">
+  <title id="kmeans-145-title">K-Means centroid update: mu1=(2,2) mu2=(4.5,4.5)</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .link { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+    }
+  </style>
+
+  <text id="kmeans-145-heading" class="ink" x="350" y="26" text-anchor="middle" font-size="16" font-weight="600">Centroid update: mean of assigned points</text>
+
+  <!-- origin (0,0) at (80,370); scale 52 px/unit -->
+  <line class="axis" x1="80" y1="370" x2="404" y2="370" stroke-width="1.5"/>
+  <line class="axis" x1="80" y1="370" x2="80" y2="46" stroke-width="1.5"/>
+
+  <text class="muted" x="80" y="390" text-anchor="middle" font-size="11">0</text>
+  <text class="muted" x="132" y="390" text-anchor="middle" font-size="11">1</text>
+  <text class="muted" x="184" y="390" text-anchor="middle" font-size="11">2</text>
+  <text class="muted" x="236" y="390" text-anchor="middle" font-size="11">3</text>
+  <text class="muted" x="288" y="390" text-anchor="middle" font-size="11">4</text>
+  <text class="muted" x="340" y="390" text-anchor="middle" font-size="11">5</text>
+  <text class="muted" x="392" y="390" text-anchor="middle" font-size="11">6</text>
+  <text class="muted" x="66" y="374" text-anchor="end" font-size="11">0</text>
+  <text class="muted" x="66" y="322" text-anchor="end" font-size="11">1</text>
+  <text class="muted" x="66" y="270" text-anchor="end" font-size="11">2</text>
+  <text class="muted" x="66" y="218" text-anchor="end" font-size="11">3</text>
+  <text class="muted" x="66" y="166" text-anchor="end" font-size="11">4</text>
+  <text class="muted" x="66" y="114" text-anchor="end" font-size="11">5</text>
+  <text class="muted" x="66" y="62" text-anchor="end" font-size="11">6</text>
+  <text class="ink" x="242" y="424" text-anchor="middle" font-size="13">x</text>
+  <text class="ink" x="24" y="208" text-anchor="middle" font-size="13" transform="rotate(-90 24 208)">y</text>
+
+  <!-- spokes to new means -->
+  <line class="accent link" x1="132" y1="266" x2="184" y2="266" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7" data-allow-overlap="1"/>
+  <line class="accent link" x1="184" y1="318" x2="184" y2="266" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7" data-allow-overlap="1"/>
+  <line class="accent link" x1="236" y1="214" x2="184" y2="266" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7" data-allow-overlap="1"/>
+  <line class="hi link" x1="288" y1="110" x2="314" y2="136" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7" data-allow-overlap="1"/>
+  <line class="hi link" x1="340" y1="162" x2="314" y2="136" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7" data-allow-overlap="1"/>
+
+  <!-- C1 points: x1=(1,2), x2=(2,1), x5=(3,3) -->
+  <circle class="accent" cx="132" cy="266" r="7" data-allow-overlap="1"/>
+  <circle class="accent" cx="184" cy="318" r="7" data-allow-overlap="1"/>
+  <circle class="accent" cx="236" cy="214" r="7" data-allow-overlap="1"/>
+  <!-- C2 points: x3=(4,5), x4=(5,4) -->
+  <circle class="hi" cx="288" cy="110" r="7" data-allow-overlap="1"/>
+  <circle class="hi" cx="340" cy="162" r="7" data-allow-overlap="1"/>
+
+  <!-- new centroids: mu1=(2,2), mu2=(4.5,4.5) -->
+  <polygon class="accent" points="184,256 194,266 184,276 174,266" data-allow-overlap="1"/>
+  <polygon class="hi" points="314,126 324,136 314,146 304,136" data-allow-overlap="1"/>
+
+  <text class="accent" x="118" y="250" text-anchor="end" font-size="12" stroke="none">x1=(1,2)</text>
+  <text class="accent" x="198" y="338" text-anchor="start" font-size="12" stroke="none">x2=(2,1)</text>
+  <text class="accent" x="250" y="204" text-anchor="start" font-size="12" stroke="none">x5=(3,3)</text>
+  <text class="hi" x="274" y="96" text-anchor="end" font-size="12" stroke="none">x3=(4,5)</text>
+  <text class="hi" x="356" y="178" text-anchor="start" font-size="12" stroke="none">x4=(5,4)</text>
+  <text class="accent" x="148" y="300" text-anchor="end" font-size="12" font-weight="600" stroke="none">&#x03BC;1=(2,2)</text>
+  <text class="hi" x="336" y="122" text-anchor="start" font-size="12" font-weight="600" stroke="none">&#x03BC;2=(4.5,4.5)</text>
+
+  <circle class="accent" cx="470" cy="120" r="6"/>
+  <text class="ink" x="486" y="124" text-anchor="start" font-size="13" stroke="none">C1 = {x1, x2, x5}</text>
+  <circle class="hi" cx="470" cy="152" r="6"/>
+  <text class="ink" x="486" y="156" text-anchor="start" font-size="13" stroke="none">C2 = {x3, x4}</text>
+  <text class="accent" x="470" y="192" text-anchor="start" font-size="12" font-weight="600" stroke="none">&#x03BC;1 = (2, 2)</text>
+  <text class="hi" x="470" y="216" text-anchor="start" font-size="12" font-weight="600" stroke="none">&#x03BC;2 = (4.5, 4.5)</text>
+</svg>

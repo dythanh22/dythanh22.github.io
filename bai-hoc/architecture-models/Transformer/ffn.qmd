@@ -184,3 +184,10 @@ def feed_forward(x: np.ndarray, W1: np.ndarray, b1: np.ndarray,
     return output
 
 ```
+
+<!-- CROSSLINK_THEORY_FFN -->
+
+::: {.callout-tip}
+## Ôn nền tảng
+ReLU / GELU primitives: [ReLU](../../theory-ai/07-activations-losses/relu-activation.qmd) · [GELU](../../theory-ai/07-activations-losses/gelu-activation.qmd).
+:::

@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" role="img" aria-labelledby="split-149-title">
+  <title id="split-149-title">Gini gain t=3.5 vs t=5.5</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .box-hi { fill: #C45C0A; fill-opacity: 0.10; stroke: #C45C0A; }
+    .box-ac { fill: #2F6FED; fill-opacity: 0.10; stroke: #2F6FED; }
+    .fill-none { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .box-hi { fill: #F9AB00; fill-opacity: 0.16; stroke: #F9AB00; }
+      .box-ac { fill: #8AB4F8; fill-opacity: 0.16; stroke: #8AB4F8; }
+    }
+  </style>
+
+  <text id="split-149-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="16" font-weight="600">Candidate splits: t = 3.5 vs t = 5.5</text>
+
+  <circle class="accent" cx="640" cy="48" r="6"/>
+  <text class="ink" x="654" y="52" text-anchor="start" font-size="12" stroke="none">+</text>
+  <circle class="hi" cx="640" cy="70" r="6"/>
+  <text class="ink" x="654" y="74" text-anchor="start" font-size="12" stroke="none">&#x2212;</text>
+
+  <line class="hi fill-none" x1="136" y1="78" x2="136" y2="188" stroke-width="1.75" stroke-dasharray="6 4"/>
+  <text class="hi" x="136" y="68" text-anchor="middle" font-size="12" font-weight="600" stroke="none">t = 3.5</text>
+
+  <line class="accent fill-none" x1="264" y1="78" x2="264" y2="188" stroke-width="1.75" stroke-dasharray="6 4"/>
+  <text class="accent" x="264" y="68" text-anchor="middle" font-size="12" font-weight="600" stroke="none">t = 5.5</text>
+
+  <line class="axis" x1="24" y1="150" x2="648" y2="150" stroke-width="1.5"/>
+
+  <circle class="accent" cx="40" cy="150" r="7" data-allow-overlap="1"/>
+  <text class="accent" x="40" y="128" text-anchor="middle" font-size="13" font-weight="600" stroke="none">+</text>
+  <text class="muted" x="40" y="178" text-anchor="middle" font-size="12">2</text>
+
+  <circle class="accent" cx="104" cy="150" r="7" data-allow-overlap="1"/>
+  <text class="accent" x="104" y="128" text-anchor="middle" font-size="13" font-weight="600" stroke="none">+</text>
+  <text class="muted" x="104" y="178" text-anchor="middle" font-size="12">3</text>
+
+  <circle class="hi" cx="168" cy="150" r="7" data-allow-overlap="1"/>
+  <text class="hi" x="168" y="128" text-anchor="middle" font-size="13" font-weight="600" stroke="none">&#x2212;</text>
+  <text class="muted" x="168" y="178" text-anchor="middle" font-size="12">4</text>
+
+  <circle class="accent" cx="232" cy="150" r="7" data-allow-overlap="1"/>
+  <text class="accent" x="232" y="128" text-anchor="middle" font-size="13" font-weight="600" stroke="none">+</text>
+  <text class="muted" x="232" y="178" text-anchor="middle" font-size="12">5</text>
+
+  <circle class="hi" cx="296" cy="150" r="7" data-allow-overlap="1"/>
+  <text class="hi" x="296" y="128" text-anchor="middle" font-size="13" font-weight="600" stroke="none">&#x2212;</text>
+  <text class="muted" x="296" y="178" text-anchor="middle" font-size="12">6</text>
+
+  <circle class="hi" cx="360" cy="150" r="7" data-allow-overlap="1"/>
+  <text class="hi" x="360" y="128" text-anchor="middle" font-size="13" font-weight="600" stroke="none">&#x2212;</text>
+  <text class="muted" x="360" y="178" text-anchor="middle" font-size="12">7</text>
+
+  <circle class="hi" cx="424" cy="150" r="7" data-allow-overlap="1"/>
+  <text class="hi" x="424" y="128" text-anchor="middle" font-size="13" font-weight="600" stroke="none">&#x2212;</text>
+  <text class="muted" x="424" y="178" text-anchor="middle" font-size="12">8</text>
+
+  <circle class="accent" cx="488" cy="150" r="7" data-allow-overlap="1"/>
+  <text class="accent" x="488" y="128" text-anchor="middle" font-size="13" font-weight="600" stroke="none">+</text>
+  <text class="muted" x="488" y="178" text-anchor="middle" font-size="12">9</text>
+
+  <circle class="hi" cx="552" cy="150" r="7" data-allow-overlap="1"/>
+  <text class="hi" x="552" y="128" text-anchor="middle" font-size="13" font-weight="600" stroke="none">&#x2212;</text>
+  <text class="muted" x="552" y="178" text-anchor="middle" font-size="12">10</text>
+
+  <circle class="hi" cx="616" cy="150" r="7" data-allow-overlap="1"/>
+  <text class="hi" x="616" y="128" text-anchor="middle" font-size="13" font-weight="600" stroke="none">&#x2212;</text>
+  <text class="muted" x="616" y="178" text-anchor="middle" font-size="12">11</text>
+
+  <text class="ink" x="360" y="204" text-anchor="middle" font-size="13">X</text>
+
+  <rect class="box-hi" x="80" y="228" width="250" height="72" rx="4" stroke-width="1.5"/>
+  <text class="hi" x="205" y="256" text-anchor="middle" font-size="14" font-weight="600" stroke="none">t = 3.5 (better)</text>
+  <text class="ink" x="205" y="280" text-anchor="middle" font-size="13" stroke="none">Gini gain = 0.18</text>
+
+  <rect class="box-ac" x="390" y="228" width="250" height="72" rx="4" stroke-width="1.5"/>
+  <text class="accent" x="515" y="256" text-anchor="middle" font-size="14" font-weight="600" stroke="none">t = 5.5</text>
+  <text class="ink" x="515" y="280" text-anchor="middle" font-size="13" stroke="none">Gini gain = 0.163</text>
+
+  <text class="muted" x="360" y="332" text-anchor="middle" font-size="12">parent: 4+, 6&#x2212;; Gini = 0.48</text>
+</svg>

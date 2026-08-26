@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="cos-126-title">
+  <title id="cos-126-title">Cosine annealing vs linear: eta_max=0.1, T=100</title>
+  <style>
+    .ink { fill: #1A1A1A; }
+    .muted { fill: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .guide { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; stroke: none; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; }
+      .muted { fill: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .guide { stroke: #9AA0A6; }
+    }
+  </style>
+  <text id="cos-126-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="16" font-weight="600">Cosine vs linear, &#x03B7;max = 0.1, T = 100</text>
+  <line class="axis" x1="80" y1="310" x2="672" y2="310" stroke-width="1.25"/>
+  <line class="axis" x1="80" y1="50" x2="80" y2="310" stroke-width="1.25"/>
+  <line class="guide" x1="370" y1="50" x2="370" y2="310" stroke-width="1" stroke-dasharray="4 4" opacity="0.55"/>
+  <path class="hi" stroke-width="2" stroke-dasharray="7 5" stroke-linecap="round" d="M 80,50 L 660,310"/>
+  <path id="cos-126-curve" class="accent" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+        d="M 80.0,50.0
+           L 109.0,51.6 L 138.0,56.4 L 167.0,64.2 L 196.0,74.8
+           L 225.0,88.1 L 254.0,103.6 L 283.0,121.0 L 312.0,139.8
+           L 341.0,159.7 L 370.0,180.0 L 399.0,200.3 L 428.0,220.2
+           L 457.0,239.0 L 486.0,256.4 L 515.0,271.9 L 544.0,285.2
+           L 573.0,295.8 L 602.0,303.6 L 631.0,308.4 L 660.0,310.0"/>
+  <circle class="accent-fill" cx="80" cy="50" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="370" cy="180" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="660" cy="310" r="4.5" data-allow-overlap="1"/>
+  <text class="muted" x="80" y="328" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="370" y="328" text-anchor="middle" font-size="12">50</text>
+  <text class="muted" x="660" y="328" text-anchor="middle" font-size="12">100</text>
+  <text class="ink" x="370" y="352" text-anchor="middle" font-size="13">t</text>
+  <text class="muted" x="70" y="314" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="70" y="184" text-anchor="end" font-size="12">0.05</text>
+  <text class="muted" x="70" y="54" text-anchor="end" font-size="12">0.1</text>
+  <text class="ink" x="22" y="180" text-anchor="middle" font-size="13" transform="rotate(-90 22 180)">&#x03B7;</text>
+  <text class="accent-fill" x="92" y="44" text-anchor="start" font-size="12">t = 0, &#x03B7; = 0.1</text>
+  <text class="accent-fill" x="382" y="174" text-anchor="start" font-size="12">t = 50, &#x03B7; = 0.05</text>
+  <text class="accent-fill" x="648" y="298" text-anchor="end" font-size="11">&#x03B7; = 0</text>
+  <line class="accent" x1="430" y1="68" x2="470" y2="68" stroke-width="2.5"/>
+  <text class="ink" x="478" y="72" font-size="12">cosine</text>
+  <line class="hi" x1="430" y1="88" x2="470" y2="88" stroke-width="2" stroke-dasharray="7 5"/>
+  <text class="ink" x="478" y="92" font-size="12">linear</text>
+  <text class="muted" x="360" y="384" text-anchor="middle" font-size="12">Shared at t = 0, 50, 100; cosine stays high longer, then drops faster</text>
+</svg>

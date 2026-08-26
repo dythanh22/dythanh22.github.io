@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 360" role="img" aria-labelledby="nrm-96-title">
+  <title id="nrm-96-title">Normalize v = (3, 4, 0) to unit (0.6, 0.8, 0)</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .guide { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .guide { stroke: #9AA0A6; }
+    }
+  </style>
+  <defs>
+    <marker id="nrm-96-arrow-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1A1A1A"/>
+    </marker>
+    <marker id="nrm-96-arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2F6FED"/>
+    </marker>
+    <marker id="nrm-96-arrow-hi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#C45C0A"/>
+    </marker>
+  </defs>
+  <text id="nrm-96-heading" class="ink" x="280" y="32" text-anchor="middle" font-size="16" font-weight="600">v to unit vector</text>
+  <!-- origin (120,300); scale 40; v tip (240,140); unit tip at 0.2*v = (144, 268) wait:
+       unit = (0.6,0.8)*40 = (24, 32) -> tip (144, 268) -->
+  <line class="axis" x1="80" y1="300" x2="420" y2="300" stroke-width="1.5" marker-end="url(#nrm-96-arrow-ink)"/>
+  <line class="axis" x1="120" y1="330" x2="120" y2="80" stroke-width="1.5" marker-end="url(#nrm-96-arrow-ink)"/>
+  <text class="muted" x="430" y="304" font-size="13" stroke="none">x</text>
+  <text class="muted" x="112" y="72" text-anchor="middle" font-size="13" stroke="none">y</text>
+  <text class="muted" x="108" y="318" text-anchor="end" font-size="12" stroke="none">O</text>
+  <!-- unit circle radius 40 -->
+  <circle class="guide" cx="120" cy="300" r="40" stroke-width="1.2" stroke-dasharray="4 3" fill="none"/>
+  <text class="muted" x="168" y="292" font-size="11" stroke="none">||u||=1</text>
+  <!-- original v -->
+  <line class="accent" x1="120" y1="300" x2="232" y2="148" stroke-width="2.5" fill="none" marker-end="url(#nrm-96-arrow-accent)"/>
+  <text class="accent" x="250" y="132" text-anchor="start" font-size="13" stroke="none">v = (3, 4, 0)</text>
+  <text class="accent" x="200" y="200" text-anchor="middle" font-size="12" stroke="none">||v|| = 5</text>
+  <!-- unit vector -->
+  <line class="hi" x1="120" y1="300" x2="141" y2="271" stroke-width="2.5" fill="none" marker-end="url(#nrm-96-arrow-hi)"/>
+  <text class="hi" x="160" y="250" text-anchor="start" font-size="13" stroke="none">u = (0.6, 0.8, 0)</text>
+  <text class="muted" x="280" y="348" text-anchor="middle" font-size="12" stroke="none">same direction; length 1</text>
+</svg>

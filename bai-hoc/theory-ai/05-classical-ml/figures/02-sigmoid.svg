@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="logreg-02-title">
+  <title id="logreg-02-title">Sigmoid sigma(z); sigma(0)=0.5</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <line class="ink" x1="80" y1="330" x2="656" y2="330" stroke-width="1.25"/>
+  <line class="ink" x1="80" y1="50" x2="80" y2="330" stroke-width="1.25"/>
+
+  <line class="hi" x1="80" y1="190" x2="656" y2="190" stroke-width="1.25" stroke-dasharray="6 4"/>
+  <line class="grid" x1="368" y1="50" x2="368" y2="330" stroke-width="1" stroke-dasharray="4 4" opacity="0.55"/>
+
+  <path id="logreg-02-curve" class="accent" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+        d="M 80,329.3
+           L 104,328.9 L 128,328.1 L 152,326.9 L 176,325.0
+           L 200,321.8 L 224,316.7 L 248,308.8 L 272,296.6
+           L 296,278.9 L 320,254.7 L 344,224.3 L 368,190.0
+           L 392,155.7 L 416,125.3 L 440,101.1 L 464,83.4
+           L 488,71.3 L 512,63.3 L 536,58.2 L 560,55.0
+           L 584,53.1 L 608,51.9 L 632,51.1 L 656,50.7"/>
+
+  <circle class="accent-fill" cx="128" cy="328.1" r="4"/>
+  <circle class="accent-fill" cx="272" cy="296.6" r="4"/>
+  <circle class="hi-fill" cx="368" cy="190" r="4.5"/>
+  <circle class="accent-fill" cx="464" cy="83.4" r="4"/>
+  <circle class="accent-fill" cx="608" cy="51.9" r="4"/>
+
+  <text id="logreg-02-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="16" font-weight="600">H&#x00E0;m sigmoid &#x03C3;(z)</text>
+
+  <text class="muted" x="80" y="348" text-anchor="middle" font-size="12">-6</text>
+  <text class="muted" x="176" y="348" text-anchor="middle" font-size="12">-4</text>
+  <text class="muted" x="272" y="348" text-anchor="middle" font-size="12">-2</text>
+  <text class="muted" x="368" y="348" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="464" y="348" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="560" y="348" text-anchor="middle" font-size="12">4</text>
+  <text class="muted" x="656" y="348" text-anchor="middle" font-size="12">6</text>
+  <text class="ink" x="368" y="372" text-anchor="middle" font-size="13">z</text>
+
+  <text class="muted" x="70" y="334" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="70" y="194" text-anchor="end" font-size="12">0.5</text>
+  <text class="muted" x="70" y="54" text-anchor="end" font-size="12">1</text>
+  <text class="ink" x="24" y="190" text-anchor="middle" font-size="13" transform="rotate(-90 24 190)">&#x03C3;(z)</text>
+
+  <text class="muted" x="155" y="314" text-anchor="middle" font-size="11">&#x03C3;(-5)&#x2248;0.0067</text>
+  <text class="muted" x="248" y="276" text-anchor="end" font-size="11">&#x03C3;(-2)&#x2248;0.119</text>
+  <text class="hi-fill" x="380" y="176" text-anchor="start" font-size="11" stroke="none">&#x03C3;(0)=0.5</text>
+  <text class="muted" x="476" y="72" text-anchor="start" font-size="11">&#x03C3;(2)&#x2248;0.881</text>
+  <text class="muted" x="608" y="78" text-anchor="middle" font-size="11">&#x03C3;(5)&#x2248;0.993</text>
+
+  <text class="hi-fill" x="88" y="178" text-anchor="start" font-size="11" stroke="none">ng&#x01B0;&#x1EE1;ng 0.5</text>
+</svg>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="ols-143-title">
+  <title id="ols-143-title">OLS line y-hat = 2/3 + (1/2)x through (1,1), (2,2), (3,2)</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="ols-143-heading" class="ink" x="320" y="24" text-anchor="middle" font-size="16" font-weight="600">OLS: y&#x0302; = 2/3 + (1/2)x</text>
+
+  <line class="axis" x1="80" y1="340" x2="572" y2="340" stroke-width="1.25"/>
+  <line class="axis" x1="80" y1="52" x2="80" y2="340" stroke-width="1.25"/>
+  <line class="grid" x1="80" y1="250" x2="572" y2="250" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="80" y1="160" x2="572" y2="160" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="80" y1="70" x2="572" y2="70" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+
+  <line id="ols-143-fit" class="accent" x1="80" y1="280" x2="560" y2="100" stroke-width="2.5"/>
+
+  <circle class="accent-fill" cx="200" cy="250" r="6" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="320" cy="160" r="6" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="440" cy="160" r="6" data-allow-overlap="1"/>
+
+  <text class="muted" x="200" y="272" text-anchor="middle" font-size="12" stroke="none">(1, 1)</text>
+  <text class="muted" x="320" y="146" text-anchor="middle" font-size="12" stroke="none">(2, 2)</text>
+  <text class="muted" x="440" y="146" text-anchor="middle" font-size="12" stroke="none">(3, 2)</text>
+
+  <circle class="hi-fill" cx="80" cy="280" r="4" data-allow-overlap="1"/>
+  <text class="hi-fill" x="96" y="266" text-anchor="start" font-size="12" stroke="none">2/3</text>
+  <text class="accent-fill" x="430" y="92" text-anchor="start" font-size="13" font-weight="600" stroke="none">y&#x0302; = 2/3 + (1/2)x</text>
+
+  <text class="muted" x="80" y="360" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="200" y="360" text-anchor="middle" font-size="12">1</text>
+  <text class="muted" x="320" y="360" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="440" y="360" text-anchor="middle" font-size="12">3</text>
+  <text class="muted" x="560" y="360" text-anchor="middle" font-size="12">4</text>
+  <text class="ink" x="320" y="388" text-anchor="middle" font-size="13">x</text>
+  <text class="muted" x="320" y="408" text-anchor="middle" font-size="11" stroke="none">X first column = 1 (intercept)</text>
+
+  <text class="muted" x="70" y="344" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="70" y="254" text-anchor="end" font-size="12">1</text>
+  <text class="muted" x="70" y="164" text-anchor="end" font-size="12">2</text>
+  <text class="muted" x="70" y="74" text-anchor="end" font-size="12">3</text>
+  <text class="ink" x="24" y="196" text-anchor="middle" font-size="13" transform="rotate(-90 24 196)">y</text>
+</svg>

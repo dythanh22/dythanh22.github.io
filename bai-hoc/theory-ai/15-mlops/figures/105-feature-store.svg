@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" role="img" aria-labelledby="fstore-105-title">
+  <title id="fstore-105-title">user_123 hit AOV 85.50; user_789 defaults AOV 0, days 999</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .cell { fill: #E8F0FE; stroke: #2F6FED; }
+    .vcell { fill: #FCE8D5; stroke: #C45C0A; }
+    .nofill { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .cell { fill: #1A2A44; stroke: #8AB4F8; }
+      .vcell { fill: #3D2A12; stroke: #F9AB00; }
+    }
+  </style>
+
+  <text id="fstore-105-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="15" font-weight="600">Feature store lookup: hit vs defaults</text>
+
+  <text class="muted" x="360" y="48" text-anchor="middle" font-size="12" stroke="none">user_123 found</text>
+
+  <rect id="fstore-105-req123" class="cell" x="24" y="58" width="188" height="88" rx="6" stroke-width="1.5"/>
+  <text class="accent" x="118" y="88" text-anchor="middle" font-size="13" font-weight="600" stroke="none">request</text>
+  <text class="ink" x="118" y="112" text-anchor="middle" font-size="13" stroke="none">user_123, cart=50</text>
+  <text class="muted" x="118" y="132" text-anchor="middle" font-size="11" stroke="none">pages=8, bucket=2</text>
+
+  <line class="accent nofill" x1="220" y1="102" x2="246" y2="102" stroke-width="2"/>
+  <polygon class="accent" points="246,96 258,102 246,108" stroke="none"/>
+
+  <rect id="fstore-105-hit" class="cell" x="266" y="58" width="188" height="88" rx="6" stroke-width="1.5"/>
+  <text class="accent" x="360" y="84" text-anchor="middle" font-size="13" font-weight="600" stroke="none">HIT</text>
+  <text class="ink" x="360" y="108" text-anchor="middle" font-size="13" stroke="none">AOV 85.50, orders 12</text>
+  <text class="muted" x="360" y="130" text-anchor="middle" font-size="11" stroke="none">days=7, cat=42</text>
+
+  <line class="accent nofill" x1="462" y1="102" x2="488" y2="102" stroke-width="2"/>
+  <polygon class="accent" points="488,96 500,102 488,108" stroke="none"/>
+
+  <rect id="fstore-105-merge123" class="cell" x="508" y="58" width="188" height="88" rx="6" stroke-width="1.5"/>
+  <text class="accent" x="602" y="88" text-anchor="middle" font-size="13" font-weight="600" stroke="none">merge</text>
+  <text class="ink" x="602" y="112" text-anchor="middle" font-size="13" stroke="none">AOV 85.50 + cart=50</text>
+  <text class="muted" x="602" y="132" text-anchor="middle" font-size="11" stroke="none">orders=12</text>
+
+  <text class="muted" x="360" y="178" text-anchor="middle" font-size="12" stroke="none">user_789 missing</text>
+
+  <rect id="fstore-105-req789" class="vcell" x="24" y="188" width="188" height="88" rx="6" stroke-width="1.5"/>
+  <text class="hi" x="118" y="218" text-anchor="middle" font-size="13" font-weight="600" stroke="none">request</text>
+  <text class="ink" x="118" y="242" text-anchor="middle" font-size="13" stroke="none">user_789, cart=25</text>
+  <text class="muted" x="118" y="262" text-anchor="middle" font-size="11" stroke="none">pages=2, bucket=1</text>
+
+  <line class="hi nofill" x1="220" y1="232" x2="246" y2="232" stroke-width="2"/>
+  <polygon class="hi" points="246,226 258,232 246,238" stroke="none"/>
+
+  <rect id="fstore-105-miss" class="vcell" x="266" y="188" width="188" height="88" rx="6" stroke-width="1.5"/>
+  <text class="hi" x="360" y="214" text-anchor="middle" font-size="13" font-weight="600" stroke="none">MISS / defaults</text>
+  <text class="ink" x="360" y="238" text-anchor="middle" font-size="13" stroke="none">AOV 0, days=999</text>
+  <text class="muted" x="360" y="258" text-anchor="middle" font-size="11" stroke="none">orders=0, cat=-1</text>
+
+  <line class="hi nofill" x1="462" y1="232" x2="488" y2="232" stroke-width="2"/>
+  <polygon class="hi" points="488,226 500,232 488,238" stroke="none"/>
+
+  <rect id="fstore-105-merge789" class="vcell" x="508" y="188" width="188" height="88" rx="6" stroke-width="1.5"/>
+  <text class="hi" x="602" y="218" text-anchor="middle" font-size="13" font-weight="600" stroke="none">merge</text>
+  <text class="ink" x="602" y="242" text-anchor="middle" font-size="13" stroke="none">AOV 0 + cart=25</text>
+  <text class="muted" x="602" y="262" text-anchor="middle" font-size="11" stroke="none">days=999</text>
+
+  <text class="muted" x="360" y="306" text-anchor="middle" font-size="12" stroke="none">complete vector = offline (or defaults) union online</text>
+  <text class="ink" x="360" y="332" text-anchor="middle" font-size="13" font-weight="600" stroke="none">hit: AOV 85.50, orders 12, cart=50 | miss: AOV 0, days=999</text>
+</svg>

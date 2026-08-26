@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" role="img" aria-labelledby="des-189-title">
+  <title id="des-189-title">Holt DES: y4 hat = 26.791 vs actual 27</title>
+  <style>
+    .ink { fill: #1A1A1A; }
+    .muted { fill: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .guide { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; stroke: none; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; }
+      .muted { fill: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .guide { stroke: #9AA0A6; }
+    }
+  </style>
+  <text id="des-189-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="15" font-weight="600">Holt: &#x03B1; = 0.3, &#x03B2; = 0.1, &#x2113;0 = 20, b0 = 2</text>
+
+  <!-- y=18..32 -> pixel 310..56; y_px = 310 - (v-18)*18.14; t=1..5 x=120+120*(t-1) -->
+  <line class="axis" x1="80" y1="50" x2="80" y2="310" stroke-width="1.25"/>
+  <line class="axis" x1="80" y1="310" x2="680" y2="310" stroke-width="1.25"/>
+  <text class="muted" x="24" y="180" text-anchor="middle" font-size="12" transform="rotate(-90 24 180)">y</text>
+  <text class="muted" x="72" y="314" text-anchor="end" font-size="11">18</text>
+  <text class="muted" x="72" y="187" text-anchor="end" font-size="11">25</text>
+  <text class="muted" x="72" y="60" text-anchor="end" font-size="11">32</text>
+
+  <!-- actual 20,22,25,27,30 -> y: 273.7, 237.4, 183, 146.7, 92.3 -->
+  <path class="accent" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" d="M 120,273.7 L 240,237.4 L 360,183 L 480,146.7 L 600,92.3"/>
+  <circle class="accent-fill" cx="120" cy="273.7" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="240" cy="237.4" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="360" cy="183" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="480" cy="146.7" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="600" cy="92.3" r="4.5" data-allow-overlap="1"/>
+  <text class="ink" x="120" y="262" text-anchor="middle" font-size="11">20</text>
+  <text class="ink" x="240" y="226" text-anchor="middle" font-size="11">22</text>
+  <text class="ink" x="360" y="172" text-anchor="middle" font-size="11">25</text>
+  <text class="ink" x="500" y="134" text-anchor="start" font-size="11">y4=27</text>
+  <text class="ink" x="600" y="82" text-anchor="middle" font-size="11">30</text>
+
+  <!-- yhat4 = 26.791 -> 310-(26.791-18)*18.14 = 150.53 -->
+  <circle class="hi-fill" cx="480" cy="150.5" r="5.5" data-allow-overlap="1"/>
+  <text class="hi-fill" x="470" y="172" text-anchor="end" font-size="12">yhat4=26.791</text>
+  <text class="hi-fill" x="480" y="198" text-anchor="middle" font-size="12">error = 0.209</text>
+
+  <text class="muted" x="120" y="332" text-anchor="middle" font-size="12">t=1</text>
+  <text class="muted" x="240" y="332" text-anchor="middle" font-size="12">t=2</text>
+  <text class="muted" x="360" y="332" text-anchor="middle" font-size="12">t=3</text>
+  <text class="muted" x="480" y="332" text-anchor="middle" font-size="12">t=4</text>
+  <text class="muted" x="600" y="332" text-anchor="middle" font-size="12">t=5</text>
+  <text class="muted" x="360" y="360" text-anchor="middle" font-size="12">Forecast uses &#x2113;3 + b3 = 24.886 + 1.905</text>
+</svg>

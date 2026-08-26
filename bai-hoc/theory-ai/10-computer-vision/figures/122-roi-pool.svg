@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 300" role="img" aria-labelledby="roi-122-title">
+  <title id="roi-122-title">ROI [1,1,5,5] pools to [[5,7],[7,9]]</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .cell { fill: #FFFFFF; stroke: #1A1A1A; }
+    .patch { fill: #E8F0FE; stroke: #2F6FED; }
+    .hi-cell { fill: #F8E6D4; stroke: #C45C0A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .cell { fill: #1E1E1E; stroke: #E8EAED; }
+      .patch { fill: #1A2A44; stroke: #8AB4F8; }
+      .hi-cell { fill: #3A2E14; stroke: #F9AB00; }
+    }
+  </style>
+  <defs>
+    <marker id="roi-122-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="accent" stroke="none"/>
+    </marker>
+  </defs>
+
+  <text id="roi-122-heading" class="ink" x="350" y="24" text-anchor="middle" font-size="15" font-weight="600">ROI pool [1,1,5,5] &#x2192; 2x2</text>
+  <text class="muted" x="152" y="44" text-anchor="middle" font-size="12" stroke="none">feature map 6x8</text>
+  <text class="muted" x="520" y="44" text-anchor="middle" font-size="12" stroke="none">output 2x2</text>
+
+  <!-- feature 6x8, origin (40,56), cell 28; value = 1+r+c -->
+  <!-- row 0 -->
+  <rect class="cell" x="40" y="56" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="68" y="56" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="96" y="56" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="124" y="56" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="152" y="56" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="180" y="56" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="208" y="56" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="236" y="56" width="28" height="28" stroke-width="1"/>
+  <!-- row 1: ROI bins (0,*) cols 1-4 -->
+  <rect class="cell" x="40" y="84" width="28" height="28" stroke-width="1"/>
+  <rect class="patch" x="68" y="84" width="28" height="28" stroke-width="1.4"/>
+  <rect class="patch" x="96" y="84" width="28" height="28" stroke-width="1.4"/>
+  <rect class="patch" x="124" y="84" width="28" height="28" stroke-width="1.4"/>
+  <rect class="patch" x="152" y="84" width="28" height="28" stroke-width="1.4"/>
+  <rect class="cell" x="180" y="84" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="208" y="84" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="236" y="84" width="28" height="28" stroke-width="1"/>
+  <!-- row 2 -->
+  <rect class="cell" x="40" y="112" width="28" height="28" stroke-width="1"/>
+  <rect class="patch" x="68" y="112" width="28" height="28" stroke-width="1.4"/>
+  <rect class="hi-cell" x="96" y="112" width="28" height="28" stroke-width="2"/>
+  <rect class="patch" x="124" y="112" width="28" height="28" stroke-width="1.4"/>
+  <rect class="hi-cell" x="152" y="112" width="28" height="28" stroke-width="2"/>
+  <rect class="cell" x="180" y="112" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="208" y="112" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="236" y="112" width="28" height="28" stroke-width="1"/>
+  <!-- row 3 -->
+  <rect class="cell" x="40" y="140" width="28" height="28" stroke-width="1"/>
+  <rect class="patch" x="68" y="140" width="28" height="28" stroke-width="1.4"/>
+  <rect class="patch" x="96" y="140" width="28" height="28" stroke-width="1.4"/>
+  <rect class="patch" x="124" y="140" width="28" height="28" stroke-width="1.4"/>
+  <rect class="patch" x="152" y="140" width="28" height="28" stroke-width="1.4"/>
+  <rect class="cell" x="180" y="140" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="208" y="140" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="236" y="140" width="28" height="28" stroke-width="1"/>
+  <!-- row 4 -->
+  <rect class="cell" x="40" y="168" width="28" height="28" stroke-width="1"/>
+  <rect class="patch" x="68" y="168" width="28" height="28" stroke-width="1.4"/>
+  <rect class="hi-cell" x="96" y="168" width="28" height="28" stroke-width="2"/>
+  <rect class="patch" x="124" y="168" width="28" height="28" stroke-width="1.4"/>
+  <rect class="hi-cell" x="152" y="168" width="28" height="28" stroke-width="2"/>
+  <rect class="cell" x="180" y="168" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="208" y="168" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="236" y="168" width="28" height="28" stroke-width="1"/>
+  <!-- row 5 -->
+  <rect class="cell" x="40" y="196" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="68" y="196" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="96" y="196" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="124" y="196" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="152" y="196" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="180" y="196" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="208" y="196" width="28" height="28" stroke-width="1"/>
+  <rect class="cell" x="236" y="196" width="28" height="28" stroke-width="1"/>
+
+  <!-- values: center of cell, baseline ~ +18 -->
+  <text class="muted" x="54" y="75" text-anchor="middle" font-size="11" stroke="none">1</text>
+  <text class="muted" x="82" y="75" text-anchor="middle" font-size="11" stroke="none">2</text>
+  <text class="muted" x="110" y="75" text-anchor="middle" font-size="11" stroke="none">3</text>
+  <text class="muted" x="138" y="75" text-anchor="middle" font-size="11" stroke="none">4</text>
+  <text class="muted" x="166" y="75" text-anchor="middle" font-size="11" stroke="none">5</text>
+  <text class="muted" x="194" y="75" text-anchor="middle" font-size="11" stroke="none">6</text>
+  <text class="muted" x="222" y="75" text-anchor="middle" font-size="11" stroke="none">7</text>
+  <text class="muted" x="250" y="75" text-anchor="middle" font-size="11" stroke="none">8</text>
+
+  <text class="muted" x="54" y="103" text-anchor="middle" font-size="11" stroke="none">2</text>
+  <text class="ink" x="82" y="103" text-anchor="middle" font-size="11" font-weight="600" stroke="none">3</text>
+  <text class="ink" x="110" y="103" text-anchor="middle" font-size="11" font-weight="600" stroke="none">4</text>
+  <text class="ink" x="138" y="103" text-anchor="middle" font-size="11" font-weight="600" stroke="none">5</text>
+  <text class="ink" x="166" y="103" text-anchor="middle" font-size="11" font-weight="600" stroke="none">6</text>
+  <text class="muted" x="194" y="103" text-anchor="middle" font-size="11" stroke="none">7</text>
+  <text class="muted" x="222" y="103" text-anchor="middle" font-size="11" stroke="none">8</text>
+  <text class="muted" x="250" y="103" text-anchor="middle" font-size="11" stroke="none">9</text>
+
+  <text class="muted" x="54" y="131" text-anchor="middle" font-size="11" stroke="none">3</text>
+  <text class="ink" x="82" y="131" text-anchor="middle" font-size="11" font-weight="600" stroke="none">4</text>
+  <text class="hi" x="110" y="131" text-anchor="middle" font-size="11" font-weight="700" stroke="none">5</text>
+  <text class="ink" x="138" y="131" text-anchor="middle" font-size="11" font-weight="600" stroke="none">6</text>
+  <text class="hi" x="166" y="131" text-anchor="middle" font-size="11" font-weight="700" stroke="none">7</text>
+  <text class="muted" x="194" y="131" text-anchor="middle" font-size="11" stroke="none">8</text>
+  <text class="muted" x="222" y="131" text-anchor="middle" font-size="11" stroke="none">9</text>
+  <text class="muted" x="250" y="131" text-anchor="middle" font-size="11" stroke="none">10</text>
+
+  <text class="muted" x="54" y="159" text-anchor="middle" font-size="11" stroke="none">4</text>
+  <text class="ink" x="82" y="159" text-anchor="middle" font-size="11" font-weight="600" stroke="none">5</text>
+  <text class="ink" x="110" y="159" text-anchor="middle" font-size="11" font-weight="600" stroke="none">6</text>
+  <text class="ink" x="138" y="159" text-anchor="middle" font-size="11" font-weight="600" stroke="none">7</text>
+  <text class="ink" x="166" y="159" text-anchor="middle" font-size="11" font-weight="600" stroke="none">8</text>
+  <text class="muted" x="194" y="159" text-anchor="middle" font-size="11" stroke="none">9</text>
+  <text class="muted" x="222" y="159" text-anchor="middle" font-size="11" stroke="none">10</text>
+  <text class="muted" x="250" y="159" text-anchor="middle" font-size="11" stroke="none">11</text>
+
+  <text class="muted" x="54" y="187" text-anchor="middle" font-size="11" stroke="none">5</text>
+  <text class="ink" x="82" y="187" text-anchor="middle" font-size="11" font-weight="600" stroke="none">6</text>
+  <text class="hi" x="110" y="187" text-anchor="middle" font-size="11" font-weight="700" stroke="none">7</text>
+  <text class="ink" x="138" y="187" text-anchor="middle" font-size="11" font-weight="600" stroke="none">8</text>
+  <text class="hi" x="166" y="187" text-anchor="middle" font-size="11" font-weight="700" stroke="none">9</text>
+  <text class="muted" x="194" y="187" text-anchor="middle" font-size="11" stroke="none">10</text>
+  <text class="muted" x="222" y="187" text-anchor="middle" font-size="11" stroke="none">11</text>
+  <text class="muted" x="250" y="187" text-anchor="middle" font-size="11" stroke="none">12</text>
+
+  <text class="muted" x="54" y="215" text-anchor="middle" font-size="11" stroke="none">6</text>
+  <text class="muted" x="82" y="215" text-anchor="middle" font-size="11" stroke="none">7</text>
+  <text class="muted" x="110" y="215" text-anchor="middle" font-size="11" stroke="none">8</text>
+  <text class="muted" x="138" y="215" text-anchor="middle" font-size="11" stroke="none">9</text>
+  <text class="muted" x="166" y="215" text-anchor="middle" font-size="11" stroke="none">10</text>
+  <text class="muted" x="194" y="215" text-anchor="middle" font-size="11" stroke="none">11</text>
+  <text class="muted" x="222" y="215" text-anchor="middle" font-size="11" stroke="none">12</text>
+  <text class="muted" x="250" y="215" text-anchor="middle" font-size="11" stroke="none">13</text>
+
+  <!-- ROI outline + bin splits -->
+  <rect class="accent" x="68" y="84" width="112" height="112" fill="none" stroke-width="2.2"/>
+  <line class="accent" x1="124" y1="84" x2="124" y2="196" stroke-width="1.4" stroke-dasharray="4 3" fill="none"/>
+  <line class="accent" x1="68" y1="140" x2="180" y2="140" stroke-width="1.4" stroke-dasharray="4 3" fill="none"/>
+
+  <text class="accent" x="152" y="248" text-anchor="middle" font-size="12" stroke="none">ROI [1, 1, 5, 5]</text>
+
+  <line class="accent" x1="292" y1="140" x2="420" y2="140" stroke-width="2" fill="none" marker-end="url(#roi-122-arrow)"/>
+
+  <rect class="hi-cell" x="436" y="92" width="52" height="52" stroke-width="2"/>
+  <rect class="hi-cell" x="488" y="92" width="52" height="52" stroke-width="2"/>
+  <rect class="hi-cell" x="436" y="144" width="52" height="52" stroke-width="2"/>
+  <rect class="hi-cell" x="488" y="144" width="52" height="52" stroke-width="2"/>
+  <text class="hi" x="462" y="124" text-anchor="middle" font-size="18" font-weight="700" stroke="none">5</text>
+  <text class="hi" x="514" y="124" text-anchor="middle" font-size="18" font-weight="700" stroke="none">7</text>
+  <text class="hi" x="462" y="176" text-anchor="middle" font-size="18" font-weight="700" stroke="none">7</text>
+  <text class="hi" x="514" y="176" text-anchor="middle" font-size="18" font-weight="700" stroke="none">9</text>
+  <text class="muted" x="514" y="220" text-anchor="middle" font-size="12" stroke="none">[[5, 7], [7, 9]]</text>
+</svg>

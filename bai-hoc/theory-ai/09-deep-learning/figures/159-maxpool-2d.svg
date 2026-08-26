@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 360" role="img" aria-labelledby="maxpool-159-title">
+  <title id="maxpool-159-title">2x2 max pool; output [[6,8],[9,7]]</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .cell { fill: #FFFFFF; stroke: #1A1A1A; }
+    .patch { fill: #E8F0FE; stroke: #2F6FED; }
+    .hi-cell { fill: #F8E6D4; stroke: #C45C0A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .cell { fill: #1E1E1E; stroke: #E8EAED; }
+      .patch { fill: #1A2A44; stroke: #8AB4F8; }
+      .hi-cell { fill: #3A2E14; stroke: #F9AB00; }
+    }
+  </style>
+  <defs>
+    <marker id="maxpool-159-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="accent" stroke="none"/>
+    </marker>
+  </defs>
+
+  <text id="maxpool-159-heading" class="ink" x="350" y="26" text-anchor="middle" font-size="16" font-weight="600">2x2 max pool; output [[6, 8], [9, 7]]</text>
+
+  <text class="muted" x="136" y="54" text-anchor="middle" font-size="12" stroke="none">input 4x4</text>
+  <text class="muted" x="520" y="54" text-anchor="middle" font-size="12" stroke="none">output 2x2</text>
+
+  <!-- input origin (40,68), cell 48; highlight BL window (max=9) -->
+  <rect class="cell" x="40" y="68" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="88" y="68" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="40" y="116" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="88" y="116" width="48" height="48" stroke-width="1.2"/>
+
+  <rect class="cell" x="136" y="68" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="184" y="68" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="136" y="116" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="184" y="116" width="48" height="48" stroke-width="1.2"/>
+
+  <rect class="hi-cell" x="40" y="164" width="48" height="48" stroke-width="2"/>
+  <rect class="patch" x="88" y="164" width="48" height="48" stroke-width="1.6"/>
+  <rect class="patch" x="40" y="212" width="48" height="48" stroke-width="1.6"/>
+  <rect class="patch" x="88" y="212" width="48" height="48" stroke-width="1.6"/>
+
+  <rect class="cell" x="136" y="164" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="184" y="164" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="136" y="212" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="184" y="212" width="48" height="48" stroke-width="1.2"/>
+
+  <text class="ink" x="64" y="98" text-anchor="middle" font-size="16" font-weight="600" stroke="none">1</text>
+  <text class="ink" x="112" y="98" text-anchor="middle" font-size="16" font-weight="600" stroke="none">3</text>
+  <text class="ink" x="160" y="98" text-anchor="middle" font-size="16" font-weight="600" stroke="none">2</text>
+  <text class="ink" x="208" y="98" text-anchor="middle" font-size="16" font-weight="600" stroke="none">4</text>
+  <text class="ink" x="64" y="146" text-anchor="middle" font-size="16" font-weight="600" stroke="none">5</text>
+  <text class="ink" x="112" y="146" text-anchor="middle" font-size="16" font-weight="600" stroke="none">6</text>
+  <text class="ink" x="160" y="146" text-anchor="middle" font-size="16" font-weight="600" stroke="none">7</text>
+  <text class="ink" x="208" y="146" text-anchor="middle" font-size="16" font-weight="600" stroke="none">8</text>
+  <text class="hi" x="64" y="194" text-anchor="middle" font-size="16" font-weight="700" stroke="none">9</text>
+  <text class="ink" x="112" y="194" text-anchor="middle" font-size="16" font-weight="600" stroke="none">2</text>
+  <text class="ink" x="160" y="194" text-anchor="middle" font-size="16" font-weight="600" stroke="none">1</text>
+  <text class="ink" x="208" y="194" text-anchor="middle" font-size="16" font-weight="600" stroke="none">3</text>
+  <text class="ink" x="64" y="242" text-anchor="middle" font-size="16" font-weight="600" stroke="none">4</text>
+  <text class="ink" x="112" y="242" text-anchor="middle" font-size="16" font-weight="600" stroke="none">5</text>
+  <text class="ink" x="160" y="242" text-anchor="middle" font-size="16" font-weight="600" stroke="none">6</text>
+  <text class="ink" x="208" y="242" text-anchor="middle" font-size="16" font-weight="600" stroke="none">7</text>
+
+  <line class="muted" x1="136" y1="68" x2="136" y2="260" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line class="muted" x1="40" y1="164" x2="232" y2="164" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <text class="accent" x="136" y="284" text-anchor="middle" font-size="12" stroke="none">bottom-left window: max = 9</text>
+
+  <line class="accent" x1="248" y1="164" x2="392" y2="164" stroke-width="2" fill="none" marker-end="url(#maxpool-159-arrow)"/>
+
+  <!-- output origin (408,116), cell 56 -->
+  <rect class="cell" x="408" y="116" width="56" height="56" stroke-width="1.2"/>
+  <rect class="cell" x="464" y="116" width="56" height="56" stroke-width="1.2"/>
+  <rect class="hi-cell" x="408" y="172" width="56" height="56" stroke-width="2"/>
+  <rect class="cell" x="464" y="172" width="56" height="56" stroke-width="1.2"/>
+
+  <text class="ink" x="436" y="150" text-anchor="middle" font-size="18" font-weight="600" stroke="none">6</text>
+  <text class="ink" x="492" y="150" text-anchor="middle" font-size="18" font-weight="600" stroke="none">8</text>
+  <text class="hi" x="436" y="206" text-anchor="middle" font-size="18" font-weight="700" stroke="none">9</text>
+  <text class="ink" x="492" y="206" text-anchor="middle" font-size="18" font-weight="600" stroke="none">7</text>
+
+  <text class="muted" x="464" y="256" text-anchor="middle" font-size="12" stroke="none">[[6, 8], [9, 7]]</text>
+</svg>

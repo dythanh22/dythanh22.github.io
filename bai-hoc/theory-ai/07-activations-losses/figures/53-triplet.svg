@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-labelledby="trip-53-title">
+  <title id="trip-53-title">Triplet loss m=0.5: good L=0, violated L=0.4, badly L=0.8</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .soft { fill: #2F6FED; fill-opacity: 0.10; stroke: none; }
+    .soft-hi { fill: #C45C0A; fill-opacity: 0.10; stroke: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .soft { fill: #8AB4F8; fill-opacity: 0.16; }
+      .soft-hi { fill: #F9AB00; fill-opacity: 0.16; }
+    }
+  </style>
+
+  <text id="trip-53-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="16" font-weight="600">Triplet loss, m = 0.5</text>
+
+  <!-- scale: 450 px / unit; A at x=80 -->
+  <!-- Row 1: good  d(a,p)=0.3  d(a,n)=1.0  L=0 -->
+  <line class="axis" x1="80" y1="110" x2="560" y2="110" stroke-width="1.25"/>
+  <rect class="soft" x="215" y="98" width="225" height="24" rx="3"/>
+  <line class="accent" x1="80" y1="110" x2="215" y2="110" stroke-width="3" fill="none"/>
+  <line class="hi" x1="80" y1="110" x2="530" y2="110" stroke-width="1.5" fill="none" stroke-dasharray="5 4"/>
+  <circle class="ink" cx="80" cy="110" r="7" data-allow-overlap="1"/>
+  <circle class="accent" cx="215" cy="110" r="7" data-allow-overlap="1"/>
+  <circle class="hi" cx="530" cy="110" r="7" data-allow-overlap="1"/>
+  <text class="ink" x="80" y="92" text-anchor="middle" font-size="12" stroke="none">A</text>
+  <text class="accent" x="215" y="92" text-anchor="middle" font-size="12" stroke="none">P</text>
+  <text class="hi" x="530" y="92" text-anchor="middle" font-size="12" stroke="none">N</text>
+  <text class="muted" x="148" y="136" text-anchor="middle" font-size="11" stroke="none">0.3</text>
+  <text class="muted" x="305" y="136" text-anchor="middle" font-size="11" stroke="none">1.0</text>
+  <text class="muted" x="328" y="88" text-anchor="middle" font-size="11" stroke="none">m = 0.5</text>
+  <text class="accent" x="640" y="106" text-anchor="middle" font-size="13" font-weight="600" stroke="none">L = 0</text>
+  <text class="muted" x="640" y="124" text-anchor="middle" font-size="11" stroke="none">good</text>
+
+  <!-- Row 2: violated  d(a,p)=0.3  d(a,n)=0.4  L=0.4 -->
+  <line class="axis" x1="80" y1="230" x2="560" y2="230" stroke-width="1.25"/>
+  <rect class="soft-hi" x="215" y="218" width="225" height="24" rx="3"/>
+  <line class="accent" x1="80" y1="230" x2="215" y2="230" stroke-width="3" fill="none"/>
+  <line class="hi" x1="80" y1="230" x2="260" y2="230" stroke-width="1.5" fill="none" stroke-dasharray="5 4"/>
+  <circle class="ink" cx="80" cy="230" r="7" data-allow-overlap="1"/>
+  <circle class="accent" cx="215" cy="230" r="7" data-allow-overlap="1"/>
+  <circle class="hi" cx="260" cy="230" r="7" data-allow-overlap="1"/>
+  <text class="ink" x="80" y="212" text-anchor="middle" font-size="12" stroke="none">A</text>
+  <text class="accent" x="200" y="212" text-anchor="middle" font-size="12" stroke="none">P</text>
+  <text class="hi" x="278" y="252" text-anchor="middle" font-size="12" stroke="none">N</text>
+  <text class="muted" x="148" y="256" text-anchor="middle" font-size="11" stroke="none">0.3</text>
+  <text class="muted" x="320" y="256" text-anchor="middle" font-size="11" stroke="none">0.4</text>
+  <text class="hi" x="640" y="226" text-anchor="middle" font-size="13" font-weight="600" stroke="none">L = 0.4</text>
+  <text class="muted" x="640" y="244" text-anchor="middle" font-size="11" stroke="none">violated</text>
+
+  <!-- Row 3: badly  d(a,p)=0.5  d(a,n)=0.2  L=0.8 -->
+  <line class="axis" x1="80" y1="350" x2="560" y2="350" stroke-width="1.25"/>
+  <line class="hi" x1="80" y1="350" x2="170" y2="350" stroke-width="3" fill="none"/>
+  <line class="accent" x1="80" y1="350" x2="305" y2="350" stroke-width="1.5" fill="none" stroke-dasharray="5 4"/>
+  <circle class="ink" cx="80" cy="350" r="7" data-allow-overlap="1"/>
+  <circle class="hi" cx="170" cy="350" r="7" data-allow-overlap="1"/>
+  <circle class="accent" cx="305" cy="350" r="7" data-allow-overlap="1"/>
+  <text class="ink" x="80" y="332" text-anchor="middle" font-size="12" stroke="none">A</text>
+  <text class="hi" x="170" y="332" text-anchor="middle" font-size="12" stroke="none">N</text>
+  <text class="accent" x="305" y="332" text-anchor="middle" font-size="12" stroke="none">P</text>
+  <text class="muted" x="125" y="376" text-anchor="middle" font-size="11" stroke="none">0.2</text>
+  <text class="muted" x="240" y="376" text-anchor="middle" font-size="11" stroke="none">0.5</text>
+  <text class="hi" x="640" y="346" text-anchor="middle" font-size="13" font-weight="600" stroke="none">L = 0.8</text>
+  <text class="muted" x="640" y="364" text-anchor="middle" font-size="11" stroke="none">badly</text>
+
+  <text class="muted" x="360" y="424" text-anchor="middle" font-size="12">L = max(0, d(A,P) - d(A,N) + m); band = margin from P</text>
+</svg>

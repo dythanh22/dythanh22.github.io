@@ -196,3 +196,10 @@ def positional_encoding(seq_length: int, d_model: int) -> np.ndarray:
     return pe
 
 ```
+
+<!-- CROSSLINK_THEORY_PE -->
+
+::: {.callout-tip}
+## Ôn nền tảng
+Sin/cos PE implement: [Theory AI — Positional Encoding](../../theory-ai/09-deep-learning/positional-encoding.qmd).
+:::

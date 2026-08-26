@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 400" role="img" aria-labelledby="gae-141-title">
+  <title id="gae-141-title">GAE backward: delta 1.4,-0.4,1.7,1 and A-hat 2.36,1.34,2.42,1 with gamma=0.9 lambda=0.8</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-soft { fill: #2F6FED; fill-opacity: 0.08; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-soft { fill: #C45C0A; fill-opacity: 0.08; stroke: #C45C0A; }
+    .card { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-soft { fill: #8AB4F8; fill-opacity: 0.12; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-soft { fill: #F9AB00; fill-opacity: 0.12; stroke: #F9AB00; }
+    }
+  </style>
+  <defs>
+    <marker id="gae-141-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="ink" stroke="none"/>
+    </marker>
+  </defs>
+
+  <text id="gae-141-heading" class="ink" x="384" y="28" text-anchor="middle" font-size="16" font-weight="600">GAE, &#x03B3; = 0.9, &#x03BB; = 0.8, V(s4) = 0</text>
+
+  <text class="muted" x="94" y="52" text-anchor="middle" font-size="12" stroke="none">t = 0</text>
+  <text class="muted" x="282" y="52" text-anchor="middle" font-size="12" stroke="none">t = 1</text>
+  <text class="muted" x="470" y="52" text-anchor="middle" font-size="12" stroke="none">t = 2</text>
+  <text class="muted" x="658" y="52" text-anchor="middle" font-size="12" stroke="none">t = 3</text>
+
+  <rect class="card ink" x="24" y="62" width="140" height="56" rx="8" stroke-width="1.25"/>
+  <text class="ink" x="94" y="84" text-anchor="middle" font-size="13" stroke="none">r = 1, V = 5</text>
+  <text class="accent" x="94" y="106" text-anchor="middle" font-size="13" font-weight="600" stroke="none">&#x03B4;0 = 1.4</text>
+
+  <rect class="card ink" x="212" y="62" width="140" height="56" rx="8" stroke-width="1.25"/>
+  <text class="ink" x="282" y="84" text-anchor="middle" font-size="13" stroke="none">r = 2, V = 6</text>
+  <text class="accent" x="282" y="106" text-anchor="middle" font-size="13" font-weight="600" stroke="none">&#x03B4;1 = -0.4</text>
+
+  <rect class="card ink" x="400" y="62" width="140" height="56" rx="8" stroke-width="1.25"/>
+  <text class="ink" x="470" y="84" text-anchor="middle" font-size="13" stroke="none">r = 3, V = 4</text>
+  <text class="accent" x="470" y="106" text-anchor="middle" font-size="13" font-weight="600" stroke="none">&#x03B4;2 = 1.7</text>
+
+  <rect class="card ink" x="588" y="62" width="140" height="56" rx="8" stroke-width="1.25"/>
+  <text class="ink" x="658" y="84" text-anchor="middle" font-size="13" stroke="none">r = 4, V = 3</text>
+  <text class="accent" x="658" y="106" text-anchor="middle" font-size="13" font-weight="600" stroke="none">&#x03B4;3 = 1</text>
+
+  <line class="muted" x1="94" y1="118" x2="94" y2="158" stroke-width="1"/>
+  <line class="muted" x1="282" y1="118" x2="282" y2="158" stroke-width="1"/>
+  <line class="muted" x1="470" y1="118" x2="470" y2="158" stroke-width="1"/>
+  <line class="muted" x1="658" y1="118" x2="658" y2="158" stroke-width="1"/>
+
+  <rect class="hi-soft card" x="24" y="158" width="140" height="72" rx="8" stroke-width="1.5"/>
+  <text class="hi" x="94" y="188" text-anchor="middle" font-size="14" font-weight="600" stroke="none">A0 = 2.36</text>
+  <text class="muted" x="94" y="212" text-anchor="middle" font-size="11" stroke="none">1.4 + 0.72 x 1.34</text>
+
+  <rect class="accent-soft card" x="212" y="158" width="140" height="72" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="282" y="188" text-anchor="middle" font-size="14" font-weight="600" stroke="none">A1 = 1.34</text>
+  <text class="muted" x="282" y="212" text-anchor="middle" font-size="11" stroke="none">-0.4 + 0.72 x 2.42</text>
+
+  <rect class="accent-soft card" x="400" y="158" width="140" height="72" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="470" y="188" text-anchor="middle" font-size="14" font-weight="600" stroke="none">A2 = 2.42</text>
+  <text class="muted" x="470" y="212" text-anchor="middle" font-size="11" stroke="none">1.7 + 0.72 x 1</text>
+
+  <rect class="accent-soft card" x="588" y="158" width="140" height="72" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="658" y="188" text-anchor="middle" font-size="14" font-weight="600" stroke="none">A3 = 1</text>
+  <text class="muted" x="658" y="212" text-anchor="middle" font-size="11" stroke="none">last step = &#x03B4;3</text>
+
+  <line class="ink" x1="212" y1="256" x2="170" y2="256" stroke-width="1.5" marker-end="url(#gae-141-arrow)"/>
+  <line class="ink" x1="400" y1="256" x2="358" y2="256" stroke-width="1.5" marker-end="url(#gae-141-arrow)"/>
+  <line class="ink" x1="588" y1="256" x2="546" y2="256" stroke-width="1.5" marker-end="url(#gae-141-arrow)"/>
+
+  <text class="muted" x="191" y="276" text-anchor="middle" font-size="11" stroke="none">x 0.72</text>
+  <text class="muted" x="379" y="276" text-anchor="middle" font-size="11" stroke="none">x 0.72</text>
+  <text class="muted" x="567" y="276" text-anchor="middle" font-size="11" stroke="none">x 0.72</text>
+
+  <text class="muted" x="384" y="320" text-anchor="middle" font-size="12" stroke="none">A_t = &#x03B4;_t + &#x03B3;&#x03BB; A_{t+1} with &#x03B3;&#x03BB; = 0.72</text>
+  <text class="muted" x="384" y="344" text-anchor="middle" font-size="12" stroke="none">&#x03B4; = r + &#x03B3; V(s') - V(s); hats omitted in labels</text>
+  <text class="muted" x="384" y="366" text-anchor="middle" font-size="12" stroke="none">A = (2.36, 1.34, 2.42, 1)</text>
+</svg>

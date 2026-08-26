@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="ent-141-title">
+  <title id="ent-141-title">Binary entropy H(p); H(0)=0, H(0.5)=1, H(0.7)=0.88</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="ent-141-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="16" font-weight="600">Binary entropy H(p)</text>
+
+  <line class="axis" x1="80" y1="320" x2="656" y2="320" stroke-width="1.25"/>
+  <line class="axis" x1="80" y1="50" x2="80" y2="320" stroke-width="1.25"/>
+  <line class="grid" x1="80" y1="56" x2="656" y2="56" stroke-width="1" stroke-dasharray="5 4" opacity="0.45"/>
+  <line class="grid" x1="360" y1="50" x2="360" y2="320" stroke-width="1" stroke-dasharray="4 4" opacity="0.45"/>
+
+  <path id="ent-141-curve" class="accent" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+        d="M 80.0,320.0
+           L 108.0,244.4 L 136.0,196.2 L 164.0,159.0 L 192.0,129.4
+           L 220.0,105.8 L 248.0,87.3 L 276.0,73.4 L 304.0,63.7
+           L 332.0,57.9 L 360.0,56.0 L 388.0,57.9 L 416.0,63.7
+           L 444.0,73.4 L 472.0,87.3 L 500.0,105.8 L 528.0,129.4
+           L 556.0,159.0 L 584.0,196.2 L 612.0,244.4 L 640.0,320.0"/>
+
+  <circle class="accent-fill" cx="80" cy="320" r="4.5" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="360" cy="56" r="5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="472" cy="87.3" r="4.5" data-allow-overlap="1"/>
+
+  <text class="muted" x="98" y="308" text-anchor="start" font-size="12" stroke="none">H(0)=0</text>
+  <text class="hi-fill" x="378" y="50" text-anchor="start" font-size="12" font-weight="600" stroke="none">H(0.5)=1</text>
+  <text class="muted" x="486" y="78" text-anchor="start" font-size="12" stroke="none">H(0.7)&#x2248;0.88</text>
+
+  <text class="muted" x="80" y="340" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="360" y="340" text-anchor="middle" font-size="12">0.5</text>
+  <text class="muted" x="472" y="340" text-anchor="middle" font-size="12">0.7</text>
+  <text class="muted" x="640" y="340" text-anchor="middle" font-size="12">1</text>
+  <text class="ink" x="360" y="368" text-anchor="middle" font-size="13">p</text>
+
+  <text class="muted" x="70" y="324" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="70" y="188" text-anchor="end" font-size="12">0.5</text>
+  <text class="muted" x="70" y="60" text-anchor="end" font-size="12">1</text>
+  <text class="ink" x="24" y="185" text-anchor="middle" font-size="13" transform="rotate(-90 24 185)">H(p)</text>
+</svg>

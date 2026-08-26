@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 440" role="img" aria-labelledby="cyclic-186-title">
+  <title id="cyclic-186-title">Unit circle hours 0,6,12,18 as (sin, cos)</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+    }
+  </style>
+
+  <text id="cyclic-186-heading" class="ink" x="340" y="26" text-anchor="middle" font-size="15" font-weight="600">Hours 0, 6, 12, 18 on the unit circle</text>
+  <text class="muted" x="340" y="46" text-anchor="middle" font-size="12">encoded as (sin, cos), period = 24</text>
+
+  <line class="ink" x1="214" y1="236" x2="450" y2="236" stroke-width="1.2" fill="none"/>
+  <line class="ink" x1="340" y1="128" x2="340" y2="344" stroke-width="1.2" fill="none"/>
+
+  <circle id="cyclic-186-circle" class="accent" cx="340" cy="236" r="116" stroke-width="2.2"/>
+
+  <!-- hour 0: (0, 1) top -->
+  <circle class="hi-fill" cx="340" cy="120" r="6"/>
+  <text class="ink" x="358" y="108" text-anchor="start" font-size="13" font-weight="600">hour 0</text>
+  <text class="hi-fill" x="358" y="124" text-anchor="start" font-size="12" stroke="none">(0, 1)</text>
+
+  <!-- hour 6: (1, 0) right -->
+  <circle class="accent-fill" cx="456" cy="236" r="6"/>
+  <text class="ink" x="474" y="218" text-anchor="start" font-size="13" font-weight="600">hour 6</text>
+  <text class="accent-fill" x="474" y="258" text-anchor="start" font-size="12" stroke="none">(1, 0)</text>
+
+  <!-- hour 12: (0, -1) bottom -->
+  <circle class="accent-fill" cx="340" cy="352" r="6"/>
+  <text class="ink" x="358" y="370" text-anchor="start" font-size="13" font-weight="600">hour 12</text>
+  <text class="accent-fill" x="358" y="386" text-anchor="start" font-size="12" stroke="none">(0, -1)</text>
+
+  <!-- hour 18: (-1, 0) left -->
+  <circle class="accent-fill" cx="224" cy="236" r="6"/>
+  <text class="ink" x="206" y="218" text-anchor="end" font-size="13" font-weight="600">hour 18</text>
+  <text class="accent-fill" x="206" y="258" text-anchor="end" font-size="12" stroke="none">(-1, 0)</text>
+
+  <text class="muted" x="530" y="240" text-anchor="start" font-size="12">sin</text>
+  <text class="muted" x="352" y="92" text-anchor="start" font-size="12">cos</text>
+
+  <text class="muted" x="340" y="420" text-anchor="middle" font-size="12">adjacent 6-hour steps are 90 degrees apart; hour 18 and hour 0 wrap around</text>
+</svg>

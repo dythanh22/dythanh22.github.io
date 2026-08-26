@@ -1,0 +1,7 @@
+sidebar: theory-ai
+series: theory-ai
+categories: [theory-ai]
+format:
+  html:
+    toc: true
+    toc-depth: 3

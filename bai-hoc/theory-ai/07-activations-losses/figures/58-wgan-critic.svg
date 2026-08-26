@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" role="img" aria-labelledby="wgan-58-title">
+  <title id="wgan-58-title">L_critic = E[f(fake)] - E[f(real)]</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .box { fill: none; stroke: #1A1A1A; }
+    .fill-a { fill: #D6E3FB; stroke: #2F6FED; }
+    .fill-b { fill: #FAD9C0; stroke: #C45C0A; }
+    .fill-c { fill: #E8E9EB; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .box { stroke: #E8EAED; }
+      .fill-a { fill: #1A2A44; stroke: #8AB4F8; }
+      .fill-b { fill: #3D2A12; stroke: #F9AB00; }
+      .fill-c { fill: #2A2C2E; stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="wgan-58-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="16" font-weight="600">L_critic = E[f(fake)] - E[f(real)]</text>
+
+  <rect class="fill-a" x="40" y="56" width="150" height="56" rx="4" stroke-width="1.5"/>
+  <text class="ink" x="115" y="90" text-anchor="middle" font-size="14" stroke="none">real x</text>
+
+  <line class="accent" x1="196" y1="84" x2="248" y2="84" stroke-width="2" fill="none"/>
+  <polygon class="accent" points="248,78 260,84 248,90" stroke="none"/>
+
+  <rect class="fill-c" x="266" y="56" width="150" height="56" rx="4" stroke-width="1.5"/>
+  <text class="ink" x="341" y="90" text-anchor="middle" font-size="14" stroke="none">critic f</text>
+
+  <line class="accent" x1="422" y1="84" x2="474" y2="84" stroke-width="2" fill="none"/>
+  <polygon class="accent" points="474,78 486,84 474,90" stroke="none"/>
+
+  <rect class="fill-a" x="492" y="56" width="188" height="56" rx="4" stroke-width="1.5"/>
+  <text class="accent" x="586" y="90" text-anchor="middle" font-size="14" font-weight="600" stroke="none">E[f(x)] high</text>
+
+  <rect class="fill-b" x="40" y="148" width="150" height="56" rx="4" stroke-width="1.5"/>
+  <text class="ink" x="115" y="182" text-anchor="middle" font-size="14" stroke="none">fake G(z)</text>
+
+  <line class="hi" x1="196" y1="176" x2="248" y2="176" stroke-width="2" fill="none"/>
+  <polygon class="hi" points="248,170 260,176 248,182" stroke="none"/>
+
+  <rect class="fill-c" x="266" y="148" width="150" height="56" rx="4" stroke-width="1.5"/>
+  <text class="ink" x="341" y="182" text-anchor="middle" font-size="14" stroke="none">critic f</text>
+
+  <line class="hi" x1="422" y1="176" x2="474" y2="176" stroke-width="2" fill="none"/>
+  <polygon class="hi" points="474,170 486,176 474,182" stroke="none"/>
+
+  <rect class="fill-b" x="492" y="148" width="188" height="56" rx="4" stroke-width="1.5"/>
+  <text class="hi" x="586" y="182" text-anchor="middle" font-size="14" font-weight="600" stroke="none">E[f(G(z))] low</text>
+
+  <rect class="box" x="120" y="236" width="480" height="72" rx="4" stroke-width="1.5"/>
+  <text id="wgan-58-formula" class="ink" x="360" y="268" text-anchor="middle" font-size="15" font-weight="600" stroke="none">L_critic = E[f(G(z))] - E[f(x)]</text>
+  <text class="muted" x="360" y="292" text-anchor="middle" font-size="12" stroke="none">minimize: raise real scores, lower fake scores</text>
+
+  <text class="muted" x="360" y="356" text-anchor="middle" font-size="12">no numeric scores; schematic of the critic objective</text>
+</svg>

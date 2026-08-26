@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 500" role="img" aria-labelledby="roc-73-title">
+  <title id="roc-73-title">ROC staircase: (0,0) to (1,1) via (0,0.67) and (0.33,1)</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="roc-73-heading" class="ink" x="260" y="24" text-anchor="middle" font-size="16" font-weight="600">ROC from scores</text>
+
+  <line class="axis" x1="88" y1="396" x2="428" y2="396" stroke-width="1.25"/>
+  <line class="axis" x1="88" y1="56" x2="88" y2="396" stroke-width="1.25"/>
+
+  <line class="grid" x1="88" y1="56" x2="428" y2="56" stroke-width="1" stroke-dasharray="4 4" opacity="0.4"/>
+  <line class="grid" x1="428" y1="56" x2="428" y2="396" stroke-width="1" stroke-dasharray="4 4" opacity="0.4"/>
+  <line id="roc-73-diag" class="hi" x1="88" y1="396" x2="428" y2="56" stroke-width="1.5" stroke-dasharray="6 4"/>
+
+  <path id="roc-73-curve" class="accent" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+        d="M 88,396 L 88,283.8 L 88,168.2 L 200.2,168.2 L 200.2,56 L 315.8,56 L 428,56"/>
+
+  <circle class="accent-fill" cx="88" cy="396" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="88" cy="283.8" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="88" cy="168.2" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="200.2" cy="168.2" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="200.2" cy="56" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="315.8" cy="56" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="428" cy="56" r="4.5" data-allow-overlap="1"/>
+
+  <text class="muted" x="108" y="384" text-anchor="start" font-size="11" stroke="none">(0, 0)</text>
+  <text class="muted" x="108" y="280" text-anchor="start" font-size="11" stroke="none">(0, 0.33)</text>
+  <text class="muted" x="122" y="152" text-anchor="start" font-size="11" stroke="none">(0, 0.67)</text>
+  <text class="muted" x="214" y="188" text-anchor="start" font-size="11" stroke="none">(0.33, 0.67)</text>
+  <text class="muted" x="214" y="80" text-anchor="start" font-size="11" stroke="none">(0.33, 1)</text>
+  <text class="muted" x="316" y="80" text-anchor="start" font-size="11" stroke="none">(0.67, 1)</text>
+  <text class="muted" x="440" y="72" text-anchor="start" font-size="11" stroke="none">(1, 1)</text>
+
+  <text class="hi-fill" x="330" y="186" text-anchor="start" font-size="11" stroke="none">random</text>
+
+  <text class="muted" x="88" y="416" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="200" y="416" text-anchor="middle" font-size="12">0.33</text>
+  <text class="muted" x="316" y="416" text-anchor="middle" font-size="12">0.67</text>
+  <text class="muted" x="428" y="416" text-anchor="middle" font-size="12">1</text>
+  <text class="ink" x="258" y="444" text-anchor="middle" font-size="13">FPR</text>
+
+  <text class="muted" x="78" y="400" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="78" y="288" text-anchor="end" font-size="12">0.33</text>
+  <text class="muted" x="78" y="172" text-anchor="end" font-size="12">0.67</text>
+  <text class="muted" x="78" y="60" text-anchor="end" font-size="12">1</text>
+  <text class="ink" x="22" y="226" text-anchor="middle" font-size="13" transform="rotate(-90 22 226)">TPR</text>
+
+  <text class="muted" x="258" y="480" text-anchor="middle" font-size="12">7 points from the worked example</text>
+</svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 360" role="img" aria-labelledby="dice-56-title">
+  <title id="dice-56-title">4 pixels: Dice = 0.82, Loss = 0.18</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .fg { fill: #FAD9C0; stroke: #C45C0A; }
+    .bg { fill: #E8E9EB; stroke: #5C6570; }
+    .panel { fill: none; stroke: #1A1A1A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .fg { fill: #3D2A12; stroke: #F9AB00; }
+      .bg { fill: #2A2C2E; stroke: #9AA0A6; }
+      .panel { stroke: #E8EAED; }
+    }
+  </style>
+
+  <text id="dice-56-heading" class="ink" x="350" y="26" text-anchor="middle" font-size="16" font-weight="600">4 pixels: Dice &#x2248; 0.82, Loss = 0.18</text>
+
+  <rect class="fg" x="40" y="52" width="140" height="110" rx="4" stroke-width="1.6"/>
+  <text class="muted" x="110" y="76" text-anchor="middle" font-size="12" stroke="none">pixel 1</text>
+  <text class="ink" x="110" y="100" text-anchor="middle" font-size="14" stroke="none">g = 1</text>
+  <text class="hi" x="110" y="124" text-anchor="middle" font-size="14" font-weight="600" stroke="none">p = 0.9</text>
+  <text class="muted" x="110" y="146" text-anchor="middle" font-size="12" stroke="none">p g = 0.9</text>
+
+  <rect class="fg" x="204" y="52" width="140" height="110" rx="4" stroke-width="1.6"/>
+  <text class="muted" x="274" y="76" text-anchor="middle" font-size="12" stroke="none">pixel 2</text>
+  <text class="ink" x="274" y="100" text-anchor="middle" font-size="14" stroke="none">g = 1</text>
+  <text class="hi" x="274" y="124" text-anchor="middle" font-size="14" font-weight="600" stroke="none">p = 0.7</text>
+  <text class="muted" x="274" y="146" text-anchor="middle" font-size="12" stroke="none">p g = 0.7</text>
+
+  <rect class="bg" x="40" y="186" width="140" height="110" rx="4" stroke-width="1.25"/>
+  <text class="muted" x="110" y="210" text-anchor="middle" font-size="12" stroke="none">pixel 3</text>
+  <text class="ink" x="110" y="234" text-anchor="middle" font-size="14" stroke="none">g = 0</text>
+  <text class="ink" x="110" y="258" text-anchor="middle" font-size="14" stroke="none">p = 0.2</text>
+  <text class="muted" x="110" y="280" text-anchor="middle" font-size="12" stroke="none">p g = 0.0</text>
+
+  <rect class="bg" x="204" y="186" width="140" height="110" rx="4" stroke-width="1.25"/>
+  <text class="muted" x="274" y="210" text-anchor="middle" font-size="12" stroke="none">pixel 4</text>
+  <text class="ink" x="274" y="234" text-anchor="middle" font-size="14" stroke="none">g = 0</text>
+  <text class="ink" x="274" y="258" text-anchor="middle" font-size="14" stroke="none">p = 0.1</text>
+  <text class="muted" x="274" y="280" text-anchor="middle" font-size="12" stroke="none">p g = 0.0</text>
+
+  <rect class="panel" x="380" y="52" width="288" height="244" rx="4" stroke-width="1.25"/>
+  <text class="muted" x="524" y="82" text-anchor="middle" font-size="12" stroke="none">soft intersection</text>
+  <text class="ink" x="524" y="108" text-anchor="middle" font-size="14" stroke="none">sum p g = 1.6</text>
+  <text class="ink" x="524" y="136" text-anchor="middle" font-size="14" stroke="none">sum p = 1.9</text>
+  <text class="ink" x="524" y="164" text-anchor="middle" font-size="14" stroke="none">sum g = 2</text>
+  <text class="accent" x="524" y="204" text-anchor="middle" font-size="15" font-weight="600" stroke="none">Dice = 3.2 / 3.9 &#x2248; 0.82</text>
+  <text class="hi" x="524" y="240" text-anchor="middle" font-size="16" font-weight="600" stroke="none">Loss = 1 - 0.82 = 0.18</text>
+  <text class="muted" x="524" y="274" text-anchor="middle" font-size="12" stroke="none">2 |A &#x2229; B| / (|A| + |B|)</text>
+</svg>

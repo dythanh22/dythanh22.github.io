@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="gelu-35-title">
+  <title id="gelu-35-title">GELU vs ReLU; Phi(0)=0.5, GELU(0)=0</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="gelu-35-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="16" font-weight="600">GELU(x) = x &#x00B7; &#x03A6;(x) vs ReLU</text>
+
+  <line class="ink" x1="80" y1="50" x2="80" y2="330" stroke-width="1.25"/>
+  <line class="ink" x1="80" y1="292" x2="656" y2="292" stroke-width="1.25"/>
+  <line class="grid" x1="368" y1="50" x2="368" y2="330" stroke-width="1" stroke-dasharray="4 4" opacity="0.55"/>
+
+  <path id="gelu-35-relu" class="hi" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="7 4"
+        d="M 80.0,292.2 L 368.0,292.2 L 656.0,65.1"/>
+  <path id="gelu-35-curve" class="accent" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+        d="M 80.0,292.5 L 89.6,292.6 L 99.2,292.7 L 108.8,292.9 L 118.4,293.1
+           L 128.0,293.3 L 137.6,293.7 L 147.2,294.0 L 156.8,294.5 L 166.4,295.0
+           L 176.0,295.6 L 185.6,296.3 L 195.2,297.1 L 204.8,297.9 L 214.4,298.8
+           L 224.0,299.7 L 233.6,300.7 L 243.2,301.7 L 252.8,302.6 L 262.4,303.5
+           L 272.0,304.2 L 281.6,304.7 L 291.2,305.0 L 300.8,305.0 L 310.4,304.6
+           L 320.0,303.8 L 329.6,302.6 L 339.2,300.8 L 348.8,298.5 L 358.4,295.6
+           L 368.0,292.2 L 377.6,288.1 L 387.2,283.4 L 396.8,278.1 L 406.4,272.3
+           L 416.0,266.0 L 425.6,259.2 L 435.2,252.0 L 444.8,244.4 L 454.4,236.6
+           L 464.0,228.5 L 473.6,220.2 L 483.2,211.8 L 492.8,203.3 L 502.4,194.8
+           L 512.0,186.2 L 521.6,177.7 L 531.2,169.2 L 540.8,160.8 L 550.4,152.5
+           L 560.0,144.3 L 569.6,136.1 L 579.2,128.0 L 588.8,120.0 L 598.4,112.0
+           L 608.0,104.1 L 617.6,96.3 L 627.2,88.5 L 636.8,80.8 L 646.4,73.1
+           L 656.0,65.4"/>
+
+  <circle class="accent-fill" cx="272.0" cy="304.2" r="4" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="368.0" cy="292.2" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="464.0" cy="228.5" r="4" data-allow-overlap="1"/>
+
+  <text class="muted" x="260" y="320" text-anchor="end" font-size="11">GELU(-1)&#x2248;-0.159</text>
+  <text class="hi-fill" x="380" y="278" text-anchor="start" font-size="11" stroke="none">GELU(0)=0, &#x03A6;(0)=0.5</text>
+  <text class="muted" x="476" y="216" text-anchor="start" font-size="11">GELU(1)&#x2248;0.841</text>
+
+  <line class="accent" x1="500" y1="58" x2="528" y2="58" stroke-width="2.5"/>
+  <text class="muted" x="534" y="62" text-anchor="start" font-size="11">GELU</text>
+  <line class="hi" x1="500" y1="76" x2="528" y2="76" stroke-width="2.25" stroke-dasharray="7 4"/>
+  <text class="muted" x="534" y="80" text-anchor="start" font-size="11">ReLU</text>
+
+  <text class="muted" x="80" y="348" text-anchor="middle" font-size="12">-3</text>
+  <text class="muted" x="176" y="348" text-anchor="middle" font-size="12">-2</text>
+  <text class="muted" x="272" y="348" text-anchor="middle" font-size="12">-1</text>
+  <text class="muted" x="368" y="348" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="464" y="348" text-anchor="middle" font-size="12">1</text>
+  <text class="muted" x="560" y="348" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="656" y="348" text-anchor="middle" font-size="12">3</text>
+  <text class="ink" x="368" y="372" text-anchor="middle" font-size="13">x</text>
+
+  <text class="muted" x="70" y="296" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="70" y="217" text-anchor="end" font-size="12">1</text>
+  <text class="muted" x="70" y="141" text-anchor="end" font-size="12">2</text>
+  <text class="muted" x="70" y="65" text-anchor="end" font-size="12">3</text>
+  <text class="ink" x="24" y="190" text-anchor="middle" font-size="13" transform="rotate(-90 24 190)">f(x)</text>
+</svg>

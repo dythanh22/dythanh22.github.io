@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 340" role="img" aria-labelledby="ang-97-title">
+  <title id="ang-97-title">Angle between a and b is about 12.9 degrees</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .arc { fill: none; stroke: #C45C0A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .arc { stroke: #F9AB00; }
+    }
+  </style>
+  <defs>
+    <marker id="ang-97-arrow-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1A1A1A"/>
+    </marker>
+    <marker id="ang-97-arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2F6FED"/>
+    </marker>
+    <marker id="ang-97-arrow-hi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#C45C0A"/>
+    </marker>
+  </defs>
+  <text id="ang-97-heading" class="ink" x="280" y="32" text-anchor="middle" font-size="16" font-weight="600">Nearly parallel vectors</text>
+  <!-- schematic 2D projection; origin (160, 260) -->
+  <line class="axis" x1="80" y1="260" x2="480" y2="260" stroke-width="1.2" marker-end="url(#ang-97-arrow-ink)"/>
+  <line class="axis" x1="160" y1="300" x2="160" y2="60" stroke-width="1.2" marker-end="url(#ang-97-arrow-ink)"/>
+  <text class="muted" x="488" y="264" font-size="12" stroke="none">x</text>
+  <text class="muted" x="152" y="52" text-anchor="middle" font-size="12" stroke="none">y</text>
+  <!-- a at ~53 deg from +x (direction of (1,2) in 2D proxy), length ~180 -->
+  <!-- a angle ~63.4 deg from x for (1,2); b for (4,5) ~51.3 deg; difference ~12.1 ~12.9 -->
+  <!-- a: cos63.4=0.447, sin=0.894 -> tip (160+161, 260-161) wait length 180: (240.5, 99) -->
+  <line class="accent" x1="160" y1="260" x2="232" y2="108" stroke-width="2.5" fill="none" marker-end="url(#ang-97-arrow-accent)"/>
+  <text class="accent" x="248" y="100" text-anchor="start" font-size="13" stroke="none">a = (1, 2, 3)</text>
+  <!-- b: angle 51.3, length 220: cos=0.625, sin=0.781 -> tip (297.5, 88) -->
+  <line class="hi" x1="160" y1="260" x2="288" y2="96" stroke-width="2.5" fill="none" marker-end="url(#ang-97-arrow-hi)"/>
+  <text class="hi" x="304" y="88" text-anchor="start" font-size="13" stroke="none">b = (4, 5, 6)</text>
+  <!-- arc between ~51 and ~63 deg, radius 55 -->
+  <path class="arc" d="M 194.4 217.0 A 55 55 0 0 0 184.6 210.8" stroke-width="2"/>
+  <text class="hi" x="210" y="200" text-anchor="start" font-size="14" font-weight="600" stroke="none">&#x03B8; &#x2248; 12.9&#x00B0;</text>
+  <text class="muted" x="280" y="328" text-anchor="middle" font-size="12" stroke="none">2D schematic of 3D angle</text>
+</svg>

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="jacc-178-title">
+  <title id="jacc-178-title">Jaccard of A and B: intersection 3, union 7, J=3/7 ~ 0.429</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-soft { fill: #2F6FED; fill-opacity: 0.14; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-soft { fill: #C45C0A; fill-opacity: 0.14; stroke: #C45C0A; }
+    .overlap { fill: #2F6FED; fill-opacity: 0.28; stroke: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-soft { fill: #8AB4F8; fill-opacity: 0.16; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-soft { fill: #F9AB00; fill-opacity: 0.16; stroke: #F9AB00; }
+      .overlap { fill: #8AB4F8; fill-opacity: 0.32; }
+    }
+  </style>
+
+  <text id="jacc-178-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="16" font-weight="600">J(A, B) = 3 / 7 &#x2248; 0.429</text>
+
+  <circle class="accent-soft" cx="268" cy="176" r="118" stroke-width="2" fill-opacity="0.12"/>
+  <circle class="hi-soft" cx="452" cy="176" r="118" stroke-width="2" fill-opacity="0.12"/>
+  <!-- overlap lens of two circles, centers 184 apart, r=118 -->
+  <path class="overlap" d="M360,102.11 A118,118 0 0,1 360,249.89 A118,118 0 0,1 360,102.11 Z"/>
+
+  <text class="accent" x="200" y="84" text-anchor="middle" font-size="14" font-weight="600" stroke="none">A</text>
+  <text class="hi" x="520" y="84" text-anchor="middle" font-size="14" font-weight="600" stroke="none">B</text>
+
+  <text class="ink" x="200" y="164" text-anchor="middle" font-size="16" stroke="none">1</text>
+  <text class="ink" x="200" y="196" text-anchor="middle" font-size="16" stroke="none">2</text>
+
+  <text class="ink" x="360" y="148" text-anchor="middle" font-size="16" font-weight="600" stroke="none">3</text>
+  <text class="ink" x="360" y="176" text-anchor="middle" font-size="16" font-weight="600" stroke="none">4</text>
+  <text class="ink" x="360" y="204" text-anchor="middle" font-size="16" font-weight="600" stroke="none">5</text>
+
+  <text class="ink" x="520" y="164" text-anchor="middle" font-size="16" stroke="none">6</text>
+  <text class="ink" x="520" y="196" text-anchor="middle" font-size="16" stroke="none">7</text>
+
+  <text class="muted" x="200" y="328" text-anchor="middle" font-size="12" stroke="none">A only: {1, 2}</text>
+  <text class="accent" x="360" y="328" text-anchor="middle" font-size="12" font-weight="600" stroke="none">|A &#x2229; B| = 3</text>
+  <text class="muted" x="520" y="328" text-anchor="middle" font-size="12" stroke="none">B only: {6, 7}</text>
+
+  <text class="ink" x="360" y="364" text-anchor="middle" font-size="14" stroke="none">|A &#x222A; B| = 7    J = 3/7 &#x2248; 0.429</text>
+</svg>

@@ -1094,3 +1094,10 @@ SLO, canary, monitoring từ Lesson 8 vẫn áp dụng; với LLM đổi trọng
 ## Học tiếp
 Capstone end-to-end: [Lesson 10](lesson-10-end-to-end-capstone.qmd).
 :::
+
+<!-- CROSSLINK_THEORY_LLM -->
+
+::: {.callout-tip}
+## Ôn nền tảng
+Attention / PE / causal mask: [Positional Encoding](../../theory-ai/09-deep-learning/positional-encoding.qmd) · [Causal Masking](../../theory-ai/09-deep-learning/causal-masking-for-attention.qmd) · [Transformer](../../architecture-models/Transformer/index.qmd).
+:::

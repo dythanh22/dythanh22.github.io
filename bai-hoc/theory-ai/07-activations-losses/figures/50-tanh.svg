@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="tanh-50-title">
+  <title id="tanh-50-title">tanh S-curve in (-1,1); tanh(0)=0, tanh(+-1)~+-0.762</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="tanh-50-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="16" font-weight="600">tanh(x) &#x2208; (-1, 1)</text>
+
+  <line class="ink" x1="80" y1="50" x2="80" y2="330" stroke-width="1.25"/>
+  <line class="ink" x1="80" y1="190" x2="656" y2="190" stroke-width="1.25"/>
+  <line class="hi" x1="80" y1="73.3" x2="656" y2="73.3" stroke-width="1.25" stroke-dasharray="6 4"/>
+  <line class="hi" x1="80" y1="306.7" x2="656" y2="306.7" stroke-width="1.25" stroke-dasharray="6 4"/>
+  <line class="grid" x1="368" y1="50" x2="368" y2="330" stroke-width="1" stroke-dasharray="4 4" opacity="0.55"/>
+
+  <path id="tanh-50-curve" class="accent" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+        d="M 80.0,306.7 L 92.0,306.7 L 104.0,306.7 L 116.0,306.7 L 128.0,306.7
+           L 140.0,306.6 L 152.0,306.6 L 164.0,306.6 L 176.0,306.6 L 188.0,306.5
+           L 200.0,306.5 L 212.0,306.3 L 224.0,306.1 L 236.0,305.7 L 248.0,305.1
+           L 260.0,304.1 L 272.0,302.5 L 284.0,299.8 L 296.0,295.6 L 308.0,289.0
+           L 320.0,278.9 L 332.0,264.1 L 344.0,243.9 L 356.0,218.6 L 368.0,190.0
+           L 380.0,161.4 L 392.0,136.1 L 404.0,115.9 L 416.0,101.1 L 428.0,91.0
+           L 440.0,84.4 L 452.0,80.2 L 464.0,77.5 L 476.0,75.9 L 488.0,74.9
+           L 500.0,74.3 L 512.0,73.9 L 524.0,73.7 L 536.0,73.5 L 548.0,73.5
+           L 560.0,73.4 L 572.0,73.4 L 584.0,73.4 L 596.0,73.4 L 608.0,73.3
+           L 620.0,73.3 L 632.0,73.3 L 644.0,73.3 L 656.0,73.3"/>
+
+  <circle class="accent-fill" cx="320.0" cy="278.9" r="4" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="368.0" cy="190.0" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="416.0" cy="101.1" r="4" data-allow-overlap="1"/>
+
+  <text class="muted" x="308" y="298" text-anchor="end" font-size="11">tanh(-1)&#x2248;-0.762</text>
+  <text class="hi-fill" x="380" y="176" text-anchor="start" font-size="11" stroke="none">tanh(0)=0</text>
+  <text class="muted" x="428" y="90" text-anchor="start" font-size="11">tanh(1)&#x2248;0.762</text>
+  <text class="hi-fill" x="88" y="66" text-anchor="start" font-size="11" stroke="none">+1</text>
+  <text class="hi-fill" x="88" y="322" text-anchor="start" font-size="11" stroke="none">-1</text>
+
+  <text class="muted" x="80" y="348" text-anchor="middle" font-size="12">-6</text>
+  <text class="muted" x="176" y="348" text-anchor="middle" font-size="12">-4</text>
+  <text class="muted" x="272" y="348" text-anchor="middle" font-size="12">-2</text>
+  <text class="muted" x="368" y="348" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="464" y="348" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="560" y="348" text-anchor="middle" font-size="12">4</text>
+  <text class="muted" x="656" y="348" text-anchor="middle" font-size="12">6</text>
+  <text class="ink" x="368" y="372" text-anchor="middle" font-size="13">x</text>
+
+  <text class="muted" x="70" y="311" text-anchor="end" font-size="12">-1</text>
+  <text class="muted" x="70" y="194" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="70" y="77" text-anchor="end" font-size="12">1</text>
+  <text class="ink" x="24" y="190" text-anchor="middle" font-size="13" transform="rotate(-90 24 190)">tanh(x)</text>
+</svg>

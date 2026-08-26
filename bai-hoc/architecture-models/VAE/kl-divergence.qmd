@@ -181,3 +181,10 @@ def kl_divergence(mu, log_var):
     return float(np.mean(kl))
 
 ```
+
+<!-- CROSSLINK_THEORY_KL -->
+
+::: {.callout-tip}
+## Ôn nền tảng
+Định nghĩa KL tổng quát: [Theory AI — KL Divergence](../../theory-ai/07-activations-losses/kl-divergence.qmd).
+:::

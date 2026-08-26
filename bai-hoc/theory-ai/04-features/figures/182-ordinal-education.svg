@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" role="img" aria-labelledby="ordenc-182-title">
+  <title id="ordenc-182-title">Education ordinal map HS=0 ... PhD=3; data [1,3,0,2,1]</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .cell { fill: #FFFFFF; stroke: #1A1A1A; }
+    .step { fill: #E8F0FE; stroke: #2F6FED; }
+    .nofill { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .cell { fill: #1E1E1E; stroke: #E8EAED; }
+      .step { fill: #1A2A44; stroke: #8AB4F8; }
+    }
+  </style>
+
+  <text id="ordenc-182-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="15" font-weight="600">Education ordinal map, then encode the sample</text>
+
+  <!-- ordered ladder -->
+  <text class="muted" x="360" y="56" text-anchor="middle" font-size="12">natural order: HS &lt; Bachelor &lt; Master &lt; PhD</text>
+
+  <rect class="step" x="40" y="72" width="150" height="56" rx="4" stroke-width="1.5"/>
+  <rect class="step" x="204" y="72" width="150" height="56" rx="4" stroke-width="1.5"/>
+  <rect class="step" x="368" y="72" width="150" height="56" rx="4" stroke-width="1.5"/>
+  <rect class="step" x="532" y="72" width="148" height="56" rx="4" stroke-width="1.5"/>
+
+  <text class="ink" x="115" y="96" text-anchor="middle" font-size="13" font-weight="600">High School</text>
+  <text class="accent" x="115" y="116" text-anchor="middle" font-size="16" font-weight="700" stroke="none">0</text>
+
+  <text class="ink" x="279" y="96" text-anchor="middle" font-size="13" font-weight="600">Bachelor's</text>
+  <text class="accent" x="279" y="116" text-anchor="middle" font-size="16" font-weight="700" stroke="none">1</text>
+
+  <text class="ink" x="443" y="96" text-anchor="middle" font-size="13" font-weight="600">Master's</text>
+  <text class="accent" x="443" y="116" text-anchor="middle" font-size="16" font-weight="700" stroke="none">2</text>
+
+  <text class="ink" x="606" y="96" text-anchor="middle" font-size="13" font-weight="600">PhD</text>
+  <text class="accent" x="606" y="116" text-anchor="middle" font-size="16" font-weight="700" stroke="none">3</text>
+
+  <!-- arrows between steps -->
+  <line class="muted nofill" x1="190" y1="100" x2="204" y2="100" stroke-width="1.5"/>
+  <line class="muted nofill" x1="354" y1="100" x2="368" y2="100" stroke-width="1.5"/>
+  <line class="muted nofill" x1="518" y1="100" x2="532" y2="100" stroke-width="1.5"/>
+
+  <!-- original row -->
+  <text class="muted" x="36" y="176" text-anchor="start" font-size="12">original</text>
+  <rect class="cell" x="110" y="156" width="108" height="40" rx="2" stroke-width="1.2"/>
+  <rect class="cell" x="226" y="156" width="108" height="40" rx="2" stroke-width="1.2"/>
+  <rect class="cell" x="342" y="156" width="108" height="40" rx="2" stroke-width="1.2"/>
+  <rect class="cell" x="458" y="156" width="108" height="40" rx="2" stroke-width="1.2"/>
+  <rect class="cell" x="574" y="156" width="108" height="40" rx="2" stroke-width="1.2"/>
+  <text class="ink" x="164" y="182" text-anchor="middle" font-size="12">Bachelor's</text>
+  <text class="ink" x="280" y="182" text-anchor="middle" font-size="12">PhD</text>
+  <text class="ink" x="396" y="182" text-anchor="middle" font-size="12">High School</text>
+  <text class="ink" x="512" y="182" text-anchor="middle" font-size="12">Master's</text>
+  <text class="ink" x="628" y="182" text-anchor="middle" font-size="12">Bachelor's</text>
+
+  <line class="accent nofill" x1="360" y1="208" x2="360" y2="236" stroke-width="2"/>
+  <polygon class="accent" points="354,236 360,248 366,236" stroke="none"/>
+
+  <!-- encoded row -->
+  <text class="muted" x="36" y="284" text-anchor="start" font-size="12">encoded</text>
+  <rect class="step" x="110" y="260" width="108" height="44" rx="2" stroke-width="1.5"/>
+  <rect class="step" x="226" y="260" width="108" height="44" rx="2" stroke-width="1.5"/>
+  <rect class="step" x="342" y="260" width="108" height="44" rx="2" stroke-width="1.5"/>
+  <rect class="step" x="458" y="260" width="108" height="44" rx="2" stroke-width="1.5"/>
+  <rect class="step" x="574" y="260" width="108" height="44" rx="2" stroke-width="1.5"/>
+  <text class="accent" x="164" y="288" text-anchor="middle" font-size="18" font-weight="700" stroke="none">1</text>
+  <text class="hi" x="280" y="288" text-anchor="middle" font-size="18" font-weight="700" stroke="none">3</text>
+  <text class="accent" x="396" y="288" text-anchor="middle" font-size="18" font-weight="700" stroke="none">0</text>
+  <text class="accent" x="512" y="288" text-anchor="middle" font-size="18" font-weight="700" stroke="none">2</text>
+  <text class="accent" x="628" y="288" text-anchor="middle" font-size="18" font-weight="700" stroke="none">1</text>
+
+  <text class="ink" x="360" y="340" text-anchor="middle" font-size="14">encoded sequence [1, 3, 0, 2, 1]</text>
+  <text class="muted" x="360" y="362" text-anchor="middle" font-size="12">one integer column; order HS &lt; Bachelor &lt; Master &lt; PhD is preserved</text>
+</svg>

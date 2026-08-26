@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="interp-165-title">
+  <title id="interp-165-title">Linear interpolation: (2,10), (8,40); at x=5, t=0.5, y=25</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="interp-165-heading" class="ink" x="320" y="24" text-anchor="middle" font-size="16" font-weight="600">At x=5, t=0.5 implies y=25</text>
+
+  <line class="grid" x1="70" y1="280" x2="610" y2="280" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="70" y1="190" x2="610" y2="190" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="70" y1="100" x2="610" y2="100" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="178" y1="52" x2="178" y2="340" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="340" y1="52" x2="340" y2="340" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="502" y1="52" x2="502" y2="340" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+
+  <line class="axis" x1="70" y1="340" x2="610" y2="340" stroke-width="1.25"/>
+  <line class="axis" x1="70" y1="52" x2="70" y2="340" stroke-width="1.25"/>
+
+  <line id="interp-165-line" class="accent" x1="178" y1="280" x2="502" y2="100" stroke-width="2.5"/>
+
+  <line class="hi" x1="340" y1="190" x2="340" y2="340" stroke-width="1.25" stroke-dasharray="6 4"/>
+  <line class="hi" x1="70" y1="190" x2="340" y2="190" stroke-width="1.25" stroke-dasharray="6 4"/>
+
+  <circle class="accent-fill" cx="178" cy="280" r="6" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="502" cy="100" r="6" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="340" cy="190" r="7" data-allow-overlap="1"/>
+
+  <text class="muted" x="178" y="302" text-anchor="middle" font-size="12" stroke="none">(2, 10)</text>
+  <text class="muted" x="528" y="88" text-anchor="start" font-size="12" stroke="none">(8, 40)</text>
+  <text class="hi-fill" x="354" y="168" text-anchor="start" font-size="13" font-weight="600" stroke="none">(5, 25)</text>
+  <text class="hi-fill" x="354" y="220" text-anchor="start" font-size="12" stroke="none">t = 0.5</text>
+
+  <text class="ink" x="340" y="64" text-anchor="middle" font-size="12">y = (1-t) y_0 + t y_1 = 5 + 20 = 25</text>
+  <text class="muted" x="250" y="250" text-anchor="middle" font-size="12" stroke="none">m = 30/6 = 5</text>
+
+  <text class="muted" x="70" y="360" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="178" y="360" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="340" y="360" text-anchor="middle" font-size="12">5</text>
+  <text class="muted" x="502" y="360" text-anchor="middle" font-size="12">8</text>
+  <text class="muted" x="610" y="360" text-anchor="middle" font-size="12">10</text>
+  <text class="ink" x="340" y="384" text-anchor="middle" font-size="13">x</text>
+
+  <text class="muted" x="60" y="344" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="60" y="284" text-anchor="end" font-size="12">10</text>
+  <text class="muted" x="60" y="194" text-anchor="end" font-size="12">25</text>
+  <text class="muted" x="60" y="104" text-anchor="end" font-size="12">40</text>
+  <text class="ink" x="22" y="196" text-anchor="middle" font-size="13" transform="rotate(-90 22 196)">y</text>
+</svg>

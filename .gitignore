@@ -9,3 +9,7 @@
 !legacy/**/*.js
 
 **/*.quarto_ipynb
+
+# Working notes — không publish
+uiux-audit-dythanh22.md
+theory-ai-integration-plan.md

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" role="img" aria-labelledby="xavier-152-title">
+  <title id="xavier-152-title">Xavier n_in=100 n_out=50; bound=0.2, sigma~0.115</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-soft { fill: #2F6FED; fill-opacity: 0.08; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-soft { fill: #C45C0A; fill-opacity: 0.08; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .bar { fill: #2F6FED; fill-opacity: 0.18; stroke: #2F6FED; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-soft { fill: #8AB4F8; fill-opacity: 0.12; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-soft { fill: #F9AB00; fill-opacity: 0.12; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .bar { fill: #8AB4F8; fill-opacity: 0.20; stroke: #8AB4F8; }
+    }
+  </style>
+
+  <text id="xavier-152-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600">Xavier: n_in = 100, n_out = 50</text>
+
+  <rect class="accent-soft" x="40" y="48" width="300" height="112" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="190" y="76" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Uniform</text>
+  <text class="ink" x="190" y="106" text-anchor="middle" font-size="14" stroke="none">U(-0.2, 0.2)</text>
+  <text class="accent" x="190" y="138" text-anchor="middle" font-size="14" font-weight="600" stroke="none">bound = 0.2</text>
+
+  <rect class="hi-soft" x="380" y="48" width="300" height="112" rx="8" stroke-width="1.5"/>
+  <text class="hi" x="530" y="76" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Normal</text>
+  <text class="ink" x="530" y="106" text-anchor="middle" font-size="14" stroke="none">N(0, 0.115)</text>
+  <text class="hi" x="530" y="138" text-anchor="middle" font-size="14" font-weight="600" stroke="none">&#x03C3; &#x2248; 0.115</text>
+
+  <line class="axis" x1="80" y1="230" x2="640" y2="230" stroke-width="1.5"/>
+  <rect class="bar" x="180" y="214" width="360" height="16" rx="2" stroke-width="1.25"/>
+
+  <line class="hi" x1="256.5" y1="204" x2="256.5" y2="246" stroke-width="2" fill="none"/>
+  <line class="hi" x1="463.5" y1="204" x2="463.5" y2="246" stroke-width="2" fill="none"/>
+  <line class="hi" x1="256.5" y1="204" x2="463.5" y2="204" stroke-width="1.5" fill="none"/>
+
+  <text class="muted" x="90" y="268" text-anchor="middle" font-size="12">-0.3</text>
+  <text class="accent" x="180" y="268" text-anchor="middle" font-size="12" stroke="none">-0.2</text>
+  <text class="hi" x="256" y="190" text-anchor="middle" font-size="11" stroke="none">-&#x03C3;</text>
+  <text class="ink" x="360" y="268" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="hi" x="464" y="190" text-anchor="middle" font-size="11" stroke="none">+&#x03C3;</text>
+  <text class="accent" x="540" y="268" text-anchor="middle" font-size="12" stroke="none">+0.2</text>
+  <text class="muted" x="630" y="268" text-anchor="middle" font-size="12">+0.3</text>
+
+  <text class="muted" x="360" y="308" text-anchor="middle" font-size="12">bound = sqrt(6/150) = 0.2;  &#x03C3; = sqrt(2/150) &#x2248; 0.115</text>
+</svg>

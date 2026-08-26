@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300" role="img" aria-labelledby="inv-87-title">
+  <title id="inv-87-title">2x2 inverse of [[4,7],[2,6]] with det=10</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .cell { fill: #FFFFFF; stroke: #1A1A1A; }
+    .hiCell { fill: #FFF4E8; stroke: #C45C0A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .cell { fill: #1E1E1E; stroke: #E8EAED; }
+      .hiCell { fill: #3A2A14; stroke: #F9AB00; }
+    }
+  </style>
+  <text id="inv-87-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="15" font-weight="600">A A^{-1} = I with det(A) = 10</text>
+
+  <!-- A -->
+  <text class="muted" x="110" y="64" text-anchor="middle" font-size="12">A</text>
+  <rect class="cell" x="50" y="76" width="56" height="48" stroke-width="1.5"/>
+  <rect class="cell" x="106" y="76" width="56" height="48" stroke-width="1.5"/>
+  <rect class="cell" x="50" y="124" width="56" height="48" stroke-width="1.5"/>
+  <rect class="cell" x="106" y="124" width="56" height="48" stroke-width="1.5"/>
+  <text id="inv-87-a00" class="ink" x="78" y="106" text-anchor="middle" font-size="16" font-weight="600">4</text>
+  <text class="ink" x="134" y="106" text-anchor="middle" font-size="16" font-weight="600">7</text>
+  <text class="ink" x="78" y="154" text-anchor="middle" font-size="16" font-weight="600">2</text>
+  <text class="ink" x="134" y="154" text-anchor="middle" font-size="16" font-weight="600">6</text>
+
+  <!-- det badge -->
+  <rect class="hiCell" x="50" y="190" width="112" height="36" rx="4" stroke-width="1.5"/>
+  <text id="inv-87-det" class="hi" x="106" y="214" text-anchor="middle" font-size="13" font-weight="600" stroke="none">det = 24 - 14 = 10</text>
+
+  <!-- Arrow -->
+  <line class="accent" x1="186" y1="124" x2="230" y2="124" stroke-width="2" fill="none"/>
+  <polygon class="accent" points="230,118 244,124 230,130" stroke="none"/>
+  <text class="muted" x="215" y="108" text-anchor="middle" font-size="11">1/det &#x00D7; adj</text>
+
+  <!-- A inverse -->
+  <text class="muted" x="360" y="64" text-anchor="middle" font-size="12">A^{-1}</text>
+  <rect class="hiCell" x="280" y="76" width="72" height="48" stroke-width="1.5"/>
+  <rect class="hiCell" x="352" y="76" width="72" height="48" stroke-width="1.5"/>
+  <rect class="hiCell" x="280" y="124" width="72" height="48" stroke-width="1.5"/>
+  <rect class="hiCell" x="352" y="124" width="72" height="48" stroke-width="1.5"/>
+  <text id="inv-87-i00" class="hi" x="316" y="106" text-anchor="middle" font-size="15" font-weight="600" stroke="none">0.6</text>
+  <text class="hi" x="388" y="106" text-anchor="middle" font-size="15" font-weight="600" stroke="none">-0.7</text>
+  <text class="hi" x="316" y="154" text-anchor="middle" font-size="15" font-weight="600" stroke="none">-0.2</text>
+  <text class="hi" x="388" y="154" text-anchor="middle" font-size="15" font-weight="600" stroke="none">0.4</text>
+  <text class="muted" x="360" y="198" text-anchor="middle" font-size="12">(1/10)[6, -7; -2, 4]</text>
+
+  <!-- equals I -->
+  <line class="accent" x1="448" y1="124" x2="488" y2="124" stroke-width="2" fill="none"/>
+  <polygon class="accent" points="488,118 502,124 488,130" stroke="none"/>
+  <text class="muted" x="475" y="108" text-anchor="middle" font-size="11">check</text>
+
+  <text class="muted" x="560" y="64" text-anchor="middle" font-size="12">I</text>
+  <rect class="cell" x="518" y="76" width="48" height="48" stroke-width="1.5"/>
+  <rect class="cell" x="566" y="76" width="48" height="48" stroke-width="1.5"/>
+  <rect class="cell" x="518" y="124" width="48" height="48" stroke-width="1.5"/>
+  <rect class="cell" x="566" y="124" width="48" height="48" stroke-width="1.5"/>
+  <text class="accent" x="542" y="106" text-anchor="middle" font-size="16" font-weight="700" stroke="none">1</text>
+  <text class="muted" x="590" y="106" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="542" y="154" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="accent" x="590" y="154" text-anchor="middle" font-size="16" font-weight="700" stroke="none">1</text>
+
+  <text class="ink" x="320" y="260" text-anchor="middle" font-size="13">A^{-1} = (1/(ad-bc)) [d, -b; -c, a]</text>
+  <text class="muted" x="320" y="284" text-anchor="middle" font-size="12">Inverse exists only if det(A) &#x2260; 0</text>
+</svg>

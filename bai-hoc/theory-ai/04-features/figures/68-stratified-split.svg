@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="strat-68-title">
+  <title id="strat-68-title">Stratified 80/20 split keeps 70/20/10</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .fill-a { fill: #D6E3FB; stroke: #2F6FED; }
+    .fill-b { fill: #FAD9C0; stroke: #C45C0A; }
+    .fill-c { fill: #E8E9EB; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .fill-a { fill: #1A2A44; stroke: #8AB4F8; }
+      .fill-b { fill: #3D2A12; stroke: #F9AB00; }
+      .fill-c { fill: #2A2C2E; stroke: #9AA0A6; }
+    }
+  </style>
+  <text id="strat-68-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="15" font-weight="600">Stratified 80/20 split preserves 70/20/10</text>
+  <text class="muted" x="320" y="50" text-anchor="middle" font-size="12">Original N=100: A 70 / B 20 / C 10</text>
+
+  <!-- Train bar: x=100 w=88, y=76 h=200 -->
+  <rect class="fill-a" x="100" y="76" width="88" height="140" stroke-width="1.5"/>
+  <rect class="fill-b" x="100" y="216" width="88" height="40" stroke-width="1.5"/>
+  <rect class="fill-c" x="100" y="256" width="88" height="20" stroke-width="1.5"/>
+  <text class="ink" x="204" y="150" font-size="13">A: 56 (70%)</text>
+  <text class="ink" x="204" y="240" font-size="13">B: 16 (20%)</text>
+  <text class="ink" x="204" y="272" font-size="13">C: 8 (10%)</text>
+  <text class="ink" x="144" y="300" text-anchor="middle" font-size="13" font-weight="600">Train n = 80</text>
+
+  <!-- Test bar: x=380 w=88, same height = same proportions -->
+  <rect class="fill-a" x="380" y="76" width="88" height="140" stroke-width="1.5"/>
+  <rect class="fill-b" x="380" y="216" width="88" height="40" stroke-width="1.5"/>
+  <rect class="fill-c" x="380" y="256" width="88" height="20" stroke-width="1.5"/>
+  <text class="ink" x="484" y="150" font-size="13">A: 14 (70%)</text>
+  <text class="ink" x="484" y="240" font-size="13">B: 4 (20%)</text>
+  <text class="ink" x="484" y="272" font-size="13">C: 2 (10%)</text>
+  <text class="ink" x="424" y="300" text-anchor="middle" font-size="13" font-weight="600">Test n = 20</text>
+
+  <text class="muted" x="320" y="336" text-anchor="middle" font-size="12">Both splits keep the original 70% / 20% / 10%</text>
+</svg>

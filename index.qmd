@@ -8,16 +8,16 @@ toc: false
 ::: {.home-hero-copy}
 <p class="home-brand">dythanh22</p>
 
-# Chuỗi bài học · kiến trúc mô hình và tối ưu inference
+# Chuỗi bài học · lý thuyết, kiến trúc và tối ưu inference
 
 Chọn một lộ trình, đi hết pipeline, rồi quay lại khi cần ôn. Không phải blog rời — mỗi chuỗi là một đường đọc có thứ tự.
 
 [Xem bài học](bai-hoc/index.qmd){.btn .btn-primary .btn-lg .home-cta-primary role="button"}
-[Architecture Models](bai-hoc/architecture-models/index.qmd){.btn .btn-outline-secondary .btn-lg role="button"}
+[Theory AI](bai-hoc/theory-ai/index.qmd){.btn .btn-outline-secondary .btn-lg role="button"}
 :::
 
 ::: {.home-hero-visual}
-![Hai lộ trình: Architecture Models và AI Optimization](assets/img/home-pipeline.svg){fig-alt="Sơ đồ: CNN → Seq → Gen → Attention → U-Net; ONNX → TensorRT → Triton → LLM → Ops."}
+![Ba lộ trình: Theory AI, Architecture Models và AI Optimization](assets/img/home-pipeline.svg){fig-alt="Sơ đồ học: nền tảng lý thuyết; CNN → Seq → Gen → Attention → U-Net; ONNX → TensorRT → Triton → LLM → Ops."}
 :::
 ::::
 
@@ -28,9 +28,20 @@ Chọn một lộ trình, đi hết pipeline, rồi quay lại khi cần ôn. Kh
 
 Một **chuỗi** = một lộ trình. Homepage không trộn từng chương. Vào chuỗi để có mục lục, sidebar và nút bài trước / bài sau — rồi đọc theo `order`.
 
-## Hai chuỗi
+## Ba chuỗi
 
 :::: {.series-grid}
+::: {.series-card .series-card--theory}
+<p class="eyebrow">Nền tảng · 15 chapter · 187 bài</p>
+### [Theory AI](bai-hoc/theory-ai/index.qmd)
+
+Probability → statistics → linear algebra → features / classical ML → activations, optimizers, DL primitives → CV, NLP, RL, time series, recommender → MLOps.
+
+<p class="series-meta">Công thức + ví dụ số + Python ngắn</p>
+
+[Mở Theory AI →](bai-hoc/theory-ai/index.qmd)
+:::
+
 ::: {.series-card .series-card--arch}
 <p class="eyebrow">Kiến trúc · 15 model</p>
 ### [Architecture Models](bai-hoc/architecture-models/index.qmd)

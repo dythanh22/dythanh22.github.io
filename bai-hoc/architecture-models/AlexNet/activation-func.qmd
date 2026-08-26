@@ -296,3 +296,10 @@ def relu(x: np.ndarray) -> np.ndarray:
     return np.maximum(0, x)
 
 ```
+
+<!-- CROSSLINK_THEORY_RELU -->
+
+::: {.callout-tip}
+## Ôn nền tảng
+Công thức và dead ReLU chi tiết: [Theory AI — ReLU Activation](../../theory-ai/07-activations-losses/relu-activation.qmd).
+:::

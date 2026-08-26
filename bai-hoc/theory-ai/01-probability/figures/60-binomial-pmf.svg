@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 340" role="img" aria-labelledby="bin-60-title">
+  <title id="bin-60-title">Binomial PMF n=4 p=0.3</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+    }
+  </style>
+  <text id="bin-60-heading" class="ink" x="280" y="28" text-anchor="middle" font-size="16" font-weight="600">Binomial PMF, n = 4, p = 0.3</text>
+  <line class="axis" x1="64" y1="280" x2="520" y2="280" stroke-width="1.25"/>
+  <line class="axis" x1="64" y1="48" x2="64" y2="280" stroke-width="1.25"/>
+  <text class="muted" x="56" y="284" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="56" y="176" text-anchor="end" font-size="12">0.25</text>
+  <text class="muted" x="56" y="72" text-anchor="end" font-size="12">0.50</text>
+  <!-- heights = v/0.5 * 208; y = 280 - h -->
+  <rect class="accent" x="92" y="180.1" width="52" height="99.9"/>
+  <text class="muted" x="118" y="170" text-anchor="middle" font-size="11">0.240</text>
+  <text class="ink" x="118" y="300" text-anchor="middle" font-size="13">0</text>
+  <rect class="hi" x="176" y="108.8" width="52" height="171.2"/>
+  <text class="muted" x="202" y="99" text-anchor="middle" font-size="11">0.412</text>
+  <text class="ink" x="202" y="300" text-anchor="middle" font-size="13">1</text>
+  <rect class="accent" x="260" y="169.9" width="52" height="110.1"/>
+  <text class="muted" x="286" y="160" text-anchor="middle" font-size="11">0.265</text>
+  <text class="ink" x="286" y="300" text-anchor="middle" font-size="13">2</text>
+  <rect class="accent" x="344" y="248.6" width="52" height="31.4"/>
+  <text class="muted" x="370" y="239" text-anchor="middle" font-size="11">0.076</text>
+  <text class="ink" x="370" y="300" text-anchor="middle" font-size="13">3</text>
+  <rect class="accent" x="428" y="276.6" width="52" height="3.4"/>
+  <text class="muted" x="454" y="268" text-anchor="middle" font-size="11">0.008</text>
+  <text class="ink" x="454" y="300" text-anchor="middle" font-size="13">4</text>
+  <text class="ink" x="280" y="328" text-anchor="middle" font-size="13">k</text>
+  <text class="ink" x="20" y="164" text-anchor="middle" font-size="13" transform="rotate(-90 20 164)">P(X = k)</text>
+</svg>

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="psi-103-title">
+  <title id="psi-103-title">PSI = 0.0459 below threshold 0.1, not flagged</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    .nofill { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="psi-103-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="15" font-weight="600">PSI = 0.0459 &lt; 0.1: not flagged</text>
+
+  <rect class="accent" x="248" y="40" width="14" height="14" rx="2"/>
+  <text class="muted" x="268" y="52" text-anchor="start" font-size="12" stroke="none">train</text>
+  <rect class="hi" x="328" y="40" width="14" height="14" rx="2"/>
+  <text class="muted" x="348" y="52" text-anchor="start" font-size="12" stroke="none">serving</text>
+
+  <line class="grid" x1="64" y1="92" x2="680" y2="92" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="grid" x1="64" y1="148" x2="680" y2="148" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="grid" x1="64" y1="204" x2="680" y2="204" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="grid" x1="64" y1="260" x2="680" y2="260" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+
+  <line class="axis" x1="64" y1="280" x2="680" y2="280" stroke-width="1.25"/>
+  <line class="axis" x1="64" y1="64" x2="64" y2="280" stroke-width="1.25"/>
+
+  <text class="muted" x="56" y="284" text-anchor="end" font-size="11" stroke="none">0</text>
+  <text class="muted" x="56" y="264" text-anchor="end" font-size="11" stroke="none">0.10</text>
+  <text class="muted" x="56" y="208" text-anchor="end" font-size="11" stroke="none">0.20</text>
+  <text class="muted" x="56" y="152" text-anchor="end" font-size="11" stroke="none">0.30</text>
+  <text class="muted" x="56" y="96" text-anchor="end" font-size="11" stroke="none">0.40</text>
+
+  <!-- h = p * 560; axis y = 280; groups at 128, 248, 368, 488, 608 -->
+  <rect id="psi-103-t1" class="accent" x="92" y="112" width="32" height="168"/>
+  <rect id="psi-103-s1" class="hi" x="128" y="140" width="32" height="140"/>
+  <text class="muted" x="108" y="100" text-anchor="middle" font-size="11" stroke="none">0.30</text>
+  <text class="muted" x="144" y="128" text-anchor="middle" font-size="11" stroke="none">0.25</text>
+
+  <rect id="psi-103-t2" class="accent" x="212" y="140" width="32" height="140"/>
+  <rect id="psi-103-s2" class="hi" x="248" y="168" width="32" height="112"/>
+  <text class="muted" x="228" y="128" text-anchor="middle" font-size="11" stroke="none">0.25</text>
+  <text class="muted" x="264" y="156" text-anchor="middle" font-size="11" stroke="none">0.20</text>
+
+  <rect id="psi-103-t3" class="accent" x="332" y="168" width="32" height="112"/>
+  <rect id="psi-103-s3" class="hi" x="368" y="140" width="32" height="140"/>
+  <text class="muted" x="348" y="156" text-anchor="middle" font-size="11" stroke="none">0.20</text>
+  <text class="muted" x="384" y="128" text-anchor="middle" font-size="11" stroke="none">0.25</text>
+
+  <rect id="psi-103-t4" class="accent" x="452" y="196" width="32" height="84"/>
+  <rect id="psi-103-s4" class="hi" x="488" y="168" width="32" height="112"/>
+  <text class="muted" x="468" y="184" text-anchor="middle" font-size="11" stroke="none">0.15</text>
+  <text class="muted" x="504" y="156" text-anchor="middle" font-size="11" stroke="none">0.20</text>
+
+  <rect id="psi-103-t5" class="accent" x="572" y="224" width="32" height="56"/>
+  <rect id="psi-103-s5" class="hi" x="608" y="224" width="32" height="56"/>
+  <text class="muted" x="606" y="212" text-anchor="middle" font-size="11" stroke="none">0.10</text>
+
+  <text class="ink" x="128" y="300" text-anchor="middle" font-size="12" stroke="none">bin 1</text>
+  <text class="ink" x="248" y="300" text-anchor="middle" font-size="12" stroke="none">bin 2</text>
+  <text class="ink" x="368" y="300" text-anchor="middle" font-size="12" stroke="none">bin 3</text>
+  <text class="ink" x="488" y="300" text-anchor="middle" font-size="12" stroke="none">bin 4</text>
+  <text class="ink" x="608" y="300" text-anchor="middle" font-size="12" stroke="none">bin 5</text>
+
+  <text class="muted" x="128" y="320" text-anchor="middle" font-size="12" stroke="none">0.0091</text>
+  <text class="muted" x="248" y="320" text-anchor="middle" font-size="12" stroke="none">0.0112</text>
+  <text class="muted" x="368" y="320" text-anchor="middle" font-size="12" stroke="none">0.0112</text>
+  <text class="muted" x="488" y="320" text-anchor="middle" font-size="12" stroke="none">0.0144</text>
+  <text class="muted" x="608" y="320" text-anchor="middle" font-size="12" stroke="none">0</text>
+
+  <text class="ink" x="360" y="350" text-anchor="middle" font-size="13" font-weight="600" stroke="none">PSI = 0.0091+0.0112+0.0112+0.0144+0 = 0.0459</text>
+  <text class="hi" x="360" y="376" text-anchor="middle" font-size="13" font-weight="600" stroke="none">threshold 0.1: no skew flag</text>
+</svg>

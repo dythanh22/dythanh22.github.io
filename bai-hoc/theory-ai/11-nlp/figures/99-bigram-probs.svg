@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 340" role="img" aria-labelledby="bigram-99-title">
+  <title id="bigram-99-title">P(cat|the)=2/3, P(mat|the)=1/3</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .node { fill: #E8F0FE; stroke: #2F6FED; }
+    .node-hi { fill: #FCE8D5; stroke: #C45C0A; }
+    .nofill { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .node { fill: #1A2A44; stroke: #8AB4F8; }
+      .node-hi { fill: #3A2A14; stroke: #F9AB00; }
+    }
+  </style>
+
+  <text id="bigram-99-heading" class="ink" x="320" y="26" text-anchor="middle" font-size="15" font-weight="600">P(next | the), Count(the) = 3</text>
+
+  <rect class="node" x="48" y="140" width="130" height="64" rx="4" stroke-width="1.5"/>
+  <text class="accent" x="113" y="166" text-anchor="middle" font-size="16" font-weight="700" stroke="none">the</text>
+  <text class="muted" x="113" y="186" text-anchor="middle" font-size="12" stroke="none">count = 3</text>
+
+  <rect class="node-hi" x="430" y="52" width="140" height="64" rx="4" stroke-width="1.5"/>
+  <text class="hi" x="500" y="78" text-anchor="middle" font-size="16" font-weight="700" stroke="none">cat</text>
+  <text class="muted" x="500" y="98" text-anchor="middle" font-size="12" stroke="none">count = 2</text>
+
+  <rect class="node" x="430" y="228" width="140" height="64" rx="4" stroke-width="1.5"/>
+  <text class="accent" x="500" y="254" text-anchor="middle" font-size="16" font-weight="700" stroke="none">mat</text>
+  <text class="muted" x="500" y="274" text-anchor="middle" font-size="12" stroke="none">count = 1</text>
+
+  <!-- arrow the -> cat; stop 6px before dest x=430 -->
+  <line class="hi nofill" x1="184" y1="156" x2="418" y2="84" stroke-width="2.5"/>
+  <polygon class="hi" points="410,76 424,82 406,92" stroke="none"/>
+  <text class="hi" x="292" y="104" text-anchor="middle" font-size="14" font-weight="700" stroke="none">2/3 &#x2248; 0.667</text>
+
+  <!-- arrow the -> mat -->
+  <line class="accent nofill" x1="184" y1="188" x2="418" y2="260" stroke-width="2"/>
+  <polygon class="accent" points="406,252 424,262 410,268" stroke="none"/>
+  <text class="accent" x="292" y="248" text-anchor="middle" font-size="14" font-weight="700" stroke="none">1/3 &#x2248; 0.333</text>
+
+  <text class="muted" x="320" y="322" text-anchor="middle" font-size="12">P(cat | the) = 2/3, P(mat | the) = 1/3</text>
+</svg>

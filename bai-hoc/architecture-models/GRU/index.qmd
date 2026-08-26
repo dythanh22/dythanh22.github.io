@@ -64,3 +64,10 @@ r_t, z_t &:\ \text{reset gate và update gate}, \\
 h_t &= (1-z_t)\odot \tilde{h}_t + z_t \odot h_{t-1}.
 \end{aligned}
 $$
+
+<!-- CROSSLINK_THEORY_GRU -->
+
+::: {.callout-tip}
+## Ôn nền tảng
+Forward một cell GRU: [Theory AI — Mini GRU Cell](../../theory-ai/09-deep-learning/build-a-mini-gru-cell-forward-pass.qmd).
+:::

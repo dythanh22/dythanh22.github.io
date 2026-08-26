@@ -8,13 +8,15 @@ Mình là <strong>Thanh</strong> (<strong>dythanh22</strong>). Site này là nơ
 </p>
 
 <ul class="about-links">
+<li><a href="bai-hoc/theory-ai/index.qmd">Theory AI →</a></li>
 <li><a href="bai-hoc/architecture-models/index.qmd">Architecture Models →</a></li>
 <li><a href="bai-hoc/ai-optimize/index.qmd">AI Optimization →</a></li>
 <li><a href="https://github.com/dythanh22">GitHub</a></li>
 </ul>
 
-## Hai chuỗi đang mở
+## Ba chuỗi đang mở
 
+- **[Theory AI](bai-hoc/theory-ai/index.qmd)** — 187 bài nền tảng: xác suất, thống kê, đại số tuyến tính, feature/ML cổ điển, activations & losses, optimizers, DL primitives, CV/NLP/RL/time series/recommender, MLOps.
 - **[Architecture Models](bai-hoc/architecture-models/index.qmd)** — CNN, RNN/LSTM/GRU, VAE/GAN/DDPM, Word2Vec, Transformer/BERT/ViT, U-Net. Mỗi model tách theo khối xây dựng.
 - **[AI Optimization](bai-hoc/ai-optimize/index.qmd)** — mười bài từ artifact đến production serving (ONNX → TensorRT → Triton → LLM ops).
 

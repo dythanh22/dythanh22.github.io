@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-labelledby="lag-175-title">
+  <title id="lag-175-title">Day 6 target=140 uses lag-1=125 and lag-2=130</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    .box { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+      .box { stroke: #9AA0A6; }
+    }
+  </style>
+  <defs>
+    <marker id="lag-175-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" class="hi-fill"/>
+    </marker>
+  </defs>
+
+  <text id="lag-175-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="16" font-weight="600">Day 6: target=140, lag-1=125, lag-2=130</text>
+
+  <line class="grid" x1="70" y1="278" x2="630" y2="278" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="70" y1="195" x2="630" y2="195" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="70" y1="153" x2="630" y2="153" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="70" y1="112" x2="630" y2="112" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+
+  <line class="axis" x1="70" y1="320" x2="630" y2="320" stroke-width="1.25"/>
+  <line class="axis" x1="70" y1="52" x2="70" y2="320" stroke-width="1.25"/>
+
+  <polyline id="lag-175-series" class="accent" fill="none" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+            points="80,278 180,195 280,216 380,153 480,174 580,112"/>
+
+  <line class="hi" x1="574" y1="115" x2="486" y2="171" stroke-width="1.75" marker-end="url(#lag-175-arrow)"/>
+  <line class="hi" x1="574" y1="113" x2="388" y2="152" stroke-width="1.75" marker-end="url(#lag-175-arrow)"/>
+
+  <circle class="accent-fill" cx="80" cy="278" r="5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="180" cy="195" r="5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="280" cy="216" r="5" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="380" cy="153" r="6" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="480" cy="174" r="6" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="580" cy="112" r="7" data-allow-overlap="1"/>
+
+  <text class="muted" x="80" y="298" text-anchor="middle" font-size="11" stroke="none">100</text>
+  <text class="muted" x="180" y="187" text-anchor="middle" font-size="11" stroke="none">120</text>
+  <text class="muted" x="280" y="236" text-anchor="middle" font-size="11" stroke="none">115</text>
+  <text class="hi-fill" x="380" y="139" text-anchor="middle" font-size="11" stroke="none">130</text>
+  <text class="hi-fill" x="498" y="168" text-anchor="start" font-size="11" stroke="none">125</text>
+  <text class="accent-fill" x="580" y="96" text-anchor="middle" font-size="12" font-weight="600" stroke="none">140</text>
+
+  <rect class="box" x="86" y="348" width="150" height="50" rx="4"/>
+  <rect class="hi" x="268" y="348" width="150" height="50" rx="4"/>
+  <rect class="accent" x="450" y="348" width="184" height="50" rx="4"/>
+
+  <text class="muted" x="161" y="368" text-anchor="middle" font-size="11" stroke="none">lag-2  y_4</text>
+  <text class="ink" x="161" y="388" text-anchor="middle" font-size="14" font-weight="600">130</text>
+  <text class="muted" x="343" y="368" text-anchor="middle" font-size="11" stroke="none">lag-1  y_5</text>
+  <text class="ink" x="343" y="388" text-anchor="middle" font-size="14" font-weight="600">125</text>
+  <text class="muted" x="542" y="368" text-anchor="middle" font-size="11" stroke="none">target  y_6</text>
+  <text class="ink" x="542" y="388" text-anchor="middle" font-size="14" font-weight="600">140</text>
+
+  <text class="muted" x="80" y="338" text-anchor="middle" font-size="12">1</text>
+  <text class="muted" x="180" y="338" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="280" y="338" text-anchor="middle" font-size="12">3</text>
+  <text class="muted" x="380" y="338" text-anchor="middle" font-size="12">4</text>
+  <text class="muted" x="480" y="338" text-anchor="middle" font-size="12">5</text>
+  <text class="muted" x="580" y="338" text-anchor="middle" font-size="12">6</text>
+  <text class="ink" x="655" y="338" text-anchor="start" font-size="13">day</text>
+  <text class="ink" x="28" y="186" text-anchor="middle" font-size="13" transform="rotate(-90 28 186)">sales</text>
+
+  <text class="muted" x="60" y="282" text-anchor="end" font-size="12">100</text>
+  <text class="muted" x="60" y="199" text-anchor="end" font-size="12">120</text>
+  <text class="muted" x="60" y="157" text-anchor="end" font-size="12">130</text>
+  <text class="muted" x="60" y="116" text-anchor="end" font-size="12">140</text>
+</svg>

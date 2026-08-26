@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" role="img" aria-labelledby="inter-173-title">
+  <title id="inter-173-title">2000 sq ft times $150/sq ft equals $300,000</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .box { fill: none; stroke: #2F6FED; }
+    .box-hi { fill: none; stroke: #C45C0A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .box { stroke: #8AB4F8; }
+      .box-hi { stroke: #F9AB00; }
+    }
+  </style>
+
+  <text id="inter-173-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600">Multiplicative interaction: area &#x00D7; price/sq ft</text>
+
+  <rect class="box" x="24" y="72" width="176" height="72" rx="6" stroke-width="1.75"/>
+  <text class="ink" x="112" y="102" text-anchor="middle" font-size="15" font-weight="600">2000 sq ft</text>
+  <text class="muted" x="112" y="124" text-anchor="middle" font-size="12">x1 = area</text>
+
+  <text class="ink" x="228" y="116" text-anchor="middle" font-size="22" font-weight="600">&#x00D7;</text>
+
+  <rect class="box" x="256" y="72" width="176" height="72" rx="6" stroke-width="1.75"/>
+  <text class="ink" x="344" y="102" text-anchor="middle" font-size="15" font-weight="600">$150 / sq ft</text>
+  <text class="muted" x="344" y="124" text-anchor="middle" font-size="12">x2 = neighborhood</text>
+
+  <text class="ink" x="460" y="116" text-anchor="middle" font-size="22" font-weight="600">=</text>
+
+  <rect class="box-hi" x="488" y="72" width="208" height="72" rx="6" stroke-width="2"/>
+  <text class="hi-fill" x="592" y="102" text-anchor="middle" font-size="16" font-weight="600" stroke="none">$300,000</text>
+  <text class="muted" x="592" y="124" text-anchor="middle" font-size="12">x1 &#x00B7; x2 = value</text>
+
+  <text class="muted" x="360" y="184" text-anchor="middle" font-size="13">Neither feature alone is house value; the product is.</text>
+</svg>

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="cr-190-title">
+  <title id="cr-190-title">Cumulative return 2.95% vs simple sum 3%</title>
+  <style>
+    .ink { fill: #1A1A1A; }
+    .muted { fill: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .guide { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; stroke: none; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; }
+      .muted { fill: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .guide { stroke: #9AA0A6; }
+    }
+  </style>
+  <text id="cr-190-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="15" font-weight="600">R_cum = 0.0295 vs simple sum = 0.03</text>
+
+  <!-- t=0..5 x=90+100*t; R=0..0.055 -> y=310..(310-0.055*4000)=90; y=310-R*4000 -->
+  <line class="axis" x1="70" y1="50" x2="70" y2="310" stroke-width="1.25"/>
+  <line class="axis" x1="70" y1="310" x2="680" y2="310" stroke-width="1.25"/>
+  <text class="muted" x="22" y="180" text-anchor="middle" font-size="12" transform="rotate(-90 22 180)">R</text>
+  <text class="muted" x="62" y="314" text-anchor="end" font-size="11">0</text>
+  <text class="muted" x="62" y="194" text-anchor="end" font-size="11">0.03</text>
+  <text class="muted" x="62" y="94" text-anchor="end" font-size="11">0.055</text>
+  <line class="guide" x1="70" y1="190" x2="680" y2="190" stroke-width="1" stroke-dasharray="4 4" opacity="0.55"/>
+
+  <!-- simple: 0, 0.02, 0.01, 0.04, 0.05, 0.03 -> y 310, 230, 270, 150, 110, 190 -->
+  <path class="hi" stroke-width="1.75" stroke-dasharray="6 4" stroke-linejoin="round" stroke-linecap="round" d="M 90,310 L 190,230 L 290,270 L 390,150 L 490,110 L 590,190"/>
+  <circle class="hi-fill" cx="90" cy="310" r="3.5" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="190" cy="230" r="3.5" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="290" cy="270" r="3.5" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="390" cy="150" r="3.5" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="490" cy="110" r="3.5" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="590" cy="190" r="4.5" data-allow-overlap="1"/>
+  <text class="hi-fill" x="622" y="186" text-anchor="start" font-size="12">3%</text>
+
+  <!-- R_cum: 0, 0.02, 0.0098, 0.040094, 0.0505, 0.0295 -> 310, 230, 270.8, 149.6, 108, 192 -->
+  <path class="accent" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" d="M 90,310 L 190,230 L 290,270.8 L 390,149.6 L 490,108 L 590,192"/>
+  <circle class="accent-fill" cx="90" cy="310" r="4" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="190" cy="230" r="4" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="290" cy="270.8" r="4" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="390" cy="149.6" r="4" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="490" cy="108" r="4" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="590" cy="192" r="5" data-allow-overlap="1"/>
+  <text class="accent-fill" x="590" y="214" text-anchor="middle" font-size="12">2.95%</text>
+
+  <text class="muted" x="90" y="332" text-anchor="middle" font-size="12">t=0</text>
+  <text class="muted" x="190" y="332" text-anchor="middle" font-size="12">t=1</text>
+  <text class="muted" x="290" y="332" text-anchor="middle" font-size="12">t=2</text>
+  <text class="muted" x="390" y="332" text-anchor="middle" font-size="12">t=3</text>
+  <text class="muted" x="490" y="332" text-anchor="middle" font-size="12">t=4</text>
+  <text class="muted" x="590" y="332" text-anchor="middle" font-size="12">t=5</text>
+  <text class="muted" x="360" y="356" text-anchor="middle" font-size="11">r = [0.02, -0.01, 0.03, 0.01, -0.02]</text>
+  <rect class="accent-fill" x="150" y="368" width="10" height="10" rx="2"/>
+  <text class="muted" x="166" y="377" text-anchor="start" font-size="12">compounded R_cum</text>
+  <rect class="hi-fill" x="400" y="368" width="10" height="10" rx="2"/>
+  <text class="muted" x="416" y="377" text-anchor="start" font-size="12">simple sum</text>
+</svg>

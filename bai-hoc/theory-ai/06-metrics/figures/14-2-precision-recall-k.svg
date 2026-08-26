@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" role="img" aria-labelledby="prk-14-2-title">
+  <title id="prk-14-2-title">Top-10: 3 of 5 relevant; P@10=0.30, R@10=0.60</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .box-hit { fill: #2F6FED; fill-opacity: 0.12; stroke: #2F6FED; }
+    .box-miss { fill: none; stroke: #5C6570; }
+    .box-left { fill: #C45C0A; fill-opacity: 0.10; stroke: #C45C0A; }
+    .box-soft { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .box-hit { fill: #8AB4F8; fill-opacity: 0.18; stroke: #8AB4F8; }
+      .box-miss { stroke: #9AA0A6; }
+      .box-left { fill: #F9AB00; fill-opacity: 0.16; stroke: #F9AB00; }
+      .box-soft { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="prk-14-2-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="16" font-weight="600" stroke="none">Top-10: 3 of 5 relevant</text>
+
+  <text class="muted" x="67" y="48" text-anchor="middle" font-size="11" stroke="none">1</text>
+  <text class="muted" x="129" y="48" text-anchor="middle" font-size="11" stroke="none">2</text>
+  <text class="muted" x="191" y="48" text-anchor="middle" font-size="11" stroke="none">3</text>
+  <text class="muted" x="253" y="48" text-anchor="middle" font-size="11" stroke="none">4</text>
+  <text class="muted" x="315" y="48" text-anchor="middle" font-size="11" stroke="none">5</text>
+  <text class="muted" x="377" y="48" text-anchor="middle" font-size="11" stroke="none">6</text>
+  <text class="muted" x="439" y="48" text-anchor="middle" font-size="11" stroke="none">7</text>
+  <text class="muted" x="501" y="48" text-anchor="middle" font-size="11" stroke="none">8</text>
+  <text class="muted" x="563" y="48" text-anchor="middle" font-size="11" stroke="none">9</text>
+  <text class="muted" x="625" y="48" text-anchor="middle" font-size="11" stroke="none">10</text>
+
+  <rect class="box-hit" x="41" y="62" width="52" height="52" rx="4" stroke-width="1.5"/>
+  <text class="accent" x="67" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">A</text>
+
+  <rect class="box-miss" x="103" y="62" width="52" height="52" rx="4" stroke-width="1.5"/>
+  <text class="muted" x="129" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">X</text>
+
+  <rect class="box-hit" x="165" y="62" width="52" height="52" rx="4" stroke-width="1.5"/>
+  <text class="accent" x="191" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">B</text>
+
+  <rect class="box-miss" x="227" y="62" width="52" height="52" rx="4" stroke-width="1.5"/>
+  <text class="muted" x="253" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">Y</text>
+
+  <rect class="box-miss" x="289" y="62" width="52" height="52" rx="4" stroke-width="1.5"/>
+  <text class="muted" x="315" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">Z</text>
+
+  <rect class="box-hit" x="351" y="62" width="52" height="52" rx="4" stroke-width="1.5"/>
+  <text class="accent" x="377" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">C</text>
+
+  <rect class="box-miss" x="413" y="62" width="52" height="52" rx="4" stroke-width="1.5"/>
+  <text class="muted" x="439" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">W</text>
+
+  <rect class="box-miss" x="475" y="62" width="52" height="52" rx="4" stroke-width="1.5"/>
+  <text class="muted" x="501" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">V</text>
+
+  <rect class="box-miss" x="537" y="62" width="52" height="52" rx="4" stroke-width="1.5"/>
+  <text class="muted" x="563" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">U</text>
+
+  <rect class="box-miss" x="599" y="62" width="52" height="52" rx="4" stroke-width="1.5"/>
+  <text class="muted" x="625" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">T</text>
+
+  <text class="muted" x="180" y="148" text-anchor="middle" font-size="12" stroke="none">hits in top-10: A, B, C</text>
+
+  <text class="ink" x="360" y="148" text-anchor="start" font-size="12" stroke="none">missed:</text>
+  <rect class="box-left" x="430" y="130" width="40" height="28" rx="3" stroke-width="1.25"/>
+  <text class="hi" x="450" y="150" text-anchor="middle" font-size="14" font-weight="700" stroke="none">D</text>
+  <rect class="box-left" x="478" y="130" width="40" height="28" rx="3" stroke-width="1.25"/>
+  <text class="hi" x="498" y="150" text-anchor="middle" font-size="14" font-weight="700" stroke="none">E</text>
+
+  <rect class="box-hit" x="70" y="188" width="260" height="72" rx="4" stroke-width="1.5"/>
+  <text class="accent" x="200" y="218" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Precision@10</text>
+  <text class="ink" x="200" y="244" text-anchor="middle" font-size="16" font-weight="700" stroke="none">3 / 10 = 0.30</text>
+
+  <rect class="box-left" x="390" y="188" width="260" height="72" rx="4" stroke-width="1.5"/>
+  <text class="hi" x="520" y="218" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Recall@10</text>
+  <text class="ink" x="520" y="244" text-anchor="middle" font-size="16" font-weight="700" stroke="none">3 / 5 = 0.60</text>
+
+  <text class="muted" x="360" y="292" text-anchor="middle" font-size="12" stroke="none">T = {A, B, C, D, E}</text>
+  <text class="muted" x="360" y="312" text-anchor="middle" font-size="12" stroke="none">blue = relevant in top-10; orange = relevant not retrieved</text>
+</svg>

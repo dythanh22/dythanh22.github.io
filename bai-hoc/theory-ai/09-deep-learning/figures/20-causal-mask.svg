@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="causal-20-title">
+  <title id="causal-20-title">4x4 causal mask: upper triangle -inf</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .ok { fill: #E8F0FE; stroke: #2F6FED; }
+    .ban { fill: #FCE8D5; stroke: #C45C0A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .ok { fill: #1A2A44; stroke: #8AB4F8; }
+      .ban { fill: #3A2A14; stroke: #F9AB00; }
+    }
+  </style>
+
+  <text id="causal-20-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="15" font-weight="600">Causal mask, seq_len = 4</text>
+
+  <text class="muted" x="320" y="52" text-anchor="middle" font-size="12">key position</text>
+  <text class="muted" x="196" y="76" text-anchor="middle" font-size="12">1</text>
+  <text class="muted" x="260" y="76" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="324" y="76" text-anchor="middle" font-size="12">3</text>
+  <text class="muted" x="388" y="76" text-anchor="middle" font-size="12">4</text>
+
+  <text class="muted" x="36" y="200" text-anchor="middle" font-size="12" transform="rotate(-90 36 200)">query position</text>
+  <text class="muted" x="148" y="120" text-anchor="end" font-size="12">1</text>
+  <text class="muted" x="148" y="184" text-anchor="end" font-size="12">2</text>
+  <text class="muted" x="148" y="248" text-anchor="end" font-size="12">3</text>
+  <text class="muted" x="148" y="312" text-anchor="end" font-size="12">4</text>
+
+  <rect class="ok" x="164" y="88" width="64" height="64" stroke-width="1.6"/>
+  <rect class="ban" x="228" y="88" width="64" height="64" stroke-width="1.6"/>
+  <rect class="ban" x="292" y="88" width="64" height="64" stroke-width="1.6"/>
+  <rect class="ban" x="356" y="88" width="64" height="64" stroke-width="1.6"/>
+  <text class="accent" x="196" y="126" text-anchor="middle" font-size="14" font-weight="700" stroke="none">0</text>
+  <text class="hi" x="260" y="126" text-anchor="middle" font-size="13" font-weight="700" stroke="none">-inf</text>
+  <text class="hi" x="324" y="126" text-anchor="middle" font-size="13" font-weight="700" stroke="none">-inf</text>
+  <text class="hi" x="388" y="126" text-anchor="middle" font-size="13" font-weight="700" stroke="none">-inf</text>
+
+  <rect class="ok" x="164" y="152" width="64" height="64" stroke-width="1.6"/>
+  <rect class="ok" x="228" y="152" width="64" height="64" stroke-width="1.6"/>
+  <rect class="ban" x="292" y="152" width="64" height="64" stroke-width="1.6"/>
+  <rect class="ban" x="356" y="152" width="64" height="64" stroke-width="1.6"/>
+  <text class="accent" x="196" y="190" text-anchor="middle" font-size="14" font-weight="700" stroke="none">0</text>
+  <text class="accent" x="260" y="190" text-anchor="middle" font-size="14" font-weight="700" stroke="none">0</text>
+  <text class="hi" x="324" y="190" text-anchor="middle" font-size="13" font-weight="700" stroke="none">-inf</text>
+  <text class="hi" x="388" y="190" text-anchor="middle" font-size="13" font-weight="700" stroke="none">-inf</text>
+
+  <rect class="ok" x="164" y="216" width="64" height="64" stroke-width="1.6"/>
+  <rect class="ok" x="228" y="216" width="64" height="64" stroke-width="1.6"/>
+  <rect class="ok" x="292" y="216" width="64" height="64" stroke-width="1.6"/>
+  <rect class="ban" x="356" y="216" width="64" height="64" stroke-width="1.6"/>
+  <text class="accent" x="196" y="254" text-anchor="middle" font-size="14" font-weight="700" stroke="none">0</text>
+  <text class="accent" x="260" y="254" text-anchor="middle" font-size="14" font-weight="700" stroke="none">0</text>
+  <text class="accent" x="324" y="254" text-anchor="middle" font-size="14" font-weight="700" stroke="none">0</text>
+  <text class="hi" x="388" y="254" text-anchor="middle" font-size="13" font-weight="700" stroke="none">-inf</text>
+
+  <rect class="ok" x="164" y="280" width="64" height="64" stroke-width="1.6"/>
+  <rect class="ok" x="228" y="280" width="64" height="64" stroke-width="1.6"/>
+  <rect class="ok" x="292" y="280" width="64" height="64" stroke-width="1.6"/>
+  <rect class="ok" x="356" y="280" width="64" height="64" stroke-width="1.6"/>
+  <text class="accent" x="196" y="318" text-anchor="middle" font-size="14" font-weight="700" stroke="none">0</text>
+  <text class="accent" x="260" y="318" text-anchor="middle" font-size="14" font-weight="700" stroke="none">0</text>
+  <text class="accent" x="324" y="318" text-anchor="middle" font-size="14" font-weight="700" stroke="none">0</text>
+  <text class="accent" x="388" y="318" text-anchor="middle" font-size="14" font-weight="700" stroke="none">0</text>
+
+  <rect class="ok" x="452" y="120" width="18" height="14" rx="2" stroke-width="1.2"/>
+  <text class="muted" x="476" y="132" text-anchor="start" font-size="12" stroke="none">0 = allowed</text>
+  <rect class="ban" x="452" y="148" width="18" height="14" rx="2" stroke-width="1.2"/>
+  <text class="muted" x="476" y="160" text-anchor="start" font-size="12" stroke="none">-inf = future</text>
+
+  <text class="ink" x="320" y="372" text-anchor="middle" font-size="13">M added before softmax; e^{-inf} = 0</text>
+  <text class="muted" x="320" y="396" text-anchor="middle" font-size="12">row i attends only to columns 1..i (lower triangle + diagonal)</text>
+</svg>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-labelledby="pc-187-title">
+  <title id="pc-187-title">Percent change of [100, 105, 102, 110, 108]</title>
+  <style>
+    .ink { fill: #1A1A1A; }
+    .muted { fill: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .guide { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; stroke: none; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; }
+      .muted { fill: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .guide { stroke: #9AA0A6; }
+    }
+  </style>
+  <text id="pc-187-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="15" font-weight="600">PC from y = [100, 105, 102, 110, 108]</text>
+
+  <!-- top panel: levels 98..112 -> y = 198 - (v-98)*7.5; t=1..5 -> x=100+130*(t-1) -->
+  <text class="muted" x="24" y="112" text-anchor="middle" font-size="12" transform="rotate(-90 24 112)">y_t</text>
+  <line class="axis" x1="80" y1="50" x2="80" y2="198" stroke-width="1.25"/>
+  <line class="axis" x1="80" y1="198" x2="680" y2="198" stroke-width="1.25"/>
+  <text class="muted" x="72" y="202" text-anchor="end" font-size="11">98</text>
+  <text class="muted" x="72" y="127" text-anchor="end" font-size="11">108</text>
+  <text class="muted" x="72" y="58" text-anchor="end" font-size="11">112</text>
+  <path class="accent" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" d="M 100,183 L 230,145.5 L 360,168 L 490,108 L 620,123"/>
+  <circle class="accent-fill" cx="100" cy="183" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="230" cy="145.5" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="360" cy="168" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="490" cy="108" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="620" cy="123" r="4.5" data-allow-overlap="1"/>
+  <text class="ink" x="100" y="168" text-anchor="middle" font-size="11">100</text>
+  <text class="ink" x="230" y="130" text-anchor="middle" font-size="11">105</text>
+  <text class="ink" x="360" y="154" text-anchor="middle" font-size="11">102</text>
+  <text class="ink" x="490" y="93" text-anchor="middle" font-size="11">110</text>
+  <text class="ink" x="620" y="108" text-anchor="middle" font-size="11">108</text>
+
+  <!-- bottom: PC bars; 0% at y=340; 1% ~ 8px; pos fill accent, neg fill hi -->
+  <text class="muted" x="22" y="328" text-anchor="middle" font-size="12" transform="rotate(-90 22 328)">PC_t</text>
+  <line class="axis" x1="80" y1="250" x2="80" y2="400" stroke-width="1.25"/>
+  <line class="guide" x1="80" y1="340" x2="680" y2="340" stroke-width="1.25"/>
+  <text class="muted" x="72" y="344" text-anchor="end" font-size="11">0%</text>
+  <text class="muted" x="72" y="260" text-anchor="end" font-size="11">10%</text>
+  <text class="muted" x="72" y="396" text-anchor="end" font-size="11">-7%</text>
+
+  <text class="muted" x="100" y="358" text-anchor="middle" font-size="11">NaN</text>
+  <rect class="accent-fill" x="214" y="300" width="32" height="40" rx="2"/>
+  <text class="accent-fill" x="230" y="294" text-anchor="middle" font-size="11">5%</text>
+  <rect class="hi-fill" x="344" y="340" width="32" height="22.9" rx="2"/>
+  <text class="hi-fill" x="360" y="378" text-anchor="middle" font-size="11">-2.857%</text>
+  <rect class="accent-fill" x="474" y="277.3" width="32" height="62.7" rx="2"/>
+  <text class="accent-fill" x="490" y="271" text-anchor="middle" font-size="11">7.843%</text>
+  <rect class="hi-fill" x="604" y="340" width="32" height="14.5" rx="2"/>
+  <text class="hi-fill" x="620" y="370" text-anchor="middle" font-size="11">-1.818%</text>
+
+  <text class="muted" x="100" y="418" text-anchor="middle" font-size="12">t=1</text>
+  <text class="muted" x="230" y="418" text-anchor="middle" font-size="12">t=2</text>
+  <text class="muted" x="360" y="418" text-anchor="middle" font-size="12">t=3</text>
+  <text class="muted" x="490" y="418" text-anchor="middle" font-size="12">t=4</text>
+  <text class="muted" x="620" y="418" text-anchor="middle" font-size="12">t=5</text>
+</svg>

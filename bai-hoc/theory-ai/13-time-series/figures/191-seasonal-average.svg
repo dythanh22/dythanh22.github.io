@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="seasavg-191-title">
+  <title id="seasavg-191-title">Seasonal averages of 12 months: Jan=125, Feb=115, ..., Dec=210; trough Feb, peak Dec</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: none; }
+    .hi { fill: #C45C0A; stroke: none; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; }
+      .hi { fill: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="seasavg-191-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="15" font-weight="600">Seasonal averages: Feb = 115, Dec = 210</text>
+
+  <line class="grid" x1="56" y1="300" x2="684" y2="300" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="56" y1="249.17" x2="684" y2="249.17" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="56" y1="198.33" x2="684" y2="198.33" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="56" y1="147.50" x2="684" y2="147.50" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="56" y1="96.67" x2="684" y2="96.67" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="56" y1="56" x2="684" y2="56" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+
+  <line class="axis" x1="56" y1="300" x2="684" y2="300" stroke-width="1.25"/>
+  <line class="axis" x1="56" y1="50" x2="56" y2="300" stroke-width="1.25"/>
+
+  <text class="muted" x="48" y="304" text-anchor="end" font-size="11">100</text>
+  <text class="muted" x="48" y="253" text-anchor="end" font-size="11">125</text>
+  <text class="muted" x="48" y="202" text-anchor="end" font-size="11">150</text>
+  <text class="muted" x="48" y="151" text-anchor="end" font-size="11">175</text>
+  <text class="muted" x="48" y="100" text-anchor="end" font-size="11">200</text>
+  <text class="muted" x="48" y="60" text-anchor="end" font-size="11">220</text>
+  <text class="ink" x="16" y="178" text-anchor="middle" font-size="12" transform="rotate(-90 16 178)">y_s</text>
+
+  <rect class="accent" x="72" y="249.17" width="36" height="50.83"/>
+  <rect class="accent" x="122" y="269.50" width="36" height="30.50"/>
+  <rect class="accent" x="172" y="228.83" width="36" height="71.17"/>
+  <rect class="accent" x="222" y="208.50" width="36" height="91.50"/>
+  <rect class="accent" x="272" y="188.17" width="36" height="111.83"/>
+  <rect class="accent" x="322" y="167.83" width="36" height="132.17"/>
+  <rect class="accent" x="372" y="147.50" width="36" height="152.50"/>
+  <rect class="accent" x="422" y="157.67" width="36" height="142.33"/>
+  <rect class="accent" x="472" y="178.00" width="36" height="122.00"/>
+  <rect class="accent" x="522" y="198.33" width="36" height="101.67"/>
+  <rect class="accent" x="572" y="218.67" width="36" height="81.33"/>
+  <rect class="hi" x="622" y="76.33" width="36" height="223.67"/>
+
+  <text class="muted" x="90" y="236" text-anchor="middle" font-size="11" stroke="none">125</text>
+  <text class="ink" x="140" y="256" text-anchor="middle" font-size="11" stroke="none">115</text>
+  <text class="muted" x="190" y="216" text-anchor="middle" font-size="11" stroke="none">135</text>
+  <text class="muted" x="240" y="196" text-anchor="middle" font-size="11" stroke="none">145</text>
+  <text class="muted" x="290" y="176" text-anchor="middle" font-size="11" stroke="none">155</text>
+  <text class="muted" x="340" y="156" text-anchor="middle" font-size="11" stroke="none">165</text>
+  <text class="muted" x="390" y="136" text-anchor="middle" font-size="11" stroke="none">175</text>
+  <text class="muted" x="440" y="146" text-anchor="middle" font-size="11" stroke="none">170</text>
+  <text class="muted" x="490" y="166" text-anchor="middle" font-size="11" stroke="none">160</text>
+  <text class="muted" x="540" y="186" text-anchor="middle" font-size="11" stroke="none">150</text>
+  <text class="muted" x="590" y="206" text-anchor="middle" font-size="11" stroke="none">140</text>
+  <text class="hi" x="640" y="64" text-anchor="middle" font-size="12" stroke="none">210</text>
+
+  <text class="muted" x="90" y="318" text-anchor="middle" font-size="11">Jan</text>
+  <text class="muted" x="140" y="318" text-anchor="middle" font-size="11">Feb</text>
+  <text class="muted" x="190" y="318" text-anchor="middle" font-size="11">Mar</text>
+  <text class="muted" x="240" y="318" text-anchor="middle" font-size="11">Apr</text>
+  <text class="muted" x="290" y="318" text-anchor="middle" font-size="11">May</text>
+  <text class="muted" x="340" y="318" text-anchor="middle" font-size="11">Jun</text>
+  <text class="muted" x="390" y="318" text-anchor="middle" font-size="11">Jul</text>
+  <text class="muted" x="440" y="318" text-anchor="middle" font-size="11">Aug</text>
+  <text class="muted" x="490" y="318" text-anchor="middle" font-size="11">Sep</text>
+  <text class="muted" x="540" y="318" text-anchor="middle" font-size="11">Oct</text>
+  <text class="muted" x="590" y="318" text-anchor="middle" font-size="11">Nov</text>
+  <text class="ink" x="640" y="318" text-anchor="middle" font-size="11">Dec</text>
+
+  <text class="ink" x="360" y="348" text-anchor="middle" font-size="12">month</text>
+
+  <rect class="accent" x="200" y="368" width="12" height="12"/>
+  <text class="ink" x="218" y="378" text-anchor="start" font-size="12" stroke="none">Jan-Nov averages</text>
+  <rect class="hi" x="430" y="368" width="12" height="12"/>
+  <text class="ink" x="448" y="378" text-anchor="start" font-size="12" stroke="none">Dec = 210</text>
+</svg>

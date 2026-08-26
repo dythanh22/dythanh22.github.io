@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="tvd-106-title">
+  <title id="tvd-106-title">TVD = 0.10 equals threshold 0.10: no drift (strict greater-than)</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="tvd-106-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="15" font-weight="600">TVD = 0.10 = threshold: no drift</text>
+
+  <rect class="accent" x="540" y="40" width="14" height="14" rx="2"/>
+  <text class="muted" x="560" y="52" text-anchor="start" font-size="12" stroke="none">ref p</text>
+  <rect class="hi" x="612" y="40" width="14" height="14" rx="2"/>
+  <text class="muted" x="632" y="52" text-anchor="start" font-size="12" stroke="none">prod q</text>
+
+  <line class="grid" x1="64" y1="92" x2="680" y2="92" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="grid" x1="64" y1="148" x2="680" y2="148" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="grid" x1="64" y1="204" x2="680" y2="204" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="grid" x1="64" y1="260" x2="680" y2="260" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+
+  <line class="axis" x1="64" y1="280" x2="680" y2="280" stroke-width="1.25"/>
+  <line class="axis" x1="64" y1="64" x2="64" y2="280" stroke-width="1.25"/>
+
+  <text class="muted" x="56" y="284" text-anchor="end" font-size="11" stroke="none">0</text>
+  <text class="muted" x="56" y="264" text-anchor="end" font-size="11" stroke="none">0.10</text>
+  <text class="muted" x="56" y="208" text-anchor="end" font-size="11" stroke="none">0.20</text>
+  <text class="muted" x="56" y="152" text-anchor="end" font-size="11" stroke="none">0.30</text>
+  <text class="muted" x="56" y="96" text-anchor="end" font-size="11" stroke="none">0.40</text>
+
+  <!-- h = p * 560; y = 280 - h. bins 1-5 at groups 128, 248, 368, 488, 608 -->
+  <!-- bin1 p=0.10 h=56 both -->
+  <rect id="tvd-106-p1" class="accent" x="92" y="224" width="32" height="56"/>
+  <rect id="tvd-106-q1" class="hi" x="128" y="224" width="32" height="56"/>
+  <text class="muted" x="126" y="212" text-anchor="middle" font-size="11" stroke="none">0.10</text>
+
+  <!-- bin2 p=0.25 h=140; q=0.20 h=112 -->
+  <rect id="tvd-106-p2" class="accent" x="212" y="140" width="32" height="140"/>
+  <rect id="tvd-106-q2" class="hi" x="248" y="168" width="32" height="112"/>
+  <text class="muted" x="228" y="128" text-anchor="middle" font-size="11" stroke="none">0.25</text>
+  <text class="muted" x="264" y="156" text-anchor="middle" font-size="11" stroke="none">0.20</text>
+
+  <!-- bin3 p=0.35 h=196 y=84; q=0.30 h=168 y=112 -->
+  <rect id="tvd-106-p3" class="accent" x="332" y="84" width="32" height="196"/>
+  <rect id="tvd-106-q3" class="hi" x="368" y="112" width="32" height="168"/>
+  <text class="muted" x="348" y="72" text-anchor="middle" font-size="11" stroke="none">0.35</text>
+  <text class="muted" x="384" y="100" text-anchor="middle" font-size="11" stroke="none">0.30</text>
+
+  <!-- bin4 p=0.20 h=112 y=168; q=0.30 h=168 y=112 -->
+  <rect id="tvd-106-p4" class="accent" x="452" y="168" width="32" height="112"/>
+  <rect id="tvd-106-q4" class="hi" x="488" y="112" width="32" height="168"/>
+  <text class="muted" x="468" y="156" text-anchor="middle" font-size="11" stroke="none">0.20</text>
+  <text class="muted" x="504" y="100" text-anchor="middle" font-size="11" stroke="none">0.30</text>
+
+  <!-- bin5 both 0.10 -->
+  <rect id="tvd-106-p5" class="accent" x="572" y="224" width="32" height="56"/>
+  <rect id="tvd-106-q5" class="hi" x="608" y="224" width="32" height="56"/>
+  <text class="muted" x="606" y="212" text-anchor="middle" font-size="11" stroke="none">0.10</text>
+
+  <text class="ink" x="128" y="300" text-anchor="middle" font-size="12" stroke="none">bin 1</text>
+  <text class="ink" x="248" y="300" text-anchor="middle" font-size="12" stroke="none">bin 2</text>
+  <text class="ink" x="368" y="300" text-anchor="middle" font-size="12" stroke="none">bin 3</text>
+  <text class="ink" x="488" y="300" text-anchor="middle" font-size="12" stroke="none">bin 4</text>
+  <text class="ink" x="608" y="300" text-anchor="middle" font-size="12" stroke="none">bin 5</text>
+
+  <text class="muted" x="128" y="318" text-anchor="middle" font-size="12" stroke="none">|d|=0.00</text>
+  <text class="muted" x="248" y="318" text-anchor="middle" font-size="12" stroke="none">|d|=0.05</text>
+  <text class="muted" x="368" y="318" text-anchor="middle" font-size="12" stroke="none">|d|=0.05</text>
+  <text class="hi" x="488" y="318" text-anchor="middle" font-size="12" font-weight="600" stroke="none">|d|=0.10</text>
+  <text class="muted" x="608" y="318" text-anchor="middle" font-size="12" stroke="none">|d|=0.00</text>
+
+  <text class="ink" x="360" y="350" text-anchor="middle" font-size="13" font-weight="600" stroke="none">sum |p-q| = 0.20,  TVD = 0.20/2 = 0.10</text>
+  <text class="hi" x="360" y="376" text-anchor="middle" font-size="13" font-weight="600" stroke="none">TVD &gt; 0.10 is required: no drift flag</text>
+</svg>

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 340" role="img" aria-labelledby="diag-86-title">
+  <title id="diag-86-title">Diagonal matrix from [5, -2, 8, 1]</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .cell { fill: #FFFFFF; stroke: #1A1A1A; }
+    .dcell { fill: #E8F0FE; stroke: #2F6FED; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .cell { fill: #1E1E1E; stroke: #E8EAED; }
+      .dcell { fill: #1A2A44; stroke: #8AB4F8; }
+    }
+  </style>
+  <text id="diag-86-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="15" font-weight="600">Input [5, -2, 8, 1] &#x2192; diag 4&#x00D7;4</text>
+
+  <!-- Input vector -->
+  <text class="muted" x="100" y="70" text-anchor="middle" font-size="12">input vector</text>
+  <rect class="cell" x="40" y="84" width="52" height="40" rx="2" stroke-width="1.2"/>
+  <rect class="cell" x="96" y="84" width="52" height="40" rx="2" stroke-width="1.2"/>
+  <rect class="cell" x="152" y="84" width="52" height="40" rx="2" stroke-width="1.2"/>
+  <rect class="cell" x="208" y="84" width="52" height="40" rx="2" stroke-width="1.2"/>
+  <text class="ink" x="66" y="110" text-anchor="middle" font-size="14" font-weight="600">5</text>
+  <text class="ink" x="122" y="110" text-anchor="middle" font-size="14" font-weight="600">-2</text>
+  <text class="ink" x="178" y="110" text-anchor="middle" font-size="14" font-weight="600">8</text>
+  <text class="ink" x="234" y="110" text-anchor="middle" font-size="14" font-weight="600">1</text>
+
+  <!-- Arrow -->
+  <line class="accent" x1="280" y1="104" x2="330" y2="104" stroke-width="2" fill="none"/>
+  <polygon class="accent" points="330,98 344,104 330,110" stroke="none"/>
+  <text class="muted" x="312" y="90" text-anchor="middle" font-size="11">place on diagonal</text>
+
+  <!-- 4x4 matrix grid: origin 370,60 cell 48 -->
+  <!-- row 0 -->
+  <rect class="dcell" x="370" y="60" width="48" height="48" stroke-width="1.5"/>
+  <rect class="cell" x="418" y="60" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="466" y="60" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="514" y="60" width="48" height="48" stroke-width="1.2"/>
+  <!-- row 1 -->
+  <rect class="cell" x="370" y="108" width="48" height="48" stroke-width="1.2"/>
+  <rect class="dcell" x="418" y="108" width="48" height="48" stroke-width="1.5"/>
+  <rect class="cell" x="466" y="108" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="514" y="108" width="48" height="48" stroke-width="1.2"/>
+  <!-- row 2 -->
+  <rect class="cell" x="370" y="156" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="418" y="156" width="48" height="48" stroke-width="1.2"/>
+  <rect class="dcell" x="466" y="156" width="48" height="48" stroke-width="1.5"/>
+  <rect class="cell" x="514" y="156" width="48" height="48" stroke-width="1.2"/>
+  <!-- row 3 -->
+  <rect class="cell" x="370" y="204" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="418" y="204" width="48" height="48" stroke-width="1.2"/>
+  <rect class="cell" x="466" y="204" width="48" height="48" stroke-width="1.2"/>
+  <rect class="dcell" x="514" y="204" width="48" height="48" stroke-width="1.5"/>
+
+  <!-- Diagonal values -->
+  <text id="diag-86-d0" class="accent" x="394" y="90" text-anchor="middle" font-size="15" font-weight="700" stroke="none">5</text>
+  <text id="diag-86-d1" class="accent" x="442" y="138" text-anchor="middle" font-size="15" font-weight="700" stroke="none">-2</text>
+  <text id="diag-86-d2" class="accent" x="490" y="186" text-anchor="middle" font-size="15" font-weight="700" stroke="none">8</text>
+  <text id="diag-86-d3" class="accent" x="538" y="234" text-anchor="middle" font-size="15" font-weight="700" stroke="none">1</text>
+
+  <!-- Off-diagonal zeros (sample) -->
+  <text class="muted" x="442" y="90" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="muted" x="490" y="90" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="muted" x="538" y="90" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="muted" x="394" y="138" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="muted" x="490" y="138" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="muted" x="538" y="138" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="muted" x="394" y="186" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="muted" x="442" y="186" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="muted" x="538" y="186" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="muted" x="394" y="234" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="muted" x="442" y="234" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="muted" x="490" y="234" text-anchor="middle" font-size="12" stroke="none">0</text>
+
+  <text class="muted" x="320" y="290" text-anchor="middle" font-size="12">Only A_ii can be nonzero; off-diagonal entries are 0</text>
+  <text class="ink" x="320" y="318" text-anchor="middle" font-size="13">det(D) = 5 &#x00D7; (-2) &#x00D7; 8 &#x00D7; 1 = -80</text>
+</svg>

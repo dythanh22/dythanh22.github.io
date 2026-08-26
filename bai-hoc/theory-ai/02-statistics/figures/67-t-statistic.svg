@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" role="img" aria-labelledby="ttest-67-title">
+  <title id="ttest-67-title">t=-1.67 inside critical bounds +/-2.064</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .rej { fill: #C45C0A; opacity: 0.12; stroke: none; }
+    .keep { fill: #2F6FED; opacity: 0.10; stroke: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .rej { fill: #F9AB00; opacity: 0.22; }
+      .keep { fill: #8AB4F8; opacity: 0.18; }
+    }
+  </style>
+  <text id="ttest-67-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="15" font-weight="600">t = -1.67 inside (-2.064, +2.064) -- fail to reject H0</text>
+
+  <!-- map t: -4..4 -> x = 80 + (t+4)*70 -->
+  <rect class="rej" x="80" y="110" width="135.5" height="56" data-allow-overlap="1"/>
+  <rect class="keep" x="215.5" y="110" width="289" height="56" data-allow-overlap="1"/>
+  <rect class="rej" x="504.5" y="110" width="135.5" height="56" data-allow-overlap="1"/>
+
+  <line class="axis" x1="80" y1="168" x2="640" y2="168" stroke-width="1.5"/>
+
+  <line class="muted" x1="80" y1="162" x2="80" y2="174" stroke-width="1.5" fill="none"/>
+  <line class="muted" x1="220" y1="162" x2="220" y2="174" stroke-width="1.5" fill="none"/>
+  <line class="muted" x1="360" y1="162" x2="360" y2="174" stroke-width="1.5" fill="none"/>
+  <line class="muted" x1="500" y1="162" x2="500" y2="174" stroke-width="1.5" fill="none"/>
+  <line class="muted" x1="640" y1="162" x2="640" y2="174" stroke-width="1.5" fill="none"/>
+
+  <text class="muted" x="80" y="196" text-anchor="middle" font-size="12">-4</text>
+  <text class="muted" x="220" y="196" text-anchor="middle" font-size="12">-2</text>
+  <text class="muted" x="360" y="196" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="500" y="196" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="640" y="196" text-anchor="middle" font-size="12">4</text>
+
+  <line class="hi" x1="215.5" y1="100" x2="215.5" y2="168" stroke-width="2" fill="none"/>
+  <line class="hi" x1="504.5" y1="100" x2="504.5" y2="168" stroke-width="2" fill="none"/>
+  <text class="hi" x="215.5" y="90" text-anchor="middle" font-size="12" stroke="none">t_crit = -2.064</text>
+  <text class="hi" x="504.5" y="90" text-anchor="middle" font-size="12" stroke="none">t_crit = +2.064</text>
+
+  <!-- t = -1.67 -> x = 80 + 2.33*70 = 243.1 -->
+  <circle class="accent" cx="243.1" cy="138" r="7" data-allow-overlap="1"/>
+  <line class="accent" x1="243.1" y1="145" x2="243.1" y2="168" stroke-width="2" fill="none"/>
+  <text class="accent" x="243.1" y="72" text-anchor="middle" font-size="13" font-weight="600" stroke="none">t = -1.67</text>
+  <text class="muted" x="243.1" y="54" text-anchor="middle" font-size="11" stroke="none">observed</text>
+
+  <text class="hi" x="130" y="145" text-anchor="middle" font-size="11" stroke="none">reject</text>
+  <text class="accent" x="360" y="145" text-anchor="middle" font-size="11" stroke="none">do not reject H0</text>
+  <text class="hi" x="572" y="145" text-anchor="middle" font-size="11" stroke="none">reject</text>
+
+  <text class="muted" x="360" y="236" text-anchor="middle" font-size="12">df = 24 ù alpha = 0.05 (two-sided) ù |t| = 1.67 &lt; 2.064 ù p &#x2248; 0.108</text>
+  <text class="ink" x="360" y="268" text-anchor="middle" font-size="13">t axis</text>
+</svg>

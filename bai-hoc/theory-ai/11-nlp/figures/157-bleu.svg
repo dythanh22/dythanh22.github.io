@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="bleu-157-title">
+  <title id="bleu-157-title">Clipped unigram p1=4/5=0.8; the min(3,2)=2</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .nofill { fill: none; }
+    .keep { fill: #2F6FED; fill-opacity: 0.12; stroke: #2F6FED; }
+    .clip { fill: #C45C0A; fill-opacity: 0.12; stroke: #C45C0A; }
+    .box { fill: none; stroke: #1A1A1A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .keep { fill: #8AB4F8; fill-opacity: 0.16; stroke: #8AB4F8; }
+      .clip { fill: #F9AB00; fill-opacity: 0.16; stroke: #F9AB00; }
+      .box { stroke: #E8EAED; }
+    }
+  </style>
+
+  <text id="bleu-157-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="15" font-weight="600">Clipped unigram p1 = 4/5 = 0.8</text>
+
+  <text class="muted" x="70" y="64" text-anchor="start" font-size="12">Reference counts</text>
+  <text class="ink" x="70" y="86" text-anchor="start" font-size="13" stroke="none">the = 2</text>
+  <text class="muted" x="170" y="86" text-anchor="start" font-size="13">cat = 1</text>
+  <text class="muted" x="270" y="86" text-anchor="start" font-size="13">sat = 1</text>
+  <text class="muted" x="370" y="86" text-anchor="start" font-size="13">on = 1</text>
+  <text class="muted" x="470" y="86" text-anchor="start" font-size="13">mat = 1</text>
+
+  <text class="muted" x="70" y="124" text-anchor="start" font-size="12">Candidate (5 unigrams)</text>
+
+  <rect class="keep" x="70" y="138" width="96" height="40" rx="4" stroke-width="1.5"/>
+  <text class="ink" x="118" y="164" text-anchor="middle" font-size="14" stroke="none">the</text>
+  <rect class="keep" x="182" y="138" width="96" height="40" rx="4" stroke-width="1.5"/>
+  <text class="ink" x="230" y="164" text-anchor="middle" font-size="14" stroke="none">the</text>
+  <rect class="clip" x="294" y="138" width="96" height="40" rx="4" stroke-width="1.8" stroke-dasharray="5 3"/>
+  <text class="hi" x="342" y="164" text-anchor="middle" font-size="14" font-weight="600" stroke="none">the</text>
+  <rect class="keep" x="406" y="138" width="96" height="40" rx="4" stroke-width="1.5"/>
+  <text class="ink" x="454" y="164" text-anchor="middle" font-size="14" stroke="none">cat</text>
+  <rect class="keep" x="518" y="138" width="96" height="40" rx="4" stroke-width="1.5"/>
+  <text class="ink" x="566" y="164" text-anchor="middle" font-size="14" stroke="none">mat</text>
+
+  <text class="accent" x="118" y="198" text-anchor="middle" font-size="11" stroke="none">keep</text>
+  <text class="accent" x="230" y="198" text-anchor="middle" font-size="11" stroke="none">keep</text>
+  <text class="hi" x="342" y="198" text-anchor="middle" font-size="11" font-weight="600" stroke="none">clipped</text>
+  <text class="accent" x="454" y="198" text-anchor="middle" font-size="11" stroke="none">keep</text>
+  <text class="accent" x="566" y="198" text-anchor="middle" font-size="11" stroke="none">keep</text>
+
+  <text class="hi" x="360" y="232" text-anchor="middle" font-size="14" font-weight="600" stroke="none">the: min(3, 2) = 2</text>
+  <text class="muted" x="360" y="256" text-anchor="middle" font-size="13">clipped matches = 2 + 1 + 1 = 4</text>
+
+  <rect class="box" x="86" y="278" width="250" height="52" rx="4" stroke-width="1.6"/>
+  <text class="ink" x="211" y="310" text-anchor="middle" font-size="16" font-weight="700" stroke="none">p1 = 4/5 = 0.8</text>
+
+  <rect class="box" x="384" y="278" width="250" height="52" rx="4" stroke-width="1.2" opacity="0.85"/>
+  <text class="muted" x="509" y="310" text-anchor="middle" font-size="14" stroke="none">unclipped 5/5 = 1.0</text>
+
+  <text class="muted" x="360" y="360" text-anchor="middle" font-size="12">without clipping, the extra &quot;the&quot; would inflate precision to 1.0</text>
+</svg>

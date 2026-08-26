@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 330" role="img" aria-labelledby="iou-118-title">
+  <title id="iou-118-title">IoU of boxes A and B equals 0.5625</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .union { fill: #EEF3FC; stroke: none; }
+    .inter { fill: #F8E6D4; stroke: #C45C0A; }
+    .box-a { fill: none; stroke: #2F6FED; }
+    .box-b { fill: none; stroke: #C45C0A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .union { fill: #1A2A44; }
+      .inter { fill: #3A2E14; stroke: #F9AB00; }
+      .box-a { stroke: #8AB4F8; }
+      .box-b { stroke: #F9AB00; }
+    }
+  </style>
+
+  <text id="iou-118-heading" class="ink" x="340" y="26" text-anchor="middle" font-size="15" font-weight="600">IoU = 7200 / 12800 = 0.5625</text>
+
+  <!-- union = A+B-inter (step polygon), scale 1.6 from image coords origin 90 -->
+  <polygon id="iou-118-union" class="union" data-allow-overlap="1"
+    points="64,72 224,72 224,88 256,88 256,248 96,248 96,232 64,232"/>
+
+  <rect id="iou-118-inter" class="inter" data-allow-overlap="1" x="96" y="88" width="128" height="144" stroke-width="1.6"/>
+
+  <rect id="iou-118-a" class="box-a" data-allow-overlap="1" x="64" y="72" width="160" height="160" stroke-width="2.2"/>
+  <rect id="iou-118-b" class="box-b" data-allow-overlap="1" x="96" y="88" width="160" height="160" stroke-width="2.2"/>
+
+  <text class="accent" x="48" y="90" text-anchor="end" font-size="13" font-weight="600" stroke="none">A</text>
+  <text class="hi" x="268" y="104" text-anchor="start" font-size="13" font-weight="600" stroke="none">B</text>
+
+  <text class="hi" x="160" y="268" text-anchor="middle" font-size="12" stroke="none">A &#x2229; B = 7200</text>
+  <text class="muted" x="160" y="288" text-anchor="middle" font-size="12" stroke="none">A &#x222A; B = 12800</text>
+
+  <text class="muted" x="470" y="72" text-anchor="middle" font-size="12" stroke="none">A predicted  [100, 100, 200, 200]</text>
+  <text class="ink" x="470" y="92" text-anchor="middle" font-size="13" stroke="none">|A| = 100 &#x00D7; 100 = 10000</text>
+
+  <text class="muted" x="470" y="122" text-anchor="middle" font-size="12" stroke="none">B ground truth  [120, 110, 220, 210]</text>
+  <text class="ink" x="470" y="142" text-anchor="middle" font-size="13" stroke="none">|B| = 100 &#x00D7; 100 = 10000</text>
+
+  <text class="muted" x="470" y="172" text-anchor="middle" font-size="12" stroke="none">intersection  [120, 110, 200, 200]</text>
+  <text class="hi" x="470" y="192" text-anchor="middle" font-size="13" font-weight="600" stroke="none">|A &#x2229; B| = 80 &#x00D7; 90 = 7200</text>
+
+  <text class="ink" x="470" y="228" text-anchor="middle" font-size="13" stroke="none">|A &#x222A; B| = 10000 + 10000 &#x2212; 7200</text>
+  <text class="ink" x="470" y="248" text-anchor="middle" font-size="13" font-weight="600" stroke="none">= 12800</text>
+  <text class="accent" x="470" y="280" text-anchor="middle" font-size="14" font-weight="700" stroke="none">IoU = 7200 / 12800 = 0.5625</text>
+</svg>

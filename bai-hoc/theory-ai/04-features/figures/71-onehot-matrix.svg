@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 420" role="img" aria-labelledby="onehot-71-title">
+  <title id="onehot-71-title">One-hot matrix for y=[0,2,1,0,2], K=3</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .cell { fill: #FFFFFF; stroke: #1A1A1A; }
+    .onecell { fill: #E8F0FE; stroke: #2F6FED; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .cell { fill: #1E1E1E; stroke: #E8EAED; }
+      .onecell { fill: #1A2A44; stroke: #8AB4F8; }
+    }
+  </style>
+
+  <text id="onehot-71-heading" class="ink" x="340" y="28" text-anchor="middle" font-size="15" font-weight="600">y = [0, 2, 1, 0, 2], K = 3</text>
+
+  <text class="muted" x="70" y="64" text-anchor="middle" font-size="12">label y_i</text>
+  <text class="muted" x="430" y="64" text-anchor="middle" font-size="12">one-hot row (class 0, 1, 2)</text>
+
+  <text class="muted" x="388" y="88" text-anchor="middle" font-size="11">0</text>
+  <text class="muted" x="440" y="88" text-anchor="middle" font-size="11">1</text>
+  <text class="muted" x="492" y="88" text-anchor="middle" font-size="11">2</text>
+
+  <!-- label cells -->
+  <rect class="cell" x="40" y="100" width="60" height="44" rx="2" stroke-width="1.2"/>
+  <rect class="cell" x="40" y="148" width="60" height="44" rx="2" stroke-width="1.2"/>
+  <rect class="cell" x="40" y="196" width="60" height="44" rx="2" stroke-width="1.2"/>
+  <rect class="cell" x="40" y="244" width="60" height="44" rx="2" stroke-width="1.2"/>
+  <rect class="cell" x="40" y="292" width="60" height="44" rx="2" stroke-width="1.2"/>
+  <text class="ink" x="70" y="128" text-anchor="middle" font-size="16" font-weight="700">0</text>
+  <text class="ink" x="70" y="176" text-anchor="middle" font-size="16" font-weight="700">2</text>
+  <text class="ink" x="70" y="224" text-anchor="middle" font-size="16" font-weight="700">1</text>
+  <text class="ink" x="70" y="272" text-anchor="middle" font-size="16" font-weight="700">0</text>
+  <text class="ink" x="70" y="320" text-anchor="middle" font-size="16" font-weight="700">2</text>
+
+  <line class="accent" x1="118" y1="210" x2="178" y2="210" stroke-width="2" fill="none"/>
+  <polygon class="accent" points="178,204 192,210 178,216" stroke="none"/>
+
+  <!-- row 0: [1,0,0] -->
+  <rect class="onecell" x="362" y="100" width="52" height="44" stroke-width="1.6"/>
+  <rect class="cell" x="414" y="100" width="52" height="44" stroke-width="1.2"/>
+  <rect class="cell" x="466" y="100" width="52" height="44" stroke-width="1.2"/>
+  <text class="accent" x="388" y="128" text-anchor="middle" font-size="16" font-weight="700" stroke="none">1</text>
+  <text class="muted" x="440" y="128" text-anchor="middle" font-size="16" stroke="none">0</text>
+  <text class="muted" x="492" y="128" text-anchor="middle" font-size="16" stroke="none">0</text>
+
+  <!-- row 1: [0,0,1] -->
+  <rect class="cell" x="362" y="148" width="52" height="44" stroke-width="1.2"/>
+  <rect class="cell" x="414" y="148" width="52" height="44" stroke-width="1.2"/>
+  <rect class="onecell" x="466" y="148" width="52" height="44" stroke-width="1.6"/>
+  <text class="muted" x="388" y="176" text-anchor="middle" font-size="16" stroke="none">0</text>
+  <text class="muted" x="440" y="176" text-anchor="middle" font-size="16" stroke="none">0</text>
+  <text class="accent" x="492" y="176" text-anchor="middle" font-size="16" font-weight="700" stroke="none">1</text>
+
+  <!-- row 2: [0,1,0] -->
+  <rect class="cell" x="362" y="196" width="52" height="44" stroke-width="1.2"/>
+  <rect class="onecell" x="414" y="196" width="52" height="44" stroke-width="1.6"/>
+  <rect class="cell" x="466" y="196" width="52" height="44" stroke-width="1.2"/>
+  <text class="muted" x="388" y="224" text-anchor="middle" font-size="16" stroke="none">0</text>
+  <text class="accent" x="440" y="224" text-anchor="middle" font-size="16" font-weight="700" stroke="none">1</text>
+  <text class="muted" x="492" y="224" text-anchor="middle" font-size="16" stroke="none">0</text>
+
+  <!-- row 3: [1,0,0] -->
+  <rect class="onecell" x="362" y="244" width="52" height="44" stroke-width="1.6"/>
+  <rect class="cell" x="414" y="244" width="52" height="44" stroke-width="1.2"/>
+  <rect class="cell" x="466" y="244" width="52" height="44" stroke-width="1.2"/>
+  <text class="accent" x="388" y="272" text-anchor="middle" font-size="16" font-weight="700" stroke="none">1</text>
+  <text class="muted" x="440" y="272" text-anchor="middle" font-size="16" stroke="none">0</text>
+  <text class="muted" x="492" y="272" text-anchor="middle" font-size="16" stroke="none">0</text>
+
+  <!-- row 4: [0,0,1] -->
+  <rect class="cell" x="362" y="292" width="52" height="44" stroke-width="1.2"/>
+  <rect class="cell" x="414" y="292" width="52" height="44" stroke-width="1.2"/>
+  <rect class="onecell" x="466" y="292" width="52" height="44" stroke-width="1.6"/>
+  <text class="muted" x="388" y="320" text-anchor="middle" font-size="16" stroke="none">0</text>
+  <text class="muted" x="440" y="320" text-anchor="middle" font-size="16" stroke="none">0</text>
+  <text class="accent" x="492" y="320" text-anchor="middle" font-size="16" font-weight="700" stroke="none">1</text>
+
+  <text class="muted" x="210" y="128" text-anchor="start" font-size="12">row 0: [1, 0, 0]</text>
+  <text class="muted" x="210" y="176" text-anchor="start" font-size="12">row 1: [0, 0, 1]</text>
+  <text class="muted" x="210" y="224" text-anchor="start" font-size="12">row 2: [0, 1, 0]</text>
+  <text class="muted" x="210" y="272" text-anchor="start" font-size="12">row 3: [1, 0, 0]</text>
+  <text class="muted" x="210" y="320" text-anchor="start" font-size="12">row 4: [0, 0, 1]</text>
+
+  <text class="ink" x="340" y="372" text-anchor="middle" font-size="13">Y shape (5, 3): exactly one 1 per row, at column y_i</text>
+  <text class="muted" x="340" y="396" text-anchor="middle" font-size="12">sum of each row = 1</text>
+</svg>

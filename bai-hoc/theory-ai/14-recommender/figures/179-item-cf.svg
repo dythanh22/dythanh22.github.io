@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" role="img" aria-labelledby="itemcf-179-title">
+  <title id="itemcf-179-title">Item-based CF: (0.8*4 + 0.6*5 + 0.3*2)/1.7 = 6.8/1.7 = 4.0</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-soft { fill: #2F6FED; fill-opacity: 0.10; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-soft { fill: #C45C0A; fill-opacity: 0.10; stroke: #C45C0A; }
+    .card { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-soft { fill: #8AB4F8; fill-opacity: 0.14; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-soft { fill: #F9AB00; fill-opacity: 0.14; stroke: #F9AB00; }
+    }
+  </style>
+  <defs>
+    <marker id="itemcf-179-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="ink" stroke="none"/>
+    </marker>
+  </defs>
+
+  <text id="itemcf-179-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="16" font-weight="600">Predict User A rating for Item X</text>
+
+  <rect class="accent-soft card" x="24" y="48" width="200" height="132" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="124" y="76" text-anchor="middle" font-size="13" font-weight="600" stroke="none">Item P</text>
+  <text class="ink" x="124" y="108" text-anchor="middle" font-size="14" stroke="none">sim(X, P) = 0.8</text>
+  <text class="ink" x="124" y="140" text-anchor="middle" font-size="14" stroke="none">r = 4.0</text>
+  <text class="muted" x="124" y="164" text-anchor="middle" font-size="12" stroke="none">0.8 &#x00D7; 4.0 = 3.2</text>
+
+  <rect class="accent-soft card" x="260" y="48" width="200" height="132" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="360" y="76" text-anchor="middle" font-size="13" font-weight="600" stroke="none">Item Q</text>
+  <text class="ink" x="360" y="108" text-anchor="middle" font-size="14" stroke="none">sim(X, Q) = 0.6</text>
+  <text class="ink" x="360" y="140" text-anchor="middle" font-size="14" stroke="none">r = 5.0</text>
+  <text class="muted" x="360" y="164" text-anchor="middle" font-size="12" stroke="none">0.6 &#x00D7; 5.0 = 3.0</text>
+
+  <rect class="accent-soft card" x="496" y="48" width="200" height="132" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="596" y="76" text-anchor="middle" font-size="13" font-weight="600" stroke="none">Item R</text>
+  <text class="ink" x="596" y="108" text-anchor="middle" font-size="14" stroke="none">sim(X, R) = 0.3</text>
+  <text class="ink" x="596" y="140" text-anchor="middle" font-size="14" stroke="none">r = 2.0</text>
+  <text class="muted" x="596" y="164" text-anchor="middle" font-size="12" stroke="none">0.3 &#x00D7; 2.0 = 0.6</text>
+
+  <line class="ink" x1="124" y1="188" x2="200" y2="218" stroke-width="1.5" marker-end="url(#itemcf-179-arrow)"/>
+  <line class="ink" x1="360" y1="188" x2="360" y2="218" stroke-width="1.5" marker-end="url(#itemcf-179-arrow)"/>
+  <line class="ink" x1="596" y1="188" x2="520" y2="218" stroke-width="1.5" marker-end="url(#itemcf-179-arrow)"/>
+
+  <rect class="hi-soft card" x="160" y="224" width="400" height="88" rx="8" stroke-width="1.5"/>
+  <text class="hi" x="360" y="252" text-anchor="middle" font-size="13" font-weight="600" stroke="none">Weighted average</text>
+  <text class="ink" x="360" y="280" text-anchor="middle" font-size="15" stroke="none">(3.2 + 3.0 + 0.6) / (0.8 + 0.6 + 0.3)</text>
+  <text class="muted" x="360" y="300" text-anchor="middle" font-size="13" stroke="none">6.8 / 1.7</text>
+
+  <text class="hi" x="360" y="344" text-anchor="middle" font-size="16" font-weight="600" stroke="none">hat r(A, X) = 4.0</text>
+</svg>

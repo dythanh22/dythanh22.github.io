@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" role="img" aria-labelledby="rnnfwd-84-title">
+  <title id="rnnfwd-84-title">RNN tanh cell: h_t = tanh(x_t Wx + h_{t-1} Wh + b)</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .box { fill: #FFFFFF; stroke: #1A1A1A; }
+    .box-ac { fill: #E8F0FE; stroke: #2F6FED; }
+    .box-hi { fill: #FCE8D5; stroke: #C45C0A; }
+    .arr { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .box { fill: #1E1E1E; stroke: #E8EAED; }
+      .box-ac { fill: #1A2A44; stroke: #8AB4F8; }
+      .box-hi { fill: #3A2A14; stroke: #F9AB00; }
+    }
+  </style>
+
+  <text id="rnnfwd-84-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="15" font-weight="600">RNN tanh cell</text>
+
+  <rect class="box-hi" x="224" y="40" width="96" height="44" rx="6" stroke-width="1.5"/>
+  <text class="hi" x="272" y="68" text-anchor="middle" font-size="15" font-weight="700" stroke="none">h_t-1</text>
+  <text class="muted" x="336" y="68" text-anchor="start" font-size="11">(H,)</text>
+
+  <line class="hi arr" x1="272" y1="84" x2="272" y2="116" stroke-width="2"/>
+  <polygon class="hi" points="266,116 272,122 278,116" stroke="none"/>
+  <text class="muted" x="286" y="112" text-anchor="start" font-size="12">W_h</text>
+
+  <rect class="box-ac" x="24" y="132" width="88" height="44" rx="6" stroke-width="1.5"/>
+  <text class="accent" x="68" y="160" text-anchor="middle" font-size="16" font-weight="700" stroke="none">x_t</text>
+  <text class="muted" x="68" y="192" text-anchor="middle" font-size="11">(D,)</text>
+
+  <line class="accent arr" x1="112" y1="154" x2="226" y2="154" stroke-width="2"/>
+  <polygon class="accent" points="226,148 240,154 226,160" stroke="none"/>
+  <text class="muted" x="168" y="144" text-anchor="middle" font-size="12">W_x</text>
+
+  <circle class="box-ac" cx="272" cy="154" r="26" stroke-width="1.6"/>
+  <text class="accent" x="272" y="160" text-anchor="middle" font-size="20" font-weight="700" stroke="none">+</text>
+
+  <rect class="box" x="248" y="220" width="48" height="36" rx="4" stroke-width="1.3"/>
+  <text class="ink" x="272" y="244" text-anchor="middle" font-size="16" font-weight="700" stroke="none">b</text>
+  <line class="accent arr" x1="272" y1="220" x2="272" y2="198" stroke-width="2"/>
+  <polygon class="accent" points="266,198 272,186 278,198" stroke="none"/>
+
+  <line class="accent arr" x1="298" y1="154" x2="390" y2="154" stroke-width="2"/>
+  <polygon class="accent" points="390,148 404,154 390,160" stroke="none"/>
+
+  <rect class="box-ac" x="410" y="132" width="96" height="44" rx="6" stroke-width="1.5"/>
+  <text class="accent" x="458" y="160" text-anchor="middle" font-size="16" font-weight="700" stroke="none">tanh</text>
+
+  <line class="accent arr" x1="506" y1="154" x2="580" y2="154" stroke-width="2"/>
+  <polygon class="accent" points="580,148 594,154 580,160" stroke="none"/>
+
+  <rect class="box-hi" x="600" y="132" width="88" height="44" rx="6" stroke-width="1.5"/>
+  <text class="hi" x="644" y="160" text-anchor="middle" font-size="16" font-weight="700" stroke="none">h_t</text>
+  <text class="muted" x="644" y="192" text-anchor="middle" font-size="11">(H,)</text>
+
+  <text class="ink" x="360" y="292" text-anchor="middle" font-size="14">h_t = tanh(x_t W_x + h_t-1 W_h + b)</text>
+</svg>

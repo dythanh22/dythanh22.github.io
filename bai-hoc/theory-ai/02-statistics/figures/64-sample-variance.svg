@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300" role="img" aria-labelledby="svar-64-title">
+  <title id="svar-64-title">Sample variance deviations around mean 6</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .fill-none { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+    }
+  </style>
+  <!-- x(v) = 80 + (v - 2) * 60 ; v in [2,10] -->
+  <text id="svar-64-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="15" font-weight="600">Deviations around mean = 6</text>
+  <line class="axis" x1="80" y1="170" x2="560" y2="170" stroke-width="1.5"/>
+  <!-- ticks 3..9 -->
+  <line class="ink fill-none" x1="140" y1="164" x2="140" y2="176" stroke-width="1.25"/>
+  <line class="ink fill-none" x1="200" y1="164" x2="200" y2="176" stroke-width="1.25"/>
+  <line class="ink fill-none" x1="260" y1="164" x2="260" y2="176" stroke-width="1.25"/>
+  <line class="ink fill-none" x1="320" y1="164" x2="320" y2="176" stroke-width="1.25"/>
+  <line class="ink fill-none" x1="380" y1="164" x2="380" y2="176" stroke-width="1.25"/>
+  <line class="ink fill-none" x1="440" y1="164" x2="440" y2="176" stroke-width="1.25"/>
+  <line class="ink fill-none" x1="500" y1="164" x2="500" y2="176" stroke-width="1.25"/>
+  <text class="muted" x="140" y="196" text-anchor="middle" font-size="12">3</text>
+  <text class="muted" x="200" y="196" text-anchor="middle" font-size="12">4</text>
+  <text class="muted" x="260" y="196" text-anchor="middle" font-size="12">5</text>
+  <text class="muted" x="320" y="196" text-anchor="middle" font-size="12">6</text>
+  <text class="muted" x="380" y="196" text-anchor="middle" font-size="12">7</text>
+  <text class="muted" x="440" y="196" text-anchor="middle" font-size="12">8</text>
+  <text class="muted" x="500" y="196" text-anchor="middle" font-size="12">9</text>
+  <!-- mean line at v=6 -> x=320 -->
+  <line class="hi fill-none" x1="320" y1="56" x2="320" y2="170" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="hi" x="320" y="50" text-anchor="middle" font-size="12" stroke="none">x&#x0304; = 6</text>
+  <!-- deviation stems from mean to each point (sorted: 3,4,5,6,7,8,9) -->
+  <line class="accent fill-none" x1="320" y1="120" x2="140" y2="120" stroke-width="1.5" opacity="0.55"/>
+  <line class="accent fill-none" x1="320" y1="132" x2="200" y2="132" stroke-width="1.5" opacity="0.55"/>
+  <line class="accent fill-none" x1="320" y1="144" x2="260" y2="144" stroke-width="1.5" opacity="0.55"/>
+  <line class="accent fill-none" x1="320" y1="108" x2="380" y2="108" stroke-width="1.5" opacity="0.55"/>
+  <line class="accent fill-none" x1="320" y1="96" x2="440" y2="96" stroke-width="1.5" opacity="0.55"/>
+  <line class="accent fill-none" x1="320" y1="84" x2="500" y2="84" stroke-width="1.5" opacity="0.55"/>
+  <!-- data points -->
+  <circle class="accent" cx="140" cy="170" r="6" data-allow-overlap="1"/>
+  <circle class="accent" cx="200" cy="170" r="6" data-allow-overlap="1"/>
+  <circle class="accent" cx="260" cy="170" r="6" data-allow-overlap="1"/>
+  <circle class="hi" cx="320" cy="170" r="6" data-allow-overlap="1"/>
+  <circle class="accent" cx="380" cy="170" r="6" data-allow-overlap="1"/>
+  <circle class="accent" cx="440" cy="170" r="6" data-allow-overlap="1"/>
+  <circle class="accent" cx="500" cy="170" r="6" data-allow-overlap="1"/>
+  <!-- deviation labels -->
+  <text class="muted" x="140" y="114" text-anchor="middle" font-size="11">-3</text>
+  <text class="muted" x="200" y="126" text-anchor="middle" font-size="11">-2</text>
+  <text class="muted" x="260" y="138" text-anchor="middle" font-size="11">-1</text>
+  <text class="muted" x="380" y="102" text-anchor="middle" font-size="11">+1</text>
+  <text class="muted" x="440" y="90" text-anchor="middle" font-size="11">+2</text>
+  <text class="muted" x="500" y="78" text-anchor="middle" font-size="11">+3</text>
+  <!-- result annotations -->
+  <text class="ink" x="160" y="236" text-anchor="middle" font-size="13">s&#xB2; &#x2248; 4.67</text>
+  <text class="ink" x="320" y="236" text-anchor="middle" font-size="13">s &#x2248; 2.16</text>
+  <text class="muted" x="480" y="236" text-anchor="middle" font-size="12">&#x3A3;(x&#x1D62; &#x2212; x&#x0304;)&#xB2; = 28</text>
+  <text class="muted" x="320" y="268" text-anchor="middle" font-size="12">Data: [4, 8, 6, 5, 3, 9, 7]  (n = 7)</text>
+  <text class="ink" x="320" y="290" text-anchor="middle" font-size="12">value</text>
+</svg>

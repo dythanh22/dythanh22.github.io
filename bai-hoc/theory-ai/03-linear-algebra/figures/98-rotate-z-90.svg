@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 380" role="img" aria-labelledby="rotz-98-title">
+  <title id="rotz-98-title">Rotate (1, 0, 5) by 90 degrees about Z to (0, 1, 5)</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .arc { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .arc { stroke: #9AA0A6; }
+    }
+  </style>
+  <defs>
+    <marker id="rotz-98-arrow-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1A1A1A"/>
+    </marker>
+    <marker id="rotz-98-arrow-arc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5C6570"/>
+    </marker>
+  </defs>
+  <text id="rotz-98-heading" class="ink" x="280" y="32" text-anchor="middle" font-size="16" font-weight="600">Top-down: 90 deg about Z</text>
+  <!-- origin (280, 220); scale 120 px/unit -->
+  <line class="axis" x1="100" y1="220" x2="460" y2="220" stroke-width="1.5" marker-end="url(#rotz-98-arrow-ink)"/>
+  <line class="axis" x1="280" y1="360" x2="280" y2="70" stroke-width="1.5" marker-end="url(#rotz-98-arrow-ink)"/>
+  <text class="muted" x="470" y="224" font-size="13" stroke="none">x</text>
+  <text class="muted" x="272" y="62" text-anchor="middle" font-size="13" stroke="none">y</text>
+  <text class="muted" x="268" y="238" text-anchor="end" font-size="12" stroke="none">O</text>
+  <!-- circle radius 120 -->
+  <circle class="arc" cx="280" cy="220" r="120" stroke-width="1" stroke-dasharray="4 3" fill="none"/>
+  <!-- before: (1,0) -> (400, 220) -->
+  <circle class="accent" cx="400" cy="220" r="7" data-allow-overlap="1"/>
+  <line class="accent" x1="280" y1="220" x2="392" y2="220" stroke-width="2" fill="none"/>
+  <text class="accent" x="400" y="248" text-anchor="middle" font-size="13" stroke="none">(1, 0, 5)</text>
+  <!-- after: (0,1) -> (280, 100) -->
+  <circle class="hi" cx="280" cy="100" r="7" data-allow-overlap="1"/>
+  <line class="hi" x1="280" y1="220" x2="280" y2="108" stroke-width="2" fill="none"/>
+  <text class="hi" x="302" y="104" text-anchor="start" font-size="13" stroke="none">(0, 1, 5)</text>
+  <!-- 90 deg arc counterclockwise from +x to +y -->
+  <path class="arc" d="M 355 220 A 75 75 0 0 0 280 145" stroke-width="2" marker-end="url(#rotz-98-arrow-arc)"/>
+  <text class="muted" x="340" y="168" text-anchor="middle" font-size="13" stroke="none">&#x03B8; = 90&#x00B0;</text>
+  <text class="muted" x="280" y="372" text-anchor="middle" font-size="12" stroke="none">XY view; z unchanged</text>
+</svg>

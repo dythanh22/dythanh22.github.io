@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-labelledby="win-199-title">
+  <title id="win-199-title">10% winsorize [1..9, 100] to [1.9, 2..9, 18.1]; mean 14.5 to 6.4</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .cap { fill: none; stroke: #2F6FED; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .cap { stroke: #8AB4F8; }
+    }
+  </style>
+
+  <text id="win-199-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600">10% winsorize: 1 &#x2192; 1.9, 100 &#x2192; 18.1</text>
+
+  <!-- map v: 0..100 -> x = 120 + v*5.6 -->
+  <text class="muted" x="16" y="96" text-anchor="start" font-size="12">original</text>
+  <line class="axis" x1="120" y1="92" x2="680" y2="92" stroke-width="1.5"/>
+  <line class="cap" x1="130.6" y1="60" x2="130.6" y2="204" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <line class="cap" x1="221.4" y1="60" x2="221.4" y2="204" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="accent" x="131" y="52" text-anchor="middle" font-size="12" stroke="none">L = 1.9</text>
+  <text class="accent" x="221" y="76" text-anchor="middle" font-size="12" stroke="none">U = 18.1</text>
+
+  <circle class="hi" cx="125.6" cy="92" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="131.2" cy="92" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="136.8" cy="92" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="142.4" cy="92" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="148.0" cy="92" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="153.6" cy="92" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="159.2" cy="92" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="164.8" cy="92" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="170.4" cy="92" r="5" data-allow-overlap="1"/>
+  <circle class="hi" cx="680" cy="92" r="6" data-allow-overlap="1"/>
+  <text class="muted" x="148" y="116" text-anchor="middle" font-size="11">1..9</text>
+  <text class="hi" x="680" y="76" text-anchor="middle" font-size="12" stroke="none">100</text>
+  <text class="hi" x="280" y="116" text-anchor="middle" font-size="12" stroke="none">mean = 14.5</text>
+
+  <line class="hi" x1="126" y1="100" x2="131" y2="168" stroke-width="1.25" fill="none"/>
+  <line class="hi" x1="668" y1="108" x2="232" y2="168" stroke-width="1.25" fill="none"/>
+
+  <text class="muted" x="16" y="192" text-anchor="start" font-size="12">winsorized</text>
+  <line class="axis" x1="120" y1="188" x2="680" y2="188" stroke-width="1.5"/>
+  <circle class="hi" cx="130.6" cy="188" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="131.2" cy="188" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="136.8" cy="188" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="142.4" cy="188" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="148.0" cy="188" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="153.6" cy="188" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="159.2" cy="188" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="164.8" cy="188" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="170.4" cy="188" r="5" data-allow-overlap="1"/>
+  <circle class="hi" cx="221.4" cy="188" r="6" data-allow-overlap="1"/>
+  <text class="hi" x="131" y="212" text-anchor="middle" font-size="11" stroke="none">1.9</text>
+  <text class="hi" x="221" y="212" text-anchor="middle" font-size="11" stroke="none">18.1</text>
+  <text class="accent" x="280" y="236" text-anchor="middle" font-size="12" stroke="none">mean = 6.4</text>
+
+  <text class="muted" x="500" y="236" text-anchor="middle" font-size="12">[1.9, 2, ..., 9, 18.1]</text>
+  <text class="ink" x="360" y="280" text-anchor="middle" font-size="13">mean 14.5 &#x2192; 6.4 after 10% caps</text>
+</svg>

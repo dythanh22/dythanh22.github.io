@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" role="img" aria-labelledby="chi2-66-title">
+  <title id="chi2-66-title">Chi-square 2x2 observed vs expected</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .box { fill: none; stroke: #1A1A1A; }
+    .box-soft { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .box { stroke: #E8EAED; }
+      .box-soft { stroke: #9AA0A6; }
+    }
+  </style>
+  <text id="chi2-66-heading" class="ink" x="340" y="28" text-anchor="middle" font-size="16" font-weight="600">Contingency 2&#x00D7;2: observed vs expected</text>
+
+  <text id="chi2-66-obs-label" class="accent" x="170" y="58" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Observed O</text>
+  <rect class="box" x="48" y="72" width="244" height="188" stroke-width="1.5" rx="4"/>
+  <line class="box-soft" x1="48" y1="112" x2="292" y2="112" stroke-width="1"/>
+  <line class="box-soft" x1="48" y1="168" x2="292" y2="168" stroke-width="1"/>
+  <line class="box-soft" x1="48" y1="224" x2="292" y2="224" stroke-width="1"/>
+  <line class="box-soft" x1="116" y1="72" x2="116" y2="260" stroke-width="1"/>
+  <line class="box-soft" x1="204" y1="72" x2="204" y2="260" stroke-width="1"/>
+  <text class="muted" x="160" y="98" text-anchor="middle" font-size="11" stroke="none">Disease+</text>
+  <text class="muted" x="248" y="98" text-anchor="middle" font-size="11" stroke="none">Disease-</text>
+  <text class="muted" x="82" y="144" text-anchor="middle" font-size="11" stroke="none">Smoke+</text>
+  <text class="ink" x="160" y="148" text-anchor="middle" font-size="18" font-weight="600" stroke="none">90</text>
+  <text class="ink" x="248" y="148" text-anchor="middle" font-size="18" font-weight="600" stroke="none">60</text>
+  <text class="muted" x="82" y="200" text-anchor="middle" font-size="11" stroke="none">Smoke-</text>
+  <text class="ink" x="160" y="204" text-anchor="middle" font-size="18" font-weight="600" stroke="none">30</text>
+  <text class="ink" x="248" y="204" text-anchor="middle" font-size="18" font-weight="600" stroke="none">120</text>
+  <text class="muted" x="170" y="248" text-anchor="middle" font-size="12" stroke="none">N = 300</text>
+
+  <text id="chi2-66-exp-label" class="hi" x="510" y="58" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Expected E</text>
+  <rect class="box" x="388" y="72" width="244" height="188" stroke-width="1.5" rx="4"/>
+  <line class="box-soft" x1="388" y1="112" x2="632" y2="112" stroke-width="1"/>
+  <line class="box-soft" x1="388" y1="168" x2="632" y2="168" stroke-width="1"/>
+  <line class="box-soft" x1="388" y1="224" x2="632" y2="224" stroke-width="1"/>
+  <line class="box-soft" x1="456" y1="72" x2="456" y2="260" stroke-width="1"/>
+  <line class="box-soft" x1="544" y1="72" x2="544" y2="260" stroke-width="1"/>
+  <text class="muted" x="500" y="98" text-anchor="middle" font-size="11" stroke="none">Disease+</text>
+  <text class="muted" x="588" y="98" text-anchor="middle" font-size="11" stroke="none">Disease-</text>
+  <text class="muted" x="422" y="144" text-anchor="middle" font-size="11" stroke="none">Smoke+</text>
+  <text class="ink" x="500" y="148" text-anchor="middle" font-size="18" font-weight="600" stroke="none">60</text>
+  <text class="ink" x="588" y="148" text-anchor="middle" font-size="18" font-weight="600" stroke="none">90</text>
+  <text class="muted" x="422" y="200" text-anchor="middle" font-size="11" stroke="none">Smoke-</text>
+  <text class="ink" x="500" y="204" text-anchor="middle" font-size="18" font-weight="600" stroke="none">60</text>
+  <text class="ink" x="588" y="204" text-anchor="middle" font-size="18" font-weight="600" stroke="none">90</text>
+  <text class="muted" x="510" y="248" text-anchor="middle" font-size="12" stroke="none">E = R&#x00D7;C / N</text>
+
+  <rect class="box-soft" x="160" y="292" width="360" height="44" stroke-width="1.5" rx="4"/>
+  <text class="hi" x="340" y="320" text-anchor="middle" font-size="16" font-weight="600" stroke="none">&#x03C7;&#x00B2; = 50 ,  df = 1</text>
+</svg>

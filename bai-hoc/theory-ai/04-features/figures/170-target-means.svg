@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="tgtenc-170-title">
+  <title id="tgtenc-170-title">Target means: NY 0.667, Boston 0.0, Chicago 1.0</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .nofill { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+    }
+  </style>
+
+  <text id="tgtenc-170-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="15" font-weight="600">City target means (binary y)</text>
+
+  <line class="ink" x1="80" y1="320" x2="580" y2="320" stroke-width="1.25" fill="none"/>
+  <line class="ink" x1="80" y1="70" x2="80" y2="320" stroke-width="1.25" fill="none"/>
+
+  <line class="muted" x1="80" y1="70" x2="580" y2="70" stroke-width="1" stroke-dasharray="4 4" opacity="0.45" fill="none"/>
+  <line class="muted" x1="80" y1="195" x2="580" y2="195" stroke-width="1" stroke-dasharray="4 4" opacity="0.45" fill="none"/>
+
+  <text class="muted" x="68" y="74" text-anchor="end" font-size="12">1.0</text>
+  <text class="muted" x="68" y="199" text-anchor="end" font-size="12">0.5</text>
+  <text class="muted" x="68" y="324" text-anchor="end" font-size="12">0.0</text>
+  <text class="ink" x="24" y="195" text-anchor="middle" font-size="13" transform="rotate(-90 24 195)">mean(y | city)</text>
+
+  <!-- NY: 0.667, height = 0.667*250 = 166.75, top = 320-167 = 153 -->
+  <rect class="accent" x="130" y="153" width="80" height="167" rx="2" stroke="none"/>
+  <text class="ink" x="170" y="142" text-anchor="middle" font-size="14" font-weight="700">0.667</text>
+  <text class="ink" x="170" y="346" text-anchor="middle" font-size="13">New York</text>
+  <text class="muted" x="170" y="364" text-anchor="middle" font-size="11">(1+1+0)/3</text>
+
+  <!-- Boston: 0.0 -->
+  <line class="hi nofill" x1="270" y1="320" x2="350" y2="320" stroke-width="4" stroke-linecap="round"/>
+  <text class="hi" x="310" y="308" text-anchor="middle" font-size="14" font-weight="700" stroke="none">0.0</text>
+  <text class="ink" x="310" y="346" text-anchor="middle" font-size="13">Boston</text>
+  <text class="muted" x="310" y="364" text-anchor="middle" font-size="11">(0+0)/2</text>
+
+  <!-- Chicago: 1.0, height = 250, top = 70 -->
+  <rect class="hi" x="410" y="70" width="80" height="250" rx="2" stroke="none"/>
+  <text class="ink" x="450" y="58" text-anchor="middle" font-size="14" font-weight="700">1.0</text>
+  <text class="ink" x="450" y="346" text-anchor="middle" font-size="13">Chicago</text>
+  <text class="muted" x="450" y="364" text-anchor="middle" font-size="11">(1)/1</text>
+</svg>

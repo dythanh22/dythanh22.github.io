@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 340" role="img" aria-labelledby="dr-137-title">
+  <title id="dr-137-title">Backward discounted returns: rewards 1,2,3,4,5, gamma=0.9, G0=11.4265</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-soft { fill: #2F6FED; fill-opacity: 0.08; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-soft { fill: #C45C0A; fill-opacity: 0.08; stroke: #C45C0A; }
+    .card { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-soft { fill: #8AB4F8; fill-opacity: 0.12; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-soft { fill: #F9AB00; fill-opacity: 0.12; stroke: #F9AB00; }
+    }
+  </style>
+  <defs>
+    <marker id="dr-137-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="ink" stroke="none"/>
+    </marker>
+  </defs>
+
+  <text id="dr-137-heading" class="ink" x="384" y="28" text-anchor="middle" font-size="16" font-weight="600">Backward returns, &#x03B3; = 0.9</text>
+
+  <text class="muted" x="80" y="52" text-anchor="middle" font-size="12" stroke="none">t = 0</text>
+  <text class="muted" x="232" y="52" text-anchor="middle" font-size="12" stroke="none">t = 1</text>
+  <text class="muted" x="384" y="52" text-anchor="middle" font-size="12" stroke="none">t = 2</text>
+  <text class="muted" x="536" y="52" text-anchor="middle" font-size="12" stroke="none">t = 3</text>
+  <text class="muted" x="688" y="52" text-anchor="middle" font-size="12" stroke="none">t = 4</text>
+
+  <rect class="card ink" x="24" y="62" width="112" height="52" rx="8" stroke-width="1.25"/>
+  <text class="ink" x="80" y="94" text-anchor="middle" font-size="14" stroke="none">R1 = 1</text>
+
+  <rect class="card ink" x="176" y="62" width="112" height="52" rx="8" stroke-width="1.25"/>
+  <text class="ink" x="232" y="94" text-anchor="middle" font-size="14" stroke="none">R2 = 2</text>
+
+  <rect class="card ink" x="328" y="62" width="112" height="52" rx="8" stroke-width="1.25"/>
+  <text class="ink" x="384" y="94" text-anchor="middle" font-size="14" stroke="none">R3 = 3</text>
+
+  <rect class="card ink" x="480" y="62" width="112" height="52" rx="8" stroke-width="1.25"/>
+  <text class="ink" x="536" y="94" text-anchor="middle" font-size="14" stroke="none">R4 = 4</text>
+
+  <rect class="card ink" x="632" y="62" width="112" height="52" rx="8" stroke-width="1.25"/>
+  <text class="ink" x="688" y="94" text-anchor="middle" font-size="14" stroke="none">R5 = 5</text>
+
+  <line class="muted" x1="80" y1="114" x2="80" y2="154" stroke-width="1"/>
+  <line class="muted" x1="232" y1="114" x2="232" y2="154" stroke-width="1"/>
+  <line class="muted" x1="384" y1="114" x2="384" y2="154" stroke-width="1"/>
+  <line class="muted" x1="536" y1="114" x2="536" y2="154" stroke-width="1"/>
+  <line class="muted" x1="688" y1="114" x2="688" y2="154" stroke-width="1"/>
+
+  <rect class="hi-soft card" x="24" y="154" width="112" height="72" rx="8" stroke-width="1.5"/>
+  <text class="hi" x="80" y="186" text-anchor="middle" font-size="13" font-weight="600" stroke="none">G0=11.4265</text>
+  <text class="muted" x="80" y="210" text-anchor="middle" font-size="11" stroke="none">1+0.9x11.585</text>
+
+  <rect class="accent-soft card" x="176" y="154" width="112" height="72" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="232" y="186" text-anchor="middle" font-size="13" font-weight="600" stroke="none">G1=11.585</text>
+  <text class="muted" x="232" y="210" text-anchor="middle" font-size="11" stroke="none">2+0.9x10.65</text>
+
+  <rect class="accent-soft card" x="328" y="154" width="112" height="72" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="384" y="186" text-anchor="middle" font-size="13" font-weight="600" stroke="none">G2=10.65</text>
+  <text class="muted" x="384" y="210" text-anchor="middle" font-size="11" stroke="none">3+0.9x8.5</text>
+
+  <rect class="accent-soft card" x="480" y="154" width="112" height="72" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="536" y="186" text-anchor="middle" font-size="13" font-weight="600" stroke="none">G3=8.5</text>
+  <text class="muted" x="536" y="210" text-anchor="middle" font-size="11" stroke="none">4+0.9x5</text>
+
+  <rect class="accent-soft card" x="632" y="154" width="112" height="72" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="688" y="186" text-anchor="middle" font-size="13" font-weight="600" stroke="none">G4=5</text>
+  <text class="muted" x="688" y="210" text-anchor="middle" font-size="11" stroke="none">R5 terminal</text>
+
+  <line class="ink" x1="176" y1="248" x2="142" y2="248" stroke-width="1.5" marker-end="url(#dr-137-arrow)"/>
+  <line class="ink" x1="328" y1="248" x2="294" y2="248" stroke-width="1.5" marker-end="url(#dr-137-arrow)"/>
+  <line class="ink" x1="480" y1="248" x2="446" y2="248" stroke-width="1.5" marker-end="url(#dr-137-arrow)"/>
+  <line class="ink" x1="632" y1="248" x2="598" y2="248" stroke-width="1.5" marker-end="url(#dr-137-arrow)"/>
+
+  <text class="muted" x="159" y="268" text-anchor="middle" font-size="11" stroke="none">x 0.9</text>
+  <text class="muted" x="311" y="268" text-anchor="middle" font-size="11" stroke="none">x 0.9</text>
+  <text class="muted" x="463" y="268" text-anchor="middle" font-size="11" stroke="none">x 0.9</text>
+  <text class="muted" x="615" y="268" text-anchor="middle" font-size="11" stroke="none">x 0.9</text>
+
+  <text class="muted" x="384" y="308" text-anchor="middle" font-size="12" stroke="none">G_t = R_{t+1} + &#x03B3; G_{t+1}  (one backward pass, O(T))</text>
+  <text class="muted" x="384" y="328" text-anchor="middle" font-size="12" stroke="none">Direct sum for G0 also equals 11.4265</text>
+</svg>

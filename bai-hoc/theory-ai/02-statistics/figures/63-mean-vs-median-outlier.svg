@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 280" role="img" aria-labelledby="mmm-63-title">
+  <title id="mmm-63-title">Mean vs median with outlier</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+    }
+  </style>
+  <text id="mmm-63-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="16" font-weight="600">Outlier pulls the mean, not the median</text>
+  <!-- map v: 0..100 -> x=72+v*4.8 -->
+  <line class="axis" x1="72" y1="180" x2="568" y2="180" stroke-width="1.5"/>
+  <text class="muted" x="72" y="204" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="168" y="204" text-anchor="middle" font-size="12">20</text>
+  <text class="muted" x="264" y="204" text-anchor="middle" font-size="12">40</text>
+  <text class="muted" x="360" y="204" text-anchor="middle" font-size="12">60</text>
+  <text class="muted" x="456" y="204" text-anchor="middle" font-size="12">80</text>
+  <text class="muted" x="552" y="204" text-anchor="middle" font-size="12">100</text>
+  <!-- cluster points 10,11,11,12,12,13 -->
+  <circle class="accent" cx="120" cy="180" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="124.8" cy="180" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="124.8" cy="168" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="129.6" cy="180" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="129.6" cy="168" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="134.4" cy="180" r="5" data-allow-overlap="1"/>
+  <!-- outlier 100 -->
+  <circle class="hi" cx="552" cy="180" r="6" data-allow-overlap="1"/>
+  <text class="hi" x="552" y="160" text-anchor="middle" font-size="11" stroke="none">100</text>
+  <!-- median 12 -->
+  <line class="accent" x1="129.6" y1="72" x2="129.6" y2="180" stroke-width="1.5" stroke-dasharray="5 4" fill="none"/>
+  <text class="accent" x="129.6" y="64" text-anchor="middle" font-size="12" stroke="none">median = 12</text>
+  <!-- mean 24.14 -->
+  <line class="hi" x1="187.9" y1="100" x2="187.9" y2="180" stroke-width="1.5" stroke-dasharray="5 4" fill="none"/>
+  <text class="hi" x="188" y="92" text-anchor="middle" font-size="12" stroke="none">mean = 24.14</text>
+  <text class="muted" x="320" y="240" text-anchor="middle" font-size="12">Data with outlier: [10, 12, 11, 13, 12, 11, 100]</text>
+  <text class="ink" x="320" y="264" text-anchor="middle" font-size="13">value</text>
+</svg>

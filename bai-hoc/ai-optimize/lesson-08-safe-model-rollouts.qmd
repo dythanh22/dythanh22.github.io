@@ -1221,3 +1221,10 @@ Các khái niệm SLO, canary, monitoring từ Lesson 8 vẫn áp dụng cho LLM
 - Kubernetes Documentation — Rolling updates and Horizontal Pod Autoscaler (autoscaling/v2).
 - Argo Rollouts Documentation — Canary strategy, AnalysisTemplate, Prometheus metrics integration, progressive delivery.
 - Google SRE Workbook — Implementing SLOs, alerting on SLOs, error budget policy and postmortem culture (O'Reilly, 2018).
+
+<!-- CROSSLINK_THEORY_OPS -->
+
+::: {.callout-tip}
+## Ôn nền tảng MLOps
+Phát hiện drift / shadow đánh giá: [Data Drift Detection](../../theory-ai/15-mlops/data-drift-detection.qmd) · [Shadow Deployment](../../theory-ai/15-mlops/shadow-deployment-evaluation.qmd) · [Train–Serving Skew](../../theory-ai/15-mlops/detect-train-serving-skew.qmd).
+:::

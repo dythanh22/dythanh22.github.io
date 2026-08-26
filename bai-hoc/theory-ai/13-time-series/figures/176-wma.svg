@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="wma-176-title">
+  <title id="wma-176-title">WMA window 4, weights [4, 3, 2, 1] on [10, 12, 15, 14, 16, 18, 17] gives [NaN, NaN, NaN, 13.5, 14.8, 16.3, 16.8]</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-line { fill: none; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-line { fill: none; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-line { stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-line { stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+  <text id="wma-176-heading" class="ink" x="320" y="24" text-anchor="middle" font-size="15" font-weight="600">WMA (w = 4, weights [4, 3, 2, 1] newest to oldest)</text>
+
+  <line class="grid" x1="64" y1="290" x2="560" y2="290" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="64" y1="237.5" x2="560" y2="237.5" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="64" y1="185" x2="560" y2="185" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="64" y1="132.5" x2="560" y2="132.5" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="64" y1="80" x2="560" y2="80" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+
+  <line class="axis" x1="64" y1="290" x2="560" y2="290" stroke-width="1.25"/>
+  <line class="axis" x1="64" y1="72" x2="64" y2="290" stroke-width="1.25"/>
+
+  <text class="muted" x="56" y="294" text-anchor="end" font-size="11">10</text>
+  <text class="muted" x="56" y="242" text-anchor="end" font-size="11">12</text>
+  <text class="muted" x="56" y="189" text-anchor="end" font-size="11">14</text>
+  <text class="muted" x="56" y="137" text-anchor="end" font-size="11">16</text>
+  <text class="muted" x="56" y="84" text-anchor="end" font-size="11">18</text>
+  <text class="ink" x="18" y="184" text-anchor="middle" font-size="12" transform="rotate(-90 18 184)">y</text>
+
+  <polyline class="accent-line" points="80,290 152,237.5 224,158.75 296,185 368,132.5 440,80 512,106.25" stroke-width="2"/>
+  <polyline class="hi-line" points="296,198.13 368,164 440,124.63 512,111.5" stroke-width="2.25"/>
+
+  <circle class="accent" cx="80" cy="290" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="152" cy="237.5" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="224" cy="158.75" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="296" cy="185" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="368" cy="132.5" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="440" cy="80" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="512" cy="106.25" r="5" data-allow-overlap="1"/>
+
+  <circle class="hi" cx="296" cy="198.13" r="5" data-allow-overlap="1"/>
+  <circle class="hi" cx="368" cy="164" r="5" data-allow-overlap="1"/>
+  <circle class="hi" cx="440" cy="124.63" r="5" data-allow-overlap="1"/>
+  <circle class="hi" cx="512" cy="111.5" r="5" data-allow-overlap="1"/>
+
+  <text class="accent" x="80" y="276" text-anchor="middle" font-size="11" stroke="none">10</text>
+  <text class="accent" x="152" y="222" text-anchor="middle" font-size="11" stroke="none">12</text>
+  <text class="accent" x="224" y="144" text-anchor="middle" font-size="11" stroke="none">15</text>
+  <text class="accent" x="296" y="172" text-anchor="middle" font-size="11" stroke="none">14</text>
+  <text class="accent" x="368" y="118" text-anchor="middle" font-size="11" stroke="none">16</text>
+  <text class="accent" x="440" y="66" text-anchor="middle" font-size="11" stroke="none">18</text>
+  <text class="accent" x="530" y="98" text-anchor="start" font-size="11" stroke="none">17</text>
+
+  <text class="hi" x="296" y="218" text-anchor="middle" font-size="12" stroke="none">13.5</text>
+  <text class="hi" x="386" y="176" text-anchor="start" font-size="12" stroke="none">14.8</text>
+  <text class="hi" x="440" y="144" text-anchor="middle" font-size="12" stroke="none">16.3</text>
+  <text class="hi" x="530" y="124" text-anchor="start" font-size="12" stroke="none">16.8</text>
+
+  <text class="muted" x="80" y="310" text-anchor="middle" font-size="11">NaN</text>
+  <text class="muted" x="152" y="310" text-anchor="middle" font-size="11">NaN</text>
+  <text class="muted" x="224" y="310" text-anchor="middle" font-size="11">NaN</text>
+  <text class="muted" x="80" y="328" text-anchor="middle" font-size="12">1</text>
+  <text class="muted" x="152" y="328" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="224" y="328" text-anchor="middle" font-size="12">3</text>
+  <text class="muted" x="296" y="328" text-anchor="middle" font-size="12">4</text>
+  <text class="muted" x="368" y="328" text-anchor="middle" font-size="12">5</text>
+  <text class="muted" x="440" y="328" text-anchor="middle" font-size="12">6</text>
+  <text class="muted" x="512" y="328" text-anchor="middle" font-size="12">7</text>
+  <text class="ink" x="296" y="348" text-anchor="middle" font-size="12">t</text>
+
+  <circle class="accent" cx="72" cy="372" r="4"/>
+  <text class="ink" x="84" y="376" text-anchor="start" font-size="12" stroke="none">y</text>
+  <circle class="hi" cx="128" cy="372" r="4"/>
+  <text class="ink" x="140" y="376" text-anchor="start" font-size="12" stroke="none">WMA [NaN, NaN, NaN, 13.5, 14.8, 16.3, 16.8]</text>
+</svg>

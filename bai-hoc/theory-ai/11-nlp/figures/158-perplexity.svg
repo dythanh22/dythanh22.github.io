@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" role="img" aria-labelledby="ppl-158-title">
+  <title id="ppl-158-title">P=0.1, 0.05, 0.02; H=3.07; PP=21.5</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .card { fill: none; stroke: #1A1A1A; }
+    .hcard { fill: #2F6FED; fill-opacity: 0.08; stroke: #2F6FED; }
+    .ppcard { fill: #C45C0A; fill-opacity: 0.10; stroke: #C45C0A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .card { stroke: #E8EAED; }
+      .hcard { fill: #8AB4F8; fill-opacity: 0.14; stroke: #8AB4F8; }
+      .ppcard { fill: #F9AB00; fill-opacity: 0.16; stroke: #F9AB00; }
+    }
+  </style>
+
+  <text id="ppl-158-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="15" font-weight="600">P = 0.1, 0.05, 0.02 &#x2192; H = 3.07, PP = 21.5</text>
+
+  <rect class="card" x="48" y="52" width="192" height="118" rx="6" stroke-width="1.4"/>
+  <text class="muted" x="144" y="76" text-anchor="middle" font-size="12">t1</text>
+  <text class="ink" x="144" y="102" text-anchor="middle" font-size="18" font-weight="700" stroke="none">The</text>
+  <text class="accent" x="144" y="128" text-anchor="middle" font-size="14" font-weight="600" stroke="none">P = 0.1</text>
+  <text class="muted" x="144" y="150" text-anchor="middle" font-size="12">-log = 2.303</text>
+
+  <rect class="card" x="264" y="52" width="192" height="118" rx="6" stroke-width="1.4"/>
+  <text class="muted" x="360" y="76" text-anchor="middle" font-size="12">t2</text>
+  <text class="ink" x="360" y="102" text-anchor="middle" font-size="18" font-weight="700" stroke="none">cat</text>
+  <text class="accent" x="360" y="128" text-anchor="middle" font-size="14" font-weight="600" stroke="none">P = 0.05</text>
+  <text class="muted" x="360" y="150" text-anchor="middle" font-size="12">-log = 2.996</text>
+
+  <rect class="card" x="480" y="52" width="192" height="118" rx="6" stroke-width="1.4"/>
+  <text class="muted" x="576" y="76" text-anchor="middle" font-size="12">t3</text>
+  <text class="ink" x="576" y="102" text-anchor="middle" font-size="18" font-weight="700" stroke="none">sat</text>
+  <text class="accent" x="576" y="128" text-anchor="middle" font-size="14" font-weight="600" stroke="none">P = 0.02</text>
+  <text class="muted" x="576" y="150" text-anchor="middle" font-size="12">-log = 3.912</text>
+
+  <text class="muted" x="360" y="198" text-anchor="middle" font-size="13">sum -log p_i = 9.211</text>
+
+  <rect class="hcard" x="100" y="218" width="240" height="72" rx="6" stroke-width="1.6"/>
+  <text class="muted" x="220" y="246" text-anchor="middle" font-size="12" stroke="none">cross-entropy  9.211 / 3</text>
+  <text class="accent" x="220" y="274" text-anchor="middle" font-size="18" font-weight="700" stroke="none">H = 3.07</text>
+
+  <rect class="ppcard" x="380" y="218" width="240" height="72" rx="6" stroke-width="1.8"/>
+  <text class="muted" x="500" y="246" text-anchor="middle" font-size="12" stroke="none">perplexity  e^3.07</text>
+  <text class="hi" x="500" y="274" text-anchor="middle" font-size="18" font-weight="700" stroke="none">PP = 21.5</text>
+
+  <text class="muted" x="360" y="328" text-anchor="middle" font-size="13">about 22 equally likely words per position</text>
+  <text class="muted" x="360" y="350" text-anchor="middle" font-size="12">N = 3 tokens: &quot;The cat sat&quot;</text>
+</svg>

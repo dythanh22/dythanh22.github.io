@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="swish-51-title">
+  <title id="swish-51-title">Swish x*sigma(x); min ~(-1.28,-0.278); 1-&gt;0.731, -1-&gt;-0.269</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="swish-51-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="16" font-weight="600">Swish(x) = x &#x00B7; &#x03C3;(x)</text>
+
+  <line class="ink" x1="80" y1="50" x2="80" y2="330" stroke-width="1.25"/>
+  <line class="ink" x1="80" y1="283" x2="656" y2="283" stroke-width="1.25"/>
+  <line class="grid" x1="400" y1="50" x2="400" y2="330" stroke-width="1" stroke-dasharray="4 4" opacity="0.55"/>
+
+  <path id="swish-51-curve" class="accent" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+        d="M 80.0,285.3 L 88.0,285.5 L 96.0,285.7 L 104.0,286.0 L 112.0,286.2
+           L 120.0,286.5 L 128.0,286.8 L 136.0,287.2 L 144.0,287.5 L 152.0,287.9
+           L 160.0,288.4 L 168.0,288.8 L 176.0,289.3 L 184.0,289.8 L 192.0,290.4
+           L 200.0,291.0 L 208.0,291.6 L 216.0,292.3 L 224.0,293.0 L 232.0,293.7
+           L 240.0,294.4 L 248.0,295.1 L 256.0,295.8 L 264.0,296.6 L 272.0,297.2
+           L 280.0,297.9 L 288.0,298.4 L 296.0,298.9 L 304.0,299.3 L 312.0,299.5
+           L 320.0,299.6 L 328.0,299.4 L 336.0,299.0 L 344.0,298.4 L 352.0,297.4
+           L 360.0,296.0 L 368.0,294.3 L 376.0,292.2 L 384.0,289.7 L 392.0,286.8
+           L 400.0,283.3 L 408.0,279.5 L 416.0,275.1 L 424.0,270.4 L 432.0,265.2
+           L 440.0,259.6 L 448.0,253.6 L 456.0,247.3 L 464.0,240.7 L 472.0,233.8
+           L 480.0,226.7 L 488.0,219.3 L 496.0,211.8 L 504.0,204.1 L 512.0,196.4
+           L 520.0,188.5 L 528.0,180.6 L 536.0,172.6 L 544.0,164.6 L 552.0,156.6
+           L 560.0,148.6 L 568.0,140.6 L 576.0,132.6 L 584.0,124.6 L 592.0,116.6
+           L 600.0,108.7 L 608.0,100.8 L 616.0,93.0 L 624.0,85.2 L 632.0,77.4
+           L 640.0,69.6 L 648.0,61.9 L 656.0,54.2"/>
+
+  <circle class="hi-fill" cx="318.1" cy="299.6" r="4.5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="336.0" cy="299.0" r="4" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="464.0" cy="240.7" r="4" data-allow-overlap="1"/>
+
+  <text class="hi-fill" x="310" y="318" text-anchor="end" font-size="11" stroke="none">min (-1.28, -0.278)</text>
+  <text class="muted" x="348" y="286" text-anchor="start" font-size="11">(-1, -0.269)</text>
+  <text class="muted" x="476" y="228" text-anchor="start" font-size="11">(1, 0.731)</text>
+
+  <text class="muted" x="80" y="348" text-anchor="middle" font-size="12">-5</text>
+  <text class="muted" x="208" y="348" text-anchor="middle" font-size="12">-3</text>
+  <text class="muted" x="336" y="348" text-anchor="middle" font-size="12">-1</text>
+  <text class="muted" x="400" y="348" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="464" y="348" text-anchor="middle" font-size="12">1</text>
+  <text class="muted" x="592" y="348" text-anchor="middle" font-size="12">3</text>
+  <text class="ink" x="368" y="372" text-anchor="middle" font-size="13">x</text>
+
+  <text class="muted" x="70" y="287" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="70" y="225" text-anchor="end" font-size="12">1</text>
+  <text class="muted" x="70" y="167" text-anchor="end" font-size="12">2</text>
+  <text class="muted" x="70" y="108" text-anchor="end" font-size="12">3</text>
+  <text class="muted" x="70" y="54" text-anchor="end" font-size="12">4</text>
+  <text class="ink" x="24" y="190" text-anchor="middle" font-size="13" transform="rotate(-90 24 190)">Swish(x)</text>
+</svg>

@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 340" role="img" aria-labelledby="erode-130-title">
+  <title id="erode-130-title">3x3 ones erode to one center pixel</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .cell { fill: #FFFFFF; stroke: #1A1A1A; }
+    .fg { fill: #E8F0FE; stroke: #2F6FED; }
+    .keep { fill: #F8E6D4; stroke: #C45C0A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .cell { fill: #1E1E1E; stroke: #E8EAED; }
+      .fg { fill: #1A2A44; stroke: #8AB4F8; }
+      .keep { fill: #3A2E14; stroke: #F9AB00; }
+    }
+  </style>
+  <text id="erode-130-heading" class="ink" x="340" y="26" text-anchor="middle" font-size="16" font-weight="600">Erosion: 3&#x00D7;3 ones &#x2192; 1 center pixel</text>
+
+  <text class="muted" x="148" y="52" text-anchor="middle" font-size="12">input 5&#x00D7;5</text>
+  <text class="muted" x="532" y="52" text-anchor="middle" font-size="12">after erosion</text>
+
+  <!-- input grid origin (48,68), cell 40 -->
+  <!-- row 0 -->
+  <rect class="cell" x="48" y="68" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="88" y="68" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="128" y="68" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="168" y="68" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="208" y="68" width="40" height="40" stroke-width="1.2"/>
+  <!-- row 1 -->
+  <rect class="cell" x="48" y="108" width="40" height="40" stroke-width="1.2"/>
+  <rect class="fg" x="88" y="108" width="40" height="40" stroke-width="1.6"/>
+  <rect class="fg" x="128" y="108" width="40" height="40" stroke-width="1.6"/>
+  <rect class="fg" x="168" y="108" width="40" height="40" stroke-width="1.6"/>
+  <rect class="cell" x="208" y="108" width="40" height="40" stroke-width="1.2"/>
+  <!-- row 2 -->
+  <rect class="cell" x="48" y="148" width="40" height="40" stroke-width="1.2"/>
+  <rect class="fg" x="88" y="148" width="40" height="40" stroke-width="1.6"/>
+  <rect class="keep" x="128" y="148" width="40" height="40" stroke-width="1.8"/>
+  <rect class="fg" x="168" y="148" width="40" height="40" stroke-width="1.6"/>
+  <rect class="cell" x="208" y="148" width="40" height="40" stroke-width="1.2"/>
+  <!-- row 3 -->
+  <rect class="cell" x="48" y="188" width="40" height="40" stroke-width="1.2"/>
+  <rect class="fg" x="88" y="188" width="40" height="40" stroke-width="1.6"/>
+  <rect class="fg" x="128" y="188" width="40" height="40" stroke-width="1.6"/>
+  <rect class="fg" x="168" y="188" width="40" height="40" stroke-width="1.6"/>
+  <rect class="cell" x="208" y="188" width="40" height="40" stroke-width="1.2"/>
+  <!-- row 4 -->
+  <rect class="cell" x="48" y="228" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="88" y="228" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="128" y="228" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="168" y="228" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="208" y="228" width="40" height="40" stroke-width="1.2"/>
+
+  <text class="muted" x="68" y="94" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="108" y="94" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="148" y="94" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="188" y="94" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="228" y="94" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="68" y="134" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="accent" x="108" y="134" text-anchor="middle" font-size="15" font-weight="700" stroke="none">1</text>
+  <text class="accent" x="148" y="134" text-anchor="middle" font-size="15" font-weight="700" stroke="none">1</text>
+  <text class="accent" x="188" y="134" text-anchor="middle" font-size="15" font-weight="700" stroke="none">1</text>
+  <text class="muted" x="228" y="134" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="68" y="174" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="accent" x="108" y="174" text-anchor="middle" font-size="15" font-weight="700" stroke="none">1</text>
+  <text class="hi" x="148" y="174" text-anchor="middle" font-size="15" font-weight="700" stroke="none">1</text>
+  <text class="accent" x="188" y="174" text-anchor="middle" font-size="15" font-weight="700" stroke="none">1</text>
+  <text class="muted" x="228" y="174" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="68" y="214" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="accent" x="108" y="214" text-anchor="middle" font-size="15" font-weight="700" stroke="none">1</text>
+  <text class="accent" x="148" y="214" text-anchor="middle" font-size="15" font-weight="700" stroke="none">1</text>
+  <text class="accent" x="188" y="214" text-anchor="middle" font-size="15" font-weight="700" stroke="none">1</text>
+  <text class="muted" x="228" y="214" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="68" y="254" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="108" y="254" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="148" y="254" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="188" y="254" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="228" y="254" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="148" y="292" text-anchor="middle" font-size="12">kernel 3&#x00D7;3 all-ones</text>
+
+  <line class="accent" x1="276" y1="168" x2="348" y2="168" stroke-width="2" fill="none"/>
+  <polygon class="accent" points="348,162 364,168 348,174" stroke="none"/>
+  <text class="muted" x="320" y="154" text-anchor="middle" font-size="11">erode</text>
+
+  <!-- output grid origin (432,68), cell 40 -->
+  <rect class="cell" x="432" y="68" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="472" y="68" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="512" y="68" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="552" y="68" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="592" y="68" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="432" y="108" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="472" y="108" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="512" y="108" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="552" y="108" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="592" y="108" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="432" y="148" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="472" y="148" width="40" height="40" stroke-width="1.2"/>
+  <rect class="keep" x="512" y="148" width="40" height="40" stroke-width="1.8"/>
+  <rect class="cell" x="552" y="148" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="592" y="148" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="432" y="188" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="472" y="188" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="512" y="188" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="552" y="188" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="592" y="188" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="432" y="228" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="472" y="228" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="512" y="228" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="552" y="228" width="40" height="40" stroke-width="1.2"/>
+  <rect class="cell" x="592" y="228" width="40" height="40" stroke-width="1.2"/>
+
+  <text class="muted" x="452" y="94" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="492" y="94" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="532" y="94" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="572" y="94" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="612" y="94" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="452" y="134" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="492" y="134" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="532" y="134" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="572" y="134" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="612" y="134" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="452" y="174" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="492" y="174" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="hi" x="532" y="174" text-anchor="middle" font-size="15" font-weight="700" stroke="none">1</text>
+  <text class="muted" x="572" y="174" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="612" y="174" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="452" y="214" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="492" y="214" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="532" y="214" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="572" y="214" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="612" y="214" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="452" y="254" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="492" y="254" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="532" y="254" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="572" y="254" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="muted" x="612" y="254" text-anchor="middle" font-size="14" stroke="none">0</text>
+  <text class="hi" x="532" y="292" text-anchor="middle" font-size="12" stroke="none">center (2,2) stays 1</text>
+</svg>

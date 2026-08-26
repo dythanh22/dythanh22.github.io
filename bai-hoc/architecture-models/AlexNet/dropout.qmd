@@ -311,3 +311,10 @@ def dropout(x: np.ndarray, p: float = 0.5, training: bool = True, mask: np.ndarr
 
 
 ```
+
+<!-- CROSSLINK_THEORY_DROPOUT -->
+
+::: {.callout-tip}
+## Ôn nền tảng
+Inverted dropout (train/inference): [Theory AI — Dropout](../../theory-ai/09-deep-learning/dropout-training-mode.qmd).
+:::

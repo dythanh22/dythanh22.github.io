@@ -1,0 +1,262 @@
+---
+short-title: "Tổng quan chuỗi"
+title: "Theory AI"
+subtitle: "Nền tảng toán, ML cổ điển, deep learning primitives, và MLOps — từng khái niệm một bài"
+date: 2026-08-26
+order: 0
+categories: [theory-ai]
+series: theory-ai
+role: "Tổng quan chuỗi Theory AI"
+description: "Chuỗi 187 bài lý thuyết thực hành: probability → ML → DL building blocks → domain → MLOps."
+toc: true
+page-layout: article
+listing:
+  - id: roadmap-probability
+    contents: ["01-probability/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-statistics
+    contents: ["02-statistics/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-linear-algebra
+    contents: ["03-linear-algebra/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-features
+    contents: ["04-features/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-classical-ml
+    contents: ["05-classical-ml/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-metrics
+    contents: ["06-metrics/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-activations-losses
+    contents: ["07-activations-losses/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-optimizers
+    contents: ["08-optimizers/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-deep-learning
+    contents: ["09-deep-learning/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-computer-vision
+    contents: ["10-computer-vision/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-nlp
+    contents: ["11-nlp/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-rl
+    contents: ["12-reinforcement-learning/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-time-series
+    contents: ["13-time-series/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-recommender
+    contents: ["14-recommender/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+  - id: roadmap-mlops
+    contents: ["15-mlops/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title, description]
+    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    max-description-length: 100
+---
+
+Chuỗi **Theory AI**: **187 bài** lý thuyết ngắn — công thức, ví dụ số, snippet Python. Nền cho Architecture Models và AI Optimization.
+
+::: {.callout-note icon=false}
+## Cách đọc
+Dùng sidebar theo 15 chapter. Trong mỗi chapter, đọc theo cột `#` (`order`). Vào từ [Trang chủ](/) / menu **Bài học → Theory AI**, hoặc [Tất cả chuỗi](/bai-hoc/).
+:::
+
+{{< include /_partials/reading-modes.md >}}
+
+## Liên kết với chuỗi khác
+
+Một số bài Theory đã gắn callout **Học tiếp / Ôn nền tảng** tới Architecture Models và AI Optimization (và ngược lại). Bản đồ rút gọn:
+
+| Theory AI | Architecture Models | AI Optimization |
+|-----------|---------------------|-----------------|
+| [ReLU](07-activations-losses/relu-activation.qmd) / [GELU](07-activations-losses/gelu-activation.qmd) | [AlexNet ReLU](../architecture-models/AlexNet/activation-func.qmd), [Transformer FFN](../architecture-models/Transformer/ffn.qmd) | — |
+| [Dropout](09-deep-learning/dropout-training-mode.qmd) | [AlexNet Dropout](../architecture-models/AlexNet/dropout.qmd) | — |
+| [Positional Encoding](09-deep-learning/positional-encoding.qmd), [Causal Mask](09-deep-learning/causal-masking-for-attention.qmd) | [Transformer PE](../architecture-models/Transformer/positional-encoding.qmd) | [Lesson 9 LLM](../ai-optimize/lesson-09-llm-inference-systems.qmd) |
+| [RNN](09-deep-learning/rnn-step-forward-tanh-cell.qmd) / [GRU cell](09-deep-learning/build-a-mini-gru-cell-forward-pass.qmd) | [RNN](../architecture-models/RNN/index.qmd), [GRU](../architecture-models/GRU/index.qmd) | — |
+| [2D Conv](10-computer-vision/2d-convolution-image-filtering.qmd) | [AlexNet Convolution](../architecture-models/AlexNet/convolution.qmd) | — |
+| [KL Divergence](07-activations-losses/kl-divergence.qmd) | [VAE KL](../architecture-models/VAE/kl-divergence.qmd) | — |
+| [Data Drift](15-mlops/data-drift-detection.qmd), [Shadow](15-mlops/shadow-deployment-evaluation.qmd) | — | [Lesson 8 Rollouts](../ai-optimize/lesson-08-safe-model-rollouts.qmd) |
+
+## 1. Probability
+
+::: {#roadmap-probability}
+:::
+
+## 2. Statistics
+
+::: {#roadmap-statistics}
+:::
+
+## 3. Linear Algebra
+
+::: {#roadmap-linear-algebra}
+:::
+
+## 4. Features
+
+::: {#roadmap-features}
+:::
+
+## 5. Classical ML
+
+::: {#roadmap-classical-ml}
+:::
+
+## 6. Metrics
+
+::: {#roadmap-metrics}
+:::
+
+## 7. Activations & Losses
+
+::: {#roadmap-activations-losses}
+:::
+
+## 8. Optimizers
+
+::: {#roadmap-optimizers}
+:::
+
+## 9. Deep Learning
+
+::: {#roadmap-deep-learning}
+:::
+
+## 10. Computer Vision
+
+::: {#roadmap-computer-vision}
+:::
+
+## 11. NLP
+
+::: {#roadmap-nlp}
+:::
+
+## 12. Reinforcement Learning
+
+::: {#roadmap-rl}
+:::
+
+## 13. Time Series
+
+::: {#roadmap-time-series}
+:::
+
+## 14. Recommender
+
+::: {#roadmap-recommender}
+:::
+
+## 15. MLOps
+
+::: {#roadmap-mlops}
+:::

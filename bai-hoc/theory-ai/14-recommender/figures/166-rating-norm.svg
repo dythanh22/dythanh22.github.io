@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-labelledby="rnorm-166-title">
+  <title id="rnorm-166-title">Mean-centering User A mean 4.4 and User B mean 2.2</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-soft { fill: #2F6FED; fill-opacity: 0.10; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-soft { fill: #C45C0A; fill-opacity: 0.10; stroke: #C45C0A; }
+    .zero { fill: none; stroke: #5C6570; }
+    .card { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-soft { fill: #8AB4F8; fill-opacity: 0.14; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-soft { fill: #F9AB00; fill-opacity: 0.14; stroke: #F9AB00; }
+      .zero { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="rnorm-166-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="16" font-weight="600">Mean-centering: A mean 4.4, B mean 2.2</text>
+
+  <rect class="accent-soft card" x="20" y="40" width="680" height="176" rx="8" stroke-width="1.25"/>
+  <text class="ink" x="36" y="62" font-size="13" font-weight="600" stroke="none">User A  mean = 4.4</text>
+  <text class="muted" x="36" y="80" font-size="11" stroke="none">raw [5, 4, 5, 3, 5]</text>
+
+  <line class="zero" x1="168" y1="130" x2="688" y2="130" stroke-width="1" stroke-dasharray="4 4"/>
+  <text class="muted" x="160" y="134" text-anchor="end" font-size="11" stroke="none">0</text>
+
+  <!-- 36 px / unit; zero y = 130. Labels sit outside bar tips. -->
+  <rect class="accent" x="188" y="108.4" width="44" height="21.6" rx="3"/>
+  <text class="accent" x="210" y="98" text-anchor="middle" font-size="12" font-weight="600" stroke="none">+0.6</text>
+
+  <rect class="hi" x="288" y="130" width="44" height="14.4" rx="3"/>
+  <text class="hi" x="310" y="162" text-anchor="middle" font-size="12" font-weight="600" stroke="none">-0.4</text>
+
+  <rect class="accent" x="388" y="108.4" width="44" height="21.6" rx="3"/>
+  <text class="accent" x="410" y="98" text-anchor="middle" font-size="12" font-weight="600" stroke="none">+0.6</text>
+
+  <rect class="hi" x="488" y="130" width="44" height="50.4" rx="3"/>
+  <text class="hi" x="548" y="164" text-anchor="start" font-size="12" font-weight="600" stroke="none">-1.4</text>
+
+  <rect class="accent" x="588" y="108.4" width="44" height="21.6" rx="3"/>
+  <text class="accent" x="610" y="98" text-anchor="middle" font-size="12" font-weight="600" stroke="none">+0.6</text>
+
+  <text class="muted" x="210" y="204" text-anchor="middle" font-size="11" stroke="none">i1</text>
+  <text class="muted" x="310" y="204" text-anchor="middle" font-size="11" stroke="none">i2</text>
+  <text class="muted" x="410" y="204" text-anchor="middle" font-size="11" stroke="none">i3</text>
+  <text class="muted" x="510" y="204" text-anchor="middle" font-size="11" stroke="none">i4</text>
+  <text class="muted" x="610" y="204" text-anchor="middle" font-size="11" stroke="none">i5</text>
+
+  <rect class="hi-soft card" x="20" y="228" width="680" height="154" rx="8" stroke-width="1.25"/>
+  <text class="ink" x="36" y="250" font-size="13" font-weight="600" stroke="none">User B  mean = 2.2</text>
+  <text class="muted" x="36" y="268" font-size="11" stroke="none">raw [3, 2, 3, 1, 2]</text>
+
+  <line class="zero" x1="168" y1="318" x2="688" y2="318" stroke-width="1" stroke-dasharray="4 4"/>
+  <text class="muted" x="160" y="322" text-anchor="end" font-size="11" stroke="none">0</text>
+
+  <rect class="accent" x="188" y="289.2" width="44" height="28.8" rx="3"/>
+  <text class="accent" x="210" y="276" text-anchor="middle" font-size="12" font-weight="600" stroke="none">+0.8</text>
+
+  <rect class="hi" x="288" y="318" width="44" height="7.2" rx="3"/>
+  <text class="hi" x="310" y="344" text-anchor="middle" font-size="12" font-weight="600" stroke="none">-0.2</text>
+
+  <rect class="accent" x="388" y="289.2" width="44" height="28.8" rx="3"/>
+  <text class="accent" x="410" y="276" text-anchor="middle" font-size="12" font-weight="600" stroke="none">+0.8</text>
+
+  <rect class="hi" x="488" y="318" width="44" height="43.2" rx="3"/>
+  <text class="hi" x="548" y="348" text-anchor="start" font-size="12" font-weight="600" stroke="none">-1.2</text>
+
+  <rect class="hi" x="588" y="318" width="44" height="7.2" rx="3"/>
+  <text class="hi" x="610" y="344" text-anchor="middle" font-size="12" font-weight="600" stroke="none">-0.2</text>
+
+  <text class="muted" x="360" y="406" text-anchor="middle" font-size="12" stroke="none">both like items 1, 3, 5 and dislike 2, 4 after centering</text>
+</svg>

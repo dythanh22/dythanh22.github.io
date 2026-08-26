@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" role="img" aria-labelledby="log-184-title">
+  <title id="log-184-title">log10 compresses [1, 10, 100, 1000, 10000] to [0, 1, 2, 3, 4]</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+    }
+  </style>
+
+  <text id="log-184-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600">x vs log&#x2081;&#x2080;(x): four orders become integers</text>
+
+  <text class="muted" x="56" y="52" text-anchor="start" font-size="12">x (linear)</text>
+  <line class="axis" x1="56" y1="88" x2="664" y2="88" stroke-width="1.5"/>
+  <circle class="accent" cx="56.1" cy="88" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="56.6" cy="88" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="62.1" cy="88" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="116.8" cy="88" r="5" data-allow-overlap="1"/>
+  <circle class="hi" cx="664" cy="88" r="6" data-allow-overlap="1"/>
+  <text class="accent" x="88" y="72" text-anchor="middle" font-size="11" stroke="none">1, 10, 100</text>
+  <text class="accent" x="117" y="112" text-anchor="middle" font-size="11" stroke="none">1000</text>
+  <text class="hi" x="664" y="72" text-anchor="middle" font-size="11" stroke="none">10000</text>
+  <text class="muted" x="56" y="132" text-anchor="middle" font-size="11">0</text>
+  <text class="muted" x="360" y="132" text-anchor="middle" font-size="11">5000</text>
+  <text class="muted" x="664" y="132" text-anchor="middle" font-size="11">10000</text>
+
+  <text class="muted" x="56" y="164" text-anchor="start" font-size="12">log&#x2081;&#x2080;(x)</text>
+  <line class="axis" x1="56" y1="196" x2="664" y2="196" stroke-width="1.5"/>
+  <circle class="accent" cx="56" cy="196" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="208" cy="196" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="360" cy="196" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="512" cy="196" r="5" data-allow-overlap="1"/>
+  <circle class="hi" cx="664" cy="196" r="6" data-allow-overlap="1"/>
+  <text class="accent" x="56" y="180" text-anchor="middle" font-size="12" stroke="none">0</text>
+  <text class="accent" x="208" y="180" text-anchor="middle" font-size="12" stroke="none">1</text>
+  <text class="accent" x="360" y="180" text-anchor="middle" font-size="12" stroke="none">2</text>
+  <text class="accent" x="512" y="180" text-anchor="middle" font-size="12" stroke="none">3</text>
+  <text class="hi" x="664" y="180" text-anchor="middle" font-size="12" stroke="none">4</text>
+
+  <text class="muted" x="360" y="244" text-anchor="middle" font-size="12">[1, 10, 100, 1000, 10000] &#x2192; [0, 1, 2, 3, 4]</text>
+  <text class="ink" x="360" y="272" text-anchor="middle" font-size="13">Four orders of magnitude become evenly spaced integers</text>
+</svg>

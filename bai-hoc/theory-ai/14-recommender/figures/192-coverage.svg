@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" role="img" aria-labelledby="cov-192-title">
+  <title id="cov-192-title">Union 9 items / catalog 100 = 9% coverage</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .cell { fill: none; stroke: #5C6570; }
+    .cell-on { fill: #2F6FED; fill-opacity: 0.85; stroke: #2F6FED; }
+    .box-hi { fill: #C45C0A; fill-opacity: 0.10; stroke: #C45C0A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .cell { stroke: #9AA0A6; }
+      .cell-on { fill: #8AB4F8; fill-opacity: 0.90; stroke: #8AB4F8; }
+      .box-hi { fill: #F9AB00; fill-opacity: 0.16; stroke: #F9AB00; }
+    }
+  </style>
+  <text id="cov-192-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600" stroke="none">Catalog coverage = 9/100 = 9%</text>
+  <rect class="cell-on" x="40" y="56" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell-on" x="63" y="56" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell-on" x="86" y="56" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell-on" x="109" y="56" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell-on" x="132" y="56" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell-on" x="155" y="56" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell-on" x="178" y="56" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell-on" x="201" y="56" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="224" y="56" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell-on" x="247" y="56" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="40" y="79" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="63" y="79" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="86" y="79" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="109" y="79" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="132" y="79" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="155" y="79" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="178" y="79" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="201" y="79" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="224" y="79" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="247" y="79" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="40" y="102" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="63" y="102" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="86" y="102" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="109" y="102" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="132" y="102" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="155" y="102" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="178" y="102" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="201" y="102" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="224" y="102" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="247" y="102" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="40" y="125" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="63" y="125" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="86" y="125" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="109" y="125" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="132" y="125" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="155" y="125" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="178" y="125" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="201" y="125" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="224" y="125" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="247" y="125" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="40" y="148" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="63" y="148" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="86" y="148" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="109" y="148" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="132" y="148" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="155" y="148" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="178" y="148" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="201" y="148" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="224" y="148" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="247" y="148" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="40" y="171" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="63" y="171" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="86" y="171" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="109" y="171" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="132" y="171" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="155" y="171" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="178" y="171" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="201" y="171" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="224" y="171" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="247" y="171" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="40" y="194" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="63" y="194" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="86" y="194" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="109" y="194" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="132" y="194" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="155" y="194" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="178" y="194" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="201" y="194" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="224" y="194" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="247" y="194" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="40" y="217" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="63" y="217" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="86" y="217" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="109" y="217" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="132" y="217" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="155" y="217" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="178" y="217" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="201" y="217" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="224" y="217" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="247" y="217" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="40" y="240" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="63" y="240" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="86" y="240" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="109" y="240" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="132" y="240" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="155" y="240" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="178" y="240" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="201" y="240" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="224" y="240" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="247" y="240" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="40" y="263" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="63" y="263" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="86" y="263" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="109" y="263" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="132" y="263" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="155" y="263" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="178" y="263" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="201" y="263" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="224" y="263" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell" x="247" y="263" width="20" height="20" rx="2" stroke-width="1"/>
+  <rect class="cell-on" x="307" y="88" width="20" height="20" rx="2" stroke-width="1"/>
+  <text class="muted" x="335" y="103" text-anchor="start" font-size="13" stroke="none">recommended (9)</text>
+  <rect class="cell" x="307" y="120" width="20" height="20" rx="2" stroke-width="1"/>
+  <text class="muted" x="335" y="135" text-anchor="start" font-size="13" stroke="none">not recommended (91)</text>
+  <rect class="box-hi" x="360" y="268" width="312" height="68" rx="4" stroke-width="1.5"/>
+  <text id="cov-192-result" class="ink" x="516" y="296" text-anchor="middle" font-size="15" font-weight="600" stroke="none">union = 9 items</text>
+  <text class="hi" x="516" y="320" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Coverage = 9/100 = 9%</text>
+  <text class="muted" x="164" y="300" text-anchor="middle" font-size="12" stroke="none">catalog |I| = 100</text>
+  <text class="muted" x="164" y="320" text-anchor="middle" font-size="12" stroke="none">cells 1,2,3,4,5,6,7,8,10 on</text>
+</svg>

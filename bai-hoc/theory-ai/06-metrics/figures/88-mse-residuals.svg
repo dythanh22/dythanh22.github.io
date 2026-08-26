@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 430" role="img" aria-labelledby="mse-88-title">
+  <title id="mse-88-title">Four residuals 0.5, 0.2, -0.7, 1.0; SSE=1.78; MSE=0.445</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-line { fill: none; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-line { fill: none; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-line { stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-line { stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="mse-88-heading" class="ink" x="320" y="24" text-anchor="middle" font-size="16" font-weight="600">Residuals: SSE = 1.78, MSE = 0.445</text>
+
+  <line class="axis" x1="80" y1="320" x2="560" y2="320" stroke-width="1.25"/>
+  <line class="axis" x1="80" y1="56" x2="80" y2="320" stroke-width="1.25"/>
+  <line class="grid" x1="80" y1="260" x2="560" y2="260" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="80" y1="200" x2="560" y2="200" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="80" y1="140" x2="560" y2="140" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="80" y1="80" x2="560" y2="80" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+
+  <!-- y_svg = 320 - y*30; x = 130, 250, 370, 490 -->
+  <!-- s1 y=3 -> 230, yhat=2.5 -> 245 -->
+  <line class="hi-line" x1="130" y1="230" x2="130" y2="245" stroke-width="2" data-allow-overlap="1"/>
+  <circle class="accent" cx="130" cy="230" r="6" data-allow-overlap="1"/>
+  <circle class="hi" cx="130" cy="245" r="5" data-allow-overlap="1"/>
+  <text class="muted" x="130" y="210" text-anchor="middle" font-size="11" stroke="none">e = 0.5</text>
+
+  <!-- s2 y=5 -> 170, yhat=4.8 -> 176 -->
+  <line class="hi-line" x1="250" y1="170" x2="250" y2="176" stroke-width="2" data-allow-overlap="1"/>
+  <circle class="accent" cx="250" cy="170" r="6" data-allow-overlap="1"/>
+  <circle class="hi" cx="250" cy="176" r="5" data-allow-overlap="1"/>
+  <text class="muted" x="278" y="168" text-anchor="start" font-size="11" stroke="none">e = 0.2</text>
+
+  <!-- s3 y=2 -> 260, yhat=2.7 -> 239 -->
+  <line class="hi-line" x1="370" y1="260" x2="370" y2="239" stroke-width="2" data-allow-overlap="1"/>
+  <circle class="accent" cx="370" cy="260" r="6" data-allow-overlap="1"/>
+  <circle class="hi" cx="370" cy="239" r="5" data-allow-overlap="1"/>
+  <text class="muted" x="388" y="252" text-anchor="start" font-size="11" stroke="none">e = -0.7</text>
+
+  <!-- s4 y=8 -> 80, yhat=7 -> 110 -->
+  <line class="hi-line" x1="490" y1="80" x2="490" y2="110" stroke-width="2" data-allow-overlap="1"/>
+  <circle class="accent" cx="490" cy="80" r="6" data-allow-overlap="1"/>
+  <circle class="hi" cx="490" cy="110" r="5" data-allow-overlap="1"/>
+  <text class="muted" x="508" y="92" text-anchor="start" font-size="11" stroke="none">e = 1.0</text>
+
+  <text class="muted" x="70" y="324" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="70" y="264" text-anchor="end" font-size="12">2</text>
+  <text class="muted" x="70" y="204" text-anchor="end" font-size="12">4</text>
+  <text class="muted" x="70" y="144" text-anchor="end" font-size="12">6</text>
+  <text class="muted" x="70" y="84" text-anchor="end" font-size="12">8</text>
+  <text class="ink" x="24" y="188" text-anchor="middle" font-size="13" transform="rotate(-90 24 188)">y</text>
+
+  <text class="muted" x="130" y="340" text-anchor="middle" font-size="12">1</text>
+  <text class="muted" x="250" y="340" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="370" y="340" text-anchor="middle" font-size="12">3</text>
+  <text class="muted" x="490" y="340" text-anchor="middle" font-size="12">4</text>
+  <text class="ink" x="320" y="358" text-anchor="middle" font-size="13">sample</text>
+
+  <text class="muted" x="130" y="380" text-anchor="middle" font-size="12">0.25</text>
+  <text class="muted" x="250" y="380" text-anchor="middle" font-size="12">0.04</text>
+  <text class="muted" x="370" y="380" text-anchor="middle" font-size="12">0.49</text>
+  <text class="muted" x="490" y="380" text-anchor="middle" font-size="12">1.00</text>
+
+  <circle class="accent" cx="530" cy="48" r="4"/>
+  <text class="accent" x="542" y="52" text-anchor="start" font-size="12" stroke="none">y</text>
+  <circle class="hi" cx="575" cy="48" r="4"/>
+  <text class="hi" x="587" y="52" text-anchor="start" font-size="12" stroke="none">y&#x0302;</text>
+
+  <text class="ink" x="320" y="412" text-anchor="middle" font-size="14" font-weight="600" stroke="none">SSE = 1.78 ,  MSE = 1.78/4 = 0.445</text>
+</svg>

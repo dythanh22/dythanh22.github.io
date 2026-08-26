@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 472" role="img" aria-labelledby="diff-174-title">
+  <title id="diff-174-title">First difference of [100, 103, 108, 112, 109, 115, 120] equals [3, 5, 4, -3, 6, 5]</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="diff-174-heading" class="ink" x="360" y="22" text-anchor="middle" font-size="16" font-weight="600">First difference: [3, 5, 4, -3, 6, 5]</text>
+
+  <text class="muted" x="90" y="42" text-anchor="start" font-size="12" stroke="none">Original y_t</text>
+
+  <line class="grid" x1="70" y1="203" x2="630" y2="203" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="grid" x1="70" y1="169" x2="630" y2="169" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="grid" x1="70" y1="136" x2="630" y2="136" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="grid" x1="70" y1="103" x2="630" y2="103" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="grid" x1="70" y1="69" x2="630" y2="69" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+
+  <line class="axis" x1="70" y1="216" x2="630" y2="216" stroke-width="1.25"/>
+  <line class="axis" x1="70" y1="48" x2="70" y2="216" stroke-width="1.25"/>
+
+  <polyline id="diff-174-series" class="accent" fill="none" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+            points="90,203 175,183 260,149 345,123 430,143 515,103 600,69"/>
+  <line class="hi" x1="345" y1="123" x2="430" y2="143" stroke-width="2.5" data-allow-overlap="1"/>
+
+  <circle class="accent-fill" cx="90" cy="203" r="5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="175" cy="183" r="5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="260" cy="149" r="5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="345" cy="123" r="5" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="430" cy="143" r="5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="515" cy="103" r="5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="600" cy="69" r="5" data-allow-overlap="1"/>
+
+  <text class="muted" x="90" y="195" text-anchor="middle" font-size="11" stroke="none">100</text>
+  <text class="muted" x="175" y="175" text-anchor="middle" font-size="11" stroke="none">103</text>
+  <text class="muted" x="260" y="141" text-anchor="middle" font-size="11" stroke="none">108</text>
+  <text class="muted" x="345" y="115" text-anchor="middle" font-size="11" stroke="none">112</text>
+  <text class="hi-fill" x="448" y="139" text-anchor="start" font-size="11" stroke="none">109</text>
+  <text class="muted" x="515" y="95" text-anchor="middle" font-size="11" stroke="none">115</text>
+  <text class="muted" x="600" y="61" text-anchor="middle" font-size="11" stroke="none">120</text>
+  <text class="hi-fill" x="388" y="148" text-anchor="middle" font-size="11" stroke="none">-3</text>
+
+  <text class="muted" x="60" y="207" text-anchor="end" font-size="11">100</text>
+  <text class="muted" x="60" y="173" text-anchor="end" font-size="11">105</text>
+  <text class="muted" x="60" y="140" text-anchor="end" font-size="11">110</text>
+  <text class="muted" x="60" y="107" text-anchor="end" font-size="11">115</text>
+  <text class="muted" x="60" y="73" text-anchor="end" font-size="11">120</text>
+
+  <text class="muted" x="90" y="244" text-anchor="start" font-size="12" stroke="none">Dy_t = y_t - y_(t-1)</text>
+
+  <line class="grid" x1="70" y1="318" x2="630" y2="318" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="grid" x1="70" y1="290" x2="630" y2="290" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="grid" x1="70" y1="276" x2="630" y2="276" stroke-width="1" stroke-dasharray="4 4" opacity="0.3"/>
+  <line class="axis" x1="70" y1="430" x2="630" y2="430" stroke-width="1.25"/>
+  <line class="axis" x1="70" y1="250" x2="70" y2="430" stroke-width="1.25"/>
+  <line class="ink" x1="70" y1="360" x2="630" y2="360" stroke-width="1" opacity="0.55"/>
+
+  <rect class="accent-fill" x="161" y="318" width="28" height="42" opacity="0.9"/>
+  <rect class="accent-fill" x="246" y="290" width="28" height="70" opacity="0.9"/>
+  <rect class="accent-fill" x="331" y="304" width="28" height="56" opacity="0.9"/>
+  <rect class="hi-fill" x="416" y="360" width="28" height="42" opacity="0.9"/>
+  <rect class="accent-fill" x="501" y="276" width="28" height="84" opacity="0.9"/>
+  <rect class="accent-fill" x="586" y="290" width="28" height="70" opacity="0.9"/>
+
+  <text class="muted" x="175" y="310" text-anchor="middle" font-size="11" stroke="none">3</text>
+  <text class="muted" x="260" y="282" text-anchor="middle" font-size="11" stroke="none">5</text>
+  <text class="muted" x="345" y="296" text-anchor="middle" font-size="11" stroke="none">4</text>
+  <text class="hi-fill" x="430" y="418" text-anchor="middle" font-size="11" stroke="none">-3</text>
+  <text class="muted" x="515" y="268" text-anchor="middle" font-size="11" stroke="none">6</text>
+  <text class="muted" x="600" y="282" text-anchor="middle" font-size="11" stroke="none">5</text>
+
+  <text class="muted" x="60" y="280" text-anchor="end" font-size="11">6</text>
+  <text class="muted" x="60" y="364" text-anchor="end" font-size="11">0</text>
+  <text class="muted" x="60" y="406" text-anchor="end" font-size="11">-3</text>
+
+  <text class="muted" x="90" y="448" text-anchor="middle" font-size="12">1</text>
+  <text class="muted" x="175" y="448" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="260" y="448" text-anchor="middle" font-size="12">3</text>
+  <text class="muted" x="345" y="448" text-anchor="middle" font-size="12">4</text>
+  <text class="muted" x="430" y="448" text-anchor="middle" font-size="12">5</text>
+  <text class="muted" x="515" y="448" text-anchor="middle" font-size="12">6</text>
+  <text class="muted" x="600" y="448" text-anchor="middle" font-size="12">7</text>
+  <text class="ink" x="655" y="448" text-anchor="start" font-size="13">t</text>
+</svg>

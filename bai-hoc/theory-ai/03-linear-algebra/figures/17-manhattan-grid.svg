@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="manh-17-title">
+  <title id="manh-17-title">Manhattan vs Euclidean on a 2D grid</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #C8CDD3; }
+    .fill-soft { fill: #2F6FED; fill-opacity: 0.08; stroke: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #5C6570; }
+      .fill-soft { fill: #8AB4F8; fill-opacity: 0.12; }
+    }
+  </style>
+  <defs>
+    <marker id="manh-17-arrow-ink" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="ink" stroke="none"/>
+    </marker>
+    <marker id="manh-17-arrow-accent" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="accent" stroke="none"/>
+    </marker>
+    <marker id="manh-17-arrow-hi" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="hi" stroke="none"/>
+    </marker>
+  </defs>
+
+  <text id="manh-17-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="16" font-weight="600">Manhattan (L1=7) vs Euclidean (L2=5)</text>
+
+  <!-- Coordinate map: origin (80,340); unit = 52px; x right, y up -->
+  <!-- Grid 0..5 x, 0..5 y -->
+  <g stroke-width="1">
+    <line class="grid" x1="80" y1="340" x2="340" y2="340"/>
+    <line class="grid" x1="80" y1="288" x2="340" y2="288"/>
+    <line class="grid" x1="80" y1="236" x2="340" y2="236"/>
+    <line class="grid" x1="80" y1="184" x2="340" y2="184"/>
+    <line class="grid" x1="80" y1="132" x2="340" y2="132"/>
+    <line class="grid" x1="80" y1="80" x2="340" y2="80"/>
+    <line class="grid" x1="80" y1="80" x2="80" y2="340"/>
+    <line class="grid" x1="132" y1="80" x2="132" y2="340"/>
+    <line class="grid" x1="184" y1="80" x2="184" y2="340"/>
+    <line class="grid" x1="236" y1="80" x2="236" y2="340"/>
+    <line class="grid" x1="288" y1="80" x2="288" y2="340"/>
+    <line class="grid" x1="340" y1="80" x2="340" y2="340"/>
+  </g>
+
+  <!-- Axes -->
+  <line class="axis" x1="80" y1="340" x2="360" y2="340" stroke-width="1.75" marker-end="url(#manh-17-arrow-ink)"/>
+  <line class="axis" x1="80" y1="340" x2="80" y2="60" stroke-width="1.75" marker-end="url(#manh-17-arrow-ink)"/>
+  <text class="muted" x="368" y="344" font-size="12" stroke="none">x</text>
+  <text class="muted" x="72" y="54" text-anchor="middle" font-size="12" stroke="none">y</text>
+
+  <!-- Tick labels -->
+  <text class="muted" x="80" y="358" text-anchor="middle" font-size="11" stroke="none">0</text>
+  <text class="muted" x="236" y="358" text-anchor="middle" font-size="11" stroke="none">3</text>
+  <text class="muted" x="64" y="236" text-anchor="end" font-size="11" stroke="none">2</text>
+  <text class="muted" x="64" y="136" text-anchor="end" font-size="11" stroke="none">4</text>
+
+  <!-- L1 unit diamond (radius 1), first quadrant edge -->
+  <polygon class="fill-soft" points="132,340 80,288 80,340"/>
+  <polyline class="accent" points="80,288 132,340" fill="none" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text class="accent" x="118" y="312" font-size="11" stroke="none">L1 ball</text>
+
+  <!-- Manhattan path: (0,0)->(3,0)->(3,4) -->
+  <polyline class="hi" points="80,340 236,340 236,132" fill="none" stroke-width="2.5" marker-end="url(#manh-17-arrow-hi)"/>
+  <text class="hi" x="158" y="330" text-anchor="middle" font-size="12" stroke="none">+3</text>
+  <text class="hi" x="248" y="236" font-size="12" stroke="none">+4</text>
+  <text class="hi" x="268" y="200" font-size="13" font-weight="600" stroke="none">Manhattan = 7</text>
+
+  <!-- Euclidean straight line -->
+  <line class="accent" x1="80" y1="340" x2="236" y2="132" stroke-width="2.5" marker-end="url(#manh-17-arrow-accent)"/>
+  <text class="accent" x="128" y="220" font-size="13" font-weight="600" stroke="none">Euclidean = 5</text>
+
+  <!-- Points -->
+  <circle class="ink" cx="80" cy="340" r="5" data-allow-overlap="1"/>
+  <circle class="ink" cx="236" cy="132" r="5" data-allow-overlap="1"/>
+  <text class="ink" x="80" y="372" text-anchor="middle" font-size="12" stroke="none">(0, 0)</text>
+  <text class="ink" x="236" y="116" text-anchor="middle" font-size="12" stroke="none">(3, 4)</text>
+
+  <!-- Legend -->
+  <line class="hi" x1="400" y1="120" x2="440" y2="120" stroke-width="2.5"/>
+  <text class="ink" x="450" y="124" font-size="13" stroke="none">grid path (L1)</text>
+  <line class="accent" x1="400" y1="150" x2="440" y2="150" stroke-width="2.5"/>
+  <text class="ink" x="450" y="154" font-size="13" stroke="none">straight line (L2)</text>
+  <text class="muted" x="400" y="190" font-size="12" stroke="none">From (0,0) to (3,4):</text>
+  <text class="hi" x="400" y="214" font-size="13" stroke="none">|3| + |4| = 7</text>
+  <text class="accent" x="400" y="238" font-size="13" stroke="none">sqrt(9+16) = 5</text>
+  <text class="muted" x="320" y="400" text-anchor="middle" font-size="12" stroke="none">Many grid paths share Manhattan length 7</text>
+</svg>

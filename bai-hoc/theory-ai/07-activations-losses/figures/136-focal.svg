@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="focal-136-title">
+  <title id="focal-136-title">BCE vs Focal y=1 gamma=2; p=0.9 and p=0.1</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="focal-136-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="16" font-weight="600">BCE vs Focal, y = 1, &#x03B3; = 2</text>
+
+  <line class="axis" x1="80" y1="320" x2="640" y2="320" stroke-width="1.25"/>
+  <line class="axis" x1="80" y1="50" x2="80" y2="320" stroke-width="1.25"/>
+  <line class="grid" x1="80" y1="220" x2="640" y2="220" stroke-width="1" stroke-dasharray="4 4" opacity="0.4"/>
+  <line class="grid" x1="80" y1="120" x2="640" y2="120" stroke-width="1" stroke-dasharray="4 4" opacity="0.4"/>
+  <line class="grid" x1="92.2" y1="50" x2="92.2" y2="320" stroke-width="1" stroke-dasharray="4 4" opacity="0.45"/>
+  <line class="grid" x1="579.1" y1="50" x2="579.1" y2="320" stroke-width="1" stroke-dasharray="4 4" opacity="0.45"/>
+
+  <path id="focal-136-bce" class="hi" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+        d="M 80.0,67.4 L 92.2,89.7 L 122.6,130.3 L 153.0,159.1 L 213.9,199.6
+           L 274.8,228.4 L 335.7,250.7 L 396.5,268.9 L 457.4,284.3
+           L 518.3,297.7 L 579.1,309.5 L 609.6,314.9 L 640.0,320.0"/>
+
+  <path id="focal-136-fl" class="accent" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+        d="M 80.0,106.2 L 92.2,133.5 L 122.6,182.9 L 153.0,217.0 L 213.9,261.0
+           L 274.8,287.0 L 335.7,302.7 L 396.5,311.8 L 457.4,316.8
+           L 518.3,319.1 L 579.1,319.9 L 609.6,320.0 L 640.0,320.0"/>
+
+  <circle class="hi-fill" cx="92.2" cy="89.7" r="5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="92.2" cy="133.5" r="5" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="579.1" cy="309.5" r="5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="579.1" cy="319.9" r="5" data-allow-overlap="1"/>
+
+  <text class="hi-fill" x="110" y="78" text-anchor="start" font-size="11" stroke="none">BCE=2.303</text>
+  <text class="accent-fill" x="110" y="152" text-anchor="start" font-size="11" stroke="none">Focal=1.866</text>
+  <text class="hi-fill" x="560" y="286" text-anchor="end" font-size="11" stroke="none">BCE=0.105</text>
+  <text class="accent-fill" x="592" y="308" text-anchor="start" font-size="11" stroke="none">Focal=0.001</text>
+
+  <text class="hi-fill" x="500" y="68" text-anchor="start" font-size="12" font-weight="600" stroke="none">BCE</text>
+  <text class="accent-fill" x="548" y="68" text-anchor="start" font-size="12" font-weight="600" stroke="none">Focal</text>
+
+  <text class="muted" x="80" y="340" text-anchor="middle" font-size="12">0.08</text>
+  <text class="muted" x="92.2" y="356" text-anchor="middle" font-size="12">0.1</text>
+  <text class="muted" x="335.7" y="340" text-anchor="middle" font-size="12">0.5</text>
+  <text class="muted" x="579.1" y="340" text-anchor="middle" font-size="12">0.9</text>
+  <text class="muted" x="640" y="340" text-anchor="middle" font-size="12">1</text>
+  <text class="ink" x="360" y="380" text-anchor="middle" font-size="13">p</text>
+
+  <text class="muted" x="70" y="324" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="70" y="224" text-anchor="end" font-size="12">1</text>
+  <text class="muted" x="70" y="124" text-anchor="end" font-size="12">2</text>
+  <text class="ink" x="24" y="185" text-anchor="middle" font-size="13" transform="rotate(-90 24 185)">L</text>
+</svg>

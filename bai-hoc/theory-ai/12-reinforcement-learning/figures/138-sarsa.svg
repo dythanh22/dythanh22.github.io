@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" role="img" aria-labelledby="sarsa-138-title">
+  <title id="sarsa-138-title">SARSA update: Q=5.0, R=2, Q(s',a')=7.0 to Q=5.33; uses chosen action not max</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-soft { fill: #2F6FED; fill-opacity: 0.08; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-soft { fill: #C45C0A; fill-opacity: 0.08; stroke: #C45C0A; }
+    .card { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-soft { fill: #8AB4F8; fill-opacity: 0.12; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-soft { fill: #F9AB00; fill-opacity: 0.12; stroke: #F9AB00; }
+    }
+  </style>
+  <defs>
+    <marker id="sarsa-138-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="ink" stroke="none"/>
+    </marker>
+  </defs>
+
+  <text id="sarsa-138-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600">SARSA update, &#x03B1; = 0.1, &#x03B3; = 0.9</text>
+
+  <rect class="card ink" x="24" y="48" width="188" height="216" rx="8" fill="none" stroke-width="1.25"/>
+  <text class="ink" x="118" y="76" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Quintuple</text>
+  <text class="ink" x="44" y="112" font-size="13" stroke="none">Q(S, A) = 5.0</text>
+  <text class="ink" x="44" y="140" font-size="13" stroke="none">R = 2</text>
+  <text class="accent" x="44" y="168" font-size="13" font-weight="600" stroke="none">Q(S', A') = 7.0</text>
+  <text class="muted" x="44" y="204" font-size="12" stroke="none">A' = chosen action</text>
+  <text class="muted" x="44" y="228" font-size="12" stroke="none">(not argmax)</text>
+
+  <line class="ink" x1="218" y1="156" x2="248" y2="156" stroke-width="1.5" marker-end="url(#sarsa-138-arrow)"/>
+
+  <rect class="accent-soft card" x="256" y="48" width="212" height="216" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="362" y="76" text-anchor="middle" font-size="14" font-weight="600" stroke="none">TD target and error</text>
+  <text class="ink" x="276" y="116" font-size="13" stroke="none">2 + 0.9 x 7 = 8.3</text>
+  <text class="accent" x="276" y="148" font-size="14" font-weight="600" stroke="none">target = 8.3</text>
+  <text class="ink" x="276" y="184" font-size="13" stroke="none">8.3 - 5.0 = 3.3</text>
+  <text class="accent" x="276" y="216" font-size="14" font-weight="600" stroke="none">&#x03B4; = 3.3</text>
+
+  <line class="ink" x1="474" y1="156" x2="506" y2="156" stroke-width="1.5" marker-end="url(#sarsa-138-arrow)"/>
+
+  <rect class="hi-soft card" x="514" y="48" width="182" height="216" rx="8" stroke-width="1.5"/>
+  <text class="hi" x="605" y="76" text-anchor="middle" font-size="14" font-weight="600" stroke="none">Update</text>
+  <text class="ink" x="534" y="124" font-size="13" stroke="none">5.0 + 0.1 x 3.3</text>
+  <text class="ink" x="534" y="152" font-size="13" stroke="none">= 5.0 + 0.33</text>
+  <text class="hi" x="534" y="200" font-size="15" font-weight="600" stroke="none">Q &#x2190; 5.33</text>
+
+  <text class="muted" x="360" y="300" text-anchor="middle" font-size="12" stroke="none">SARSA bootstraps Q(S', A') of the action actually taken</text>
+  <text class="muted" x="360" y="322" text-anchor="middle" font-size="12" stroke="none">Q-learning would use max Q(S', a') instead</text>
+</svg>

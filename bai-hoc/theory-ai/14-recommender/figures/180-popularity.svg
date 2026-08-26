@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" role="img" aria-labelledby="pop-180-title">
+  <title id="pop-180-title">Views A=10000 &gt; B=8500 &gt; C=7200 &gt; D=5100 &gt; E=3800; Top-3 {A,B,C}</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .box-ac { fill: #2F6FED; fill-opacity: 0.12; stroke: #2F6FED; }
+    .box-soft { fill: none; stroke: #5C6570; }
+    .band { fill: #2F6FED; stroke: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .box-ac { fill: #8AB4F8; fill-opacity: 0.16; stroke: #8AB4F8; }
+      .box-soft { stroke: #9AA0A6; }
+      .band { fill: #8AB4F8; }
+    }
+  </style>
+
+  <text id="pop-180-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600" stroke="none">Popularity ranking: Top-3 = {A, B, C}</text>
+
+  <rect class="band" x="64" y="52" width="348" height="276" opacity="0.07" rx="6"/>
+
+  <line class="muted" x1="48" y1="300" x2="688" y2="300" stroke-width="1.25" fill="none"/>
+
+  <rect id="pop-180-a" class="accent" x="88" y="80" width="72" height="220" rx="3" stroke="none"/>
+  <rect id="pop-180-b" class="accent" x="208" y="113" width="72" height="187" rx="3" stroke="none"/>
+  <rect id="pop-180-c" class="accent" x="328" y="142" width="72" height="158" rx="3" stroke="none"/>
+  <rect id="pop-180-d" class="muted" x="448" y="188" width="72" height="112" rx="3" stroke="none" opacity="0.55"/>
+  <rect id="pop-180-e" class="muted" x="568" y="216" width="72" height="84" rx="3" stroke="none" opacity="0.55"/>
+
+  <text class="ink" x="124" y="72" text-anchor="middle" font-size="12" font-weight="600" stroke="none">10000</text>
+  <text class="ink" x="244" y="105" text-anchor="middle" font-size="12" font-weight="600" stroke="none">8500</text>
+  <text class="ink" x="364" y="134" text-anchor="middle" font-size="12" font-weight="600" stroke="none">7200</text>
+  <text class="muted" x="484" y="180" text-anchor="middle" font-size="12" stroke="none">5100</text>
+  <text class="muted" x="604" y="208" text-anchor="middle" font-size="12" stroke="none">3800</text>
+
+  <text class="ink" x="124" y="322" text-anchor="middle" font-size="13" font-weight="600" stroke="none">A</text>
+  <text class="ink" x="244" y="322" text-anchor="middle" font-size="13" font-weight="600" stroke="none">B</text>
+  <text class="ink" x="364" y="322" text-anchor="middle" font-size="13" font-weight="600" stroke="none">C</text>
+  <text class="muted" x="484" y="322" text-anchor="middle" font-size="13" stroke="none">D</text>
+  <text class="muted" x="604" y="322" text-anchor="middle" font-size="13" stroke="none">E</text>
+
+  <text id="pop-180-top3" class="hi" x="238" y="350" text-anchor="middle" font-size="13" font-weight="600" stroke="none">Top-3 {A, B, C}</text>
+  <text class="muted" x="536" y="350" text-anchor="middle" font-size="12" stroke="none">not in Top-3</text>
+</svg>

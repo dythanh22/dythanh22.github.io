@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="base-181-title">
+  <title id="base-181-title">mu=3.6, b_C=0.4, b_2=-0.6 so predict C,2 = 3.4</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .box-ac { fill: #2F6FED; fill-opacity: 0.10; stroke: #2F6FED; }
+    .box-hi { fill: #C45C0A; fill-opacity: 0.10; stroke: #C45C0A; }
+    .pos { fill: #2F6FED; stroke: none; }
+    .neg { fill: #C45C0A; stroke: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .box-ac { fill: #8AB4F8; fill-opacity: 0.16; stroke: #8AB4F8; }
+      .box-hi { fill: #F9AB00; fill-opacity: 0.16; stroke: #F9AB00; }
+      .pos { fill: #8AB4F8; }
+      .neg { fill: #F9AB00; }
+    }
+  </style>
+
+  <text id="base-181-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600" stroke="none">b_C,2 = mu + b_C + b_2 = 3.4</text>
+
+  <rect class="box-ac" x="28" y="48" width="128" height="64" rx="4" stroke-width="1.5"/>
+  <text class="muted" x="92" y="72" text-anchor="middle" font-size="11" stroke="none">global mean</text>
+  <text class="accent" x="92" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">mu = 3.6</text>
+
+  <text class="ink" x="172" y="88" text-anchor="middle" font-size="20" font-weight="600" stroke="none">+</text>
+
+  <rect class="box-ac" x="192" y="48" width="128" height="64" rx="4" stroke-width="1.5"/>
+  <text class="muted" x="256" y="72" text-anchor="middle" font-size="11" stroke="none">user C bias</text>
+  <text class="accent" x="256" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">b_C = 0.4</text>
+
+  <text class="ink" x="336" y="88" text-anchor="middle" font-size="20" font-weight="600" stroke="none">+</text>
+
+  <rect class="box-hi" x="352" y="48" width="148" height="64" rx="4" stroke-width="1.5"/>
+  <text class="muted" x="426" y="72" text-anchor="middle" font-size="11" stroke="none">item 2 bias</text>
+  <text class="hi" x="426" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">b_2 = -0.6</text>
+
+  <text class="ink" x="516" y="88" text-anchor="middle" font-size="20" font-weight="600" stroke="none">=</text>
+
+  <rect class="box-hi" x="536" y="48" width="156" height="64" rx="4" stroke-width="1.5"/>
+  <text class="muted" x="614" y="72" text-anchor="middle" font-size="11" stroke="none">predict C,2</text>
+  <text class="hi" x="614" y="96" text-anchor="middle" font-size="18" font-weight="700" stroke="none">3.4</text>
+
+  <text class="ink" x="180" y="152" text-anchor="middle" font-size="12" font-weight="600" stroke="none">user bias</text>
+  <text class="ink" x="540" y="152" text-anchor="middle" font-size="12" font-weight="600" stroke="none">item bias</text>
+
+  <line class="muted" x1="48" y1="268" x2="312" y2="268" stroke-width="1.25" fill="none"/>
+  <line class="muted" x1="408" y1="268" x2="672" y2="268" stroke-width="1.25" fill="none"/>
+
+  <rect class="pos" x="68" y="196" width="48" height="72" rx="2"/>
+  <text class="ink" x="92" y="188" text-anchor="middle" font-size="12" font-weight="600" stroke="none">0.9</text>
+  <text class="muted" x="92" y="288" text-anchor="middle" font-size="12" stroke="none">b_A</text>
+
+  <rect class="neg" x="148" y="268" width="48" height="88" rx="2"/>
+  <text class="hi" x="172" y="374" text-anchor="middle" font-size="12" font-weight="600" stroke="none">-1.1</text>
+  <text class="muted" x="172" y="258" text-anchor="middle" font-size="12" stroke="none">b_B</text>
+
+  <rect class="pos" x="228" y="236" width="48" height="32" rx="2"/>
+  <text class="ink" x="252" y="228" text-anchor="middle" font-size="12" font-weight="600" stroke="none">0.4</text>
+  <text class="muted" x="252" y="288" text-anchor="middle" font-size="12" stroke="none">b_C</text>
+
+  <rect class="pos" x="448" y="236" width="48" height="32" rx="2"/>
+  <text class="ink" x="472" y="228" text-anchor="middle" font-size="12" font-weight="600" stroke="none">0.4</text>
+  <text class="muted" x="472" y="288" text-anchor="middle" font-size="12" stroke="none">b_1</text>
+
+  <rect class="neg" x="548" y="268" width="48" height="48" rx="2"/>
+  <text class="hi" x="572" y="334" text-anchor="middle" font-size="12" font-weight="600" stroke="none">-0.6</text>
+  <text class="muted" x="572" y="258" text-anchor="middle" font-size="12" stroke="none">b_2</text>
+</svg>

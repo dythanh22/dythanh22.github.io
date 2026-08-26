@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 372" role="img" aria-labelledby="pg-140-title">
+  <title id="pg-140-title">REINFORCE reward-to-go: log_prob -0.5,-1.0,-0.3; R=11,10,10; L=-18.5</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-soft { fill: #2F6FED; fill-opacity: 0.08; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-soft { fill: #C45C0A; fill-opacity: 0.08; stroke: #C45C0A; }
+    .card { fill: none; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-soft { fill: #8AB4F8; fill-opacity: 0.12; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-soft { fill: #F9AB00; fill-opacity: 0.12; stroke: #F9AB00; }
+    }
+  </style>
+  <defs>
+    <marker id="pg-140-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" class="ink" stroke="none"/>
+    </marker>
+  </defs>
+
+  <text id="pg-140-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600">REINFORCE loss with reward-to-go (no baseline)</text>
+
+  <rect class="card ink" x="24" y="48" width="200" height="188" rx="8" fill="none" stroke-width="1.25"/>
+  <text class="ink" x="124" y="76" text-anchor="middle" font-size="14" font-weight="600" stroke="none">t = 0</text>
+  <text class="ink" x="44" y="112" font-size="13" stroke="none">log_prob = -0.5</text>
+  <text class="ink" x="44" y="140" font-size="13" stroke="none">r = 1</text>
+  <text class="accent" x="44" y="176" font-size="14" font-weight="600" stroke="none">R0 = 11</text>
+  <text class="muted" x="44" y="204" font-size="12" stroke="none">1 + 0 + 10</text>
+
+  <rect class="card ink" x="248" y="48" width="200" height="188" rx="8" fill="none" stroke-width="1.25"/>
+  <text class="ink" x="348" y="76" text-anchor="middle" font-size="14" font-weight="600" stroke="none">t = 1</text>
+  <text class="ink" x="268" y="112" font-size="13" stroke="none">log_prob = -1.0</text>
+  <text class="ink" x="268" y="140" font-size="13" stroke="none">r = 0</text>
+  <text class="accent" x="268" y="176" font-size="14" font-weight="600" stroke="none">R1 = 10</text>
+  <text class="muted" x="268" y="204" font-size="12" stroke="none">0 + 10</text>
+
+  <rect class="card ink" x="472" y="48" width="224" height="188" rx="8" fill="none" stroke-width="1.25"/>
+  <text class="ink" x="584" y="76" text-anchor="middle" font-size="14" font-weight="600" stroke="none">t = 2</text>
+  <text class="ink" x="492" y="112" font-size="13" stroke="none">log_prob = -0.3</text>
+  <text class="ink" x="492" y="140" font-size="13" stroke="none">r = 10</text>
+  <text class="accent" x="492" y="176" font-size="14" font-weight="600" stroke="none">R2 = 10</text>
+  <text class="muted" x="492" y="204" font-size="12" stroke="none">terminal reward</text>
+
+  <line class="ink" x1="360" y1="236" x2="360" y2="256" stroke-width="1.5" marker-end="url(#pg-140-arrow)"/>
+
+  <rect class="hi-soft card" x="120" y="262" width="480" height="64" rx="8" stroke-width="1.5"/>
+  <text class="ink" x="360" y="286" text-anchor="middle" font-size="13" stroke="none">L = -[(-0.5)(11) + (-1.0)(10) + (-0.3)(10)]</text>
+  <text class="hi" x="360" y="310" text-anchor="middle" font-size="15" font-weight="600" stroke="none">L = -18.5</text>
+
+  <text class="muted" x="360" y="348" text-anchor="middle" font-size="12" stroke="none">All R_t &gt; 0, so every taken action is reinforced</text>
+</svg>

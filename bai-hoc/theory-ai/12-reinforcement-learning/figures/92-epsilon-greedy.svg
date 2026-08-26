@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="epsgreedy-92-title">
+  <title id="epsgreedy-92-title">Epsilon-greedy: P(B)=0.867, P(A)=P(C)=0.067</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-soft { fill: #2F6FED; fill-opacity: 0.08; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-soft { fill: #C45C0A; fill-opacity: 0.08; stroke: #C45C0A; }
+    .bar { fill: #2F6FED; fill-opacity: 0.18; stroke: #2F6FED; }
+    .bar-hi { fill: #C45C0A; fill-opacity: 0.18; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-soft { fill: #8AB4F8; fill-opacity: 0.12; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-soft { fill: #F9AB00; fill-opacity: 0.12; stroke: #F9AB00; }
+      .bar { fill: #8AB4F8; fill-opacity: 0.22; stroke: #8AB4F8; }
+      .bar-hi { fill: #F9AB00; fill-opacity: 0.22; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+    }
+  </style>
+
+  <text id="epsgreedy-92-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600">&#x03B5;-greedy, &#x03B5; = 0.2, |A| = 3</text>
+
+  <!-- axis: y=300 is P=0; scale 240 px for P=1 -->
+  <line class="axis" x1="80" y1="300" x2="520" y2="300" stroke-width="1.5"/>
+  <line class="axis" x1="80" y1="52" x2="80" y2="300" stroke-width="1.5"/>
+  <text class="muted" x="68" y="304" text-anchor="end" font-size="11" stroke="none">0</text>
+  <text class="muted" x="68" y="184" text-anchor="end" font-size="11" stroke="none">0.5</text>
+  <text class="muted" x="68" y="64" text-anchor="end" font-size="11" stroke="none">1</text>
+  <text class="muted" x="36" y="176" text-anchor="middle" font-size="12" stroke="none" transform="rotate(-90 36 176)">P(a)</text>
+
+  <!-- A: P=0.067, height=16.08, y=283.92 -->
+  <rect class="bar" x="120" y="284" width="72" height="16" rx="3" stroke-width="1.5"/>
+  <text class="accent" x="156" y="276" text-anchor="middle" font-size="13" font-weight="600" stroke="none">0.067</text>
+  <text class="ink" x="156" y="322" text-anchor="middle" font-size="13" font-weight="600" stroke="none">A</text>
+  <text class="muted" x="156" y="340" text-anchor="middle" font-size="12" stroke="none">Q = 2.5</text>
+
+  <!-- B: P=0.867, height=208.08, y=91.92 -->
+  <rect class="bar-hi" x="248" y="92" width="72" height="208" rx="3" stroke-width="1.5"/>
+  <text class="hi" x="284" y="84" text-anchor="middle" font-size="13" font-weight="600" stroke="none">0.867</text>
+  <text class="ink" x="284" y="322" text-anchor="middle" font-size="13" font-weight="600" stroke="none">B (greedy)</text>
+  <text class="muted" x="284" y="340" text-anchor="middle" font-size="12" stroke="none">Q = 3.0</text>
+
+  <!-- C: P=0.067 -->
+  <rect class="bar" x="376" y="284" width="72" height="16" rx="3" stroke-width="1.5"/>
+  <text class="accent" x="412" y="276" text-anchor="middle" font-size="13" font-weight="600" stroke="none">0.067</text>
+  <text class="ink" x="412" y="322" text-anchor="middle" font-size="13" font-weight="600" stroke="none">C</text>
+  <text class="muted" x="412" y="340" text-anchor="middle" font-size="12" stroke="none">Q = 1.8</text>
+
+  <rect class="accent-soft" x="540" y="88" width="156" height="168" rx="8" stroke-width="1.5"/>
+  <text class="accent" x="618" y="116" text-anchor="middle" font-size="13" font-weight="600" stroke="none">Split</text>
+  <text class="ink" x="618" y="148" text-anchor="middle" font-size="12" stroke="none">1 - &#x03B5; = 0.80</text>
+  <text class="ink" x="618" y="176" text-anchor="middle" font-size="12" stroke="none">&#x03B5;/3 = 0.067</text>
+  <text class="muted" x="618" y="212" text-anchor="middle" font-size="12" stroke="none">P(B) = 0.80</text>
+  <text class="muted" x="618" y="232" text-anchor="middle" font-size="12" stroke="none">+ 0.067 = 0.867</text>
+
+  <text class="muted" x="360" y="378" text-anchor="middle" font-size="12" stroke="none">non-greedy share the explore mass equally</text>
+</svg>

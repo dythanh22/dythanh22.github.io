@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="huber-52-title">
+  <title id="huber-52-title">Huber delta=1 vs MSE; e=0.5, 1, 2</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: none; stroke: #2F6FED; }
+    .accent-fill { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: none; stroke: #C45C0A; }
+    .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { stroke: #8AB4F8; }
+      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { stroke: #F9AB00; }
+      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="huber-52-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="16" font-weight="600">Huber vs MSE, &#x03B4; = 1</text>
+
+  <line class="axis" x1="90" y1="320" x2="650" y2="320" stroke-width="1.25"/>
+  <line class="axis" x1="90" y1="50" x2="90" y2="320" stroke-width="1.25"/>
+  <line class="grid" x1="90" y1="291.1" x2="650" y2="291.1" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="90" y1="233.3" x2="650" y2="233.3" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="90" y1="88.9" x2="650" y2="88.9" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="314" y1="50" x2="314" y2="320" stroke-width="1" stroke-dasharray="4 4" opacity="0.45"/>
+  <line class="hi" x1="538" y1="50" x2="538" y2="320" stroke-width="1" stroke-dasharray="5 4" opacity="0.7"/>
+
+  <path id="huber-52-mse" class="hi" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"
+        d="M 90.0,320.0 L 146.0,316.4 L 202.0,305.6 L 258.0,287.5
+           L 314.0,262.2 L 370.0,229.7 L 426.0,190.0 L 482.0,143.1
+           L 538.0,88.9 L 564.7,60.3"/>
+
+  <path id="huber-52-huber" class="accent" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+        d="M 90.0,320.0 L 118.0,319.5 L 146.0,318.2 L 174.0,315.9
+           L 202.0,312.8 L 230.0,308.7 L 258.0,303.8 L 286.0,297.9
+           L 314.0,291.1 L 342.0,283.9 L 370.0,276.7 L 398.0,269.4
+           L 426.0,262.2 L 454.0,255.0 L 482.0,247.8 L 510.0,240.6
+           L 538.0,233.3 L 566.0,226.1 L 594.0,218.9 L 622.0,211.7
+           L 650.0,204.4"/>
+
+  <circle class="accent-fill" cx="202" cy="312.8" r="5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="314" cy="291.1" r="5" data-allow-overlap="1"/>
+  <circle class="accent-fill" cx="538" cy="233.3" r="5" data-allow-overlap="1"/>
+  <circle class="hi-fill" cx="538" cy="88.9" r="5" data-allow-overlap="1"/>
+
+  <text class="muted" x="202" y="298" text-anchor="middle" font-size="11" stroke="none">e=0.5, L=0.125</text>
+  <text class="muted" x="350" y="278" text-anchor="start" font-size="11" stroke="none">e=1, L=0.5</text>
+  <text class="accent-fill" x="548" y="228" text-anchor="start" font-size="11" stroke="none">Huber 1.5</text>
+  <text class="hi-fill" x="548" y="80" text-anchor="start" font-size="11" stroke="none">MSE 4.0</text>
+
+  <text class="accent-fill" x="108" y="68" text-anchor="start" font-size="12" font-weight="600" stroke="none">Huber</text>
+  <text class="hi-fill" x="168" y="68" text-anchor="start" font-size="12" font-weight="600" stroke="none">MSE = e^2</text>
+
+  <text class="muted" x="90" y="340" text-anchor="middle" font-size="12">0</text>
+  <text class="muted" x="202" y="340" text-anchor="middle" font-size="12">0.5</text>
+  <text class="muted" x="314" y="340" text-anchor="middle" font-size="12">1</text>
+  <text class="muted" x="538" y="340" text-anchor="middle" font-size="12">2</text>
+  <text class="muted" x="650" y="340" text-anchor="middle" font-size="12">2.5</text>
+  <text class="ink" x="370" y="372" text-anchor="middle" font-size="13">e = y - yhat</text>
+
+  <text class="muted" x="80" y="324" text-anchor="end" font-size="12">0</text>
+  <text class="muted" x="80" y="295" text-anchor="end" font-size="12">0.5</text>
+  <text class="muted" x="80" y="237" text-anchor="end" font-size="12">1.5</text>
+  <text class="muted" x="80" y="93" text-anchor="end" font-size="12">4</text>
+  <text class="ink" x="28" y="185" text-anchor="middle" font-size="13" transform="rotate(-90 28 185)">L</text>
+</svg>

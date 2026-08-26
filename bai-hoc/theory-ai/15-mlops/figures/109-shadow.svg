@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-labelledby="shadow-109-title">
+  <title id="shadow-109-title">Shadow REJECT: agreement 0.40 below 0.50</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .nofill { fill: none; }
+    .box-a { fill: #E8F0FE; stroke: #2F6FED; }
+    .box-b { fill: #FCE8D5; stroke: #C45C0A; }
+    .bar-bg { fill: #E8E9EB; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .box-a { fill: #1A2A44; stroke: #8AB4F8; }
+      .box-b { fill: #3A2A14; stroke: #F9AB00; }
+      .bar-bg { fill: #2A2C2E; stroke: #9AA0A6; }
+    }
+  </style>
+
+  <text id="shadow-109-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="15" font-weight="600">Shadow promotion: REJECT</text>
+  <text class="muted" x="360" y="46" text-anchor="middle" font-size="12">min gain 0.10, max P95 60 ms, min agreement 0.50</text>
+
+  <!-- Prod bar: 0.60 -> width 180 of 300 -->
+  <text class="ink" x="28" y="86" font-size="13">prod</text>
+  <rect class="bar-bg" x="90" y="70" width="300" height="22" rx="3" stroke-width="1"/>
+  <rect class="muted" x="90" y="70" width="180" height="22" rx="3" stroke-width="0"/>
+  <text class="ink" x="402" y="86" font-size="13">0.60</text>
+
+  <!-- Shadow bar: 0.80 -> width 240 of 300 -->
+  <text class="ink" x="28" y="122" font-size="13">shadow</text>
+  <rect class="bar-bg" x="90" y="106" width="300" height="22" rx="3" stroke-width="1"/>
+  <rect class="accent" x="90" y="106" width="240" height="22" rx="3" stroke-width="0"/>
+  <text class="ink" x="402" y="122" font-size="13">0.80</text>
+
+  <text id="shadow-109-gain" class="accent" x="560" y="104" text-anchor="middle" font-size="14" font-weight="600" stroke="none">gain 0.20</text>
+
+  <!-- Three criteria -->
+  <rect class="box-a" x="28" y="156" width="210" height="72" rx="6" stroke-width="1.5"/>
+  <text class="ink" x="133" y="178" text-anchor="middle" font-size="12" stroke="none">accuracy gain</text>
+  <text class="ink" x="133" y="198" text-anchor="middle" font-size="13" font-weight="600" stroke="none">0.20 &#x2265; 0.10</text>
+  <text class="accent" x="133" y="216" text-anchor="middle" font-size="12" font-weight="600" stroke="none">PASS</text>
+
+  <rect class="box-a" x="255" y="156" width="210" height="72" rx="6" stroke-width="1.5"/>
+  <text class="ink" x="360" y="178" text-anchor="middle" font-size="12" stroke="none">P95 latency</text>
+  <text class="ink" x="360" y="198" text-anchor="middle" font-size="13" font-weight="600" stroke="none">55 &#x2264; 60 ms</text>
+  <text class="accent" x="360" y="216" text-anchor="middle" font-size="12" font-weight="600" stroke="none">PASS</text>
+
+  <rect class="box-b" x="482" y="156" width="210" height="72" rx="6" stroke-width="1.5"/>
+  <text class="ink" x="587" y="178" text-anchor="middle" font-size="12" stroke="none">agreement</text>
+  <text class="ink" x="587" y="198" text-anchor="middle" font-size="13" font-weight="600" stroke="none">0.40 &lt; 0.50</text>
+  <text class="hi" x="587" y="216" text-anchor="middle" font-size="12" font-weight="600" stroke="none">FAIL</text>
+
+  <rect class="box-b" x="255" y="248" width="210" height="48" rx="6" stroke-width="1.75"/>
+  <text id="shadow-109-decision" class="hi" x="360" y="278" text-anchor="middle" font-size="16" font-weight="700" stroke="none">REJECT</text>
+</svg>

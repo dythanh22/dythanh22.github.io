@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 430" role="img" aria-labelledby="rstd-177-title">
+  <title id="rstd-177-title">Rolling std w=3 on [10, 12, 15, 11, 13, 16, 14]; sigma3=2.52, sigma4=2.08; [NaN, NaN, 2.52, 2.08, 2.08, 2.52, 1.00]</title>
+  <style>
+    .ink { fill: #1A1A1A; stroke: #1A1A1A; }
+    .muted { fill: #5C6570; stroke: #5C6570; }
+    .accent { fill: #2F6FED; stroke: #2F6FED; }
+    .accent-line { fill: none; stroke: #2F6FED; }
+    .hi { fill: #C45C0A; stroke: #C45C0A; }
+    .hi-line { fill: none; stroke: #C45C0A; }
+    .axis { fill: none; stroke: #1A1A1A; }
+    .grid { fill: none; stroke: #5C6570; }
+    text { font-family: ui-sans-serif, system-ui, sans-serif; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #E8EAED; stroke: #E8EAED; }
+      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
+      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
+      .accent-line { stroke: #8AB4F8; }
+      .hi { fill: #F9AB00; stroke: #F9AB00; }
+      .hi-line { stroke: #F9AB00; }
+      .axis { stroke: #E8EAED; }
+      .grid { stroke: #9AA0A6; }
+    }
+  </style>
+  <text id="rstd-177-heading" class="ink" x="320" y="24" text-anchor="middle" font-size="15" font-weight="600">Rolling std (w = 3): &#x03C3;&#x2083; = 2.52, &#x03C3;&#x2084; = 2.08</text>
+
+  <text class="muted" x="320" y="44" text-anchor="middle" font-size="11">y_t</text>
+  <line class="axis" x1="56" y1="200" x2="540" y2="200" stroke-width="1.25"/>
+  <line class="axis" x1="56" y1="72" x2="56" y2="200" stroke-width="1.25"/>
+  <line class="grid" x1="56" y1="163.4" x2="540" y2="163.4" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="56" y1="126.8" x2="540" y2="126.8" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+  <line class="grid" x1="56" y1="90.2" x2="540" y2="90.2" stroke-width="1" stroke-dasharray="4 4" opacity="0.35"/>
+
+  <text class="muted" x="48" y="204" text-anchor="end" font-size="11">10</text>
+  <text class="muted" x="48" y="168" text-anchor="end" font-size="11">12</text>
+  <text class="muted" x="48" y="131" text-anchor="end" font-size="11">14</text>
+  <text class="muted" x="48" y="94" text-anchor="end" font-size="11">16</text>
+
+  <polyline class="accent-line" points="80,200 150,163.4 220,108.5 290,181.7 360,145.1 430,90.2 500,126.8" stroke-width="2"/>
+  <circle class="accent" cx="80" cy="200" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="150" cy="163.4" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="220" cy="108.5" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="290" cy="181.7" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="360" cy="145.1" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="430" cy="90.2" r="5" data-allow-overlap="1"/>
+  <circle class="accent" cx="500" cy="126.8" r="5" data-allow-overlap="1"/>
+
+  <text class="ink" x="80" y="216" text-anchor="middle" font-size="11">1</text>
+  <text class="ink" x="150" y="216" text-anchor="middle" font-size="11">2</text>
+  <text class="ink" x="220" y="216" text-anchor="middle" font-size="11">3</text>
+  <text class="ink" x="290" y="216" text-anchor="middle" font-size="11">4</text>
+  <text class="ink" x="360" y="216" text-anchor="middle" font-size="11">5</text>
+  <text class="ink" x="430" y="216" text-anchor="middle" font-size="11">6</text>
+  <text class="ink" x="500" y="216" text-anchor="middle" font-size="11">7</text>
+  <text class="muted" x="298" y="232" text-anchor="middle" font-size="12">t</text>
+
+  <text class="accent" x="80" y="188" text-anchor="middle" font-size="11" stroke="none">10</text>
+  <text class="accent" x="150" y="150" text-anchor="middle" font-size="11" stroke="none">12</text>
+  <text class="accent" x="220" y="96" text-anchor="middle" font-size="11" stroke="none">15</text>
+  <text class="accent" x="308" y="172" text-anchor="start" font-size="11" stroke="none">11</text>
+  <text class="accent" x="360" y="132" text-anchor="middle" font-size="11" stroke="none">13</text>
+  <text class="accent" x="430" y="78" text-anchor="middle" font-size="11" stroke="none">16</text>
+  <text class="accent" x="518" y="122" text-anchor="start" font-size="11" stroke="none">14</text>
+
+  <text class="muted" x="70" y="248" text-anchor="start" font-size="11">sample std</text>
+  <line class="axis" x1="56" y1="370" x2="540" y2="370" stroke-width="1.25"/>
+  <line class="axis" x1="56" y1="262" x2="56" y2="370" stroke-width="1.25"/>
+
+  <text class="muted" x="48" y="374" text-anchor="end" font-size="11">0</text>
+  <text class="muted" x="48" y="334" text-anchor="end" font-size="11">1</text>
+  <text class="muted" x="48" y="294" text-anchor="end" font-size="11">2</text>
+  <text class="muted" x="48" y="270" text-anchor="end" font-size="11">2.6</text>
+
+  <text class="muted" x="80" y="388" text-anchor="middle" font-size="11">NaN</text>
+  <text class="muted" x="150" y="388" text-anchor="middle" font-size="11">NaN</text>
+
+  <line class="hi-line" x1="220" y1="370" x2="220" y2="269.2" stroke-width="6"/>
+  <circle class="hi" cx="220" cy="269.2" r="4" data-allow-overlap="1"/>
+  <text class="hi" x="220" y="258" text-anchor="middle" font-size="12" stroke="none">2.52</text>
+
+  <line class="hi-line" x1="290" y1="370" x2="290" y2="286.8" stroke-width="6"/>
+  <circle class="hi" cx="290" cy="286.8" r="4" data-allow-overlap="1"/>
+  <text class="hi" x="268" y="272" text-anchor="end" font-size="11" stroke="none">2.08</text>
+
+  <line class="hi-line" x1="360" y1="370" x2="360" y2="286.8" stroke-width="6"/>
+  <circle class="hi" cx="360" cy="286.8" r="4" data-allow-overlap="1"/>
+  <text class="hi" x="378" y="278" text-anchor="start" font-size="11" stroke="none">2.08</text>
+
+  <line class="hi-line" x1="430" y1="370" x2="430" y2="269.2" stroke-width="6"/>
+  <circle class="hi" cx="430" cy="269.2" r="4" data-allow-overlap="1"/>
+  <text class="hi" x="430" y="258" text-anchor="middle" font-size="12" stroke="none">2.52</text>
+
+  <line class="hi-line" x1="500" y1="370" x2="500" y2="330" stroke-width="6"/>
+  <circle class="hi" cx="500" cy="330" r="4" data-allow-overlap="1"/>
+  <text class="hi" x="518" y="334" text-anchor="start" font-size="12" stroke="none">1.00</text>
+
+  <text class="ink" x="320" y="414" text-anchor="middle" font-size="12">t</text>
+</svg>
