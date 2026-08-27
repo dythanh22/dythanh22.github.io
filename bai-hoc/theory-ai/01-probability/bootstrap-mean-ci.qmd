@@ -321,3 +321,17 @@ def bootstrap_mean(x, n_bootstrap=1000, ci=0.95, rng=None):
     upper = np.quantile(boot_means, 1 - alpha)
     return boot_means, lower, upper
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Bootstrap: trung bình và khoảng tin cậy» là gì?</summary>
+Bootstrapping là kỹ thuật **lấy mẫu lại** (resampling) mạnh, cho phép ước lượng độ biến thiên của một thống kê mà không cần giả định mạnh về phân phối gốc.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\mathrm{SE}_{\mathrm{boot}} = \sqrt{\frac{1}{B-1}\sum_{b=1}^{B}(\bar{x}^{\ast b} - \bar{\bar{x}}^{\ast})^2}$$
+</details>
+:::

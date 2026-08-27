@@ -374,3 +374,17 @@ def poisson_pmf_cdf(lam, k):
         cdf += np.exp(log_pmf_i)
     return float(pmf), float(cdf)
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «PMF & CDF Poisson» là gì?</summary>
+Phân phối Poisson mô hình **số sự kiện** xảy ra trong một khoảng thời gian hoặc không gian cố định, khi các sự kiện độc lập và có tốc độ trung bình không đổi.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\lambda = \text{tốc độ trung bình (số sự kiện kỳ vọng)}$$
+</details>
+:::

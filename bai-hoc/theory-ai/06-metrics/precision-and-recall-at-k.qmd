@@ -294,3 +294,17 @@ def precision_recall_at_k(recommended, relevant, k):
     return [precision, recall]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Precision và Recall at K» là gì?</summary>
+Precision@K và Recall@K là ranking metric đánh giá mức hệ gợi ý đặt item relevant vào các vị trí top-K.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{Precision@K} = \frac{|\{\text{relevant items in top-K}\}|}{K} = \frac{|R_K \cap T|}{K}$$
+</details>
+:::

@@ -2,6 +2,7 @@
 pagetitle: "dythanh22 — Ghi chú học tập"
 page-layout: full
 toc: false
+image: assets/img/og-cover.png
 ---
 
 :::: {.home-hero}
@@ -12,8 +13,8 @@ toc: false
 
 Chọn một lộ trình, đi hết pipeline, rồi quay lại khi cần ôn. Không phải blog rời — mỗi chuỗi là một đường đọc có thứ tự.
 
-[Xem bài học](bai-hoc/index.qmd){.btn .btn-primary .btn-lg .home-cta-primary role="button"}
-[Theory AI](bai-hoc/theory-ai/index.qmd){.btn .btn-outline-secondary .btn-lg role="button"}
+[Bắt đầu Theory AI](bai-hoc/theory-ai/index.qmd){.btn .btn-primary .btn-lg .home-cta-primary role="button"}
+[Tất cả chuỗi](bai-hoc/index.qmd){.btn .btn-outline-secondary .btn-lg role="button"}
 :::
 
 ::: {.home-hero-visual}

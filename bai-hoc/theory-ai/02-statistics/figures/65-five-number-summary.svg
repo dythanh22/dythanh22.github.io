@@ -9,14 +9,7 @@
     .box-fill { fill: #2F6FED; fill-opacity: 0.12; stroke: #2F6FED; }
     .fill-none { fill: none; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-      .box-fill { fill: #8AB4F8; fill-opacity: 0.18; stroke: #8AB4F8; }
-    }
+    
   </style>
   <!-- x(v) = 40 + (v - 10) * 11 ; 10..55 -> 40..535 -->
   <text id="fn5-65-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="15" font-weight="600">Five-number summary box plot</text>

@@ -310,3 +310,17 @@ def jaccard_similarity(set_a, set_b):
     return len(a & b) / union
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Jaccard Similarity» là gì?</summary>
+**Jaccard similarity** (còn gọi Jaccard index hoặc Intersection over Union) đo mức giống nhau giữa hai tập bằng cách so kích thước phần giao với kích thước phần hợp.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$J(A, B) = \frac{|A \cap B|}{|A \cup B|}$$
+</details>
+:::

@@ -226,3 +226,17 @@ def log_transform(values):
     return [round(float(np.log1p(v)), 4) for v in values]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Log Transform» là gì?</summary>
+**Log transform** áp dụng hàm logarithm lên các giá trị dữ liệu, chuyển quan hệ nhân thành quan hệ cộng.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$y = \ln(x) = \log_e(x)$$
+</details>
+:::

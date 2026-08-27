@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="og-title">
+  <title id="og-title">dythanh22 — Theory AI, Architecture Models, AI Optimization</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="55%" stop-color="#134E4A"/>
+      <stop offset="100%" stop-color="#1E3A5F"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="80" y="180" font-family="Georgia, serif" font-size="72" font-weight="600" fill="#F8FAFC">dythanh22</text>
+  <text x="80" y="250" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="32" fill="#CCFBF1">Ghi chu hoc tap theo chuoi</text>
+  <text x="80" y="360" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="28" fill="#FDE68A">Theory AI</text>
+  <text x="80" y="410" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="28" fill="#99F6E4">Architecture Models</text>
+  <text x="80" y="460" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="28" fill="#BFDBFE">AI Optimization</text>
+  <text x="80" y="560" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="22" fill="#94A3B8">dythanh22.github.io</text>
+</svg>

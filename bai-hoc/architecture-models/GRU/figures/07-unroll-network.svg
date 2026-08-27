@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="820" height="300" viewBox="0 0 820 300" role="img" aria-labelledby="gru-07-title">
 <title id="gru-07-title">Complete GRU network unroll</title>
-<rect class="fig-bg" width="820" height="300" fill="#F7F8FA"/>
-<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<rect class="fig-bg" width="820" height="300" fill="none"/>
+
 <text x="410.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Mạng GRU: unroll T bước · h₀=0 · yₜ = W_y hₜ + b_y</text>
 <text x="410.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Weight sharing · một state hₜ (không Cₜ) · projection sau cell</text>
 <rect x="25.0" y="140.0" width="62.0" height="48.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>

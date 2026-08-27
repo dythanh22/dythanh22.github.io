@@ -226,3 +226,17 @@ def max_pooling_2d(X, pool_size):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Max Pooling 2D» là gì?</summary>
+Max pooling là phép downsampling giảm kích thước không gian của feature map.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{output}[i][j] = \max_{0 \leq a < p,\, 0 \leq b < p} \text{input}[i \cdot p + a][j \cdot p + b]$$
+</details>
+:::

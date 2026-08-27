@@ -212,3 +212,17 @@ def feature_store_lookup(feature_store, requests, defaults):
     return results
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Feature Store Lookup» là gì?</summary>
+**Feature store** là thành phần hạ tầng dữ liệu chuyên biệt, dùng để quản lý và phục vụ feature cho hệ thống machine learning.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$F_{\text{offline}} \cap F_{\text{online}} = \emptyset$$
+</details>
+:::

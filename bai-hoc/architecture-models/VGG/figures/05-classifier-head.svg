@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="780" height="240" viewBox="0 0 780 240" role="img" aria-labelledby="vgg-05-title">
 <title id="vgg-05-title">VGG classifier head</title>
-<rect class="fig-bg" width="780" height="240" fill="#F7F8FA"/>
-<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<rect class="fig-bg" width="780" height="240" fill="none"/>
+
 <text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Classifier head: Flatten → FC4096 → FC4096 → FC K (logits)</text>
 <rect x="48.0" y="60.0" width="120.0" height="60.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>
 <text x="108.0" y="85.2" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="12" font-weight="600" fill="#1A1A1A" text-anchor="middle">7×7×512</text>

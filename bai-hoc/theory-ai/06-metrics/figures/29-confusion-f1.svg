@@ -9,14 +9,7 @@
     .box-soft { fill: none; stroke: #5C6570; }
     .fill-none { fill: none; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .box { stroke: #E8EAED; }
-      .box-soft { stroke: #9AA0A6; }
-    }
+    
   </style>
 
   <text id="cm-29-heading" class="ink" x="320" y="26" text-anchor="middle" font-size="16" font-weight="600">Confusion 2&#x00D7;2 (n = 100)</text>

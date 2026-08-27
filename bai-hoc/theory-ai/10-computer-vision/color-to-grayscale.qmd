@@ -486,3 +486,17 @@ def color_to_grayscale(image):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Color to Grayscale» là gì?</summary>
+**Chuyển grayscale** biến một ảnh màu (các channel red, green, blue tách riêng) thành ảnh một channel biểu diễn luminance hay độ sáng.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{Gray} = f(R, G, B)$$
+</details>
+:::

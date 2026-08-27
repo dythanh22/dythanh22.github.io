@@ -110,3 +110,17 @@ def leaky_relu(x, alpha=0.01):
     return np.where(x >= 0, x, alpha * x)
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Leaky ReLU (với α)» là gì?</summary>
+ReLU cho ra đúng không với mọi đầu vào âm: Nghĩa là nếu pre-activation của một neuron âm với mọi mẫu huấn luyện, gradient của nó luôn bằng không.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{ReLU}(x) = \max(0, x)$$
+</details>
+:::

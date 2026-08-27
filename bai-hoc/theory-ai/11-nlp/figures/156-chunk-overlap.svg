@@ -9,14 +9,7 @@
     .ov { fill: #FCE8D5; stroke: #C45C0A; }
     .nofill { fill: none; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .uniq { fill: #1A2A44; stroke: #8AB4F8; }
-      .ov { fill: #3A2A14; stroke: #F9AB00; }
-    }
+    
   </style>
 
   <text id="chunk-156-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="15" font-weight="600">Fixed-size chunks with overlap</text>

@@ -8,13 +8,7 @@
     .axis { fill: none; stroke: #1A1A1A; }
     .link { fill: none; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-    }
+    
   </style>
 
   <text id="kmeans-145-heading" class="ink" x="350" y="26" text-anchor="middle" font-size="16" font-weight="600">Centroid update: mean of assigned points</text>

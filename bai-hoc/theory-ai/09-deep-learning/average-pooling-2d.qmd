@@ -212,3 +212,17 @@ def average_pooling_2d(X, pool_size):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Average Pooling 2D» là gì?</summary>
+Average pooling là phép downsampling giảm kích thước không gian bằng cách tính trung bình trong mỗi vùng pooling.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{output}[i][j] = \frac{1}{p^{2}} \sum_{a=0}^{p-1} \sum_{b=0}^{p-1} \text{input}[i \cdot p + a][j \cdot p + b]$$
+</details>
+:::

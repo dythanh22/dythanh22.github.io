@@ -229,3 +229,17 @@ def kfold_split(N, k, shuffle=True, rng=None):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «K-Fold Split (chỉ chỉ số)» là gì?</summary>
+**K-Fold Cross-Validation** là kỹ thuật resampling dùng để đánh giá mô hình machine learning khi dữ liệu hạn chế.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{fold\_size} = \lfloor N / k \rfloor$$
+</details>
+:::

@@ -304,3 +304,17 @@ def hit_rate_at_k(recommendations, ground_truth, k):
     return hits / len(recommendations) if recommendations else 0.0
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Hit Rate at K» là gì?</summary>
+**Hit Rate at K (HR@K)** là metric đo tỷ lệ user có ít nhất một item liên quan xuất hiện trong top-K recommendation.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{HR@K} = \frac{\text{số user có ít nhất một hit trong top-K}}{\text{tổng số user}}$$
+</details>
+:::

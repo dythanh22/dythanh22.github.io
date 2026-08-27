@@ -202,3 +202,17 @@ def linear_layer_forward(X, W, b):
              for j in range(d_out)] for i in range(n)]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Linear Layer Forward» là gì?</summary>
+Lớp tuyến tính (còn gọi là fully connected layer, dense layer, hoặc phép biến đổi affine) là phép toán nền tảng nhất trong deep learning.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$y = Wx + b$$
+</details>
+:::

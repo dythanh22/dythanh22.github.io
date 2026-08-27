@@ -231,3 +231,17 @@ def calibrate_isotonic(cal_labels, cal_probs, new_probs):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Isotonic Regression Calibration» là gì?</summary>
+Isotonic regression khớp một hàm **đơn điệu không giảm** vào dữ liệu.
+</details>
+<details>
+<summary>Khi nào nên nhớ / áp dụng «Isotonic Regression Calibration»?</summary>
+Mạng nơ-ron hiện đại thường overconfident: chúng gán xác suất cao ngay cả khi sai.
+</details>
+:::

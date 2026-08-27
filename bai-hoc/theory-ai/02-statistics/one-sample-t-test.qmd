@@ -401,3 +401,17 @@ def t_test_one_sample(x, mu0):
     t_stat = (x_bar - mu0) / se
     return float(t_stat)
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Kiểm định t một mẫu» là gì?</summary>
+**Kiểm định t một mẫu** (one-sample t-test) xác định liệu trung bình của một mẫu có khác biệt có ý nghĩa thống kê so với trung bình quần thể đã biết hoặc giả định hay không.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$H_0: \mu = \mu_0$$
+</details>
+:::

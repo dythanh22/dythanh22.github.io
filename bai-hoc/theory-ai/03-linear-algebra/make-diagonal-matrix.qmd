@@ -266,3 +266,17 @@ def make_diagonal(v):
     return D
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Ma trận đường chéo» là gì?</summary>
+Một **diagonal matrix** là ma trận vuông trong đó mọi phần tử ngoài đường chéo chính đều bằng không.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$D = \begin{bmatrix} d_1 & 0 & 0 \\ 0 & d_2 & 0 \\ 0 & 0 & d_3 \end{bmatrix}$$
+</details>
+:::

@@ -221,3 +221,17 @@ def cosine_similarity(a, b):
     return float(dot / (norm_a * norm_b))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Cosine Similarity» là gì?</summary>
+**Cosine similarity** đo **góc** giữa hai vector, bỏ qua độ lớn (magnitude).
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\cos(\theta) = \frac{A \cdot B}{\|A\| \times \|B\|}$$
+</details>
+:::

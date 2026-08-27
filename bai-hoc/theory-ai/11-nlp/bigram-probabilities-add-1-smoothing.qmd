@@ -248,3 +248,17 @@ def bigram_probabilities(tokens):
     return counts, probs
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Bigram Probabilities (Add-1 Smoothing)» là gì?</summary>
+Một **bigram** là chuỗi hai phần tử liên tiếp.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$P(w_n \mid w_1, w_2, \ldots, w_{n-1}) \approx P(w_n \mid w_{n-1})$$
+</details>
+:::

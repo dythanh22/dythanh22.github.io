@@ -255,3 +255,17 @@ def text_chunking(tokens, chunk_size, overlap):
     return chunks
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Text Chunking» là gì?</summary>
+**Text chunking** chia tài liệu dài thành các mảnh nhỏ, dễ xử lý gọi là chunk.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{num\_chunks} = \left\lceil \frac{\text{text\_length}}{\text{chunk\_size}} \right\rceil$$
+</details>
+:::

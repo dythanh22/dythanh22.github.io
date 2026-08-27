@@ -294,3 +294,17 @@ def compute_monitoring_metrics(system_type, y_true, y_pred):
         return sorted([("precision_at_3", p_at_3), ("recall_at_3", r_at_3)])
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Monitoring Metrics Selection» là gì?</summary>
+Khi theo dõi hệ thống ML đã deploy, cám dỗ là chỉ track một metric như accuracy rồi coi như xong.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{accuracy} = \frac{TP + TN}{TP + TN + FP + FN} = \frac{\text{dự đoán đúng}}{\text{tổng số dự đoán}}$$
+</details>
+:::

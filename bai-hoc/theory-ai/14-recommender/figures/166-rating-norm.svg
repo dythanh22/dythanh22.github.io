@@ -10,15 +10,7 @@
     .zero { fill: none; stroke: #5C6570; }
     .card { fill: none; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .accent-soft { fill: #8AB4F8; fill-opacity: 0.14; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .hi-soft { fill: #F9AB00; fill-opacity: 0.14; stroke: #F9AB00; }
-      .zero { stroke: #9AA0A6; }
-    }
+    
   </style>
 
   <text id="rnorm-166-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="16" font-weight="600">Mean-centering: A mean 4.4, B mean 2.2</text>

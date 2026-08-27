@@ -419,3 +419,17 @@ Tuổi không cyclic ($90$ không nên gần $0$).
 ## Code
 ```python
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Cyclic Encoding» là gì?</summary>
+**Cyclic encoding** (còn gọi là circular encoding hoặc trigonometric encoding) là kỹ thuật biểu diễn feature có bản chất tuần hoàn hoặc tuần hoàn theo chu kỳ.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$x_{\sin} = \sin\left(\frac{2\pi \cdot x}{\mathrm{period}}\right)$$
+</details>
+:::

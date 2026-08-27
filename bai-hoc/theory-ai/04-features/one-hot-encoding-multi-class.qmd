@@ -212,3 +212,17 @@ def one_hot(y, num_classes=None):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «One-Hot Encoding (đa lớp)» là gì?</summary>
+**One-hot encoding** biến nhãn categorical thành vector nhị phân, mỗi category chiếm một vị trí riêng.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\mathrm{onehot}(y) = [0, 0, \ldots, 0, 1, 0, \ldots, 0]$$
+</details>
+:::

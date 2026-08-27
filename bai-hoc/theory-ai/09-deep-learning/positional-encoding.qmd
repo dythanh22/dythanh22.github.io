@@ -212,3 +212,17 @@ def positional_encoding(seq_len, d_model, base=10000.0):
 ## Học tiếp
 Positional encoding trong kiến trúc đầy đủ: [Transformer — Positional Encoding](../../architecture-models/Transformer/positional-encoding.qmd). Serving LLM (KV cache, batching): [Lesson 9 — LLM Inference](../../ai-optimize/lesson-09-llm-inference-systems.qmd).
 :::
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Positional Encoding (sin/cos)» là gì?</summary>
+Self-attention, cơ chế cốt lõi của Transformer, coi đầu vào như một tập hợp.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$PE(pos, 2i) = \sin\left(\frac{pos}{10000^{2i/d}}\right)$$
+</details>
+:::

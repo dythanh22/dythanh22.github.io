@@ -9,14 +9,7 @@
     .box-fill { fill: #2F6FED; fill-opacity: 0.12; stroke: #2F6FED; }
     .fill-none { fill: none; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-      .box-fill { fill: #8AB4F8; fill-opacity: 0.18; stroke: #8AB4F8; }
-    }
+    
   </style>
   <text id="robust-197-heading" class="ink" x="320" y="26" text-anchor="middle" font-size="15" font-weight="600">Robust scale: Q2 = 55, IQR = 55, outlier 1000</text>
   <!-- bulk 10..90: x = 48 + (v-10)*4.4 -&gt; 48..400; break; 1000 at x=552 -->

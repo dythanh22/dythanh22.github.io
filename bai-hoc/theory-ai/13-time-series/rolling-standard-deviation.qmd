@@ -582,3 +582,17 @@ def rolling_std(values, window_size):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Rolling Standard Deviation» là gì?</summary>
+**Rolling standard deviation** đo độ biến thiên của $w$ quan sát gần nhất trong một chuỗi thời gian.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\sigma_t(w) = \sqrt{\frac{1}{w-1} \sum_{i=0}^{w-1} (y_{t-i} - \bar{y}_t)^2}$$
+</details>
+:::

@@ -280,3 +280,17 @@ def policy_gradient_loss(log_probs, rewards, gamma):
     return -sum(lp * adv for lp, adv in zip(log_probs, advantages)) / T
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Policy Gradient Loss» là gì?</summary>
+Policy ánh xạ state sang action.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$a = \pi(s)$$
+</details>
+:::

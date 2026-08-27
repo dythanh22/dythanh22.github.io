@@ -312,3 +312,17 @@ def user_based_cf_prediction(similarities, ratings):
     return num / den
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «User-Based CF Prediction» là gì?</summary>
+**User-based collaborative filtering** dự đoán rating của một user cho một item dựa trên cách các user tương tự đã đánh giá item đó.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\hat{r}_{ui} = \frac{\sum_{v \in N(u)} \operatorname{sim}(u, v) \cdot r_{vi}}{\sum_{v \in N(u)} \lvert \operatorname{sim}(u, v) \rvert}$$
+</details>
+:::

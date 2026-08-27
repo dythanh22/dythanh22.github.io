@@ -211,3 +211,17 @@ def expected_calibration_error(y_true, y_pred, n_bins):
     return ece
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Expected Calibration Error» là gì?</summary>
+Một mô hình **well-calibrated** nếu xác suất dự đoán khớp tần suất thực tế.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{ECE} = \sum_{m=1}^{M} \frac{|B_m|}{n} \left| \text{acc}(B_m) - \text{conf}(B_m) \right|$$
+</details>
+:::

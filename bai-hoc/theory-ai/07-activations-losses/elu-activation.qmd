@@ -114,3 +114,17 @@ def elu(x, alpha=1.0):
     return [v if v > 0 else alpha * (math.exp(v) - 1) for v in x]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «ELU Activation» là gì?</summary>
+ReLU ($\max(0, x)$) đã thay đổi deep learning, nhưng có hai vấn đề: 1.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{ELU}(x) = \begin{cases} x & \text{nếu } x > 0 \\ \alpha \cdot (e^x - 1) & \text{nếu } x \leq 0 \end{cases}$$
+</details>
+:::

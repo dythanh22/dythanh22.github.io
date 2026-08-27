@@ -148,3 +148,17 @@ def detect_skew(train_dist, serving_dist, threshold=0.2, eps=1e-10):
     return results
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Detect Train-Serving Skew» là gì?</summary>
+Cho một feature được rời rạc hóa thành $n$ bin, gọi $P_i^{train}$ là tỷ lệ mẫu huấn luyện rơi vào bin $i$, và $P_i^{serving}$ là tỷ lệ mẫu production rơi vào bin $i$.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$PSI = \sum_{i=1}^{n} (P_i^{serving} - P_i^{train}) \times \ln\left(\frac{P_i^{serving}}{P_i^{train}}\right)$$
+</details>
+:::

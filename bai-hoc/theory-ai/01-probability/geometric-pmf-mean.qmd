@@ -376,3 +376,17 @@ def geometric_pmf_mean(k, p):
     mean = 1.0 / p
     return pmf, float(mean)
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «PMF hình học (Geometric) và kỳ vọng» là gì?</summary>
+Phân phối Geometric mô hình **số phép thử đến lần thành công đầu tiên** trong một dãy phép thử Bernoulli độc lập.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$p = P(\text{thành công mỗi phép thử})$$
+</details>
+:::

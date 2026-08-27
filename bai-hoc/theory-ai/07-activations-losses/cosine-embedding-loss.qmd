@@ -228,3 +228,17 @@ def cosine_embedding_loss(x1, x2, label, margin):
         return max(0.0, cos_sim - margin)
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Cosine Embedding Loss» là gì?</summary>
+Cosine similarity đo góc giữa hai vector: với: * $a \cdot b$ là tích vô hướng * $\|a\|$ và $\|b\|$ là độ lớn các vector Miền giá trị: * $\cos(\theta) = 1$: hai vector cùng hướng (giống nhất) * $\cos(\theta) = 0$: hai vector trực giao (không liên quan) *…
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\cos(\theta) = \frac{a \cdot b}{\|a\| \cdot \|b\|}$$
+</details>
+:::

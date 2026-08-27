@@ -228,3 +228,17 @@ def gru_cell_forward(x, h_prev, params):
 ## Học tiếp
 GRU đầy đủ (encoder–decoder): [Architecture Models — GRU](../../architecture-models/GRU/index.qmd).
 :::
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Mini GRU Cell (forward)» là gì?</summary>
+Vanilla RNN xử lý sequence bằng cách duy trì hidden state được cập nhật tại mỗi time step: Bước cập nhật đơn giản này có lỗi then chốt: **vanishing gradient**.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$h_t = \tanh(W_{xh} x_t + W_{hh} h_{t-1} + b)$$
+</details>
+:::

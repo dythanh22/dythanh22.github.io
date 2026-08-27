@@ -1,4 +1,5 @@
 ---
+toc-depth: 3
 title: "ONNX Runtime Deep Dive"
 subtitle: "AI Optimization — Bài 3"
 date: 2026-05-16

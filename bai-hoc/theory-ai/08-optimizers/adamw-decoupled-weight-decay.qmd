@@ -175,3 +175,17 @@ def adamw_step(w, m, v, grad, lr=0.001, beta1=0.9, beta2=0.999, weight_decay=0.0
     return w_new, m_new, v_new
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «AdamW (Decoupled Weight Decay)» là gì?</summary>
+Mạng nơ-ron với hàng triệu tham số có thể ghi nhớ dữ liệu huấn luyện thay vì học mẫu tổng quát.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$w_t = w_{t-1} - \eta \cdot \lambda \cdot w_{t-1}$$
+</details>
+:::

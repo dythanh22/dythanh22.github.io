@@ -363,3 +363,17 @@ def discount_returns(rewards, gamma):
     return [round(g, 4) for g in G]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Discounted Returns» là gì?</summary>
+**Discounted return** (còn gọi là discounted cumulative reward) là tổng phần thưởng agent nhận từ một thời điểm cho tới hết, trong đó phần thưởng tương lai được trọng số nhỏ hơn phần thưởng tức thời.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \cdots = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}$$
+</details>
+:::

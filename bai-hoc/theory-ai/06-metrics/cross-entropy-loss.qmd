@@ -185,3 +185,17 @@ def cross_entropy_loss(y_true, y_pred):
     return float(-np.mean(np.log(p_true)))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Cross-Entropy Loss» là gì?</summary>
+**Cross-entropy loss** (còn gọi là log loss hoặc softmax loss) là hàm mất mát chuẩn cho bài phân loại.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{CE} = -\sum_{c=1}^{C} y_c \log(\hat{y}_c)$$
+</details>
+:::

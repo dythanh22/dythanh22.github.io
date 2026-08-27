@@ -195,3 +195,17 @@ def edit_distance(s1, s2):
     return dp[m][n]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Edit Distance» là gì?</summary>
+**Edit distance** (còn gọi là Levenshtein distance) đo số phép toán trên từng ký tự tối thiểu cần để biến một chuỗi thành chuỗi kia.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$dp[0][j] = j$$
+</details>
+:::

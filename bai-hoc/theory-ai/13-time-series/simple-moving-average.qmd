@@ -295,3 +295,17 @@ def simple_moving_average(values, window_size):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Simple Moving Average» là gì?</summary>
+**Simple moving average (SMA)** là trung bình của $w$ quan sát gần nhất trong một time series.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{SMA}_t(w) = \frac{1}{w} \sum_{i=0}^{w-1} y_{t-i}$$
+</details>
+:::

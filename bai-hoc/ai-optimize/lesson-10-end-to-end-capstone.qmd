@@ -1,4 +1,5 @@
 ---
+toc-depth: 3
 title: "End-to-End Capstone Project"
 subtitle: "AI Optimization — Bài 10"
 date: 2026-05-23

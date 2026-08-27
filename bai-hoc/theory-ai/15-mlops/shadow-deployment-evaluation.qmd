@@ -329,3 +329,17 @@ def evaluate_shadow(production_log, shadow_log, criteria):
 ## Học tiếp
 Canary / shadow / rollback trong inference ops: [Lesson 8 — Safe Model Rollouts](../../ai-optimize/lesson-08-safe-model-rollouts.qmd).
 :::
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Shadow Deployment Evaluation» là gì?</summary>
+Đưa một mô hình machine learning mới lên production là rủi ro.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{accuracy} = \frac{\text{số dự đoán đúng}}{\text{tổng số dự đoán}}$$
+</details>
+:::

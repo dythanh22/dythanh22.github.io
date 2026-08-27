@@ -10,6 +10,11 @@ source-id: "185"
 ---
 # Min-Max Scaling
 
+::: {.callout-tip icon=false}
+## Cùng công thức với bài cạnh
+Bài [Min-Max Normalization](min-max-normalization.qmd) (`order: 1`) dùng cùng phép biến đổi về $[0,1]$. Bài này nhấn **vì sao** cần scale và khi nào dùng trong ML.
+:::
+
 ## Min-max scaling là gì
 
 **Min-max scaling**, còn gọi là normalization, biến đổi đặc trưng về một khoảng cố định, thường là $[0, 1]$. Giá trị nhỏ nhất thành 0, giá trị lớn nhất thành 1, và mọi giá trị còn lại được scale tuyến tính giữa hai mốc đó. Nhờ vậy mọi đặc trưng cùng thang, điều then chốt với nhiều thuật toán machine learning.
@@ -225,3 +230,17 @@ def min_max_scaling(data):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Min-Max Scaling» là gì?</summary>
+**Min-max scaling**, còn gọi là normalization, biến đổi đặc trưng về một khoảng cố định, thường là $[0, 1]$.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$x' = \frac{x - x_{\min}}{x_{\max} - x_{\min}}$$
+</details>
+:::

@@ -285,3 +285,17 @@ def batch_norm_forward(x, gamma, beta, eps=1e-5):
         raise ValueError("x must be (N,D) or (N,C,H,W)")
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Batch Normalization (Forward)» là gì?</summary>
+Huấn luyện mạng neural sâu khó vì phân phối đầu vào của mỗi lớp thay đổi trong lúc học.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\hat{x} = \frac{x - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}$$
+</details>
+:::

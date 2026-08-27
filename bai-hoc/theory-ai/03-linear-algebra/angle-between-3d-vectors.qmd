@@ -352,3 +352,17 @@ def angle_between_3d(v, w):
     return round(float(theta), 6)
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Góc giữa hai vector 3D» là gì?</summary>
+Góc giữa hai vector là khái niệm nền tảng trong hình học và đại số tuyến tính.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\mathbf{a} \cdot \mathbf{b} = \lVert\mathbf{a}\rVert \cdot \lVert\mathbf{b}\rVert \cdot \cos(\theta)$$
+</details>
+:::

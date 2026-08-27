@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="230" viewBox="0 0 720 230" role="img" aria-labelledby="word2vec-02-title">
 <title id="word2vec-02-title">Frequent-word keep probability</title>
-<rect class="fig-bg" width="720" height="230" fill="#F7F8FA"/>
-<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<rect class="fig-bg" width="720" height="230" fill="none"/>
+
 <text x="360.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Subsample: P_keep(w) = min(1, √(t / f(w)))</text>
 <text x="360.0" y="44.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">f ≤ t → luôn giữ · f &gt; t → làm thưa theo căn · t ≈ 10⁻⁵</text>
 <rect x="98.0" y="80.0" width="110.0" height="56.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>

@@ -9,15 +9,7 @@
     .rej { fill: #C45C0A; opacity: 0.12; stroke: none; }
     .keep { fill: #2F6FED; opacity: 0.10; stroke: none; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-      .rej { fill: #F9AB00; opacity: 0.22; }
-      .keep { fill: #8AB4F8; opacity: 0.18; }
-    }
+    
   </style>
   <text id="ttest-67-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="15" font-weight="600">t = -1.67 inside (-2.064, +2.064) -- fail to reject H0</text>
 
@@ -55,6 +47,6 @@
   <text class="accent" x="360" y="145" text-anchor="middle" font-size="11" stroke="none">do not reject H0</text>
   <text class="hi" x="572" y="145" text-anchor="middle" font-size="11" stroke="none">reject</text>
 
-  <text class="muted" x="360" y="236" text-anchor="middle" font-size="12">df = 24 ù alpha = 0.05 (two-sided) ù |t| = 1.67 &lt; 2.064 ù p &#x2248; 0.108</text>
+  <text class="muted" x="360" y="236" text-anchor="middle" font-size="12">df = 24 ÔøΩ alpha = 0.05 (two-sided) ÔøΩ |t| = 1.67 &lt; 2.064 ÔøΩ p &#x2248; 0.108</text>
   <text class="ink" x="360" y="268" text-anchor="middle" font-size="13">t axis</text>
 </svg>

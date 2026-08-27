@@ -127,3 +127,17 @@ def swish(x):
     return np.round(result, 4).tolist()
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Swish Activation» là gì?</summary>
+ReLU ($\max(0, x)$) là hàm kích hoạt phổ biến nhất trong deep learning, nhưng không tối ưu mọi tình huống.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{Swish}(x) = x \cdot \sigma(x)$$
+</details>
+:::

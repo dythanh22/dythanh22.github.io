@@ -7,12 +7,7 @@
     .hi { fill: #C45C0A; stroke: #C45C0A; }
     .nofill { fill: none; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-    }
+    
   </style>
 
   <text id="wcount-102-heading" class="ink" x="340" y="28" text-anchor="middle" font-size="15" font-weight="600">Global word counts</text>

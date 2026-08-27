@@ -347,3 +347,17 @@ def percentiles(x, q):
     q = np.asarray(q, dtype=float)
     return np.percentile(x, q, method="linear")
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Percentile / Quantile» là gì?</summary>
+Một percentile cho biết **vị trí tương đối** của một giá trị trong tập dữ liệu.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$L = \frac{p}{100} \times (n + 1)$$
+</details>
+:::

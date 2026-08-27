@@ -206,3 +206,17 @@ def dice_loss(p, y, eps=1e-8):
     return float(1.0 - (2.0 * intersection + eps) / (np.sum(p) + np.sum(y) + eps))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Dice Loss» là gì?</summary>
+Trong semantic segmentation, mục tiêu là gán lớp cho từng pixel trong ảnh: * Đầu vào: ảnh kích thước $H \times W$ * Đầu ra: mask kích thước $H \times W$ trong đó mỗi pixel có một nhãn lớp Thách thức: mất cân bằng lớp rất nặng.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\mathrm{Dice} = \frac{2 |A \cap B|}{|A| + |B|}$$
+</details>
+:::

@@ -289,3 +289,17 @@ def lbfgs_direction(grad, s_list, y_list):
     return [-r[j] for j in range(n)]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «L-BFGS Two-Loop Recursion» là gì?</summary>
+Trong machine learning, ta cực tiểu hóa hàm loss $f(x)$ với $x$ là vector tham số.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$x_{k+1} = x_k - \alpha \nabla f(x_k)$$
+</details>
+:::

@@ -1,4 +1,5 @@
 ---
+toc-depth: 3
 short-title: "Tổng quan chuỗi"
 title: "Architecture Models"
 subtitle: "CNN → sequence → generative (VAE/GAN/DDPM) → embeddings → attention → U-Net"

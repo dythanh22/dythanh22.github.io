@@ -10,16 +10,7 @@
     .axis { fill: none; stroke: #1A1A1A; }
     .guide { fill: none; stroke: #5C6570; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; stroke: none; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; }
-      .muted { fill: #9AA0A6; }
-      .accent { stroke: #8AB4F8; }
-      .accent-fill { fill: #8AB4F8; }
-      .hi { stroke: #F9AB00; }
-      .hi-fill { fill: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-      .guide { stroke: #9AA0A6; }
-    }
+    
   </style>
   <text id="pc-187-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="15" font-weight="600">PC from y = [100, 105, 102, 110, 108]</text>
 

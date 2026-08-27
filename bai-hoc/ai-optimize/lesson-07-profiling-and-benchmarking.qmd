@@ -1,4 +1,5 @@
 ---
+toc-depth: 3
 title: "Profiling and Benchmarking Inference Systems"
 subtitle: "AI Optimization — Bài 7"
 date: 2026-05-20

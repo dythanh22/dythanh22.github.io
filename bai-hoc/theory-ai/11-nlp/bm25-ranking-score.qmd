@@ -276,3 +276,17 @@ def bm25_score(query_tokens, docs, k1=1.2, b=0.75):
     return scores
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «BM25 Ranking Score» là gì?</summary>
+**BM25** (Best Matching 25) là hàm xếp hạng dùng trong information retrieval để ước lượng độ liên quan của tài liệu với một query tìm kiếm.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{TF-IDF}(t, d) = \text{tf}(t, d) \times \text{idf}(t)$$
+</details>
+:::

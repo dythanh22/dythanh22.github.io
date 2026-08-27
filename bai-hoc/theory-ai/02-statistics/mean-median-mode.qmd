@@ -397,3 +397,17 @@ def mean_median_mode(x):
     mode = float(min(modes))
     return mean, median, mode
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Mean, Median, Mode» là gì?</summary>
+Xu hướng trung tâm mô tả “trung tâm” của một tập dữ liệu nằm ở đâu.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i = \frac{x_1 + x_2 + \cdots + x_n}{n}$$
+</details>
+:::

@@ -10,16 +10,7 @@
     .pos { fill: #2F6FED; stroke: none; }
     .neg { fill: #C45C0A; stroke: none; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .box-ac { fill: #8AB4F8; fill-opacity: 0.16; stroke: #8AB4F8; }
-      .box-hi { fill: #F9AB00; fill-opacity: 0.16; stroke: #F9AB00; }
-      .pos { fill: #8AB4F8; }
-      .neg { fill: #F9AB00; }
-    }
+    
   </style>
 
   <text id="base-181-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600" stroke="none">b_C,2 = mu + b_C + b_2 = 3.4</text>

@@ -156,3 +156,17 @@ def softmax(x):
         return np.round(result, 4).tolist()
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Softmax» là gì?</summary>
+Lớp cuối của mạng phân loại cho ra một vector số thô, một số mỗi lớp.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$z = \begin{bmatrix} 2.0 & 1.0 & 0.5 \end{bmatrix}$$
+</details>
+:::

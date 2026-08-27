@@ -385,3 +385,17 @@ def binomial_pmf_cdf(n, p, k):
         cdf += comb(n, i, exact=False) * (p ** i) * ((1 - p) ** (n - i))
     return float(pmf), float(cdf)
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «PMF nhị thức (Binomial)» là gì?</summary>
+Phân phối Binomial mô hình **số lần thành công** trong một số phép thử độc lập cố định, mỗi phép thử có cùng xác suất thành công.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\begin{aligned} n &:\ \text{số phép thử (số nguyên dương)}, \\ p &:\ \text{xác suất thành công mỗi lần }(0 \leq p \leq 1). \end{aligned}$$
+</details>
+:::

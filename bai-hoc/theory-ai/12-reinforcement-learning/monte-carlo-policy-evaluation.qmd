@@ -350,3 +350,17 @@ def mc_policy_evaluation(episodes, gamma, n_states):
     return V
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Monte Carlo Policy Evaluation» là gì?</summary>
+Policy evaluation là quá trình tính **hàm giá trị** cho một policy $\pi$ cho trước.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$V^{\pi}(s) = \mathbb{E}_{\pi}[G_t \mid S_t = s]$$
+</details>
+:::

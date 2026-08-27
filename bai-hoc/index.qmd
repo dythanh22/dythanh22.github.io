@@ -10,7 +10,7 @@ listing:
       - "*/index.qmd"
     sort: "title"
     type: grid
-    grid-columns: 2
+    grid-columns: 3
     fields: [title, description]
     sort-ui: false
     filter-ui: false
@@ -31,8 +31,8 @@ listing:
     feed: true
     fields: [order, title, date, description, categories]
     field-display-names:
-      order: "#"
-      title: "Chương"
+      order: "Trong chuỗi"
+      title: "Bài / chương"
       date: "Ngày"
       description: "Mô tả"
       categories: "Chủ đề"
@@ -40,16 +40,19 @@ listing:
     max-description-length: 120
 ---
 
-Chọn **chuỗi** bên dưới, rồi đọc từng chương theo thứ tự. Sidebar và nút trước/sau giữ đúng lộ trình trong chuỗi đang mở.
+Chọn **chuỗi** bên dưới, rồi đọc từng bài theo thứ tự trong chuỗi đó. Sidebar và nút trước/sau giữ đúng lộ trình đang mở.
 
 ## Chuỗi bài
 
 ::: {#danh-sach-chuoi}
 :::
 
-## Tất cả chương
+<details>
+<summary><strong>Tất cả bài trên site</strong> (lọc theo chuỗi / chủ đề — cột “Trong chuỗi” chỉ đúng trong từng chuỗi, không phải thứ tự toàn site)</summary>
 
-Lọc theo chủ đề / chuỗi (`architecture-models`, `ai-optimize`, `alexnet`, …) hoặc tìm theo tên. Sắp xếp theo `#` (`order`) hoặc ngày.
+Lọc `theory-ai`, `architecture-models`, `ai-optimize`, hoặc tên model. Sắp theo chuỗi rồi `order`, hoặc theo ngày.
 
 ::: {#danh-sach-bai}
 :::
+
+</details>

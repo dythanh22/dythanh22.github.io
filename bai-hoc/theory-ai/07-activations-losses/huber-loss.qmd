@@ -220,3 +220,17 @@ def huber_loss(y_true, y_pred, delta=1.0):
     return float(np.mean(loss))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Huber Loss» là gì?</summary>
+Mean Squared Error (MSE) là hàm mất mát phổ biến nhất cho hồi quy: MSE hoạt động tốt khi sai số phân phối chuẩn, nhưng có điểm yếu then chốt: **nhạy với outlier**.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$
+</details>
+:::

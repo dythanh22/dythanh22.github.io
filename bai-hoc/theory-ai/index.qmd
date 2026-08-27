@@ -18,8 +18,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-statistics
     contents: ["02-statistics/*.qmd"]
@@ -28,8 +28,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-linear-algebra
     contents: ["03-linear-algebra/*.qmd"]
@@ -38,8 +38,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-features
     contents: ["04-features/*.qmd"]
@@ -48,8 +48,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-classical-ml
     contents: ["05-classical-ml/*.qmd"]
@@ -58,8 +58,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-metrics
     contents: ["06-metrics/*.qmd"]
@@ -68,8 +68,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-activations-losses
     contents: ["07-activations-losses/*.qmd"]
@@ -78,8 +78,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-optimizers
     contents: ["08-optimizers/*.qmd"]
@@ -88,8 +88,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-deep-learning
     contents: ["09-deep-learning/*.qmd"]
@@ -98,8 +98,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-computer-vision
     contents: ["10-computer-vision/*.qmd"]
@@ -108,8 +108,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-nlp
     contents: ["11-nlp/*.qmd"]
@@ -118,8 +118,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-rl
     contents: ["12-reinforcement-learning/*.qmd"]
@@ -128,8 +128,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-time-series
     contents: ["13-time-series/*.qmd"]
@@ -138,8 +138,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-recommender
     contents: ["14-recommender/*.qmd"]
@@ -148,8 +148,8 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
   - id: roadmap-mlops
     contents: ["15-mlops/*.qmd"]
@@ -158,12 +158,14 @@ listing:
     categories: false
     sort-ui: false
     filter-ui: false
-    fields: [order, title, description]
-    field-display-names: {order: "#", title: "Chương", description: "Mô tả"}
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
     max-description-length: 100
 ---
 
 Chuỗi **Theory AI**: **187 bài** lý thuyết ngắn — công thức, ví dụ số, snippet Python. Nền cho Architecture Models và AI Optimization.
+
+Mỗi mục dưới đây chỉ liệt kê **#** và tiêu đề (bấm để mở bài). Dùng TOC hoặc sidebar để nhảy chapter.
 
 ::: {.callout-note icon=false}
 ## Cách đọc
@@ -186,77 +188,77 @@ Một số bài Theory đã gắn callout **Học tiếp / Ôn nền tảng** t�
 | [KL Divergence](07-activations-losses/kl-divergence.qmd) | [VAE KL](../architecture-models/VAE/kl-divergence.qmd) | — |
 | [Data Drift](15-mlops/data-drift-detection.qmd), [Shadow](15-mlops/shadow-deployment-evaluation.qmd) | — | [Lesson 8 Rollouts](../ai-optimize/lesson-08-safe-model-rollouts.qmd) |
 
-## 1. Probability
+## 1. Probability {#probability}
 
 ::: {#roadmap-probability}
 :::
 
-## 2. Statistics
+## 2. Statistics {#statistics}
 
 ::: {#roadmap-statistics}
 :::
 
-## 3. Linear Algebra
+## 3. Linear Algebra {#linear-algebra}
 
 ::: {#roadmap-linear-algebra}
 :::
 
-## 4. Features
+## 4. Features {#features}
 
 ::: {#roadmap-features}
 :::
 
-## 5. Classical ML
+## 5. Classical ML {#classical-ml}
 
 ::: {#roadmap-classical-ml}
 :::
 
-## 6. Metrics
+## 6. Metrics {#metrics}
 
 ::: {#roadmap-metrics}
 :::
 
-## 7. Activations & Losses
+## 7. Activations & Losses {#activations-losses}
 
 ::: {#roadmap-activations-losses}
 :::
 
-## 8. Optimizers
+## 8. Optimizers {#optimizers}
 
 ::: {#roadmap-optimizers}
 :::
 
-## 9. Deep Learning
+## 9. Deep Learning {#deep-learning}
 
 ::: {#roadmap-deep-learning}
 :::
 
-## 10. Computer Vision
+## 10. Computer Vision {#computer-vision}
 
 ::: {#roadmap-computer-vision}
 :::
 
-## 11. NLP
+## 11. NLP {#nlp}
 
 ::: {#roadmap-nlp}
 :::
 
-## 12. Reinforcement Learning
+## 12. Reinforcement Learning {#reinforcement-learning}
 
 ::: {#roadmap-rl}
 :::
 
-## 13. Time Series
+## 13. Time Series {#time-series}
 
 ::: {#roadmap-time-series}
 :::
 
-## 14. Recommender
+## 14. Recommender {#recommender}
 
 ::: {#roadmap-recommender}
 :::
 
-## 15. MLOps
+## 15. MLOps {#mlops}
 
 ::: {#roadmap-mlops}
 :::

@@ -232,3 +232,17 @@ def triplet_loss(anchor, positive, negative, margin=1.0):
     return float(np.mean(np.maximum(0, dist_ap - dist_an + margin)))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Triplet Loss» là gì?</summary>
+Triplet loss học embedding bằng cách so sánh ba mẫu mỗi lần: * **Anchor (a)**: mẫu tham chiếu * **Positive (p)**: mẫu giống anchor (cùng lớp/identity) * **Negative (n)**: mẫu khác anchor (khác lớp/identity) Mục tiêu: học embedding sao cho anchor gần positive…
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$d(a, p) < d(a, n)$$
+</details>
+:::

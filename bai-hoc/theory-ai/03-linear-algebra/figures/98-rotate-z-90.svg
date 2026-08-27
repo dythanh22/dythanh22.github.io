@@ -8,14 +8,7 @@
     .axis { fill: none; stroke: #1A1A1A; }
     .arc { fill: none; stroke: #5C6570; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-      .arc { stroke: #9AA0A6; }
-    }
+    
   </style>
   <defs>
     <marker id="rotz-98-arrow-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">

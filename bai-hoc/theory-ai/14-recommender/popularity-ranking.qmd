@@ -314,3 +314,17 @@ def popularity_ranking(items, min_votes, global_mean):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Popularity Ranking» là gì?</summary>
+**Popularity ranking** là chiến lược recommendation đơn giản nhất: xếp hạng item theo mức độ phổ biến và gợi ý những item phổ biến nhất.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{score}(i) = \text{popularity}(i)$$
+</details>
+:::

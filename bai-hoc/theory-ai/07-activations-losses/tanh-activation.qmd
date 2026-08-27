@@ -125,3 +125,17 @@ def tanh(x):
     return np.round((np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x)), 4).tolist()
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Tanh Activation» là gì?</summary>
+Trước khi ReLU chiếm ưu thế, mạng neural cần hàm kích hoạt có hai tính chất: 1.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$$
+</details>
+:::

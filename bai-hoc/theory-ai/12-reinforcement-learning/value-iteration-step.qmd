@@ -232,3 +232,17 @@ def value_iteration_step(values, transitions, rewards, gamma):
     return new_values
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Value Iteration Step» là gì?</summary>
+Một **hàm giá trị** $V(s)$ gán cho mỗi trạng thái một số, cho biết việc ở trạng thái đó tốt đến mức nào.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\sum_{s'} T(s, a, s') = 1 \quad \text{với mọi } s, a$$
+</details>
+:::

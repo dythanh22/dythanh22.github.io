@@ -286,3 +286,17 @@ def impute_missing(X, strategy="mean"):
     return X_imputed
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Impute Missing Values (mean/median)» là gì?</summary>
+**Missing data imputation** là quá trình thay các giá trị missing hoặc null trong tập dữ liệu bằng giá trị thay thế.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$x_{\text{imputed}} = \bar{x} = \frac{1}{n_{\text{observed}}} \sum_{i \in \text{observed}} x_i$$
+</details>
+:::

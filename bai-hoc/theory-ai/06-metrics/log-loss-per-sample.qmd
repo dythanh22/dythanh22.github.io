@@ -217,3 +217,17 @@ def log_loss(y_true, y_pred, eps=1e-15):
     return losses
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Log Loss (từng mẫu)» là gì?</summary>
+Trong phân loại nhị phân: * Đầu vào: một mẫu $x$ * Nhãn thật: $y \in \{0, 1\}$ * Xác suất dự đoán: $\hat{y} = P(y=1|x)$ Mô hình xuất một xác suất cho lớp dương.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$L = -[y \log(\hat{y}) + (1-y) \log(1-\hat{y})]$$
+</details>
+:::

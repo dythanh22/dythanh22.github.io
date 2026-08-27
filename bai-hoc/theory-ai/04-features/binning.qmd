@@ -191,3 +191,17 @@ def binning(values, num_bins):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Binning» là gì?</summary>
+**Binning**, còn gọi là discretization hoặc bucketing, biến biến số liên tục thành biến categorical rời rạc bằng cách nhóm giá trị vào các khoảng (bin).
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{bin\_width} = \frac{x_{\max} - x_{\min}}{k}$$
+</details>
+:::

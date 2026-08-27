@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="780" height="280" viewBox="0 0 780 280" role="img" aria-labelledby="vgg-08-title">
 <title id="vgg-08-title">Complete VGG-16</title>
-<rect class="fig-bg" width="780" height="280" fill="#F7F8FA"/>
-<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<rect class="fig-bg" width="780" height="280" fill="none"/>
+
 <text x="390.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">VGG-16 hoàn chỉnh: features(config) → flatten → classifier</text>
 <rect x="40.0" y="55.0" width="420.0" height="140.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2" data-allow-overlap="1"/>
 <text x="250.0" y="78.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Giai đoạn 1 — Feature extractor</text>

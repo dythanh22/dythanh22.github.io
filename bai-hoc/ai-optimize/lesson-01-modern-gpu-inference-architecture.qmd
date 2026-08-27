@@ -1,4 +1,5 @@
 ---
+toc-depth: 3
 title: "Modern GPU Inference Architecture"
 subtitle: "AI Optimization — Bài 1"
 date: 2026-05-14

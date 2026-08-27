@@ -257,3 +257,17 @@ def robust_scaling(values):
     return [(v - median) / iqr for v in values]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Robust Scaling» là gì?</summary>
+**Robust scaling** biến đổi đặc trưng bằng các thống kê bền với outlier: median và interquartile range (IQR).
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$x_{\text{scaled}} = \frac{x - Q_2}{IQR}$$
+</details>
+:::

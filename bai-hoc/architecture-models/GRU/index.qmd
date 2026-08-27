@@ -1,4 +1,5 @@
 ---
+toc-depth: 3
 title: "GRU"
 subtitle: "Tổng quan encoder-decoder và các gate"
 date: 2026-08-22

@@ -10,16 +10,7 @@
     .axis { fill: none; stroke: #1A1A1A; }
     .grid { fill: none; stroke: #5C6570; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .accent-line { stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .hi-line { stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-      .grid { stroke: #9AA0A6; }
-    }
+    
   </style>
   <text id="ema-163-heading" class="ink" x="320" y="26" text-anchor="middle" font-size="15" font-weight="600">EMA (&#x03B1; = 0.3): y vs smoothed path</text>
 

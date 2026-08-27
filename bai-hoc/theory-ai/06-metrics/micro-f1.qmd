@@ -269,3 +269,17 @@ def f1_micro(y_true, y_pred) -> float:
     return round(2 * total_tp / denom, 4)
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Micro-F1» là gì?</summary>
+F1 score là trung bình điều hòa của precision và recall: Với phân loại nhị phân: * Precision $= TP / (TP + FP)$ * Recall $= TP / (TP + FN)$ F1 cân bằng trade-off giữa precision và recall trong một metric.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$F1 = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$
+</details>
+:::

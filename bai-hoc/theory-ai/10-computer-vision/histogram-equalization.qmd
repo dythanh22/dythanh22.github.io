@@ -275,3 +275,17 @@ def histogram_equalize(image):
     return [[mapping[v] for v in row] for row in image]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Histogram Equalization» là gì?</summary>
+**Histogram equalization** là kỹ thuật xử lý ảnh điều chỉnh contrast bằng cách phân bố lại giá trị intensity của pixel.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$h(k) = \text{số pixel có intensity } k$$
+</details>
+:::

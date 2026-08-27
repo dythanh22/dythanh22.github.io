@@ -356,3 +356,17 @@ def normalize_3d(v):
         return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Chuẩn hóa vector 3D» là gì?</summary>
+Chuẩn hóa vector là quá trình biến một vector thành **unit vector** (vector có độ dài 1) cùng hướng với vector gốc.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\hat{\mathbf{v}} = \frac{\mathbf{v}}{\lVert\mathbf{v}\rVert}$$
+</details>
+:::

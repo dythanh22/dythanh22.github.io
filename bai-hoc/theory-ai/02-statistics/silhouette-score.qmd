@@ -210,3 +210,17 @@ def silhouette_score(X, labels):
     return float(np.mean(s))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Điểm silhouette» là gì?</summary>
+Các thuật toán clustering như K-Means, DBSCAN, hay agglomerative clustering nhóm các điểm dữ liệu theo độ tương đồng.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$a(i) = \frac{1}{|C_i| - 1} \sum_{\substack{j \in C_i \\ j \neq i}} d(i, j)$$
+</details>
+:::

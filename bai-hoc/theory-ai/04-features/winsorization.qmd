@@ -252,3 +252,17 @@ def winsorize(values, lower_pct, upper_pct):
     return [max(lo, min(hi, v)) for v in values]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Winsorization» là gì?</summary>
+**Winsorization** là kỹ thuật giới hạn giá trị cực đoan bằng cách cắt trần/sàn tại các percentile cho trước.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$x_{\text{winsorized}} = \begin{cases} L & \text{nếu } x < L \\ x & \text{nếu } L \leq x \leq U \\ U & \text{nếu } x > U \end{cases}$$
+</details>
+:::

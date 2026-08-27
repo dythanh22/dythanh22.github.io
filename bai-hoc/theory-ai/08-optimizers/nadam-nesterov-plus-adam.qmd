@@ -166,3 +166,17 @@ def nadam_step(w, m, v, grad, lr, beta1, beta2, eps):
     return w_new, m_new, v_new
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Nadam (Nesterov + Adam)» là gì?</summary>
+Huấn luyện một mạng nơ-ron nghĩa là tìm tập trọng số làm cực tiểu hàm mất mát.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$w_t = w_{t-1} - \eta \cdot g_t$$
+</details>
+:::

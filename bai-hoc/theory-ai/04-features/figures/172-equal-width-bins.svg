@@ -11,17 +11,7 @@
     .band3 { fill: #C45C0A; opacity: 0.14; stroke: none; }
     .axis { fill: none; stroke: #1A1A1A; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .band0 { fill: #8AB4F8; opacity: 0.18; }
-      .band1 { fill: #9AA0A6; opacity: 0.14; }
-      .band2 { fill: #8AB4F8; opacity: 0.18; }
-      .band3 { fill: #F9AB00; opacity: 0.20; }
-      .axis { stroke: #E8EAED; }
-    }
+    
   </style>
 
   <text id="bin-172-heading" class="ink" x="360" y="28" text-anchor="middle" font-size="16" font-weight="600">Equal-width 4 bins on [2, 89]</text>

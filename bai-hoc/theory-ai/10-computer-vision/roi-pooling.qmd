@@ -253,3 +253,17 @@ def roi_pool(feature_map, rois, output_size):
     return results
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «ROI Pooling» là gì?</summary>
+Trong object detection, mạng đề xuất vùng (region proposal network) gợi ý nhiều vùng quan tâm (ROI) kích thước khác nhau.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$h_{\mathrm{start}} = y_1 + \left\lfloor \frac{i \cdot \mathrm{roi\_h}}{\text{output size}} \right\rfloor$$
+</details>
+:::

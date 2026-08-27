@@ -285,3 +285,17 @@ def tfidf_vectorizer(documents):
     return matrix, vocab
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «TF-IDF Vectorizer» là gì?</summary>
+**TF-IDF** (Term Frequency–Inverse Document Frequency) là một thống kê số phản ánh mức độ quan trọng của một từ đối với một tài liệu trong một tập hợp.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{tf}(t, d) = f_{t,d}$$
+</details>
+:::

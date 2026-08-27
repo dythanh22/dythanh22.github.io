@@ -288,3 +288,17 @@ def k_means_centroid_update(points, assignments, k):
              for d in range(dim)] for j in range(k)]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Bước cập nhật centroid K-Means» là gì?</summary>
+Bước cập nhật centroid là nửa sau của mỗi vòng lặp K-Means.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\mu_j = \frac{1}{|C_j|} \sum_{i \in C_j} x_i$$
+</details>
+:::

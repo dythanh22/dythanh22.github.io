@@ -289,3 +289,17 @@ def morphological_op(image, kernel, operation):
     return out
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Morphological Erosion and Dilation» là gì?</summary>
+**Morphological operations** là bộ lọc phi tuyến cho ảnh nhị phân (đen–trắng).
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\begin{bmatrix} 1 & 1 & 1 \\ 1 & 1 & 1 \\ 1 & 1 & 1 \end{bmatrix}$$
+</details>
+:::

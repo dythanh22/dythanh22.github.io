@@ -273,3 +273,17 @@ def conv2d(x, W, b):
     return y
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «CNN Layer (NumPy)» là gì?</summary>
+Lớp tích chập (**convolutional layer**) áp các filter (kernel) học được lên ảnh đầu vào hoặc feature map.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{output}[i, j] = \sum_{m=0}^{k_h-1} \sum_{n=0}^{k_w-1} \text{input}[i+m, j+n] \times \text{kernel}[m, n] + \text{bias}$$
+</details>
+:::

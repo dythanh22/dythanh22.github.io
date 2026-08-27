@@ -280,3 +280,17 @@ def calculate_eigenvalues(matrix):
     return eigenvals
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Trị riêng của ma trận» là gì?</summary>
+Một **eigenvalue** của ma trận vuông $A$ là vô hướng $\lambda$ sao cho tồn tại vector khác không $v$ thỏa: Nói cách khác: khi nhân ma trận $A$ với vector $v$, kết quả chỉ là $v$ được scale bởi $\lambda$.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$Av = \lambda v$$
+</details>
+:::

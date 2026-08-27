@@ -8,14 +8,7 @@
     .hi-fill { fill: #C45C0A; stroke: #C45C0A; }
     .axis { fill: none; stroke: #1A1A1A; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { stroke: #F9AB00; }
-      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-    }
+    
   </style>
   <text id="boot-83-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="16" font-weight="600">Sample [4, 7, 3, 8, 5], mean = 5.4</text>
   <!-- x(v)=72+(v-3)*88 ; 3..8 -->

@@ -1,4 +1,5 @@
 ---
+toc-depth: 3
 title: "VGG"
 subtitle: "Tổng quan pipeline Conv 3×3 → MaxPool → FC"
 date: 2026-08-22

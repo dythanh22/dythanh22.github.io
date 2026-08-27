@@ -236,3 +236,17 @@ def ndcg(relevance_scores, k):
     return dcg / idcg
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «NDCG (Normalized Discounted Cumulative Gain)» là gì?</summary>
+Trong information retrieval và recommendation, ta thường xếp hạng item theo độ liên quan.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{CG}_k = \sum_{i=1}^{k} \mathrm{rel}_i$$
+</details>
+:::

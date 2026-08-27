@@ -1,4 +1,5 @@
 ---
+toc-depth: 3
 title: "Quantization Deep Dive"
 subtitle: "AI Optimization — Bài 5"
 date: 2026-05-18

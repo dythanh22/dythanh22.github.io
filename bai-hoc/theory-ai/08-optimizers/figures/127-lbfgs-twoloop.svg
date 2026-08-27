@@ -9,16 +9,7 @@
     .hi-soft { fill: #C45C0A; fill-opacity: 0.08; stroke: #C45C0A; }
     .card { fill: none; stroke: #1A1A1A; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; stroke: none; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; }
-      .muted { fill: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .accent-soft { fill: #8AB4F8; fill-opacity: 0.12; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .hi-soft { fill: #F9AB00; fill-opacity: 0.12; stroke: #F9AB00; }
-      .card { stroke: #E8EAED; }
-      #lbfgs-127-ah path { fill: #E8EAED; }
-    }
+    
   </style>
   <defs>
     <marker id="lbfgs-127-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">

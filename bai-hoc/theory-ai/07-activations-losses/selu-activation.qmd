@@ -121,3 +121,17 @@ def selu(x):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «SELU Activation» là gì?</summary>
+Mạng sâu gặp **internal covariate shift**: phân phối activation ở mỗi lớp thay đổi khi mạng huấn luyện.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{SELU}(x) = \lambda \cdot \begin{cases} x & \text{nếu } x > 0 \\ \alpha \cdot (e^x - 1) & \text{nếu } x \leq 0 \end{cases}$$
+</details>
+:::

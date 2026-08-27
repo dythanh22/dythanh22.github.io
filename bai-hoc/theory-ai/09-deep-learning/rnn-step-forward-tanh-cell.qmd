@@ -165,3 +165,17 @@ def rnn_step_forward(x_t, h_prev, Wx, Wh, b):
 ## Học tiếp
 Chuỗi kiến trúc sequence: [RNN](../../architecture-models/RNN/index.qmd) → [LSTM](../../architecture-models/LSTM/index.qmd) → [GRU](../../architecture-models/GRU/index.qmd). Mini GRU: [Mini GRU Cell](build-a-mini-gru-cell-forward-pass.qmd).
 :::
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «RNN Step Forward (Tanh Cell)» là gì?</summary>
+Mạng nơ-ron chuẩn nhận đầu vào kích thước cố định và cho đầu ra kích thước cố định.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$h_t = \tanh(x_t \, W_x + h_{t-1} \, W_h + b)$$
+</details>
+:::

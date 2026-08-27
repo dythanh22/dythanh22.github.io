@@ -234,3 +234,17 @@ def manhattan_distance(x, y):
         raise ValueError("length mismatch")
     return float(np.sum(np.abs(x - y)))
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Manhattan Distance» là gì?</summary>
+**Manhattan distance** đo khoảng cách giữa hai điểm bằng tổng các hiệu tuyệt đối theo từng chiều.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$d_{\text{Manhattan}}(A, B) = \sum_{i=1}^{n} |a_i - b_i|$$
+</details>
+:::

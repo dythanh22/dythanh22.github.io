@@ -1,4 +1,5 @@
 ---
+toc-depth: 3
 title: "ONNX Fundamentals"
 subtitle: "AI Optimization — Bài 2"
 date: 2026-05-15

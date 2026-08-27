@@ -249,3 +249,17 @@ def global_avg_pool(x):
         raise ValueError("x must be (C,H,W) or (N,C,H,W)")
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Global Average Pooling» là gì?</summary>
+**Global Average Pooling** (GAP) lấy một feature map và tính trung bình mọi vị trí không gian trên từng channel.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{GAP}(F)_{c} = \frac{1}{H \times W} \sum_{i=1}^{H} \sum_{j=1}^{W} F_{c,i,j}$$
+</details>
+:::

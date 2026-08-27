@@ -441,3 +441,17 @@ def cumulative_returns(returns):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Cumulative Returns» là gì?</summary>
+**Cumulative return** là tổng return của một khoản đầu tư trên một khoảng thời gian, đã kể compounding.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$R_{\text{cum}}(t) = \prod_{i=1}^{t} (1 + r_i) - 1$$
+</details>
+:::

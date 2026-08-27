@@ -254,3 +254,17 @@ def generate_anchors(feature_size, image_size, scales, aspect_ratios):
     return anchors
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Anchor Box Generation» là gì?</summary>
+**Anchor box** (còn gọi là prior box hoặc default box) là các bounding box định sẵn dùng trong object detection.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\mathrm{stride} = \frac{\text{kích thước ảnh}}{\text{kích thước feature}}$$
+</details>
+:::

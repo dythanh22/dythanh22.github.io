@@ -281,3 +281,17 @@ def sobel_edges(image):
     return out
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Sobel Edge Detection» là gì?</summary>
+Cạnh trên ảnh là ranh giới nơi cường độ pixel đổi đột ngột.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\nabla I = \left( \frac{\partial I}{\partial x}, \frac{\partial I}{\partial y} \right)$$
+</details>
+:::

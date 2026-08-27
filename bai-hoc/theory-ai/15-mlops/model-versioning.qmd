@@ -135,3 +135,17 @@ def promote_model(models):
     return best["name"]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Model Versioning» là gì?</summary>
+**Model registry** là kho tập trung lưu: * Artifact mô hình (trọng số đã huấn luyện, tham số, hoặc object đã serialize) * Metadata (ngày huấn luyện, hyperparameter, phiên bản dataset) * Metric hiệu năng (accuracy, latency, mức dùng tài nguyên) * Lineage…
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{Best Model} = \arg\max_m \left( \text{accuracy}(m), -\text{latency}(m), \text{timestamp}(m) \right)$$
+</details>
+:::

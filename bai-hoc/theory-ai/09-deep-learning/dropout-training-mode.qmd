@@ -164,3 +164,17 @@ def dropout(x, p=0.5, rng=None):
 ## Học tiếp
 Dropout trên FC của AlexNet: [AlexNet — Dropout](../../architecture-models/AlexNet/dropout.qmd).
 :::
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Dropout (chế độ huấn luyện)» là gì?</summary>
+Một mạng neural với hàng triệu tham số có thể nhớ dữ liệu huấn luyện thay vì học pattern tổng quát.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\mathbb{E}[\text{output}_i] = (1 - p) \cdot x_i + p \cdot 0 = (1 - p) \cdot x_i$$
+</details>
+:::

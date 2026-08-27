@@ -262,3 +262,17 @@ def bilinear_resize(image, new_h, new_w):
     return out
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Bilinear Interpolation» là gì?</summary>
+Nội suy ước lượng giá trị tại các vị trí nằm giữa các điểm dữ liệu đã biết.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\begin{aligned} v &= I[y_0][x_0](1-dx)(1-dy) + I[y_0][x_1] \cdot dx(1-dy) \\ &\quad + I[y_1][x_0](1-dx) \cdot dy + I[y_1][x_1] \cdot dx \cdot dy \end{aligned}$$
+</details>
+:::

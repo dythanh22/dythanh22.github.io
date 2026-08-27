@@ -354,3 +354,17 @@ def vector_norm_3d(v):
         return np.sqrt(np.sum(v**2, axis=1))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Norm vector 3D» là gì?</summary>
+Norm của vector là một hàm gán cho mỗi vector một **độ dài** (length) hoặc **độ lớn** (magnitude) không âm.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\lVert\mathbf{v}\rVert_2 = \sqrt{v_x^2 + v_y^2 + v_z^2}$$
+</details>
+:::

@@ -217,3 +217,17 @@ def linear_regression_closed_form(X, y):
     w = np.linalg.inv(X.T @ X) @ X.T @ y
     return w.tolist()
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Linear Regression dạng đóng» là gì?</summary>
+Linear regression tìm đường thẳng (hoặc siêu phẳng) khớp nhất đi qua các điểm dữ liệu.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$Xw \approx y$$
+</details>
+:::

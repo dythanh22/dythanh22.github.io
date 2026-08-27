@@ -250,3 +250,17 @@ def iou(box_a, box_b):
     return inter / union
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Intersection over Union (IoU)» là gì?</summary>
+**Intersection over Union (IoU)**, còn gọi là chỉ số Jaccard, đo mức độ chồng lấp của hai vùng: Với bounding box: * $A$ là bounding box dự đoán * $B$ là bounding box ground truth * Phần giao là nơi hai hộp chồng lên nhau * Phần hợp là toàn bộ diện tích được…
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\mathrm{IoU} = \frac{|A \cap B|}{|A \cup B|} = \frac{\text{diện tích giao}}{\text{diện tích hợp}}$$
+</details>
+:::

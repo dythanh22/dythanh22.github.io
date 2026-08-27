@@ -321,3 +321,17 @@ def schedule_pipeline(tasks, resource_budget):
     return sorted(schedule, key=lambda x: (x[1], x[0]))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «ETL Dependency Orchestration» là gì?</summary>
+Pipeline dữ liệu thực tế gồm nhiều task với phụ thuộc phức tạp.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{current\_usage} = \sum_{t \in \text{running}} \text{resources}(t)$$
+</details>
+:::

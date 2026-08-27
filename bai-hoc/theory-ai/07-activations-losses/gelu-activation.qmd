@@ -160,3 +160,17 @@ def gelu(x):
 ## Học tiếp
 GELU trong FFN Transformer: [Transformer — FFN](../../architecture-models/Transformer/ffn.qmd). So với ReLU cổ điển: [ReLU Activation](relu-activation.qmd) · [AlexNet ReLU](../../architecture-models/AlexNet/activation-func.qmd).
 :::
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «GELU Activation» là gì?</summary>
+Mạng neural không có hàm kích hoạt chỉ là chồng biến đổi tuyến tính.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{ReLU}(x) = \max(0, x)$$
+</details>
+:::

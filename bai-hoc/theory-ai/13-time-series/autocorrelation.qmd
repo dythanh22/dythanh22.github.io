@@ -385,3 +385,17 @@ def autocorrelation(series, max_lag):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Autocorrelation» là gì?</summary>
+**Autocorrelation** đo quan hệ tuyến tính giữa một chuỗi thời gian và phiên bản trễ (lagged) của chính nó.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\rho_k = \frac{\sum_{t=k+1}^{T} (y_t - \bar{y})(y_{t-k} - \bar{y})}{\sum_{t=1}^{T} (y_t - \bar{y})^2}$$
+</details>
+:::

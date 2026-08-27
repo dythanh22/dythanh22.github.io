@@ -273,3 +273,17 @@ def streaming_minmax_update(state, X_batch, eps=1e-8):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Streaming Min-Max Normalization» là gì?</summary>
+**Streaming min-max** tính minimum và maximum của một data stream mà không lưu mọi phần tử.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{current\_min} = \min(\text{current\_min}, x)$$
+</details>
+:::

@@ -281,3 +281,17 @@ def validate_records(records, schema):
     return results
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «ETL Schema Validation» là gì?</summary>
+Một **schema** định nghĩa cấu trúc kỳ vọng và ràng buộc của dữ liệu.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{valid} = (\text{min} \leq \text{value} \leq \text{max})$$
+</details>
+:::

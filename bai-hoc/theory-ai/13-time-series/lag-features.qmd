@@ -451,3 +451,17 @@ def lag_features(series, lags):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Lag Features» là gì?</summary>
+**Lag features** là các giá trị từ các bước thời gian trước đó, dùng làm feature để dự đoán bước hiện tại hoặc bước tương lai.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\rho_k = \frac{\operatorname{Cov}(y_t, y_{t-k})}{\operatorname{Var}(y_t)}$$
+</details>
+:::

@@ -206,3 +206,17 @@ def linear_interpolation(values):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Linear Interpolation» là gì?</summary>
+**Linear interpolation** là phương pháp ước lượng các giá trị chưa biết nằm giữa hai điểm dữ liệu đã biết.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$y = y_0 + (y_1 - y_0) \cdot \frac{x - x_0}{x_1 - x_0}$$
+</details>
+:::

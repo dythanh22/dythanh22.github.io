@@ -246,3 +246,17 @@ def pearson_correlation(X):
     np.fill_diagonal(corr, np.where(std == 0, np.nan, 1.0))
     return corr
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Ma trận tương quan Pearson» là gì?</summary>
+**Pearson correlation** đo quan hệ tuyến tính giữa hai biến, cho giá trị trong khoảng $[-1, +1]$.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\rho_{ij} = \frac{\operatorname{Cov}(X_i, X_j)}{\sigma_i \sigma_j}$$
+</details>
+:::

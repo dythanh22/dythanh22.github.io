@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="840" height="310" viewBox="0 0 840 310" role="img" aria-labelledby="bert-05-title">
 <title id="bert-05-title">Masked Language Modeling</title>
-<rect class="fig-bg" width="840" height="310" fill="#F7F8FA"/>
-<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<rect class="fig-bg" width="840" height="310" fill="none"/>
+
 <text x="420.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">MLM: che ~15% token · chiến lược 80-10-10 · loss chỉ tại ℳ</text>
 <text x="420.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Bidirectional (không causal mask) · z_i = h_i W + b · CE trên vị trí masked</text>
 <rect x="120.0" y="75.0" width="180.0" height="90.0" rx="4" fill="#EEF1F5" stroke="#C45C0A" stroke-width="2"/>

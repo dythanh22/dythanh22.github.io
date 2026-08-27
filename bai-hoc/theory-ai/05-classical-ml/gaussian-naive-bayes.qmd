@@ -349,3 +349,17 @@ def gaussian_naive_bayes(X_train, y_train, X_test):
     return preds
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Gaussian Naive Bayes» là gì?</summary>
+Gaussian Naive Bayes là thuật toán phân loại cho **đặc trưng liên tục**.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$P(x_i \mid y = c) = \frac{1}{\sqrt{2\pi\sigma_{ic}^{2}}} \exp\left(-\frac{(x_i - \mu_{ic})^{2}}{2\sigma_{ic}^{2}}\right)$$
+</details>
+:::

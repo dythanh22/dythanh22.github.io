@@ -216,3 +216,17 @@ def binary_focal_loss(predictions, targets, alpha, gamma):
     return total / n
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Binary Focal Loss» là gì?</summary>
+Trong nhiều bài phân loại nhị phân, một lớp phổ biến hơn lớp kia rất nhiều: * Phát hiện gian lận: $99.9\%$ hợp lệ, $0.1\%$ gian lận * Chẩn đoán y khoa: $95\%$ khỏe, $5\%$ bệnh * Object detection: hầu hết vùng là nền, ít vùng chứa vật Binary cross-entropy…
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{FL}(p_t) = -\alpha_t (1 - p_t)^\gamma \log(p_t)$$
+</details>
+:::

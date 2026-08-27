@@ -9,15 +9,7 @@
     .gbox { fill: #F8E6D4; stroke: #C45C0A; }
     .out { fill: #E8F0FE; stroke: #2F6FED; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .box { fill: #1E1E1E; stroke: #E8EAED; }
-      .gbox { fill: #3A2E14; stroke: #F9AB00; }
-      .out { fill: #1A2A44; stroke: #8AB4F8; }
-    }
+    
   </style>
   <text id="rgbgray-161-heading" class="ink" x="340" y="28" text-anchor="middle" font-size="16" font-weight="600">Luminosity: RGB(200, 100, 50) &#x2192; Gray = 124.2</text>
 

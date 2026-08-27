@@ -308,3 +308,17 @@ def baseline_predict(ratings_matrix, target_pairs):
     return [mu + user_biases[u] + item_biases[i] for u, i in target_pairs]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Baseline Predictor» là gì?</summary>
+**Baseline predictor** trong recommender system ước lượng rating của một user cho một item chỉ từ thống kê toàn cục và bias của user/item, không dùng thông tin similarity hay latent factor.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$b_{ui} = \mu + b_u + b_i$$
+</details>
+:::

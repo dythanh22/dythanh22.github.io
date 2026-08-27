@@ -145,3 +145,17 @@ def linear_lr(step, total_steps, initial_lr, final_lr=0.0, warmup_steps=0):
     return float(final_lr + (initial_lr - final_lr) * max(0.0, (total_steps - s_eff) / decay_len))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Learning Rate Scheduler (Linear Decay)» là gì?</summary>
+Learning rate $\eta$ kiểm soát độ lớn bước mà optimizer đi ở mỗi vòng lặp huấn luyện: Nếu learning rate quá cao: * Optimizer vượt cực tiểu, nảy qua lại * Training loss dao động mạnh hoặc thậm chí phân kỳ ra vô cực * Mô hình không bao giờ ổn định vào một…
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$w_t = w_{t-1} - \eta \cdot g_t$$
+</details>
+:::

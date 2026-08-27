@@ -219,3 +219,17 @@ def apply_causal_mask(scores, mask_value=-1e9):
 ## Học tiếp
 Attention trong Transformer: [Multi-Head Attention](../../architecture-models/Transformer/multi-head.qmd) · [Encoder block](../../architecture-models/Transformer/encoder-block.qmd). Inference LLM: [Lesson 9](../../ai-optimize/lesson-09-llm-inference-systems.qmd).
 :::
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Causal Masking cho Attention» là gì?</summary>
+Trong language modeling, mục tiêu là dự đoán token tiếp theo khi đã biết mọi token trước đó.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{Attention}(Q, K, V) = \mathrm{softmax}\left(\frac{QK^{T}}{\sqrt{d_k}}\right) V$$
+</details>
+:::

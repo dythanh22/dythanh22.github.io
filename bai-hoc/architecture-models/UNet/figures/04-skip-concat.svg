@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="860" height="320" viewBox="0 0 860 320" role="img" aria-labelledby="unet-04-title">
 <title id="unet-04-title">U-Net skip connection</title>
-<rect class="fig-bg" width="860" height="320" fill="#F7F8FA"/>
-<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<rect class="fig-bg" width="860" height="320" fill="none"/>
+
 <text x="430.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Skip: center-crop encoder rồi Concat channel (không cộng)</text>
 <text x="430.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">δ=(H_e−H_d)/2 · x_skip = Concat(x_crop, x_dec) ∈ ℝ^{(C_e+C_d)×H_d×W_d}</text>
 <rect x="40.0" y="100.0" width="160.0" height="70.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>

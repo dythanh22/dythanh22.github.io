@@ -286,3 +286,17 @@ def conv2d(image, kernel, stride=1, padding=0):
 ## Học tiếp
 Convolution trong AlexNet (geometry, stride, channel): [AlexNet — Convolution](../../architecture-models/AlexNet/convolution.qmd).
 :::
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «2D Convolution (lọc ảnh)» là gì?</summary>
+Convolution là phép toán kết hợp hai tín hiệu để tạo ra tín hiệu thứ ba.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{output}[i][j] = \sum_{m=0}^{k_h-1} \sum_{n=0}^{k_w-1} I[i+m][j+n] \cdot K[m][n]$$
+</details>
+:::

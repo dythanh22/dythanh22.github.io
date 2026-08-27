@@ -1,4 +1,5 @@
 ---
+toc-depth: 3
 title: "Các lớp tích chập của AlexNet"
 date: 2026-08-22
 order: 1

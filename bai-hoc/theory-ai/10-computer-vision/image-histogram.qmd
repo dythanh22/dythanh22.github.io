@@ -218,3 +218,17 @@ def image_histogram(image):
     return hist
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Image Histogram» là gì?</summary>
+**Histogram** đếm số lần mỗi giá trị xuất hiện trong một tập dữ liệu.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\begin{bmatrix} 0 & 50 & 50 & 100 \\ 0 & 50 & 100 & 100 \\ 50 & 100 & 150 & 200 \\ 100 & 150 & 200 & 255 \end{bmatrix}$$
+</details>
+:::

@@ -512,3 +512,17 @@ def interaction_features(X):
         result.append(list(row) + interactions)
     return result
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Interaction Features» là gì?</summary>
+**Interaction features** là feature mới tạo bằng cách kết hợp hai hay nhiều feature hiện có, bắt các quan hệ mà từng feature riêng không biểu diễn được.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$y = \beta_0 + \beta_1 x_1 + \beta_2 x_2$$
+</details>
+:::

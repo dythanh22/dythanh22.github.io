@@ -11,16 +11,7 @@
     .new { fill: #1A1A1A; stroke: #1A1A1A; }
     .fill-none { fill: none; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-      .ell-a { fill: #8AB4F8; fill-opacity: 0.14; stroke: #8AB4F8; }
-      .ell-b { fill: #F9AB00; fill-opacity: 0.14; stroke: #F9AB00; }
-      .new { fill: #E8EAED; stroke: #E8EAED; }
-    }
+    
   </style>
 
   <text id="gnb-150-heading" class="ink" x="340" y="24" text-anchor="middle" font-size="15" font-weight="600">Class A ~ (3,4), class B ~ (7,2); x = [5, 3]</text>

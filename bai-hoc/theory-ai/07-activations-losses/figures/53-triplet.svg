@@ -9,15 +9,7 @@
     .soft { fill: #2F6FED; fill-opacity: 0.10; stroke: none; }
     .soft-hi { fill: #C45C0A; fill-opacity: 0.10; stroke: none; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-      .soft { fill: #8AB4F8; fill-opacity: 0.16; }
-      .soft-hi { fill: #F9AB00; fill-opacity: 0.16; }
-    }
+    
   </style>
 
   <text id="trip-53-heading" class="ink" x="360" y="26" text-anchor="middle" font-size="16" font-weight="600">Triplet loss, m = 0.5</text>

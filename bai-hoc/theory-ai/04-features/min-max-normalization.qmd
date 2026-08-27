@@ -215,3 +215,17 @@ def minmax_scale(X, axis=0, eps=1e-12):
     return ((X - mn) / (mx - mn + eps)).tolist()
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Min-Max Normalization» là gì?</summary>
+**Min-max normalization** đưa dữ liệu về một khoảng chỉ định, phổ biến nhất là $[0, 1]$.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$x_{\text{normalized}} = \frac{x - x_{\min}}{x_{\max} - x_{\min}}$$
+</details>
+:::

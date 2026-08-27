@@ -362,3 +362,17 @@ def gae(rewards, values, gamma, lam):
     return advantages
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Generalized Advantage Estimation» là gì?</summary>
+**Generalized Advantage Estimation** là kỹ thuật tính **ước lượng hàm advantage** cân bias và phương sai.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$A^\pi(s, a) = Q^\pi(s, a) - V^\pi(s)$$
+</details>
+:::

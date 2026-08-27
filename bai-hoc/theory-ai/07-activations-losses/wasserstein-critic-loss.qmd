@@ -165,3 +165,17 @@ def wasserstein_critic_loss(real_scores, fake_scores):
     return float(np.mean(fake_scores) - np.mean(real_scores))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Wasserstein Critic Loss» là gì?</summary>
+Trong GAN chuẩn, discriminator xuất ra xác suất đầu vào là thật.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$W(P_r, P_g) \approx \max_f \left( \mathbb{E}_{x \sim P_r}[f(x)] - \mathbb{E}_{z \sim P_z}[f(G(z))] \right)$$
+</details>
+:::

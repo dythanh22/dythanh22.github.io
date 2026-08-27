@@ -8,14 +8,7 @@
     .axis { fill: none; stroke: #1A1A1A; }
     .pc { fill: none; stroke: #2F6FED; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-      .pc { stroke: #8AB4F8; }
-    }
+    
   </style>
 
   <text id="pca-148-heading" class="ink" x="320" y="26" text-anchor="middle" font-size="16" font-weight="600">Centered X and PC1</text>

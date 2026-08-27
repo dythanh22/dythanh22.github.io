@@ -286,3 +286,17 @@ def he_initialization(W, fan_in):
              for j in range(len(W[0]))] for i in range(len(W))]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «He Initialization» là gì?</summary>
+Xavier initialization giả định activation gần như tuyến tính (như tanh quanh không).
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{ReLU}(x) = \max(0, x)$$
+</details>
+:::

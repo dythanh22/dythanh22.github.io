@@ -365,3 +365,17 @@ def chi2_independence(C):
     chi2 = np.sum((C - expected) ** 2 / expected)
     return float(chi2), expected
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Kiểm định Chi-Square» là gì?</summary>
+Kiểm định chi-square độc lập xác định liệu có **liên hệ có ý nghĩa thống kê** giữa hai biến phân loại hay không.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$E_{ij} = \frac{R_i \times C_j}{N}$$
+</details>
+:::

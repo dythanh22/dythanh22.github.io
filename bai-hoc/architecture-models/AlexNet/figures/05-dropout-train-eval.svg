@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="740" height="240" viewBox="0 0 740 240" role="img" aria-labelledby="alexnet-05-title">
 <title id="alexnet-05-title">Dropout train vs eval</title>
-<rect class="fig-bg" width="740" height="240" fill="#F7F8FA"/>
-<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<rect class="fig-bg" width="740" height="240" fill="none"/>
+
 <text x="370.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Inverted dropout: train (mask + scale) vs inference (identity)</text>
 <rect x="40.0" y="50.0" width="300.0" height="120.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2" data-allow-overlap="1"/>
 <text x="190.0" y="72.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="#1A1A1A" text-anchor="middle">Training (p = 0.5)</text>

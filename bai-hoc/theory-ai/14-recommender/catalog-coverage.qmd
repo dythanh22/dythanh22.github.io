@@ -280,3 +280,17 @@ def catalog_coverage(recommendations, n_items):
     return len(items) / n_items if n_items > 0 else 0.0
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Catalog Coverage» là gì?</summary>
+**Catalog coverage** là metric đo phần catalog item mà một recommender system thực sự recommend tới user.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{Catalog Coverage} = \frac{|\text{Recommended Items}|}{|\text{Total Items}|}$$
+</details>
+:::

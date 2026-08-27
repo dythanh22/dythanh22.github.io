@@ -202,3 +202,17 @@ def perplexity(prob_distributions, actual_tokens):
     return round(math.exp(H), 4)
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Perplexity» là gì?</summary>
+**Perplexity** đo mức "bất ngờ" của một language model trước một chuỗi văn bản.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$PP = \exp\left(-\frac{1}{N} \sum_{i=1}^{N} \log P(w_i | \text{context})\right)$$
+</details>
+:::

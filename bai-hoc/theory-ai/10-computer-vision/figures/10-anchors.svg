@@ -9,15 +9,7 @@
     .feat { fill: #E8F0FE; stroke: #2F6FED; }
     .anchor { fill: none; stroke: #C45C0A; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .cell { fill: #1E1E1E; stroke: #E8EAED; }
-      .feat { fill: #1A2A44; stroke: #8AB4F8; }
-      .anchor { stroke: #F9AB00; }
-    }
+    
   </style>
 
   <text id="anc-10-heading" class="ink" x="340" y="24" text-anchor="middle" font-size="15" font-weight="600">Anchor at cell (0,0): [1, 1, 3, 3]</text>

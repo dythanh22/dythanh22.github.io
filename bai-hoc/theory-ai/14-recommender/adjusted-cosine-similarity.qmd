@@ -279,3 +279,17 @@ def adjusted_cosine_similarity(ratings_matrix, item_i, item_j):
     return num / den
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Adjusted Cosine Similarity» là gì?</summary>
+**Adjusted cosine similarity** là biến thể của cosine similarity chuẩn, thiết kế riêng cho item-based collaborative filtering.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\cos(i, j) = \frac{\sum_{u \in U_{ij}} r_{ui} \cdot r_{uj}}{\sqrt{\sum_{u \in U_{ij}} r_{ui}^{2}} \cdot \sqrt{\sum_{u \in U_{ij}} r_{uj}^{2}}}$$
+</details>
+:::

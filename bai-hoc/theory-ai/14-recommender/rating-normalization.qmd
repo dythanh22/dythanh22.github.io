@@ -303,3 +303,17 @@ def rating_normalization(matrix):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Rating Normalization» là gì?</summary>
+**Rating normalization** biến đổi rating thô để điều chỉnh các bias hệ thống trong cách user đánh giá item.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\tilde{r}_{ui} = r_{ui} - \bar{r}_u$$
+</details>
+:::

@@ -194,3 +194,17 @@ def warmup_decay_schedule(base_lr, warmup_steps, total_steps, current_step):
         return round(base_lr * (total_steps - current_step) / (total_steps - warmup_steps), 6)
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Warmup + Linear Decay LR Schedule» là gì?</summary>
+Ngay lúc bắt đầu huấn luyện, mọi thứ đều ngẫu nhiên: * **Trọng số ngẫu nhiên**: khởi tạo từ một phân phối ngẫu nhiên (Xavier, He, v.v.) * **Activation ngẫu nhiên**: vì đầu vào đi qua trọng số ngẫu nhiên, activation về cơ bản là nhiễu * **Gradient không tin…
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\eta(t) = \eta_0 \cdot \frac{t}{W}$$
+</details>
+:::

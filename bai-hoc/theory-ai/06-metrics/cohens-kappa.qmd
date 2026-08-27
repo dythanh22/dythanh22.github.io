@@ -234,3 +234,17 @@ def cohens_kappa(rater1, rater2):
     return (p_o - p_e) / (1 - p_e)
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Cohen's Kappa» là gì?</summary>
+Khi hai rater (hoặc một mô hình và nhãn thật) phân loại các mẫu, ta có thể đo agreement bằng tỷ lệ mẫu mà họ đồng ý.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\kappa = \frac{p_o - p_e}{1 - p_e}$$
+</details>
+:::

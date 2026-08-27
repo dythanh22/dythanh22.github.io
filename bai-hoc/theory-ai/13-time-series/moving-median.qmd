@@ -589,3 +589,17 @@ def moving_median(values, window_size):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Moving Median» là gì?</summary>
+**Moving median** là median của $w$ quan sát gần nhất trong một time series.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{MM}_t(w) = \mathrm{median}(y_{t-w+1}, y_{t-w+2}, \ldots, y_t)$$
+</details>
+:::

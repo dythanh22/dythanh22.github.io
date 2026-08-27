@@ -221,3 +221,17 @@ def apply_homogeneous_transform(T, points):
         return result[0]
     return result
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Áp dụng biến đổi đồng nhất 4×4» là gì?</summary>
+Ý tưởng cốt lõi đơn giản: lấy điểm 3D $(x, y, z)$ và nối thêm số 1 ở cuối để được vector 4D: Tọa độ thêm này (thường gọi là tọa độ $w$) chính là chìa khóa.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$p' = R \cdot p$$
+</details>
+:::

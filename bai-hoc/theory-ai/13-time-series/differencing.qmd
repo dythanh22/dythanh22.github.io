@@ -462,3 +462,17 @@ def differencing(series, order):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Differencing» là gì?</summary>
+**Differencing** biến đổi một time series bằng cách tính thay đổi giữa các quan sát liên tiếp.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\nabla y_t = y_t - y_{t-1}$$
+</details>
+:::

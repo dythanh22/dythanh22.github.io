@@ -331,3 +331,17 @@ def top_k_recommendations(scores, rated_indices, k):
     return [idx for _, idx in unrated[:k]]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Top-K Recommendations» là gì?</summary>
+**Top-K recommendations** là $K$ item có điểm cao nhất được đưa cho user.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$R_K(u) = \operatorname{argmax}_{S \subset I,\, |S|=K} \sum_{i \in S} \operatorname{score}(u, i)$$
+</details>
+:::

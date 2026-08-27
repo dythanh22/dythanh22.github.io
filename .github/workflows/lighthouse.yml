@@ -1,5 +1,4 @@
-# Optional: Lighthouse against production (manual / scheduled)
-# Does not block Pages deploy.
+# Lighthouse CI — production URLs (manual / weekly). Does not block Pages deploy.
 
 name: Lighthouse CI
 
@@ -18,7 +17,10 @@ jobs:
           urls: |
             https://dythanh22.github.io/
             https://dythanh22.github.io/bai-hoc/
+            https://dythanh22.github.io/bai-hoc/theory-ai/
+            https://dythanh22.github.io/bai-hoc/theory-ai/01-probability/bernoulli-pmf-moments.html
             https://dythanh22.github.io/bai-hoc/architecture-models/
             https://dythanh22.github.io/bai-hoc/ai-optimize/
           uploadArtifacts: true
           temporaryPublicStorage: true
+          budgetPath: .github/lighthouse-budget.json

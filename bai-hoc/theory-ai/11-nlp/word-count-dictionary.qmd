@@ -173,3 +173,17 @@ def word_count_dict(sentences):
     return freq
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Word Count Dictionary» là gì?</summary>
+Đếm tần suất từ là một trong những thao tác nền tảng nhất trong xử lý ngôn ngữ tự nhiên.
+</details>
+<details>
+<summary>Khi nào nên nhớ / áp dụng «Word Count Dictionary»?</summary>
+Đếm tần suất từ là một trong những thao tác nền tảng nhất trong xử lý ngôn ngữ tự nhiên.
+</details>
+:::

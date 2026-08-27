@@ -169,3 +169,17 @@ def rmsprop_step(w, g, s, lr=0.001, beta=0.9, eps=1e-8):
     return np.round(w_new, 6).tolist(), np.round(s_new, 6).tolist()
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «RMSProp Optimizer» là gì?</summary>
+AdaGrad là một bước đột phá: nó cho mỗi tham số learning rate riêng bằng cách chia cho tổng bình phương gradient tích lũy.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$G_t = G_{t-1} + g_t^2 \quad \text{(chỉ tăng)}$$
+</details>
+:::

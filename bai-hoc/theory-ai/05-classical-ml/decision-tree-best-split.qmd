@@ -312,3 +312,17 @@ def decision_tree_split(X, y):
     return [best_feat, best_thresh]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Chia tốt nhất Decision Tree» là gì?</summary>
+Một lần chia trên decision tree tách các mẫu tại một nút thành hai hay nhiều nhóm dựa trên giá trị đặc trưng.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\mathrm{Gini}(S) = 1 - \sum_{i=1}^{C} p_i^2$$
+</details>
+:::

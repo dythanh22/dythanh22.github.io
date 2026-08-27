@@ -579,3 +579,17 @@ def exponential_moving_average(values, alpha):
     return ema
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Exponential Moving Average» là gì?</summary>
+**Exponential moving average (EMA)** là trung bình có trọng số, gán trọng số lớn hơn cho các quan sát gần đây.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{EMA}_t = \alpha y_t + (1-\alpha) \text{EMA}_{t-1}$$
+</details>
+:::

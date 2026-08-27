@@ -361,3 +361,17 @@ def epsilon_greedy(q_values, epsilon, rng=None):
         return int(np.argmax(q_values))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «ε-Greedy Action Selection» là gì?</summary>
+Epsilon-greedy là một **chiến lược chọn action** cân bằng exploration và exploitation trong reinforcement learning.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\pi(a \mid s) = \begin{cases} 1 - \epsilon + \frac{\epsilon}{|A|} & \text{nếu } a = \arg\max_{a'} Q(s, a') \\ \frac{\epsilon}{|A|} & \text{còn lại} \end{cases}$$
+</details>
+:::

@@ -277,3 +277,17 @@ def bag_of_words_vector(tokens, vocab):
     return vec
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Bag-of-Words Vector» là gì?</summary>
+Mô hình **Bag of Words (BoW)** biểu diễn văn bản như một tập đếm từ, hoàn toàn bỏ qua ngữ pháp, thứ tự từ, và cấu trúc câu.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\begin{bmatrix} 0 & 0 & 1 & 0 & 1 & 1 & 1 \\ 0 & 1 & 0 & 1 & 1 & 0 & 1 \\ 1 & 1 & 1 & 0 & 0 & 1 & 0 \end{bmatrix}$$
+</details>
+:::

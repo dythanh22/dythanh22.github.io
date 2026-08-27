@@ -8,14 +8,7 @@
     .axis { fill: none; stroke: #1A1A1A; }
     .mean { fill: none; stroke: #C45C0A; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-      .mean { stroke: #F9AB00; }
-    }
+    
   </style>
   <text id="zscore-28-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="15" font-weight="600">z-score of [10, 20, 30, 40, 50], mean = 30</text>
   <!-- x = 80 + (v-10)*12 ; 10,20,30,40,50 -> 80,200,320,440,560 -->

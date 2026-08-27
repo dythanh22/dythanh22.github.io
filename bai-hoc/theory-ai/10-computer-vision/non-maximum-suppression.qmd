@@ -278,3 +278,17 @@ def nms(boxes, scores, iou_threshold):
     return kept
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Non-Maximum Suppression» là gì?</summary>
+**Non-Maximum Suppression (NMS)** loại các detection chồng lấp thừa, chỉ giữ cái tốt nhất.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\mathrm{IoU}(A, B) = \frac{\mathrm{Area}(A \cap B)}{\mathrm{Area}(A \cup B)}$$
+</details>
+:::

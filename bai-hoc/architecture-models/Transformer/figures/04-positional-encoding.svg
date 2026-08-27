@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="290" viewBox="0 0 800 290" role="img" aria-labelledby="tf-04-title">
 <title id="tf-04-title">Sinusoidal positional encoding</title>
-<rect class="fig-bg" width="800" height="290" fill="#F7F8FA"/>
-<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<rect class="fig-bg" width="800" height="290" fill="none"/>
+
 <text x="400.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">PE(pos, 2i)=sin(θ) · PE(pos, 2i+1)=cos(θ)</text>
 <text x="400.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">θ = pos / 10000^{2i/d} · 0 tham số · ngoại suy chuỗi dài · quay tương đối</text>
 <rect x="40.0" y="80.0" width="280.0" height="100.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>

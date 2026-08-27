@@ -539,3 +539,17 @@ def double_exponential_smoothing(series, alpha, beta):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Double Exponential Smoothing» là gì?</summary>
+**Double exponential smoothing** (phương pháp tuyến tính của Holt) mở rộng simple exponential smoothing để xử lý dữ liệu có trend.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\ell_t = \alpha y_t + (1-\alpha)(\ell_{t-1} + b_{t-1})$$
+</details>
+:::

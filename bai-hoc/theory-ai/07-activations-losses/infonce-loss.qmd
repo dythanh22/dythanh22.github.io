@@ -240,3 +240,17 @@ def info_nce_loss(Z1, Z2, temperature=0.1):
     return float(np.mean(losses))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «InfoNCE Loss» là gì?</summary>
+**InfoNCE** (Information Noise-Contrastive Estimation) là hàm mất mát đứng sau nhiều phương pháp self-supervised learning hiện đại như SimCLR, MoCo và CLIP.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$L = -\log \frac{\exp(\mathrm{sim}(z, z^{+}) / \tau)}{\exp(\mathrm{sim}(z, z^{+}) / \tau) + \sum_{i=1}^{N} \exp(\mathrm{sim}(z, z^{-}_{i}) / \tau)}$$
+</details>
+:::

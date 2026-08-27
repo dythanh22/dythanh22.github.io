@@ -367,3 +367,17 @@ def td_value_update(V, s, r, s_next, alpha, gamma):
     return [round(float(v), 4) for v in V]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «One-Step TD Value Update» là gì?</summary>
+Temporal Difference (TD) learning là phương pháp nền của reinforcement learning, kết hợp ý từ Monte Carlo và dynamic programming.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$V(S_t) \leftarrow V(S_t) + \alpha \left[ R_{t+1} + \gamma V(S_{t+1}) - V(S_t) \right]$$
+</details>
+:::

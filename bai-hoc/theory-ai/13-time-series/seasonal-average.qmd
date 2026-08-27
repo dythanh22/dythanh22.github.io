@@ -602,3 +602,17 @@ def seasonal_average(series, period):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Seasonal Average» là gì?</summary>
+**Seasonal average** là giá trị trung bình của mỗi mùa (vị trí trong một chu kỳ) qua nhiều chu kỳ.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\bar{y}_s = \frac{1}{n} \sum_{i=1}^{n} y_{s + (i-1) \cdot m}$$
+</details>
+:::

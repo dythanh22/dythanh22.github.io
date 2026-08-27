@@ -376,3 +376,17 @@ def sample_var_std(x):
     std = np.sqrt(var)
     return float(var), float(std)
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Phương sai mẫu & độ lệch chuẩn» là gì?</summary>
+Variance đo **độ phân tán** (spread / dispersion) của các điểm dữ liệu quanh mean.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\sigma^2 = \frac{1}{N}\sum_{i=1}^{N}(x_i - \mu)^2$$
+</details>
+:::

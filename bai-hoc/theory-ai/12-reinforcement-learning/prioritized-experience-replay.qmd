@@ -375,3 +375,17 @@ def priority_replay_sample(priorities, alpha, beta):
     return [probs, weights]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Prioritized Experience Replay» là gì?</summary>
+**Prioritized Experience Replay (PER)** là cải tiến của experience replay chuẩn: lấy mẫu transition theo **tầm quan trọng**, không đều ngẫu nhiên.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\delta_i = \bigl|r_i + \gamma \max_{a'} Q(s_i', a') - Q(s_i, a_i)\bigr|$$
+</details>
+:::

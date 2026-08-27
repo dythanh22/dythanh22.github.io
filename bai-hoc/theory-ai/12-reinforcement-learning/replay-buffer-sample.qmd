@@ -373,3 +373,17 @@ def replay_buffer_sample(buffer, batch_size, seed):
     return [buffer[i] for i in sorted(indices)]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Replay Buffer Sample» là gì?</summary>
+**Replay buffer** (còn gọi là experience replay memory) là cấu trúc dữ liệu lưu trải nghiệm cũ và cho phép **lấy mẫu ngẫu nhiên** để huấn luyện.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$(s_t, a_t, r_{t+1}, s_{t+1}, \mathrm{done})$$
+</details>
+:::

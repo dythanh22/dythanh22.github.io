@@ -1,4 +1,5 @@
 ---
+toc-depth: 3
 title: "DenseNet"
 subtitle: "Tổng quan concat skip, growth rate và transition"
 date: 2026-08-22

@@ -654,3 +654,17 @@ def weighted_moving_average(values, weights):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Weighted Moving Average» là gì?</summary>
+**Weighted moving average (WMA)** là trung bình $w$ quan sát gần nhất, trong đó mỗi quan sát nhân với một trọng số.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{WMA}_t = \frac{\sum_{i=0}^{w-1} w_i \cdot y_{t-i}}{\sum_{i=0}^{w-1} w_i}$$
+</details>
+:::

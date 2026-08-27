@@ -255,3 +255,17 @@ def r2_score(y_true, y_pred):
     return round(float(1.0 - ss_res / ss_tot), 4)
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «R² Score (hệ số xác định)» là gì?</summary>
+R-squared ($R^2$), còn gọi là **hệ số xác định** (coefficient of determination), đo mức mô hình hồi quy giải thích phương sai của biến target.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$R^2 = 1 - \frac{SS_{\text{res}}}{SS_{\text{tot}}}$$
+</details>
+:::

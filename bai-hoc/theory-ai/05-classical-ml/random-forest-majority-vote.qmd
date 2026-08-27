@@ -260,3 +260,17 @@ def random_forest_vote(predictions):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Bình chọn đa số Random Forest» là gì?</summary>
+Random Forest là một **ensemble** các decision tree.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\hat{y} = \mathrm{mode}(\hat{y}_1, \hat{y}_2, \ldots, \hat{y}_T)$$
+</details>
+:::

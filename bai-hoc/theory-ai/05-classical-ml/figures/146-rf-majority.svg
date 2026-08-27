@@ -10,15 +10,7 @@
     .chip-b { fill: #2F6FED; fill-opacity: 0.12; stroke: #2F6FED; }
     .fill-none { fill: none; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-      .chip-a { fill: #F9AB00; fill-opacity: 0.18; stroke: #F9AB00; }
-      .chip-b { fill: #8AB4F8; fill-opacity: 0.18; stroke: #8AB4F8; }
-    }
+    
   </style>
 
   <text id="rf-146-heading" class="ink" x="320" y="26" text-anchor="middle" font-size="16" font-weight="600">Hard vote: A = 3, B = 2, C = 0</text>

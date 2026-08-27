@@ -8,14 +8,7 @@
     .hi-bg { fill: #C45C0A; opacity: 0.12; stroke: none; }
     .cell { fill: none; stroke: #5C6570; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .hi-bg { fill: #F9AB00; opacity: 0.18; }
-      .cell { stroke: #9AA0A6; }
-    }
+    
   </style>
 
   <text id="poly-171-heading" class="ink" x="280" y="28" text-anchor="middle" font-size="16" font-weight="600">Degree 2: [1, x, x&#x00B2;]</text>

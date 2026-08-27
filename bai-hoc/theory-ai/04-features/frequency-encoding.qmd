@@ -426,3 +426,17 @@ Với category thứ tự mà hạng mới là điều quan trọng, ordinal enc
 ## Code
 ```python
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Frequency Encoding» là gì?</summary>
+**Frequency encoding** (còn gọi là count encoding) là kỹ thuật đổi feature categorical thành feature số bằng cách thay mỗi category bằng tần suất xuất hiện của nó trong dataset.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\mathrm{encoded}(c) = \mathrm{count}(c)$$
+</details>
+:::

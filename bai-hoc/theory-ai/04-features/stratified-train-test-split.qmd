@@ -244,3 +244,17 @@ def stratified_split(X, y, test_size, rng=None):
     return X[train_idx], X[test_idx], y[train_idx], y[test_idx]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Stratified Train/Test Split» là gì?</summary>
+**Stratified splitting** chia tập dữ liệu thành các tập con trong khi giữ nguyên tỷ lệ mỗi lớp.
+</details>
+<details>
+<summary>Khi nào nên nhớ / áp dụng «Stratified Train/Test Split»?</summary>
+Stratified splitting chia tập dữ liệu thành các tập con trong khi giữ nguyên tỷ lệ mỗi lớp.
+</details>
+:::

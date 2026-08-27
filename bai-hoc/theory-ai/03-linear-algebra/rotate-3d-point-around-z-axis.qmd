@@ -366,3 +366,17 @@ def rotate_around_z(points, theta):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Quay điểm 3D quanh trục Z» là gì?</summary>
+Quay quanh trục Z xoay một điểm hoặc vector trong mặt phẳng XY, giữ nguyên tọa độ Z.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$R_z(\theta) = \begin{pmatrix} \cos\theta & -\sin\theta & 0 \\ \sin\theta & \cos\theta & 0 \\ 0 & 0 & 1 \end{pmatrix}$$
+</details>
+:::

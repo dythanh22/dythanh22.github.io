@@ -249,3 +249,17 @@ def rotate_image(image, angle_degrees):
     return out
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Image Rotation (Nearest Neighbor)» là gì?</summary>
+Xoay ảnh một góc tùy ý đòi hỏi: 1.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$x' = x \cos\theta - y \sin\theta$$
+</details>
+:::

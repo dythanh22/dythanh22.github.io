@@ -250,3 +250,17 @@ def mean_rating_imputation(ratings_matrix, mode):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Mean Rating Imputation» là gì?</summary>
+**Mean rating imputation** là kỹ thuật dùng trong recommender system để điền các ô còn thiếu của ma trận rating user–item.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\hat{r}_{ui} = \mu = \frac{1}{|\Omega|} \sum_{(u,i) \in \Omega} r_{ui}$$
+</details>
+:::

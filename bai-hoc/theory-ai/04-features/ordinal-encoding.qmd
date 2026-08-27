@@ -453,3 +453,17 @@ Tính thống kê như mean và độ lệch chuẩn trên dữ liệu thứ t�
 ## Code
 ```python
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Ordinal Encoding» là gì?</summary>
+**Ordinal encoding** là kỹ thuật đổi feature categorical thành giá trị số bằng cách gán số nguyên cho category theo thứ tự hoặc hạng vốn có.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$f(c_i) = i - 1$$
+</details>
+:::

@@ -7,6 +7,7 @@ project:
   render:
     - index.qmd
     - about.qmd
+    - 404.qmd
     # Whitelist: 3 chuỗi ổn định (Pha 5 — theory-ai đã đủ 15 chapter)
     - bai-hoc/index.qmd
     - bai-hoc/architecture-models/**
@@ -24,6 +25,11 @@ website:
   site-url: https://dythanh22.github.io
   repo-url: https://github.com/dythanh22/dythanh22.github.io
   repo-actions: [edit, issue]
+  favicon: assets/img/favicon.svg
+  image: assets/img/og-cover.png
+  open-graph: true
+  twitter-card:
+    card-style: summary_large_image
   reader-mode: true
   page-navigation: true
   bread-crumbs: true
@@ -44,12 +50,12 @@ website:
         menu:
           - href: bai-hoc/index.qmd
             text: Tất cả chuỗi
+          - href: bai-hoc/theory-ai/index.qmd
+            text: Theory AI
           - href: bai-hoc/architecture-models/index.qmd
             text: Architecture Models
           - href: bai-hoc/ai-optimize/index.qmd
             text: AI Optimization
-          - href: bai-hoc/theory-ai/index.qmd
-            text: Theory AI
       - href: about.qmd
         text: Giới thiệu
 
@@ -113,54 +119,56 @@ website:
       title: "Theory AI"
       style: docked
       search: true
-      collapse-level: 2
+      # 1 = chỉ hiện 15 chapter; bung từng mục để thấy bài (tránh 187 mục cùng lúc)
+      collapse-level: 1
       contents:
         - bai-hoc/theory-ai/index.qmd
+        # auto: *.qmd — bài nằm trực tiếp dưới section, không tạo tầng folder "01 Probability"
         - section: "1. Probability"
           contents:
-            - auto: bai-hoc/theory-ai/01-probability
+            - auto: bai-hoc/theory-ai/01-probability/*.qmd
         - section: "2. Statistics"
           contents:
-            - auto: bai-hoc/theory-ai/02-statistics
+            - auto: bai-hoc/theory-ai/02-statistics/*.qmd
         - section: "3. Linear Algebra"
           contents:
-            - auto: bai-hoc/theory-ai/03-linear-algebra
+            - auto: bai-hoc/theory-ai/03-linear-algebra/*.qmd
         - section: "4. Features"
           contents:
-            - auto: bai-hoc/theory-ai/04-features
+            - auto: bai-hoc/theory-ai/04-features/*.qmd
         - section: "5. Classical ML"
           contents:
-            - auto: bai-hoc/theory-ai/05-classical-ml
+            - auto: bai-hoc/theory-ai/05-classical-ml/*.qmd
         - section: "6. Metrics"
           contents:
-            - auto: bai-hoc/theory-ai/06-metrics
+            - auto: bai-hoc/theory-ai/06-metrics/*.qmd
         - section: "7. Activations & Losses"
           contents:
-            - auto: bai-hoc/theory-ai/07-activations-losses
+            - auto: bai-hoc/theory-ai/07-activations-losses/*.qmd
         - section: "8. Optimizers"
           contents:
-            - auto: bai-hoc/theory-ai/08-optimizers
+            - auto: bai-hoc/theory-ai/08-optimizers/*.qmd
         - section: "9. Deep Learning"
           contents:
-            - auto: bai-hoc/theory-ai/09-deep-learning
+            - auto: bai-hoc/theory-ai/09-deep-learning/*.qmd
         - section: "10. Computer Vision"
           contents:
-            - auto: bai-hoc/theory-ai/10-computer-vision
+            - auto: bai-hoc/theory-ai/10-computer-vision/*.qmd
         - section: "11. NLP"
           contents:
-            - auto: bai-hoc/theory-ai/11-nlp
+            - auto: bai-hoc/theory-ai/11-nlp/*.qmd
         - section: "12. Reinforcement Learning"
           contents:
-            - auto: bai-hoc/theory-ai/12-reinforcement-learning
+            - auto: bai-hoc/theory-ai/12-reinforcement-learning/*.qmd
         - section: "13. Time Series"
           contents:
-            - auto: bai-hoc/theory-ai/13-time-series
+            - auto: bai-hoc/theory-ai/13-time-series/*.qmd
         - section: "14. Recommender"
           contents:
-            - auto: bai-hoc/theory-ai/14-recommender
+            - auto: bai-hoc/theory-ai/14-recommender/*.qmd
         - section: "15. MLOps"
           contents:
-            - auto: bai-hoc/theory-ai/15-mlops
+            - auto: bai-hoc/theory-ai/15-mlops/*.qmd
 
   page-footer:
     left: "© 2026 dythanh22 · Ghi chú học tập theo chuỗi"
@@ -183,7 +191,7 @@ format:
       dark: [darkly, assets/css/custom.scss]
     css: assets/css/custom.scss
     toc: true
-    toc-depth: 3
+    toc-depth: 2
     toc-title: "Mục lục"
     number-sections: false
     code-copy: true
@@ -195,9 +203,12 @@ format:
     fig-align: center
     smooth-scroll: true
     link-external-newwindow: true
+    link-external-icon: true
     include-in-header:
       - text: |
           <meta property="og:site_name" content="dythanh22">
+          <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+          <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#222222">
           <link rel="preconnect" href="https://fonts.googleapis.com">
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
           <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">

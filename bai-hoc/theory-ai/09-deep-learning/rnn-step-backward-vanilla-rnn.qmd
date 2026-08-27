@@ -263,3 +263,17 @@ def rnn_step_backward(dh, cache):
     return dx, dh_prev, dW, dU, db
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «RNN Step Backward (Vanilla RNN)» là gì?</summary>
+Trước khi hiểu lượt truyền ngược, nhắc lại lượt truyền xuôi của vanilla RNN cell: với * $x_t$ là đầu vào tại time step $t$ (shape: `input_size`) * $h_{t-1}$ là hidden state từ time step trước (shape: `hidden_size`) * $h_t$ là hidden state mới (shape:…
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$h_t = \tanh(W_{xh} \cdot x_t + W_{hh} \cdot h_{t-1} + b_h)$$
+</details>
+:::

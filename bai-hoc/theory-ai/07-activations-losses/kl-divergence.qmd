@@ -220,3 +220,17 @@ def kl_divergence(p, q, eps=1e-12):
 ## Học tiếp
 KL trong VAE (regularize posterior): [VAE — KL Divergence](../../architecture-models/VAE/kl-divergence.qmd) · [ELBO](../../architecture-models/VAE/elbo.qmd).
 :::
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «KL Divergence» là gì?</summary>
+**Kullback–Leibler (KL) divergence** đo mức một phân phối xác suất khác phân phối kia.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$D_{\mathrm{KL}}(P \parallel Q) = \sum_x P(x) \log \frac{P(x)}{Q(x)}$$
+</details>
+:::

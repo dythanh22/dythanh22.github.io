@@ -268,3 +268,17 @@ def entropy_node(y):
     probs = probs[probs > 0]
     return float(-np.sum(probs * np.log2(probs)))
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Entropy của một node» là gì?</summary>
+**Entropy** đo **độ bất định** hoặc **độ tạp** trong một tập nhãn.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$H = -\sum_{i=1}^{C} p_i \log_2(p_i)$$
+</details>
+:::

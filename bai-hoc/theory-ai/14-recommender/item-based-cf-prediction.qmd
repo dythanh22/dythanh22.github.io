@@ -292,3 +292,17 @@ def item_cf_predict(user_ratings, item_similarities, target):
     return num / den
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Item-Based CF Prediction» là gì?</summary>
+**Item-based collaborative filtering** dự đoán rating của user cho một item dựa trên rating của chính user đó cho các item tương tự.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\hat{r}_{ui} = \frac{\sum_{j \in N(i;u)} \operatorname{sim}(i, j) \cdot r_{uj}}{\sum_{j \in N(i;u)} \lvert \operatorname{sim}(i, j) \rvert}$$
+</details>
+:::

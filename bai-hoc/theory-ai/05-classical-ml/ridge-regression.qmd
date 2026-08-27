@@ -324,3 +324,17 @@ def ridge_regression(X, y, lam):
     w = np.linalg.inv(X.T @ X + lam * I) @ X.T @ y
     return w.tolist()
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Ridge Regression» là gì?</summary>
+Ridge regression là **linear regression với regularization L2**.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$L(\beta) = \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 + \lambda \sum_{j=1}^{p} \beta_j^2$$
+</details>
+:::

@@ -220,3 +220,17 @@ def contrastive_loss(a, b, y, margin, reduction):
     return float(loss.mean() if reduction == "mean" else loss.sum())
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Contrastive Loss (Siamese)» là gì?</summary>
+Contrastive learning huấn luyện mô hình tạo embedding sao cho: * **Mục giống nhau nằm gần nhau** trong không gian embedding * **Mục khác nhau nằm xa nhau** Khác với phân loại: * Phân loại gán mục vào các nhóm cố định * Contrastive learning học một metric…
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$L = (1 - y) \cdot \frac{1}{2} D^2 + y \cdot \frac{1}{2} \max(0, m - D)^2$$
+</details>
+:::

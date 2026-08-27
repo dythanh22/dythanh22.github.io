@@ -250,3 +250,17 @@ def gaussian_kernel(size, sigma):
     return kernel
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Gaussian Blur Kernel» là gì?</summary>
+Gaussian blur là bộ lọc làm mượt được dùng rộng rãi nhất trong xử lý ảnh.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$G(x, y) = \frac{1}{2\pi\sigma^2} e^{-\frac{x^2 + y^2}{2\sigma^2}}$$
+</details>
+:::

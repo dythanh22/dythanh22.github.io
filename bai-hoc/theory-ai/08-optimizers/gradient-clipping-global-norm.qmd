@@ -145,3 +145,17 @@ def clip_gradients(g, max_norm):
     return g * scale_factor
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Gradient Clipping (Global Norm)» là gì?</summary>
+Huấn luyện một mạng nơ-ron nghĩa là tính gradient qua lan truyền ngược.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\frac{\partial L}{\partial w_1} = \frac{\partial L}{\partial h_n} \cdot \frac{\partial h_n}{\partial h_{n-1}} \cdot \frac{\partial h_{n-1}}{\partial h_{n-2}} \cdots \frac{\parti…$$
+</details>
+:::

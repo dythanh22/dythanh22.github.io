@@ -241,3 +241,17 @@ def pad_sequences(seqs, pad_value=0, max_len=None):
     return np.array(result, dtype=float)
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Pad Sequences» là gì?</summary>
+**Sequence padding** biến các sequence độ dài khác nhau thành sequence độ dài cố định bằng cách thêm token padding đặc biệt.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$L = \max(l_1, l_2, \ldots, l_B) \quad \text{nếu max\_len là None}$$
+</details>
+:::

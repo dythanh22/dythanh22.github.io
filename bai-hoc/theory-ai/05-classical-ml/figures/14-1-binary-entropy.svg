@@ -10,16 +10,7 @@
     .axis { fill: none; stroke: #1A1A1A; }
     .grid { fill: none; stroke: #5C6570; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { stroke: #8AB4F8; }
-      .accent-fill { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { stroke: #F9AB00; }
-      .hi-fill { fill: #F9AB00; stroke: #F9AB00; }
-      .axis { stroke: #E8EAED; }
-      .grid { stroke: #9AA0A6; }
-    }
+    
   </style>
 
   <text id="ent-141-heading" class="ink" x="360" y="24" text-anchor="middle" font-size="16" font-weight="600">Binary entropy H(p)</text>

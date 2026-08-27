@@ -296,3 +296,17 @@ def deduplicate(records, key_columns, strategy):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «ETL Deduplication» là gì?</summary>
+Để deduplicate, trước hết phải định nghĩa thế nào là hai record “giống nhau”.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{null\_count}(record) = \sum_{field \in record} \mathbf{1}[\text{value is None}]$$
+</details>
+:::

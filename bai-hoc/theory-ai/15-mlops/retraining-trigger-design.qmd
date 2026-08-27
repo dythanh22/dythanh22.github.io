@@ -321,3 +321,17 @@ def retraining_policy(daily_stats, config):
     return retrain_days
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Retraining Trigger Design» là gì?</summary>
+Mô hình machine learning không tĩnh.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{drift\_score} > \text{drift\_threshold}$$
+</details>
+:::

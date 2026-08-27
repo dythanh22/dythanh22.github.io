@@ -240,3 +240,17 @@ def xavier_initialization(W, fan_in, fan_out):
     return [[round(W[i][j] * 2 * limit - limit, 4) for j in range(len(W[0]))] for i in range(len(W))]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Xavier Initialization» là gì?</summary>
+Huấn luyện mạng neural bắt đầu với trọng số ngẫu nhiên.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\operatorname{Var}(W) = \frac{2}{n_{in} + n_{out}}$$
+</details>
+:::

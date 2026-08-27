@@ -268,3 +268,17 @@ def roc_curve(y_true, y_score):
     return fprs, tprs, thresholds
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Đường ROC từ score» là gì?</summary>
+Đường **ROC** (Receiver Operating Characteristic) trực quan hóa hiệu năng bộ phân loại trên mọi ngưỡng có thể.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{TPR} = \frac{TP}{TP + FN} = \frac{\text{số dương nhận đúng}}{\text{tất cả dương thật}}$$
+</details>
+:::

@@ -432,3 +432,17 @@ def maxpool_forward(X, pool_size, stride):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Max Pooling Forward» là gì?</summary>
+Max pooling là phép **downsampling** giảm kích thước không gian của feature map, đồng thời giữ thông tin quan trọng nhất.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{output}[c, i, j] = \max_{m, n} \text{input}[c, i \cdot s + m, j \cdot s + n]$$
+</details>
+:::

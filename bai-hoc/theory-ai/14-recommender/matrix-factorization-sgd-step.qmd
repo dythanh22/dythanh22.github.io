@@ -314,3 +314,17 @@ def matrix_factorization_sgd_step(U, V, r, lr, reg):
     return [round(float(x), 4) for x in U_new], [round(float(x), 4) for x in V_new]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Matrix Factorization SGD Step» là gì?</summary>
+**Matrix factorization (MF)** phân rã ma trận rating user–item thành các ma trận latent factor chiều thấp hơn.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$r_{ui} \approx \mathbf{p}_u^{T} \mathbf{q}_i$$
+</details>
+:::

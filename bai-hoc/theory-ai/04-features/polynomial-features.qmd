@@ -440,3 +440,17 @@ def polynomial_features(values, degree):
     return [[x ** p for p in range(degree + 1)] for x in values]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Polynomial Features» là gì?</summary>
+**Polynomial features** là các feature mới tạo bằng cách nâng feature hiện có lên lũy thừa và tính mọi tích chéo (cross-product) đến một bậc cho trước.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$f(x) = \beta_0 + \beta_1 x + \beta_2 x^2 + \cdots + \beta_d x^d$$
+</details>
+:::

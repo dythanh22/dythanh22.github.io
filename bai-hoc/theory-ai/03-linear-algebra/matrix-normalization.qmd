@@ -250,3 +250,17 @@ def matrix_normalization(matrix, axis=None, norm_type="l2"):
     return matrix / norms
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Chuẩn hóa ma trận» là gì?</summary>
+**Matrix normalization** biến đổi các giá trị trong ma trận sao cho hàng, cột, hoặc toàn bộ ma trận thỏa một tiêu chí nhất định — ví dụ tổng bằng một hoặc có độ dài đơn vị.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$x'_{ij} = \frac{x_{ij}}{\sum_{k} x_{ik}}$$
+</details>
+:::

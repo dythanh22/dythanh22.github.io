@@ -502,3 +502,17 @@ def rank_transform(values):
     return ranks
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Rank Transform» là gì?</summary>
+**Rank transform** (còn gọi là ranking hoặc ordinal transform) thay mỗi giá trị bằng vị trí của nó khi mọi giá trị đã được sắp.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{percentile rank} = \frac{\text{rank} - 1}{n - 1} \times 100$$
+</details>
+:::

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="840" height="320" viewBox="0 0 840 320" role="img" aria-labelledby="vit-05-title">
 <title id="vit-05-title">ViT encoder block</title>
-<rect class="fig-bg" width="840" height="320" fill="#F7F8FA"/>
-<style><![CDATA[.fig-bg { fill: #F7F8FA; }@media (prefers-color-scheme: dark) { .fig-bg { fill: #1B1F24; } }]]></style>
+<rect class="fig-bg" width="840" height="320" fill="none"/>
+
 <text x="420.0" y="24.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="15" font-weight="700" fill="#1A1A1A" text-anchor="middle">Encoder block (Pre-LN): x'=x+MSA(LN(x)), out=x'+MLP(LN(x'))</text>
 <text x="420.0" y="46.0" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="11" font-weight="500" fill="#5C6570" text-anchor="middle">Không causal mask · MLP: GELU, D→4D→D · residual cộng x gốc (không LN(x))</text>
 <rect x="40.0" y="130.0" width="70.0" height="50.0" rx="4" fill="#EEF1F5" stroke="#2F6FED" stroke-width="2"/>

@@ -291,3 +291,17 @@ def k_means_assignment(points, centroids):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Bước gán cụm K-Means» là gì?</summary>
+K-Means là thuật toán **học không giám sát** chia $n$ điểm dữ liệu thành $k$ cluster.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$c_i = \arg\min_j \|x_i - \mu_j\|^2$$
+</details>
+:::

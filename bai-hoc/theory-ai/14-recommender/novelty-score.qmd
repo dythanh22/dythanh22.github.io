@@ -287,3 +287,17 @@ def novelty_score(recommendations, item_counts, n_users):
     return total / len(recommendations) if recommendations else 0.0
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Novelty Score» là gì?</summary>
+**Novelty score** đo mức item được recommend bất ngờ hoặc xa lạ với user.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{novelty}(i) = -\log_{2} p(i)$$
+</details>
+:::

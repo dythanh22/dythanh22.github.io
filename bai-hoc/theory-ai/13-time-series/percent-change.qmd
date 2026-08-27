@@ -637,3 +637,17 @@ def percent_change(series):
     return result
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Percent Change» là gì?</summary>
+**Percent change** đo biến thiên tương đối giữa các quan sát liên tiếp trong một time series, biểu diễn dưới dạng phần trăm.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{PC}_t = \frac{y_t - y_{t-1}}{y_{t-1}} \times 100\%$$
+</details>
+:::

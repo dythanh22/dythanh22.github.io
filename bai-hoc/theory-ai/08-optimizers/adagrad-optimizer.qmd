@@ -143,3 +143,17 @@ def adagrad_step(w, g, G, lr=0.01, eps=1e-8):
     return np.round(w_new, 6).tolist(), np.round(G_new, 6).tolist()
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «AdaGrad Optimizer» là gì?</summary>
+Hạ gradient thuần dùng một learning rate cho mọi tham số trong mô hình: Mọi trọng số, mọi bias, mọi phần tử embedding đều nhân với cùng $\eta$.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$w_t = w_{t-1} - \eta \cdot g_t$$
+</details>
+:::

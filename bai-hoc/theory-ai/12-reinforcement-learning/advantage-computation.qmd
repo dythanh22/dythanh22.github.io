@@ -223,3 +223,17 @@ def compute_advantage(states, rewards, V, gamma):
     return [round(float(a), 4) for a in advantages]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Advantage Computation» là gì?</summary>
+Trong reinforcement learning (RL), một **agent** tương tác với một **môi trường** qua một chuỗi bước thời gian.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$s_0, a_0, r_0, \; s_1, a_1, r_1, \; s_2, a_2, r_2, \; \ldots, \; s_T, a_T, r_T$$
+</details>
+:::

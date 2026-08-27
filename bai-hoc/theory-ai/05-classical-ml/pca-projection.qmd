@@ -231,3 +231,17 @@ def pca_projection(X, k):
     return X_proj
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Chiếu PCA» là gì?</summary>
+Principal Component Analysis (PCA) là kỹ thuật giảm số chiều của dữ liệu trong khi giữ càng nhiều phương sai càng tốt.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$X_c = X - \bar{X}$$
+</details>
+:::

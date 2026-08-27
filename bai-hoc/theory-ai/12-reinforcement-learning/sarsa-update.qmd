@@ -332,3 +332,17 @@ def sarsa_update(q_table, state, action, reward, next_state, next_action, alpha,
     return Q
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «SARSA Update» là gì?</summary>
+SARSA là thuật toán **on-policy** temporal difference (TD) control, học hàm action-value $Q(s, a)$.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$Q(S_t, A_t) \leftarrow Q(S_t, A_t) + \alpha \left[ R_{t+1} + \gamma Q(S_{t+1}, A_{t+1}) - Q(S_t, A_t) \right]$$
+</details>
+:::

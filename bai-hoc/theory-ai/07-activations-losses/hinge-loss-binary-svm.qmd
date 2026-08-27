@@ -194,3 +194,17 @@ def hinge_loss(y_true, y_score, margin=1.0, reduction="mean"):
     return float(loss.mean() if reduction == "mean" else loss.sum())
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Hinge Loss (SVM nhị phân)» là gì?</summary>
+**Hinge loss** là hàm mất mát đứng sau Support Vector Machines (SVM).
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$L = \max(0, 1 - y \cdot f(x))$$
+</details>
+:::

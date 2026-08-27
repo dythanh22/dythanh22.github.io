@@ -9,15 +9,7 @@
     .lose { fill: #C45C0A; stroke: #C45C0A; fill-opacity: 0.18; }
     .box { fill: none; stroke: #5C6570; }
     text { font-family: ui-sans-serif, system-ui, sans-serif; }
-    @media (prefers-color-scheme: dark) {
-      .ink { fill: #E8EAED; stroke: #E8EAED; }
-      .muted { fill: #9AA0A6; stroke: #9AA0A6; }
-      .accent { fill: #8AB4F8; stroke: #8AB4F8; }
-      .hi { fill: #F9AB00; stroke: #F9AB00; }
-      .win { fill: #8AB4F8; stroke: #8AB4F8; fill-opacity: 0.22; }
-      .lose { fill: #F9AB00; stroke: #F9AB00; fill-opacity: 0.26; }
-      .box { stroke: #9AA0A6; }
-    }
+    
   </style>
 
   <text id="auc-74-heading" class="ink" x="320" y="28" text-anchor="middle" font-size="16" font-weight="600">Pairwise ranking: 8/9 wins</text>

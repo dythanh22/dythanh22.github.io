@@ -232,3 +232,17 @@ def label_smoothing_loss(predictions, target, epsilon):
     return loss
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Label Smoothing Loss» là gì?</summary>
+Phân loại chuẩn dùng nhãn one-hot: * Lớp đúng: $1$ * Mọi lớp khác: $0$ Ví dụ phân loại $5$ lớp với lớp đúng là $2$: * Nhãn cứng: $[0,\ 0,\ 1,\ 0,\ 0]$ Cross-entropy với nhãn cứng đẩy mô hình: * Dự đoán xác suất $1.0$ cho lớp đúng * Dự đoán xác suất $0.0$ cho…
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$y_{\mathrm{smooth}} = (1 - \epsilon) \cdot y_{\mathrm{hard}} + \frac{\epsilon}{K}$$
+</details>
+:::

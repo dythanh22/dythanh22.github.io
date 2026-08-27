@@ -196,3 +196,17 @@ def remove_stopwords(tokens, stopwords):
     return [t for t in tokens if t not in stop_set]
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Remove Stopwords» là gì?</summary>
+**Stopwords** là những từ phổ biến xuất hiện thường xuyên trong văn bản nhưng tự thân mang rất ít nghĩa ngữ nghĩa.
+</details>
+<details>
+<summary>Khi nào nên nhớ / áp dụng «Remove Stopwords»?</summary>
+Stopwords là những từ phổ biến xuất hiện thường xuyên trong văn bản nhưng tự thân mang rất ít nghĩa ngữ nghĩa.
+</details>
+:::

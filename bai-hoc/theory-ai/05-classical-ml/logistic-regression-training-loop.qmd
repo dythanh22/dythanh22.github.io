@@ -314,3 +314,17 @@ def train_logistic_regression(X, y, lr=0.1, steps=1000):
     return w, b
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Vòng lặp huấn luyện Logistic Regression» là gì?</summary>
+Logistic regression là thuật toán **phân loại nhị phân**.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$z = Xw + b$$
+</details>
+:::

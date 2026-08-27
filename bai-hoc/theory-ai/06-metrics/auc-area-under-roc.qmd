@@ -222,3 +222,17 @@ def auc(fpr, tpr):
             return float(np.trapz(tpr, fpr))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «AUC (diện tích dưới ROC)» là gì?</summary>
+AUC là **Area Under the Curve** (diện tích dưới đường cong).
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$\text{AUC} = \int_0^1 \text{TPR}(\text{FPR}) \, d(\text{FPR})$$
+</details>
+:::

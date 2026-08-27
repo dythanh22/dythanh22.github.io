@@ -196,3 +196,17 @@ Khi $A$ không khả nghịch (hoặc thậm chí không vuông), pseudoinverse 
 * Với hệ underdetermined: $A^+ = A^T (A A^T)^{-1}$ (minimum norm)
 
 Pseudoinverse luôn tồn tại và cho nghiệm “tốt nhất” theo nghĩa least-squares.
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Nghịch đảo ma trận» là gì?</summary>
+Nghịch đảo của ma trận $A$ là một ma trận khác, ký hiệu $A^{-1}$, sao cho: với $I$ là identity matrix (số 1 trên đường chéo, số 0 ở nơi khác).
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$A A^{-1} = A^{-1} A = I$$
+</details>
+:::

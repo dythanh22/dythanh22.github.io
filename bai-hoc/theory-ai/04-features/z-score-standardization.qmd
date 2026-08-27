@@ -266,3 +266,17 @@ def zscore_standardize(X, axis=0, eps=1e-12):
     return ((X - mu) / (sigma + eps)).tolist()
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «z-Score Standardization» là gì?</summary>
+**z-Score standardization** biến đổi dữ liệu để có mean bằng không và độ lệch chuẩn đơn vị.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$z = \frac{x - \mu}{\sigma}$$
+</details>
+:::

@@ -184,3 +184,17 @@ def nesterov_momentum_step(w, v, grad, lr, momentum):
     return np.round(w_new, 6).tolist(), np.round(v_new, 6).tolist()
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Nesterov Momentum (NAG)» là gì?</summary>
+Hạ gradient thuần cập nhật tham số chỉ bằng gradient hiện tại: Cách này có vài vấn đề: * **Gradient nhiễu**: mỗi mini-batch cho một ước lượng gradient hơi khác.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$w_t = w_{t-1} - \eta \cdot g_t$$
+</details>
+:::

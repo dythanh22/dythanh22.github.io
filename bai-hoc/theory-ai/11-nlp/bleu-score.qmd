@@ -226,3 +226,17 @@ def bleu_score(candidate, reference, max_n):
     return float(bleu)
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «BLEU Score» là gì?</summary>
+**BLEU** (Bilingual Evaluation Understudy) là metric tự động chuẩn để đánh giá chất lượng dịch máy.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$p_n = \frac{\text{matching n-grams}}{\text{total candidate n-grams}}$$
+</details>
+:::

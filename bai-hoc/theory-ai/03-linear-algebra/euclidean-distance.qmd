@@ -126,3 +126,17 @@ def euclidean_distance(x, y):
     return float(np.sqrt(np.sum((x - y) ** 2)))
 
 ```
+
+<!-- auto-self-check -->
+
+::: {.callout-note}
+## Kiểm tra nhanh
+<details>
+<summary>Ý chính của bài «Euclidean Distance» là gì?</summary>
+**Euclidean distance** là khoảng cách đường thẳng giữa hai điểm.
+</details>
+<details>
+<summary>Công thức / quan hệ cốt lõi trong bài là gì?</summary>
+$$d = \sqrt{(\Delta x)^2 + (\Delta y)^2}$$
+</details>
+:::
