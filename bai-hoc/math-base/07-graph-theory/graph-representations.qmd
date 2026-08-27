@@ -62,7 +62,7 @@ $$
 ### Phân Tích Độ Phức Tạp
 
 | Thao tác                | Thời gian | Ghi chú                       |
-|:------------------------|:----------|:------------------------------|
+|:---|:---|:---|
 | Kiểm tra cạnh tồn tại   | $O(1)$    | Tra cứu mảng trực tiếp        |
 | Lấy tất cả nút lân cận  | $O(V)$    | Phải quét toàn bộ hàng        |
 | Thêm/xóa cạnh           | $O(1)$    | Cập nhật mảng trực tiếp       |
@@ -88,7 +88,7 @@ Thay vì lưu tất cả các cạnh có thể có, chỉ lưu những cạnh th
 ### Phân Tích Độ Phức Tạp
 
 | Thao tác               | Thời gian          | Ghi chú                                            |
-|:-----------------------|:-------------------|:---------------------------------------------------|
+|:---|:---|:---|
 | Kiểm tra cạnh tồn tại  | $O(\text{degree})$ | Phải quét danh sách lân cận ($O(1)$ nếu dùng set)  |
 | Lấy tất cả nút lân cận | $O(\text{degree})$ | Chỉ cần trả về danh sách                           |
 | Thêm cạnh              | $O(1)$             | Trung bình cho mảng động                           |
@@ -113,7 +113,7 @@ Danh sách cạnh lưu tất cả các cạnh dưới dạng danh sách các c�
 * **Streaming Graphs:** Lý tưởng khi các cạnh đến từng cái một.
 
 | Thao tác                | Thời gian |
-|:------------------------|:----------|
+|:---|:---|
 | Kiểm tra cạnh tồn tại   | $O(E)$    |
 | Lấy tất cả nút lân cận  | $O(E)$    |
 | Thêm cạnh               | $O(1)$    |
@@ -153,7 +153,7 @@ $$
 ## Tóm Tắt So Sánh
 
 | Biểu diễn              | Không gian  | Kiểm tra cạnh   | Nút lân cận     | Tốt nhất cho                      |
-|:-----------------------|:------------|:----------------|:----------------|:----------------------------------|
+|:---|:---|:---|:---|:---|
 | **Ma trận kề**         | $O(V^2)$    | $O(1)$          | $O(V)$          | Đồ thị dày đặc, phép toán ma trận |
 | **Danh sách kề**       | $O(V+E)$    | $O(\text{deg})$ | $O(\text{deg})$ | Đồ thị thưa, duyệt đồ thị         |
 | **Danh sách cạnh**     | $O(E)$      | $O(E)$          | $O(E)$          | Kruskal, I/O, streaming           |

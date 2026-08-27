@@ -111,7 +111,7 @@ Trạng thái hấp thụ là trạng thái mà một khi đã vào thì không 
 Trong một số hệ thống, trạng thái Markov không thể quan sát trực tiếp; thay vào đó ta chỉ thấy các quan sát nhiễu (emissions) phụ thuộc vào trạng thái ẩn.
 
 | Chuỗi Markov thông thường                  | Mô hình Markov ẩn                                |
-| :----------------------------------------- | :----------------------------------------------- |
+|:---|:---|
 | Trạng thái quan sát trực tiếp              | Trạng thái bị ẩn                                 |
 | Ví dụ: Quan sát thời tiết ($Sunny, Rainy$) | Ví dụ: Quan sát người mang ô để suy ra thời tiết |
 

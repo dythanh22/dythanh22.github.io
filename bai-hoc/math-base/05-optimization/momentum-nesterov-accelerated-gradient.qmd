@@ -107,7 +107,7 @@ Chúng ta tính gradient không phải tại $\theta_t$, mà tại vị trí "nh
 ### Trực Giác về Lookahead của Nesterov
 
 | Classical Momentum                            | Nesterov                         |
-| :--- | :--- |
+|:---|:---|
 | 1. Quan sát gradient hiện tại                 | 1. Nhảy tới trước (momentum)     |
 | 2. Cập nhật vận tốc                           | 2. Quan sát gradient tại đó      |
 | 3. Di chuyển                                  | 3. Hiệu chỉnh bước nhảy          |

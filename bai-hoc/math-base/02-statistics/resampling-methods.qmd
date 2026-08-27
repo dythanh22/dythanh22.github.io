@@ -34,7 +34,7 @@ $\Rightarrow$ Trung bình khoảng **63.2%** điểm dữ liệu gốc xuất hi
 Phiên bản “cổ điển” và có tính xác định của Bootstrap. Thay vì lấy mẫu ngẫu nhiên, Jackknife loại bỏ từng quan sát một cách có hệ thống.
 
 | Đặc điểm | Bootstrap | Jackknife |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | **Phương pháp** | Lấy mẫu ngẫu nhiên có hoàn lại | Loại bỏ từng phần tử (leave-one-out) |
 | **Số mẫu** | Có thể tạo vô hạn | Chính xác $n$ mẫu |
 | **Ứng dụng** | Dùng cho mọi thống kê | Chủ yếu để ước lượng bias |

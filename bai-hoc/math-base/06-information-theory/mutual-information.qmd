@@ -43,7 +43,7 @@ Hãy xem [entropy](https://www.tensortonic.com/ml-math/information-theory/shanno
 Đây là khác biệt cực kỳ quan trọng trong phân tích thống kê.
 
 | Thước đo              | Pearson Correlation                                             | Mutual Information                                          |
-|:----------------------|:----------------------------------------------------------------|:------------------------------------------------------------|
+|:---|:---|:---|
 | **Phạm vi phát hiện** | Chỉ các quan hệ **tuyến tính**.                                 | Phát hiện **mọi** dạng phụ thuộc.                           |
 | **$y = x$**           | $\rho = 1.0$                                                    | MI cao                                                      |
 | **$y = x^2$**         | $\rho \approx 0$                                                | MI cao                                                      |

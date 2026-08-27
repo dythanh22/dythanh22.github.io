@@ -1496,7 +1496,7 @@ Backpropagation thực chất là cách tính hiệu quả các đạo hàm riê
 Bạn có thể nhớ như sau:
 
 | Khái niệm        | Ý nghĩa                                              |
-| ---------------- | ---------------------------------------------------- |
+|---|---|
 | Đạo hàm thường   | Hàm một biến thay đổi thế nào                        |
 | Đạo hàm riêng    | Hàm nhiều biến thay đổi thế nào khi chỉ một biến đổi |
 | Gradient         | Vector chứa tất cả đạo hàm riêng                     |

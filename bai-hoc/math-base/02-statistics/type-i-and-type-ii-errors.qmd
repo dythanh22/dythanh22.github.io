@@ -17,7 +17,7 @@ Trong kiểm định giả thuyết, chúng ta đưa ra suy luận dựa trên m
 Khi đưa ra một quyết định thống kê, có hai cách đúng và hai cách sai.
 
 | Quyết định              | $H_0$ đúng (Thực tế)              | $H_0$ sai (Thực tế)               |
-|-------------------------|-----------------------------------|-----------------------------------|
+|---|---|---|
 | **Không bác bỏ $H_0$** | ✅ Đúng (True Negative)           | ❌ Sai lầm loại II (False Negative) |
 | **Bác bỏ $H_0$**       | ❌ Sai lầm loại I (False Positive) | ✅ Đúng (True Positive)           |
 * **Mẹo nhớ:**  
@@ -89,7 +89,7 @@ Thông thường, bạn không thể giảm đồng thời cả hai loại sai l
 ## 7. Ứng dụng thực tế và tối ưu hóa
 
 | Bối cảnh | $H_0$ / $H_1$ | Sai lầm nguy hiểm hơn | Chiến lược                  |
-| --- | --- | --- |-----------------------------|
+|---|---|---|---|
 | **Phiên tòa** | Vô tội / Có tội | **Type I:** Kết án người vô tội | Alpha thấp (0.01)           |
 | **Xét nghiệm y tế** | Khỏe / Bệnh | **Type II:** Bỏ sót bệnh | Power cao / Alpha cao hơn   |
 | **Spam filter** | Email thật / Spam | **Type I:** Chặn email quan trọng | Giảm Type I                 |

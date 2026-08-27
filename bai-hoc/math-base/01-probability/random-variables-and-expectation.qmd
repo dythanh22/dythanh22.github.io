@@ -65,7 +65,7 @@ Biến ngẫu nhiên $X$ chuyển các kết quả định tính (như "$HT$") t
 ### Cách tính
 
 | Loại         | Công thức                                       | Mô tả                                            |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | **Rời rạc**  | $E[X] = \sum_x x \cdot P(X=x)$                  | Tổng của (giá trị $\times$ xác suất)    |
 | **Liên tục** | $E[X] = \int_{-\infty}^{\infty} x \cdot f(x)dx$ | Tích phân của (giá trị $\times$ mật độ) |
 

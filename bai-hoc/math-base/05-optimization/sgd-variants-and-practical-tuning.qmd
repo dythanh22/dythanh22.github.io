@@ -32,7 +32,7 @@ $$\theta_{t+1} = \theta_t - \eta \cdot \frac{1}{N} \sum_{i=1}^{N} \nabla L(\thet
 ### Đánh đổi của Batch GD
 
 | Ưu điểm                                      | Nhược điểm                                       |
-|:---------------------------------------------|:-------------------------------------------------|
+|:---|:---|
 | Gradient chính xác (không có nhiễu lấy mẫu)  | Rất chậm (mỗi bước = duyệt toàn bộ tập dữ liệu)  |
 | Hội tụ ổn định, dễ dự đoán                   | Yêu cầu toàn bộ dữ liệu nằm trong bộ nhớ         |
 | Dễ phân tích về mặt lý thuyết                | Không thể thoát khỏi local minima                |
@@ -76,7 +76,7 @@ $$\theta_{t+1} = \theta_t - \eta \cdot \frac{1}{B} \sum_{i \in \mathcal{B}} \nab
 ## Đánh đổi của Batch Size
 
 | Khía cạnh              | Batch nhỏ (32)             | Batch lớn (2048+)        |
-|:-----------------------|:---------------------------|:-------------------------|
+|:---|:---|:---|
 | Nhiễu Gradient         | Cao                        | Thấp                     |
 | Khả năng khám phá      | Tốt (thoát local minima)   | Kém (dễ bị mắc kẹt)      |
 | Khả năng tổng quát hóa | Thường tốt hơn             | Có thể tệ hơn            |

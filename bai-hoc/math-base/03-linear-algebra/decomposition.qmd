@@ -80,7 +80,7 @@ Quá trình Gram-Schmidt là thuật toán dùng để xây dựng $Q$. Nó lặ
 ## So sánh: LU vs QR vs SVD
 
 | Đặc điểm         | LU                         | QR                          | SVD                             |
-| :--- |:---------------------------|:----------------------------|:--------------------------------|
+|:---|:---|:---|:---|
 | **Dạng ma trận** | Chỉ vuông                  | Bất kỳ                      | Bất kỳ                          |
 | **Tốc độ**       | Nhanh nhất ($\sim n^3/3$)  | Trung bình ($\sim 2n^3/3$)  | Chậm nhất ($\sim 10n^3$)        |
 | **Ổn định**      | Cần pivot                  | Tốt                         | Tốt nhất (Total Least Squares)  |

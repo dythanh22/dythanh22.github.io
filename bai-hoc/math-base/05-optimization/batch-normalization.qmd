@@ -67,7 +67,7 @@ $$y_i = \gamma \hat{x}_i + \beta$$
 Batch Normalization hoạt động khác nhau tùy thuộc vào chế độ của mô hình:
 
 | Giai Đoạn      | Hành Vi                                                                           | Mục Đích                                                                    |
-|:---------------|:----------------------------------------------------------------------------------|:----------------------------------------------------------------------------|
+|:---|:---|:---|
 | **Training**   | Sử dụng thống kê tính từ mini-batch hiện tại ($\mu_B$, $\sigma_B^2$).             | Ổn định huấn luyện và tạo hiệu ứng regularization thông qua nhiễu batch.    |
 | **Inference**  | Sử dụng running statistics (trung bình toàn cục) được tích lũy trong huấn luyện.  | Đảm bảo đầu ra xác định cho cùng đầu vào và cho phép xử lý batch size = 1.  |
 

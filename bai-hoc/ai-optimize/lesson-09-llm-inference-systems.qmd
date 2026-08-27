@@ -27,7 +27,7 @@ LLM serving giả định bạn đã quen self-attention và decoder. Ôn [Trans
 ## Lộ trình bài học
 
 | # | Phần | Trả lời câu hỏi | Thời lượng |
-|:--|:-----|:----------------|:-----------|
+|:---|:---|:---|:---|
 | 1 | Khác gì classic + metric | Vì sao một request = nhiều forward? Metric nào quan trọng? | 15 phút |
 | 2 | Prefill / decode + KV | Prefill vs decode? KV cache tốn bao nhiêu memory? | 25 phút |
 | 3 | Continuous batching | Static vs continuous? Scheduler ưu tiên gì? | 20 phút |
@@ -122,7 +122,7 @@ Framework LLM đổi flag nhanh. Bài tập trung **mental model, metric, archit
 ## Prerequisites {.unnumbered}
 
 | Chủ đề | Cần nắm |
-|:-------|:--------|
+|:---|:---|
 | GPU / attention | Transformer decoder-only ở mức khái niệm; memory bandwidth vs compute (Lesson 1) |
 | Quantization | FP16/BF16/FP8/INT8 ý tưởng cơ bản (Lesson 5) |
 | Serving | Dynamic batching, metrics, Triton/NIM ở mức khái niệm (Lesson 6) |
@@ -146,7 +146,7 @@ Classic inference gần như **một request = một forward = một output cố
 :::
 
 | Chiều | Classic (CNN / classifier) | LLM inference |
-|:------|:---------------------------|:--------------|
+|:---|:---|:---|
 | Forward / request | Thường 1 | Prefill + nhiều decode step |
 | Output size | Cố định / gần cố định | Biến động theo `max_tokens` / EOS |
 | Batching | Gom request dễ hơn | Output length lệch → static batch lãng phí |
@@ -176,7 +176,7 @@ Attention(Q, K, V) = softmax(QKᵀ / √d) V
 Token mới attend tới mọi token trước (`1..t`). Không cache thì mỗi decode step tính lại K/V cho cả prefix — cực kỳ lãng phí.
 
 | Loại | Vai trò | Tính chất |
-|:-----|:--------|:----------|
+|:---|:---|:---|
 | **Weights** | “Kiến thức” model | Gần như static sau load |
 | **Activations** | Giá trị tạm một forward | Sống ngắn |
 | **KV cache** | K/V đã tính cho token cũ | Per-request, **mọc theo sequence length** |
@@ -218,7 +218,7 @@ flowchart LR
 ```
 
 | Phase | Input vào model | Việc chính | Bound thường gặp | Metric gắn |
-|:------|:----------------|:-----------|:-----------------|:-----------|
+|:---|:---|:---|:---|:---|
 | Prefill | Toàn bộ prompt (vd. 2048 tokens) | Hidden states, first logits, KV prompt | Compute-heavy | TTFT |
 | Decode | 1 token mới / step | Next token + cập nhật KV | Memory-bandwidth | ITL / TPOT |
 
@@ -241,7 +241,7 @@ $$
 $$
 
 | Ký hiệu | Ý nghĩa |
-|:--------|:--------|
+|:---|:---|
 | $L$ | `num_layers` |
 | $S$ | `sequence_length` (prompt + generated đã có) |
 | $2$ | K và V |
@@ -282,7 +282,7 @@ last token   ← E2E latency
 :::
 
 | Kiểu | Cách hoạt động | Điểm yếu với LLM |
-|:-----|:---------------|:-----------------|
+|:---|:---|:---|
 | **Static batching** | Gom A,B,C,D → chạy tới khi tất cả xong | Request ngắn chờ dài; slot idle; throughput kém khi output lệch |
 | **Dynamic batching** | Chờ ≤ X ms rồi chạy batch | Vẫn hữu ích cho prefill; chưa giải quyết generation length lệch |
 | **Continuous / IFB** | Mỗi step: thêm/bớt sequence khi còn capacity | Cần KV paging + fairness + metric tốt |
@@ -296,7 +296,7 @@ t3: add E (prefill) while B/C/D decode → [B, C, D, E]
 Ý tưởng cốt lõi: *Batch is not a fixed group of requests — it is a changing set of active sequences at each iteration.*
 
 | Lợi ích | Trade-off |
-|:--------|:----------|
+|:---|:---|
 | GPU utilization cao hơn | Scheduler phức tạp |
 | Request mới ít chờ hơn | Cấp phát/thu hồi KV liên tục |
 | Phù hợp streaming | Fairness / tail latency khó hơn |
@@ -305,7 +305,7 @@ t3: add E (prefill) while B/C/D decode → [B, C, D, E]
 **Chunked prefill**: chia prompt dài thành chunk để xen kẽ với decode — tránh “một prefill dài làm ITL toàn batch xấu”.
 
 | Knob liên quan | Hướng ảnh hưởng thường gặp |
-|:---------------|:---------------------------|
+|:---|:---|
 | `max_num_batched_tokens` nhỏ hơn | ITL thường tốt hơn |
 | `max_num_batched_tokens` lớn hơn | TTFT / prefill throughput thường tốt hơn |
 
@@ -365,7 +365,7 @@ flowchart TB
 ```
 
 | Contiguous reserve | Paged KV |
-|:-------------------|:---------|
+|:---|:---|
 | Đoán trước max length / request | Cấp block khi sequence mọc |
 | Waste nếu output ngắn | Thu hồi block khi xong |
 | Fragmentation vùng trống nhỏ | Physical blocks không cần liền kề |
@@ -425,7 +425,7 @@ flowchart TB
 ```
 
 | Điều kiện thường **có lợi** | Điều kiện thường **ít lợi / hại** |
-|:---------------------------|:----------------------------------|
+|:---|:---|
 | Low–medium QPS | High QPS, GPU đã saturated |
 | Target lớn, decode memory-bound | Draft chiếm memory/compute lớn |
 | Draft rẻ + acceptance cao | Acceptance thấp |
@@ -433,7 +433,7 @@ flowchart TB
 | | Overhead scheduler lớn |
 
 | Biến thể | Ý tưởng |
-|:---------|:--------|
+|:---|:---|
 | Draft model | Model nhỏ hơn sinh token nháp |
 | N-gram speculation | Pattern lặp trong context; không cần model phụ |
 | EAGLE / EAGLE3 | Speculator chuyên dụng |
@@ -441,7 +441,7 @@ flowchart TB
 | PARD / suffix / custom | Tùy engine |
 
 | Parallelism | Việc làm | Ghi nhớ |
-|:------------|:---------|:--------|
+|:---|:---|:---|
 | **TP** (tensor) | Shard matrix ops qua GPU | Giảm memory/GPU, tăng communication |
 | **PP** (pipeline) | Chia layer qua GPU | Fit model lớn, thường tăng latency |
 | **EP** (expert) | Phân tán MoE experts | Cho MoE; thêm chiều scheduling |
@@ -503,7 +503,7 @@ flowchart LR
 ```
 
 | Tiêu chí | vLLM | TensorRT-LLM |
-|:---------|:-----|:-------------|
+|:---|:---|:---|
 | Triết lý | Serving linh hoạt, dễ dùng | NVIDIA-optimized stack |
 | Model ecosystem | Rất mạnh với Hugging Face | Model được hỗ trợ/tối ưu trên NVIDIA |
 | API | OpenAI-compatible phổ biến | `trtllm-serve` / Triton, Dynamo, NIM… |
@@ -516,7 +516,7 @@ flowchart LR
 **Knobs ổn định hơn tên flag** (tên có thể đổi theo version):
 
 | Concept | Ảnh hưởng |
-|:--------|:----------|
+|:---|:---|
 | `max_model_len` | Context max → KV demand |
 | `max_num_seqs` | Active sequences; quá cao → memory pressure |
 | `max_num_batched_tokens` | Trade-off TTFT / ITL / throughput |
@@ -528,7 +528,7 @@ flowchart LR
 Quantization thường gặp trên path LLM:
 
 | Kỹ thuật | Mục tiêu chính |
-|:---------|:---------------|
+|:---|:---|
 | FP8 / FP4 (weights, KV, activation tùy path) | Giảm memory, tăng throughput trên NVIDIA |
 | INT8 SmoothQuant | Activation/weight scale cho INT8 |
 | INT4 AWQ / GPTQ-style | Nén weight mạnh; cần đánh giá quality |
@@ -565,7 +565,7 @@ Streaming giảm **perceived latency** nhưng không miễn phí (chunk/SSE, det
 :::
 
 | Metric | Định nghĩa ngắn | Dùng để |
-|:-------|:----------------|:--------|
+|:---|:---|:---|
 | **TTFT** | Thời điểm first token − request sent | Cảm nhận “bắt đầu trả lời” |
 | **ITL / TPOT** | Thời gian giữa các output token | Độ mượt stream / decode |
 | **E2E** | Final token − request sent | Tổng thời gian hoàn tất |
@@ -644,7 +644,7 @@ flowchart LR
 ```
 
 | Triệu chứng | Nguyên nhân khả dĩ | Kiểm tra | Hướng xử lý |
-|:------------|:-------------------|:---------|:------------|
+|:---|:---|:---|:---|
 | TTFT cao | Prompt dài, prefill, queue | length hist, queue, prefill time | prefix cache, chunked prefill, scale, tune scheduler |
 | ITL cao | Decode BW, batch nhỏ, KV dài | decode time, BW, active seq | continuous batching, concurrency hợp lý, quant KV |
 | OOM | KV lớn, max_len/seqs cao | GPU mem, KV blocks | giảm max_len/seqs, FP8 KV, TP |
@@ -715,7 +715,7 @@ $$
 
 ### Debug nhanh {.unnumbered}
 | Case | Check trước | Action |
-|:-----|:------------|:-------|
+|:---|:---|:---|
 | TTFT đột biến | Queue, prompt len, prefix hit, long+short trộn, GPU, tokenizer | Tách pool; prefix cache; chunked prefill; giảm max_len; scale |
 | ITL p99 xấu | Decode batch, prefill chen, preemption, output outliers | Tune batched tokens; concurrency; pool riêng; quant KV; thử spec |
 | GPU OOM | max_len, max_seqs, KV dtype, long-context | Giảm len/seqs/max_tokens; TP; FP8 KV; tách pool |
@@ -723,7 +723,7 @@ $$
 
 ### Common misconceptions {.unnumbered}
 | Hiểu nhầm | Thực tế |
-|:----------|:--------|
+|:---|:---|
 | Latency = một forward | Gồm queue, tokenize, prefill, decode, KV, detokenize, stream |
 | Batch càng lớn càng tốt | Có thể tăng TPS nhưng phá TTFT/ITL/p99 |
 | RPS là metric chính | Cần token-level + length distribution |
@@ -733,7 +733,7 @@ $$
 
 ### Design — 3 workload {.unnumbered}
 | Workload | Shape | Ưu tiên | Gợi ý bắt đầu |
-|:---------|:------|:--------|:--------------|
+|:---|:---|:---|:---|
 | A Chatbot ngắn, traffic cao | in 200–800, out 100–300 | Continuous batching, TPS, quant nếu được, scale theo queue/TTFT/ITL | vLLM + metrics; sau đó bench TRT-LLM |
 | B RAG context dài | in 8K–64K, out 300–1000 | Prefix cache, chunked prefill, tách pool long-context; cân nhắc disagg prefill/decode | Tune context + scheduler |
 | C Code gen output dài | in 1K–4K, out 2K–8K | Decode TPS, thử spec, KV planning, cancel, max_tokens, quota | ITL + memory trước RPS |
@@ -1003,7 +1003,7 @@ Template gợi ý:
 ## Glossary {.unnumbered}
 
 | Thuật ngữ | Định nghĩa |
-|:----------|:-----------|
+|:---|:---|
 | **Acceptance rate** | Tỷ lệ draft tokens được target model chấp nhận |
 | **Chunked prefill** | Chia prefill dài thành chunks để xen kẽ với decode |
 | **Continuous batching** | Batching động theo từng decode iteration |

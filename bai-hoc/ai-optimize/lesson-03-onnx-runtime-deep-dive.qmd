@@ -21,7 +21,7 @@ Bài này không dừng ở `session.run()`. Mục tiêu là hiểu **ONNX Runti
 ## Lộ trình bài học
 
 | # | Phần | Trả lời câu hỏi | Thời lượng |
-|:--|:-----|:----------------|:-----------|
+|:---|:---|:---|:---|
 | 1 | ORT là / không phải gì | Format khác runtime thế nào? | 10 phút |
 | 2 | InferenceSession | Vì sao không tạo session mỗi request? | 10 phút |
 | 3 | Execution Providers | Priority, partitioning, fallback, GPU chậm? | 20 phút |
@@ -125,7 +125,7 @@ Pipeline khái niệm khi tạo session và chạy inference:
 Mental model: `ORT = graph optimizer + execution planner + provider dispatcher + kernel runtime + memory manager`.
 
 | Không phải | Hệ quả thực tế |
-|:-----------|:---------------|
+|:---|:---|
 | **ONNX** | `model.onnx` = file format; `onnxruntime` = library chạy file đó |
 | **TensorRT** | CUDA EP dùng CUDA/cuDNN; TRT EP build engine cho subgraph hỗ trợ; native TRT = API trực tiếp |
 | **Luôn nhanh hơn PyTorch** | Model rất nhỏ / batch 1 / nhiều copy → PyTorch có thể ngang hoặc thắng nếu benchmark chưa thiết kế đúng |
@@ -218,7 +218,7 @@ EP chạy **node/subgraph** mà nó hỗ trợ — không nhất thiết toàn g
 :::
 
 | Execution Provider | Mục tiêu |
-|:-------------------|:---------|
+|:---|:---|
 | `CPUExecutionProvider` | CPU kernels của ORT |
 | `CUDAExecutionProvider` | NVIDIA GPU — CUDA/cuDNN/cuBLAS |
 | `TensorrtExecutionProvider` | NVIDIA TensorRT: compile + chạy subgraph hỗ trợ |
@@ -278,7 +278,7 @@ Nếu fallback xảy ra nhiều lần: `GPU subgraph → copy về CPU → CPU o
 ## Vì sao GPU đôi khi chậm hơn CPU?
 
 | Nguyên nhân | Hướng debug |
-|:------------|:-----------|
+|:---|:---|
 | Model/batch quá nhỏ — compute không bù overhead | Tăng batch size |
 | `session.run(numpy)` copy CPU→GPU→CPU mỗi lần | Dùng I/O Binding |
 | Nhiều op fallback về CPU | Profiling trace + verbose log |
@@ -323,7 +323,7 @@ session = ort.InferenceSession(
 ```
 
 | Option | Ý nghĩa chi tiết |
-|:-------|:----------------|
+|:---|:---|
 | `graph_optimization_level` | Disable / basic / extended / all — xem @sec-graph-opt |
 | `execution_mode` | `ORT_SEQUENTIAL`: tốt cho latency thấp; `ORT_PARALLEL`: khi graph có nhiều branch độc lập |
 | `intra_op_num_threads` | Thread parallelize **bên trong** một operator (MatMul, Conv); 0 = ORT tự quyết |
@@ -360,7 +360,7 @@ Constant → Add → Mul         →  SingleConstant      (constant folding)
 ### Bốn mức optimization {.unnumbered}
 
 | Level | Enum | Bao gồm |
-|:------|:-----|:--------|
+|:---|:---|:---|
 | Tắt | `ORT_DISABLE_ALL` | Không optimize — chỉ dùng khi debug |
 | Basic | `ORT_ENABLE_BASIC` | Fold/fuse an toàn; chạy **trước** partitioning → áp dụng bất kể provider |
 | Extended | `ORT_ENABLE_EXTENDED` | Basic + pattern kiến trúc phụ thuộc provider |
@@ -466,7 +466,7 @@ Input                 Concat → Output
 Hữu ích khi graph có nhiều branch song song (vd. multi-head attention, multi-scale feature pyramid).
 
 | Tình huống | Gợi ý |
-|:-----------|:------|
+|:---|:---|
 | Đơn session, muốn max tốc độ | Default (`intra_op = 0`) |
 | Nhiều session / nhiều model song song | Giảm `intra_op` tránh oversubscription: `total_cores / num_sessions` |
 | Multi-tenant server tranh CPU | Giới hạn thread mỗi session; đo p99 dưới tải thật |
@@ -516,7 +516,7 @@ session = ort.InferenceSession("model.onnx", providers=providers)
 ```
 
 | Option | Ý nghĩa |
-|:-------|:--------|
+|:---|:---|
 | `device_id` | GPU index (0, 1, …) |
 | `gpu_mem_limit` | Giới hạn memory arena GPU (bytes) |
 | `arena_extend_strategy` | Cách tăng kích thước memory pool |
@@ -593,7 +593,7 @@ ORT partition graph
 **Khi nào dùng TensorRT EP:**
 
 | Điều kiện | Đủ điều kiện? |
-|:----------|:-------------|
+|:---|:---|
 | NVIDIA GPU deployment | ✓ |
 | Model có nhiều op TRT hỗ trợ (Conv, MatMul, Attention…) | ✓ |
 | Chấp nhận engine build time lần đầu | ✓ |
@@ -604,7 +604,7 @@ ORT partition graph
 **Khi nào chưa nên dùng TensorRT EP:**
 
 | Tình huống | Lý do |
-|:-----------|:------|
+|:---|:---|
 | ONNX model chưa sạch (shape inference thiếu) | TRT fail hoặc fallback nhiều |
 | Nhiều custom/unsupported ops | Ít subgraph cho TRT, ít speedup |
 | Chưa có CUDA EP baseline | Không có baseline để so sánh |
@@ -714,7 +714,7 @@ Không profiling thì rất dễ tối ưu sai chỗ. Bật `enable_profiling` �
 Tách latency theo thành phần trước khi profile:
 
 | Thành phần | Ví dụ |
-|:-----------|:------|
+|:---|:---|
 | Session creation | Load, optimize, build TRT engine |
 | Warmup | Lazy init, kernel cache, allocator growth |
 | Input copy | CPU → GPU |
@@ -831,7 +831,7 @@ Average có thể đẹp nhưng p99 xấu. p99 tệ = user cảm thấy lag 1 tr
 **Batch size sweep:**
 
 | Batch | Mean ms | p99 ms | Throughput samples/s |
-|------:|--------:|-------:|---------------------:|
+|---:|---:|---:|---:|
 | 1 | — | — | — |
 | 4 | — | — | — |
 | 8 | — | — | — |
@@ -966,7 +966,7 @@ CUDA: 7 ms
 ```
 
 | Nguyên nhân | Kiểm tra | Fix |
-|:------------|:---------|:----|
+|:---|:---|:---|
 | Model/batch quá nhỏ (batch = 1 thường chưa đủ) | Thử batch 8/16 | Tăng batch size |
 | Copy CPU→GPU→CPU mỗi `run()` | Profiling trace MemcpyH2D | I/O Binding |
 | Op fallback CPU | Profiling trace provider placement | Simplify graph / shape inference |
@@ -1035,7 +1035,7 @@ Tám lỗi phổ biến, đều phòng tránh được bằng thói quen: chỉ 
 :::
 
 | # | Lỗi | Hậu quả | Fix |
-|:--|:----|:--------|:----|
+|:---|:---|:---|:---|
 | 1 | Không chỉ định `providers` | Dựa vào default không kiểm soát | Luôn truyền `providers=[…]` rõ ràng |
 | 2 | Provider order sai: `["CPU…", "CUDA…"]` | CPU ưu tiên dù có GPU | GPU provider đứng đầu |
 | 3 | Tạo session trong `predict()` | Mỗi request gánh overhead khởi tạo | Session toàn cục, reuse |
@@ -1554,7 +1554,7 @@ python iobinding_cuda.py
 ## Glossary {.unnumbered}
 
 | Thuật ngữ | Giải thích |
-|:----------|:-----------|
+|:---|:---|
 | **ONNX** | Format/spec mở biểu diễn ML model (graph + weights + I/O + opset) |
 | **ONNX Runtime** | Engine chạy ONNX/ORT model: optimize, plan, dispatch, memory |
 | **InferenceSession** | Object trung tâm: load, optimize, run — tạo một lần, reuse mãi |

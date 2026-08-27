@@ -47,7 +47,7 @@ $$r = \frac{Cov(X,Y)}{\sigma_X \sigma_Y}$$
 Chọn thước đo phù hợp phụ thuộc vào bản chất dữ liệu.
 
 | Đặc điểm | Tương quan Pearson ($r$) | Tương quan hạng Spearman ($\rho$) |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | **Mối quan hệ** | Đo quan hệ **tuyến tính**. | Đo quan hệ **đơn điệu**. |
 | **Loại dữ liệu** | Liên tục, gần phân phối chuẩn. | Dữ liệu thứ bậc, không chuẩn hoặc dạng xếp hạng. |
 | **Outliers** | Rất nhạy với outliers. | Bền vững hơn với outliers. |

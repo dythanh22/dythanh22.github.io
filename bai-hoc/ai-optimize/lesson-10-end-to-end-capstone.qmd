@@ -22,7 +22,7 @@ Ghép Lesson 1–9 thành **một project vận hành được**: PyTorch → ON
 ## Lộ trình bài học
 
 | # | Phần | Trả lời câu hỏi | Thời lượng |
-|:--|:-----|:----------------|:-----------|
+|:---|:---|:---|:---|
 | 1 | Phạm vi + workload | CNN mặc định vs LLM optional? In/out scope? | 15 phút |
 | 2 | Architecture + contract | Repo, deliverables, SLO, kiến trúc mục tiêu? | 20 phút |
 | 3 | Export + optimize (+quant) | ONNX → validate → TRT FP16/INT8? | 35 phút |
@@ -84,7 +84,7 @@ Capstone = correctness + SLO + observability + reversible rollout + cost.
 ## Chuỗi kiến thức Lesson 1–9 gắn vào phase nào?
 
 | Lesson | Gắn phase capstone |
-|:-------|:-------------------|
+|:---|:---|
 | 1 GPU pipeline | Latency vs throughput; H2D/D2H vs compute |
 | 2 ONNX | Export, opset, dynamic batch, checker |
 | 3 ORT | Baseline CUDA/CPU; I/O binding mindset |
@@ -114,7 +114,7 @@ Capstone = correctness + SLO + observability + reversible rollout + cost.
 ## Prerequisites {.unnumbered}
 
 | Chủ đề | Cần nắm |
-|:-------|:--------|
+|:---|:---|
 | Lessons 1–5 | Pipeline GPU, ONNX, ORT, TensorRT, quantization cơ bản |
 | Lesson 6 | Triton model repository, `config.pbtxt`, dynamic batching |
 | Lesson 7 | `trtexec`, Perf Analyzer, p50/p95/p99, bottleneck |
@@ -140,7 +140,7 @@ Không có GPU: làm contract, scripts, configs, report design, runbook; benchma
 :::
 
 | Chiều | Track A — Classic CNN | Track B — LLM (optional) |
-|:------|:----------------------|:-------------------------|
+|:---|:---|:---|
 | Model | ResNet-50 / MobileNetV3 | HF causal LM nhỏ (7B nếu có GPU) |
 | IR / engine | ONNX → TensorRT `.plan` | Checkpoint → vLLM / TensorRT-LLM |
 | Serving | NVIDIA Triton | OpenAI-compatible API |
@@ -166,7 +166,7 @@ Deploy: Docker Compose trước; Kubernetes optional
 ## Success criteria + ví dụ SLO (đặt trước khi tối ưu)
 
 | Category | Target |
-|:---------|:-------|
+|:---|:---|
 | Correctness | ONNX ≈ PyTorch (max abs diff nhỏ; assert `atol`/`rtol`) |
 | Accuracy | Drop vs baseline < 1% nếu có validation set |
 | Latency | p99 server-side < 100 ms ở concurrency mục tiêu |
@@ -224,7 +224,7 @@ flowchart TB
 So sánh runtime trong project:
 
 | Layer | Artifact | Vai trò |
-|:------|:---------|:--------|
+|:---|:---|:---|
 | Baseline | PyTorch eager / `torch.compile` | Tham chiếu correctness |
 | Intermediate | ONNX Runtime CPU/CUDA | Baseline portable |
 | Optimized | TensorRT FP16 `.plan` | Production path chính |
@@ -252,7 +252,7 @@ Notebook một file “chạy được trên máy tôi” ≠ production project
 **Deliverables checklist**
 
 | # | Nhóm | Files chính |
-|:--|:-----|:------------|
+|:---|:---|:---|
 | 1 | Model artifacts | `model.onnx`, `model_fp16.plan`, optional INT8, `labels.txt` |
 | 2 | Triton repo | `resnet50_onnx/`, `resnet50_trt/` + `config.pbtxt` |
 | 3 | Validation | `01_export_to_onnx.py`, `02_validate_onnx.py`, `03_compare_outputs.py` |
@@ -352,7 +352,7 @@ flowchart LR
 ```
 
 | Bước | Việc | Gate thoát |
-|:-----|:-----|:-----------|
+|:---|:---|:---|
 | A1 | Contract + chọn model | Contract đã ghi; shape/dtype cố định |
 | A2 | `torch.onnx.export` (opset 17, dynamic batch) | File `.onnx` tồn tại |
 | A3 | `onnx.checker` + inspect graph | Checker OK |
@@ -451,7 +451,7 @@ trtexec --loadEngine=models/resnet50_trt/1/model.plan \
 Ghi: Throughput, Latency, Enqueue, H2D, GPU Compute, D2H.
 
 | Symptom `trtexec` | Nghĩa thường gặp |
-|:------------------|:-----------------|
+|:---|:---|
 | GPU Compute cao | Bottleneck model |
 | H2D / D2H cao | Transfer / preprocess |
 | Enqueue cao | CPU schedule / launch nhỏ |
@@ -492,7 +492,7 @@ flowchart LR
 `config.pbtxt` phải khớp artifact — không đoán tên I/O:
 
 | Field | ONNX backend | TensorRT backend |
-|:------|:-------------|:-----------------|
+|:---|:---|:---|
 | name | `resnet50_onnx` | `resnet50_trt` |
 | backend/platform | `backend: "onnxruntime"` | `platform: "tensorrt_plan"` |
 | max_batch_size | 32 | 32 (≤ profile max) |
@@ -502,7 +502,7 @@ flowchart LR
 | instance_group | `count: 1`, `KIND_GPU` | giống |
 
 | Mistake config | Hệ quả |
-|:---------------|:-------|
+|:---|:---|
 | Sai input/output name | Request fail |
 | Sai dims / dtype | Shape mismatch |
 | `max_batch_size` lệch profile TRT | Runtime error batch lớn |
@@ -517,7 +517,7 @@ client latency ≈ network + queue + input + compute infer + output + transfer
 ```
 
 | Symptom Triton | Bottleneck | Action |
-|:---------------|:-----------|:-------|
+|:---|:---|:---|
 | Queue time cao | Overload / batch delay | Giảm concurrency, thêm instance, tune batch |
 | Compute infer cao | Model/GPU | TRT/precision/model nhỏ hơn |
 | Input/output cao | Pre/post / copy | Tối ưu preprocess, giảm output |
@@ -585,7 +585,7 @@ Trước knee: throughput↑, p99 OK. Sau knee: throughput đứng, p99↑ → c
 **Benchmark report skeleton**
 
 | Mục | Ghi |
-|:----|:----|
+|:---|:---|
 | Environment | GPU/CPU/RAM/CUDA/TRT/Triton/Driver/Model/shape/precision |
 | SLO | p99, throughput, max error |
 | ORT table | concurrency 1…32 × throughput × avg/p95/p99 |
@@ -633,7 +633,7 @@ flowchart LR
 Dashboard tối thiểu: request rate, error rate, p50/p95/p99, queue duration, compute infer, GPU util/mem, model name/version, instance count.
 
 | Strategy | Mục tiêu | Khi dùng |
-|:---------|:---------|:---------|
+|:---|:---|:---|
 | Shadow | So sánh v2 không ảnh hưởng user | Trước canary |
 | Canary | An toàn, rollback nhanh | Mặc định production |
 | A/B | Đo business/quality impact | Ranking/LLM/moderation… |
@@ -696,7 +696,7 @@ def compare_topk(logits_v1, logits_v2, k=5):
 **Runbook (`ops/incident_runbook.md`)**
 
 | Incident | Symptoms | Check ngay | Mitigate | Root candidates |
-|:---------|:---------|:-----------|:---------|:----------------|
+|:---|:---|:---|:---|:---|
 | High latency | p99↑, queue↑, timeout | RPS, queue, compute, GPU, recent change | Rollback / scale / tắt canary / giảm postprocess | spike, batch delay, thiếu instance, GPU sat, CPU preprocess |
 | Error spike | 5xx, model unavailable | load status, logs, OOM, shape/dtype | Rollback, drain pod, disable canary | bad config, engine/GPU mismatch, corrupt artifact |
 | Quality regression | shadow mismatch, complaints | preprocess, labels, version, drift, INT8 | Rollback, FP16 path, sample | wrong labels, calibration, silent mapping |
@@ -751,7 +751,7 @@ flowchart LR
 ```
 
 | Lever | Effect | Risk |
-|:------|:-------|:-----|
+|:---|:---|:---|
 | FP16 | Nhanh / ít mem | Sai số nhỏ |
 | INT8 | Rẻ hơn | Accuracy drop |
 | Dynamic batching | Throughput↑ | Latency↑ |
@@ -763,7 +763,7 @@ flowchart LR
 Bottleneck framework (dùng trong report):
 
 | Observation | Evidence | Likely bottleneck | Next action |
-|:------------|:---------|:------------------|:------------|
+|:---|:---|:---|:---|
 | p99↑ sau concurrency 16 | Perf Analyzer | Queue/saturation | Target ≤16 hoặc scale |
 | GPU util thấp, latency cao | Triton metrics | CPU/client | Profile gateway |
 | H2D cao | `trtexec` | Transfer | Input placement |
@@ -821,7 +821,7 @@ local demo / staging / limited production / full production
 **`reports/production_readiness_review.md`**
 
 | Section | Nội dung |
-|:--------|:---------|
+|:---|:---|
 | 1 Service overview | name, model, runtime, serving, owner, on-call, deps |
 | 2 Model artifact | training run, ONNX, plan, precision, I/O contract |
 | 3 Validation | checker, PyTorch↔ONNX, ONNX↔TRT, offline, regression |
@@ -835,7 +835,7 @@ local demo / staging / limited production / full production
 **Rubric tự chấm**
 
 | Level | Mô tả |
-|:------|:------|
+|:---|:---|
 | 1 | Export ONNX + infer local |
 | 2 | TRT + `trtexec` |
 | 3 | Serve ORT + TRT trên Triton |
@@ -870,7 +870,7 @@ Hầu hết failure modes là **mismatch** (export/eval, config vs artifact, `tr
 :::
 
 | Failure | Symptoms | Causes điển hình | Fix |
-|:--------|:---------|:-----------------|:----|
+|:---|:---|:---|:---|
 | ONNX “OK” nhưng sai | Checker pass, pred lệch PyTorch | `train` mode, opset, preprocess | `eval()`, compare, đổi opset |
 | TRT build fail | Unsupported op, shape/profile | Dynamic unbounded, plugin | Simplify, replace op, ORT fallback |
 | Triton load fail | Unavailable, config/backend error | Sai name/dims, engine GPU mismatch | Logs, metadata, rebuild cùng env |
@@ -1010,7 +1010,7 @@ Final report 13 mục + PRR decision. Tự chấm Level 1–8. Optional INT8 ho�
 ## Glossary {.unnumbered}
 
 | Thuật ngữ | Định nghĩa |
-|:----------|:-----------|
+|:---|:---|
 | **Canary** | Rollout dần traffic sang candidate với gate và rollback |
 | **Dynamic batching** | Triton gom request trong cửa sổ delay để tăng throughput |
 | **Knee point** | Điểm trên curve concurrency khi throughput bão hòa và p99 xấu đi |

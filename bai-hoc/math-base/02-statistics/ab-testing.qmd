@@ -35,7 +35,7 @@ Phân chia ngẫu nhiên là bắt buộc. Việc chia người dùng ngẫu nhi
 Vì kiểm định dựa trên xác suất, có hai cách để đưa ra quyết định sai:
 
 | Loại sai lầm | Tên gọi | Hệ quả kinh doanh|
-| :-----| :-----|:----------------------------------------------------------|
+|:---|:---|:---|
 | **Sai lầm loại I ($\alpha$)** | **False Positive** | Triển khai thay đổi không hiệu quả → lãng phí tài nguyên  |
 | **Sai lầm loại II ($\beta$)** | **False Negative** | Bỏ lỡ ý tưởng tốt vì test không phát hiện được lợi ích    |
 

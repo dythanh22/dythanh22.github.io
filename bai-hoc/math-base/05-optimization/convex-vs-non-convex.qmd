@@ -53,7 +53,7 @@ Một tập $C$ là **convex (lồi)** nếu với bất kỳ hai điểm $x, y 
 $$\forall \lambda \in [0,1]: \quad \lambda x + (1-\lambda)y \in C$$
 
 | Tập lồi                        | Tập không lồi                          |
-|:-------------------------------|:---------------------------------------|
+|:---|:---|
 | Hình tròn, hình cầu            | Hình bánh donut (có lỗ)                |
 | Hình chữ nhật, hình lập phương | Hình trăng lưỡi liềm                   |
 | Hình tam giác (được tô kín)    | Hình ngôi sao                          |
@@ -76,7 +76,7 @@ $$f(\lambda x + (1-\lambda)y) \le \lambda f(x) + (1-\lambda)f(y)$$
 *với mọi $x, y$ và $\lambda$ trong $[0, 1]$*
 
 | Convex Functions | Non-Convex Functions |
-| :--- | :--- |
+|:---|:---|
 | $f(x) = x^2$ (parabola) | $f(x) = \sin(x)$ |
 | $f(x) = e^x$ | $f(x) = x^3$ (cubic) |
 | $f(x) = |x|$ | $f(x) = -x^2$ (concave) |

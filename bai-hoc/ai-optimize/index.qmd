@@ -48,7 +48,7 @@ Không chỉ học API ONNX / TensorRT / Triton / vLLM. Mục tiêu là hiểu c
 ## Lộ trình nhanh
 
 | Part | Lesson | Thời lượng gợi ý |
-|:-----|:-------|:-----------------|
+|:---|:---|:---|
 | I — Foundations | 1–3 | ~1 tuần |
 | II — Compiler & precision | 4–5 | ~1 tuần |
 | III — Serving & ops | 6–8 | ~1–2 tuần |
@@ -109,7 +109,7 @@ Nói ngắn gọn, đây là chuỗi bài về **AI Optimization cho inference s
 Trong nhiều tài liệu, “optimization” thường bị hiểu hẹp là làm model chạy nhanh hơn. Ở đây khái niệm đó được mở rộng thành nhiều tầng:
 
 | Tầng | Nội dung |
-|:-----|:---------|
+|:---|:---|
 | Model-level | Graph, operator, tensor shape, precision, quantization, memory footprint |
 | Runtime-level | Execution backend, overhead, data movement, CUDA / TensorRT / ONNX Runtime |
 | Hardware-level | GPU execution, Tensor Cores, memory bandwidth, batching, streams, kernel |
@@ -211,7 +211,7 @@ Nếu chưa có GPU, vẫn học được phần lớn concepts, làm ONNX/ORT C
 ### Part I — Foundations of Inference Optimization
 
 | Lesson | Chủ đề | Vai trò |
-|:-------|:-------|:--------|
+|:---|:---|:---|
 | [Lesson 1: Modern GPU Inference Architecture](lesson-01-modern-gpu-inference-architecture.qmd) | GPU inference, latency, throughput, batching, bottlenecks | Mental model: inference system ≠ training system |
 | [Lesson 2: ONNX Fundamentals](lesson-02-onnx-fundamentals.qmd) | ONNX graph, operators, opset, export | Model graph như IR, chuẩn bị cho runtime/compiler |
 | [Lesson 3: ONNX Runtime Deep Dive](lesson-03-onnx-runtime-deep-dive.qmd) | Execution Providers, graph opt, I/O Binding | Runtime thực thi graph trên nhiều backend |
@@ -219,14 +219,14 @@ Nếu chưa có GPU, vẫn học được phần lớn concepts, làm ONNX/ORT C
 ### Part II — Compiler, Precision and Hardware-Aware Optimization
 
 | Lesson | Chủ đề | Vai trò |
-|:-------|:-------|:--------|
+|:---|:---|:---|
 | [Lesson 4: TensorRT Internals](lesson-04-tensorrt-internals.qmd) | Engine, tactics, profiles, FP16/INT8 | TensorRT như inference compiler NVIDIA |
 | [Lesson 5: Quantization Deep Dive](lesson-05-quantization-deep-dive.qmd) | PTQ, QAT, calibration, Q/DQ, INT8/FP8 | Giảm memory/compute, kiểm soát accuracy |
 
 ### Part III — Serving, Benchmarking and Production Operations
 
 | Lesson | Chủ đề | Vai trò |
-|:-------|:-------|:--------|
+|:---|:---|:---|
 | [Lesson 6: NVIDIA Triton Inference Server](lesson-06-nvidia-triton-inference-server.qmd) | Repository, backends, dynamic batching | Từ optimized model → multi-request service |
 | [Lesson 7: Profiling and Benchmarking](lesson-07-profiling-and-benchmarking.qmd) | `trtexec`, Perf Analyzer, Nsight, p99 | Đo đúng, tìm bottleneck bằng số liệu |
 | [Lesson 8: Safe Rollouts & Operations](lesson-08-safe-model-rollouts.qmd) | Canary, A/B, shadow, monitoring, autoscale | Production an toàn và vận hành ổn định |
@@ -234,7 +234,7 @@ Nếu chưa có GPU, vẫn học được phần lớn concepts, làm ONNX/ORT C
 ### Part IV — Advanced Generative Inference and Capstone
 
 | Lesson | Chủ đề | Vai trò |
-|:-------|:-------|:--------|
+|:---|:---|:---|
 | [Lesson 9: LLM & Generative Inference](lesson-09-llm-inference-systems.qmd) | KV cache, continuous batching, vLLM, TRT-LLM | Mở rộng sang LLM/generative serving |
 | [Lesson 10: End-to-End Capstone](lesson-10-end-to-end-capstone.qmd) | Build → optimize → benchmark → operate | Tổng hợp thành project end-to-end |
 

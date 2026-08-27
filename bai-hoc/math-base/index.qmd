@@ -101,7 +101,7 @@ Sau Math Base, dùng [Theory AI](../theory-ai/index.qmd) để ôn lại khái n
 Math Base = đọc kỹ. [Theory AI](../theory-ai/index.qmd) = ôn nhanh + ví dụ số + Python. Vài bài cửa ngõ có callout **Ôn nhanh (Theory AI)**; bản đồ rút gọn:
 
 | Math Base | Theory AI (ôn nhanh + code) |
-|-----------|------------------------------|
+|---|---|
 | [Conditional Probability](01-probability/conditional-probability.qmd), [Phân phối xác suất](01-probability/probability-distributions.qmd) | [Bernoulli](../theory-ai/01-probability/bernoulli-pmf-moments.qmd), [Binomial](../theory-ai/01-probability/binomial-pmf.qmd), [Expected value](../theory-ai/01-probability/expected-value-discrete.qmd) |
 | [Biến ngẫu nhiên & Kỳ vọng](01-probability/random-variables-and-expectation.qmd) | [Expected value](../theory-ai/01-probability/expected-value-discrete.qmd) |
 | [Thống kê mô tả](02-statistics/descriptive-statistics-study-guide.qmd), [One-Sample T-Test](02-statistics/one-sample-t-test.qmd) | [Mean / Median / Mode](../theory-ai/02-statistics/mean-median-mode.qmd), [One-sample t-test](../theory-ai/02-statistics/one-sample-t-test.qmd) |

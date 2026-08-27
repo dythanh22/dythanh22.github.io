@@ -39,7 +39,7 @@ Một tập con của tổng thể được chọn ra để đo lường và ph�
 Trong tài liệu và phỏng vấn, ký hiệu giúp phân biệt giữa giá trị thật chưa biết (Population) và giá trị ước lượng (Sample).
 
 | Chỉ số | Tham số tổng thể | Thống kê mẫu | Quan hệ |
-| :--- | :--- | :--- | :--- |
+|:---|:---|:---|:---|
 | **Kích thước** | $N$ | $n$ | Thường $n \ll N$ |
 | **Trung bình** | $\mu$ (Mu) | $\bar{x}$ (x-bar) | $\bar{x}$ ước lượng $\mu$ |
 | **Phương sai** | $\sigma^2$ | $s^2$ | $s^2$ ước lượng $\sigma^2$ |

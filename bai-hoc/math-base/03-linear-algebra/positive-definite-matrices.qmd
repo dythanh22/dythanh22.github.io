@@ -77,7 +77,7 @@ $$A = LL^T$$
 Phân loại ma trận đối xứng phụ thuộc vào dấu của các giá trị riêng:
 
 | Loại                   | Giá trị riêng           | Dạng toàn phương | Tối ưu               |
-|:-----------------------|:------------------------|:-----------------|:---------------------|
+|:---|:---|:---|:---|
 | **Xác định dương**     | Tất cả $\lambda > 0$    | $x^TAx > 0$      | Cực tiểu duy nhất    |
 | **Bán xác định dương** | Tất cả $\lambda \geq 0$ | $x^TAx \geq 0$   | Không gian cực tiểu  |
 | **Không xác định**     | Dấu hỗn hợp             | Có cả $+$ và $-$ | Điểm yên ngựa        |

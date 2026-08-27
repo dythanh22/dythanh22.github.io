@@ -115,7 +115,7 @@ Generator với $D = 3$ feature, batch $N = 5$ mẫu.
 **Đầu ra generator đã collapse:**
 
 | Sample | Feature 1 | Feature 2 | Feature 3 |
-| --- | --- | --- | --- |
+|---|---|---|---|
 | 1 | 0.51 | 0.82 | 0.34 |
 | 2 | 0.50 | 0.81 | 0.35 |
 | 3 | 0.52 | 0.83 | 0.33 |
@@ -137,7 +137,7 @@ Với ngưỡng $= 0.1$: $0.0067 < 0.1 \Rightarrow \text{is\_collapsed} = \text{
 **Đầu ra generator khỏe mạnh:**
 
 | Sample | Feature 1 | Feature 2 | Feature 3 |
-| --- | --- | --- | --- |
+|---|---|---|---|
 | 1 | 0.23 | 0.91 | 0.67 |
 | 2 | 0.78 | 0.15 | 0.42 |
 | 3 | 0.45 | 0.63 | 0.89 |

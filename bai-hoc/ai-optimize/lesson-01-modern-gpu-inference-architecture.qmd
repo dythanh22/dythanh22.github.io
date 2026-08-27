@@ -27,7 +27,7 @@ Chuỗi này tập trung serving. Nền CNN / Transformer nằm ở [Architectur
 ## Lộ trình bài học
 
 | # | Phần | Trả lời câu hỏi | Thời lượng |
-|:--|:-----|:----------------|:-----------|
+|:---|:---|:---|:---|
 | 1 | Artifact vs service | Vì sao train xong chưa phải xong? | 10 phút |
 | 2 | Vòng đời một request | Thời gian thực sự đi đâu? | 15 phút |
 | 3 | GPU mental model | GPU chạy model thế nào? | 20 phút |
@@ -173,7 +173,7 @@ Inference service trả lời: *Làm sao nhận request từ user, xử lý inpu
 Một inference service thường bao gồm:
 
 | Thành phần | Vai trò |
-|:-----------|:--------|
+|:---|:---|
 | API layer | Nhận request qua HTTP/gRPC/message queue |
 | Input validation | Kiểm tra schema, size, dtype, range, authentication |
 | Preprocessing | Decode ảnh, tokenize text, resize, normalize, pad/truncate |
@@ -236,7 +236,7 @@ flowchart LR
 Giả sử SLO là p99 latency < 100 ms. Một budget ban đầu:
 
 | Thành phần | Budget |
-|:-----------|------:|
+|:---|---:|
 | Network + API parsing | 5 ms |
 | Queueing | 10 ms |
 | Preprocessing | 15 ms |
@@ -255,7 +255,7 @@ Nếu preprocessing thực tế là 45 ms, TensorRT giảm GPU execution từ 40
 Service image classification có breakdown latency đo được:
 
 | Thành phần | Trước TensorRT | Sau TensorRT |
-|:-----------|------:|------:|
+|:---|---:|---:|
 | API parse | 2 ms | 2 ms |
 | Image decode + resize | 35 ms | 35 ms |
 | H2D copy | 3 ms | 3 ms |
@@ -307,7 +307,7 @@ GPU là **throughput machine**: rất nhiều worker đơn giản chạy song so
 CPU và GPU được thiết kế cho hai kiểu workload khác nhau:
 
 | | CPU | GPU |
-|:--|:----|:----|
+|:---|:---|:---|
 | Thiết kế cho | Ít worker linh hoạt, logic phức tạp | Rất nhiều worker, công việc chia đều |
 | Mạnh ở | Branching, control flow, task nhỏ latency thấp | Data parallelism, matmul, tensor ops, bandwidth lớn |
 | Phù hợp | OS, networking, orchestration | Convolution, attention, elementwise song song |
@@ -363,7 +363,7 @@ Với deep learning inference dùng TensorRT hoặc ONNX Runtime, runtime và th
 ### Memory hierarchy
 
 | Bộ nhớ | Đặc điểm | Ghi chú |
-|:-------|:---------|:--------|
+|:---|:---|:---|
 | Registers | Rất nhanh, rất nhỏ | Riêng cho thread |
 | Shared memory | Nhanh, nhỏ | Chia sẻ trong một block |
 | L1/L2 cache | Trung gian | Giảm global memory access |
@@ -422,7 +422,7 @@ Ví dụ đồ thị khái niệm: `Input → Conv → BatchNorm → ReLU → Ma
 ### Vai trò từng lớp
 
 | Công nghệ | Vai trò chính | Không nên hiểu nhầm là |
-|:----------|:--------------|:-----------------------|
+|:---|:---|:---|
 | ONNX | Model representation / interchange format | Một serving server |
 | ONNX Runtime | Runtime chạy ONNX trên nhiều backend | Chỉ dành cho CPU |
 | TensorRT | NVIDIA inference compiler + runtime | Chỉ là Python wrapper |
@@ -442,7 +442,7 @@ Ví dụ đồ thị khái niệm: `Input → Conv → BatchNorm → ReLU → Ma
 Không có stack duy nhất đúng. Tùy use case:
 
 | Stack | Khi nào dùng |
-|:------|:-------------|
+|:---|:---|
 | PyTorch → ONNX → TensorRT → Triton | Production NVIDIA GPU, cần throughput tối đa |
 | PyTorch → ONNX → ORT (CUDA EP) → FastAPI | Cần flexibility, không muốn TRT build time |
 | PyTorch → Torch-TensorRT → TensorRT → Triton | Tránh ONNX export, tích hợp trực tiếp TRT vào PyTorch |
@@ -477,7 +477,7 @@ flowchart LR
 Framework training như PyTorch rất linh hoạt, nhưng linh hoạt không luôn tối ưu nhất cho inference production. TensorRT biến model đã train thành execution plan tối ưu hơn cho GPU NVIDIA qua các bước:
 
 | Khả năng | Ý nghĩa thực tế |
-|:---------|:----------------|
+|:---|:---|
 | Graph cleanup | Bỏ node dư thừa; đơn giản hóa pattern |
 | Layer fusion | Gộp nhiều layer để giảm memory access và kernel launch |
 | Precision optimization | FP16/BF16/INT8/FP8: giảm bandwidth, tăng tốc Tensor Cores |
@@ -546,7 +546,7 @@ Production quan tâm **p99** hơn average. Batching tăng **throughput** nhưng 
 Latency là thời gian từ request sent tới response received.
 
 | Metric | Ý nghĩa |
-|:-------|:--------|
+|:---|:---|
 | Average latency | Trung bình, dễ bị che bởi outlier |
 | Median / p50 | 50% request nhanh hơn giá trị này |
 | p95 | 95% request nhanh hơn giá trị này |
@@ -572,7 +572,7 @@ Ví dụ: 500 RPS × 100 ms = khoảng 50 request đồng thời. Đây chỉ l�
 ### Latency–throughput trade-off
 
 | | Batch size = 1 | Batch size lớn |
-|:--|:---------------|:---------------|
+|:---|:---|:---|
 | Ưu | Không chờ gom batch; latency đơn request thường thấp; dễ reasoning | Tăng arithmetic intensity; tận dụng GPU tốt; throughput cao |
 | Nhược | GPU có thể under-utilized; launch overhead lớn; matmul nhỏ kém hiệu quả | Phải chờ batch/timeout; memory tăng; p99 có thể xấu |
 
@@ -595,7 +595,7 @@ Nếu batch size 3 hiệu quả hơn nhiều so với ba lần batch size 1, thr
 Service object detection có traffic không đều. Bạn bật dynamic batching với max queue delay = 20 ms.
 
 | Metric | Trước batching | Sau batching |
-|:-------|------:|----:|
+|:---|---:|---:|
 | Throughput | 200 RPS | 520 RPS |
 | Average latency | 30 ms | 42 ms |
 | p99 latency | 70 ms | 145 ms |
@@ -666,7 +666,7 @@ flowchart LR
 ```
 
 | Loại bottleneck | Dấu hiệu nhận biết | Cần đo gì | Hướng xử lý |
-|:----------------|:-------------------|:----------|:------------|
+|:---|:---|:---|:---|
 | Compute-bound | GPU compute cao, Tensor Cores bận, tăng batch thì throughput tăng | GPU SM active %, Tensor Core utilization | FP16/BF16/INT8, TensorRT, kernel fusion, shape alignment, đổi architecture |
 | Memory-bound | Bandwidth cao nhưng compute thấp; nhiều elementwise / attention decode | GPU memory bandwidth util | Kernel fusion, layout tối ưu, quantization, KV cache |
 | Transfer-bound | H2D/D2H đáng kể; model nhanh nhưng e2e vẫn chậm | H2D/D2H duration trong profiler | Giảm số lần copy, pinned memory, overlap bằng stream, giữ postprocess trên GPU |
@@ -702,7 +702,7 @@ Ba ví dụ dưới đây minh hoạ ba bẫy phổ biến: tối ưu nhầm ch�
 Service image classification đo được:
 
 | Thành phần | Latency |
-|:-----------|--------:|
+|:---|---:|
 | API parse | 2 ms |
 | Image decode + resize | 35 ms |
 | H2D copy | 3 ms |
@@ -722,7 +722,7 @@ Kết luận: bottleneck thật là image decode + resize (35 ms), không phải
 Service object detection có traffic không đều. Bạn bật dynamic batching với max queue delay = 20 ms.
 
 | Metric | Trước batching | Sau batching |
-|:-------|------:|----:|
+|:---|---:|---:|
 | Throughput | 200 RPS | 520 RPS |
 | Average latency | 30 ms | 42 ms |
 | p99 latency | 70 ms | 145 ms |
@@ -795,7 +795,7 @@ Làm lần lượt Lab 1 → 3. Không cần GPU. Mục tiêu là luyện cách 
 Chọn một model quen thuộc (image classification, object detection, text embedding, speech-to-text). Vẽ theo pipeline xương sống ở @fig-request-pipeline, rồi điền latency giả định:
 
 | Stage | Latency estimate |
-|:------|:-----------------|
+|:---|:---|
 | Validation | ? |
 | Preprocessing | ? |
 | Queueing/batching | ? |
@@ -816,7 +816,7 @@ Câu hỏi:
 Yêu cầu: p99 < 80 ms, throughput ≥ 300 RPS.
 
 | Metric | Value |
-|:-------|------:|
+|:---|---:|
 | Average latency | 45 ms |
 | p99 latency | 120 ms |
 | Throughput max | 280 RPS |
@@ -836,7 +836,7 @@ Bạn ưu tiên gì?
 ### Lab 3: batching trade-off {.unnumbered}
 
 | Batch size | Model latency | Images/sec |
-|:-----------|--------------:|-----------:|
+|:---|---:|---:|
 | 1 | 5 ms | 200 |
 | 2 | 7 ms | 286 |
 | 4 | 11 ms | 364 |
@@ -894,7 +894,7 @@ Gợi ý đáp án:
 ## Glossary {.unnumbered}
 
 | Thuật ngữ | Giải thích ngắn |
-|:----------|:----------------|
+|:---|:---|
 | Inference | Quá trình dùng model đã train để tạo prediction/output |
 | Model artifact | File hoặc object chứa weights/graph/model sau training |
 | Runtime | Thành phần thực thi model, ví dụ ONNX Runtime hoặc TensorRT runtime |

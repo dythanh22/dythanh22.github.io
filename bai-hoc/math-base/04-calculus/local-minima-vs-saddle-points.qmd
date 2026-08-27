@@ -38,7 +38,7 @@ Cả cực tiểu cục bộ và điểm yên ngựa đều là "điểm tới h
 Tại một điểm tới hạn nơi $\nabla f = 0$, ta xét các giá trị riêng của ma trận Hessian ($\lambda_i$) để phân loại:
 
 | Giá trị riêng          | Độ cong                                | Phân loại           |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | Tất cả $\lambda_i > 0$ | Cong lên mọi hướng                     | **Cực tiểu cục bộ** |
 | Tất cả $\lambda_i < 0$ | Cong xuống mọi hướng                   | **Cực đại cục bộ**  |
 | Trái dấu               | Lên ở một số hướng, xuống ở hướng khác | **Điểm yên ngựa**   |

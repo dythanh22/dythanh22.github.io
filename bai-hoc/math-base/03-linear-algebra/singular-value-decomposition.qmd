@@ -106,7 +106,7 @@ Một ảnh $1000 \times 1000$ (1 triệu pixel) có thể được nén bằng 
 ## So sánh: SVD vs. PCA vs. Phân rã trị riêng
 
 | Phương pháp           | Loại ma trận          | Tìm gì                        | Ứng dụng chính                   |
-|:----------------------|:----------------------|:------------------------------|:---------------------------------|
+|:---|:---|:---|:---|
 | **Phân rã trị riêng** | Vuông ($n \times n$)  | Giá trị riêng & vector riêng  | Hệ động lực, phân tích lý thuyết |
 | **SVD**               | Bất kỳ ($m \times n$) | Giá trị kỳ dị & vector        | Nén dữ liệu, nghịch đảo          |
 | **PCA**               | Ma trận dữ liệu       | Thành phần chính              | Giảm chiều                       |

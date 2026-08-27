@@ -114,7 +114,7 @@ Learning rate là siêu tham số quan trọng nhất:
 Lượng dữ liệu dùng cho mỗi lần cập nhật quyết định loại thuật toán:
 
 | Biến thể                 | Dữ liệu mỗi bước   | Ưu điểm                        | Nhược điểm            |
-|:-------------------------|:-------------------|:-------------------------------|:----------------------|
+|:---|:---|:---|:---|
 | **Batch GD**             | Toàn bộ dữ liệu    | Ổn định, gradient chính xác    | Chậm, tốn bộ nhớ      |
 | **Stochastic GD (SGD)**  | Một mẫu            | Nhanh, có nhiễu giúp thoát bẫy | Không ổn định         |
 | **Mini-Batch GD**        | Nhóm nhỏ (32–128)  | Chuẩn thực tế, tối ưu GPU      | Cần tuning batch size |

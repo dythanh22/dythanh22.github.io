@@ -110,7 +110,7 @@ Mô hình “bối rối như thể đang chọn giữa 7 từ có xác suất n
 Perplexity là thước đo tiêu chuẩn để so sánh các mô hình ngôn ngữ trên các bộ dữ liệu như WikiText-103.
 
 | Model        | WikiText-103  | Parameters  |
-|:-------------|:--------------|:------------|
+|:---|:---|:---|
 | GPT-2 Small  | 37.5          | 117M        |
 | GPT-2 Large  | 22.1          | 762M        |
 | GPT-3        | ~20           | 175B        |
@@ -136,7 +136,7 @@ $$PPL = 2^{BPC}$$
 Tối thiểu hóa Perplexity tương đương về mặt toán học với tối thiểu hóa hàm mất mát **Cross-Entropy**.
 
 | Khái niệm         | Định nghĩa       | Ý nghĩa                    |
-| :- | : | :- |
+|:---|:---:|:---|
 | **Entropy**       | $H$              | Số bit cần thiết           |
 | **Cross-Entropy** | $H(p, q)$        | Hàm mất mát khi huấn luyện |
 | **Perplexity**    | $2^H$ hoặc $e^H$ | Số lựa chọn hiệu dụng      |

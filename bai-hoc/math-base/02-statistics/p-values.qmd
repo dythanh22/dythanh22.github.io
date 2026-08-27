@@ -68,7 +68,7 @@ Năm 2016, Hiệp hội Thống kê Hoa Kỳ (ASA) đã đưa ra cảnh báo v�
 ## Cách diễn giải P-value
 
 | Khoảng P-value | Bằng chứng chống $H_0$ | Diễn giải |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | **$P < 0.001$** | Rất mạnh | Rất khó xảy ra nếu $H_0$ đúng |
 | **$0.001 - 0.01$** | Mạnh | Thường bác bỏ $H_0$ |
 | **$0.01 - 0.05$** | Trung bình | “Có ý nghĩa thống kê” |

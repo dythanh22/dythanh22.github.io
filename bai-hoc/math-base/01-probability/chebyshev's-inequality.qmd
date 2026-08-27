@@ -34,7 +34,7 @@ $$P(|X - \mu| \geq k\sigma) \leq \frac{1}{k^2}$$
 ### Bảng tra nhanh
 
 | $k$ (Độ lệch chuẩn) | Giới hạn Chebyshev | Phân phối chuẩn (Thực tế) |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | 1                   | $\leq 100\%$        | ~32%                      |
 | 2                   | $\leq 25\%$         | ~5%                       |
 | 3                   | $\leq 11.1\%$       | ~0.3%                     |

@@ -158,7 +158,7 @@ $$h_G = \text{READOUT}({h_v^{(L)} : v \in V})$$
 ## Tóm Tắt Kiến Trúc
 
 | Mô hình        | Tổng hợp       | Self-Loop                 | Khả năng biểu diễn | Tốt nhất cho                     |      |
-|:---------------|:---------------|:--------------------------|:-------------------|:---------------------------------|------|
+|:---|:---|:---|:---|:---|---|
 | **GCN**        | Tổng chuẩn hóa | Trong ma trận $\tilde{A}$ | Thấp (1-WL)        | Phân loại nút                    |      |
 | **GraphSAGE**  | Mean/Max/LSTM  | Concatenate               | Trung bình         | Quy mô lớn, Inductive            |      |
 | **GAT**        | Attention      | Trong attention           | Trung bình         | Tầm quan trọng hàng xóm thay đổi |      |

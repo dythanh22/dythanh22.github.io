@@ -21,7 +21,7 @@ Bài này không dạy tối ưu TensorRT hay serving Triton. Mục tiêu là hi
 ## Lộ trình bài học
 
 | # | Phần | Trả lời câu hỏi | Thời lượng |
-|:--|:-----|:----------------|:-----------|
+|:---|:---|:---|:---|
 | 1 | ONNX là / không phải gì | Format khác runtime thế nào? | 10 phút |
 | 2 | Cấu trúc ModelProto & graph | File `.onnx` chứa gì? | 15 phút |
 | 3 | Tensor, node, operator, domain | Ai nối với ai trong graph? | 20 phút |
@@ -130,7 +130,7 @@ class MLP(torch.nn.Module):
 Sau export, graph trông giống `Input → Gemm → Relu → Gemm → Output`. Code Python biến mất; thứ còn lại là biểu diễn mà runtime khác đọc được.
 
 | ONNX **không** phải | Hệ quả |
-|:--------------------|:-------|
+|:---|:---|
 | Runtime | Cần ORT, TensorRT, OpenVINO, CoreML, TVM, … để chạy |
 | Đảm bảo nhanh hơn | Tốc độ phụ thuộc backend, ops, shape, batch, dtype, transfer |
 | Đảm bảo mọi PyTorch export được | Control flow, custom ops, data-dependent shape dễ fail hoặc bị specialize |
@@ -169,7 +169,7 @@ ModelProto
 ```
 
 | Thành phần | Ý nghĩa |
-|:-----------|:--------|
+|:---|:---|
 | `ModelProto` | Container cấp cao |
 | `GraphProto` | Computation graph chính |
 | `NodeProto` | Một phép tính (`Conv`, `Relu`, `MatMul`, …) |
@@ -258,7 +258,7 @@ Node B inputs:  ["hidden_1"]
 **Bốn loại tensor trong graph.**
 
 | Loại | Vai trò | Ví dụ |
-|:-----|:--------|:------|
+|:---|:---|:---|
 | **Graph input** | User/runtime cung cấp khi infer | `images: float32[batch,3,224,224]` |
 | **Graph output** | Runtime trả về | `logits: float32[batch,1000]` |
 | **Intermediate** | Giữa các node, không public | `conv_out → relu_out → pool_out` |
@@ -290,7 +290,7 @@ Ba node này dùng cùng operator spec, nhưng là ba lần gọi khác nhau v�
 **Anatomy của `NodeProto`.**
 
 | Field | Ý nghĩa |
-|:------|:--------|
+|:---|:---|
 | `op_type` | `Conv`, `Relu`, `MatMul`, … |
 | `domain` | Namespace (`ai.onnx`, `ai.onnx.ml`, custom) |
 | `input[]` | Tên tensor đầu vào |
@@ -328,7 +328,7 @@ Attributes (cấu hình tĩnh):
 **Operator domain.** ONNX dùng domain để phân biệt operator sets.
 
 | Domain | Ý nghĩa |
-|:-------|:--------|
+|:---|:---|
 | `ai.onnx` / `""` | Standard ops (`Conv`, `Relu`, `MatMul`, …) |
 | `ai.onnx.ml` | Classical ML ops (`LinearRegressor`, …) |
 | Custom | Operator riêng của framework/vendor/user |
@@ -379,7 +379,7 @@ Nếu opset quá mới: runtime/compiler chưa hỗ trợ. Nếu quá cũ: expor
 **Phân biệt các loại version.**
 
 | Version | Ý nghĩa |
-|:--------|:--------|
+|:---|:---|
 | IR version | Format/cấu trúc biểu diễn graph |
 | Opset version | Spec của operators |
 | Model version | Do tác giả đặt (quản lý artifact) |
@@ -408,7 +408,7 @@ Shape/dtype/layout là nguồn lỗi lớn nhất khi export và serve. Dynamic 
 **Static vs dynamic shape.**
 
 | | Static | Dynamic |
-|:--|:-------|:--------|
+|:---|:---|:---|
 | Ví dụ | `float32[1,3,224,224]` | `float32[batch,3,224,224]` |
 | Ưu | Tối ưu dễ, TRT build/memory planning đơn giản | Linh hoạt batch/serving |
 | Nhược | Đổi batch/size → fail | Khó tối ưu; TRT cần min/opt/max profile |
@@ -418,7 +418,7 @@ Shape/dtype/layout là nguồn lỗi lớn nhất khi export và serve. Dynamic 
 **Dtype phổ biến.**
 
 | Dtype | Dùng phổ biến cho |
-|:------|:------------------|
+|:---|:---|
 | `float32` | Inference mặc định |
 | `float16` | GPU inference, TRT FP16 |
 | `bfloat16` | Training, một số inference mới |
@@ -501,7 +501,7 @@ flowchart LR
 ```
 
 | Giai đoạn | Việc xảy ra |
-|:----------|:------------|
+|:---|:---|
 | Capture | Chạy/capture `forward` với example input → graph PyTorch ops |
 | Normalize / decompose | Chuẩn hoá ops PyTorch thành dạng exporter hiểu được |
 | Translate | Map sang ONNX operators + ghi weights / I/O schema |
@@ -543,7 +543,7 @@ with torch.no_grad():
 **Export ≠ save weights.**
 
 | Artifact | Lưu gì? | Chạy ngoài PyTorch? |
-|:---------|:--------|:--------------------|
+|:---|:---|:---|
 | `.pth` state dict | Weights | Không — cần Python class |
 | TorchScript | Graph/module PyTorch | Có, trong ecosystem PyTorch |
 | ONNX | Graph trung lập + weights | Có nếu runtime hỗ trợ ops |
@@ -589,7 +589,7 @@ Runtime cố gán subgraph cho provider chuyên biệt. Phần không chạy đ�
 **Bốn loại graph optimization ORT thực hiện (phải giữ nguyên semantics):**
 
 | Loại | Ví dụ trực giác |
-|:-----|:----------------|
+|:---|:---|
 | Constant folding | `Constant A + Constant B → Constant C` (tính trước) |
 | Dead node elimination | Node tạo output không ai dùng → loại bỏ |
 | Identity elimination | `x → Identity → y` không cần → `x → y` |
@@ -613,7 +613,7 @@ Checker chỉ nói schema hợp lệ. Luôn so **PyTorch vs ORT** trên cùng in
 **Numerical validation — tolerance theo task type.** Khác biệt floating point, fused kernel, backend optimization có thể làm output lệch nhỏ.
 
 | Task | Tolerance gợi ý | Metric thêm |
-|:-----|:----------------|:------------|
+|:---|:---|:---|
 | Classification (FP32) | `rtol=1e-4, atol=1e-5` | Top-1/Top-k, accuracy trên val set |
 | Classification (FP16) | `rtol=1e-2, atol=1e-3` | Top-1/Top-k |
 | Object detection | Metric-level | mAP, NMS output, bbox tolerance |
@@ -626,7 +626,7 @@ Checker chỉ nói schema hợp lệ. Luôn so **PyTorch vs ORT** trên cùng in
 **Lỗi export phổ biến.**
 
 | Vấn đề | Triệu chứng | Hướng xử lý |
-|:-------|:------------|:------------|
+|:---|:---|:---|
 | Shape bị fixed | Muốn batch dynamic nhưng input `[1,3,…]` | Kiểm tra `dynamic_shapes` / key argument `forward` / tránh `x.shape[0]` → Python control flow |
 | Unsupported op | Export hoặc runtime/TRT fail | Tìm op, refactor sang op phổ biến, đổi opset, custom symbolic/plugin |
 | Data-dependent control flow | `if x.sum() > 0` | Refactor tensor ops / `torch.where`; tránh `.item()` / NumPy trong `forward` |
@@ -1172,7 +1172,7 @@ Next action:
 ## Glossary {.unnumbered}
 
 | Thuật ngữ | Giải thích ngắn |
-|:----------|:----------------|
+|:---|:---|
 | ONNX | Open format/spec biểu diễn ML model |
 | ONNX Runtime | Runtime chạy ONNX trên CPU/GPU/accelerators |
 | TensorRT | Compiler/runtime tối ưu inference NVIDIA GPU |

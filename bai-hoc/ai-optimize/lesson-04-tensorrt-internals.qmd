@@ -21,7 +21,7 @@ Hiểu **TensorRT** như **inference compiler + runtime** cho NVIDIA GPU — kh�
 ## Lộ trình bài học
 
 | # | Phần | Trả lời câu hỏi | Thời lượng |
-|:--|:-----|:----------------|:-----------|
+|:---|:---|:---|:---|
 | 1 | TensorRT là / không phải gì | Khác ONNX, ORT, Triton thế nào? | 10 phút |
 | 2 | Objects + build vs runtime | Engine build chậm, inference nhanh vì sao? | 15 phút |
 | 3 | Build pipeline + tactics | Fusion, precision, tactic, workspace, timing cache? | 25 phút |
@@ -132,7 +132,7 @@ flowchart LR
 ```
 
 | Không phải | Hệ quả |
-|:-----------|:-------|
+|:---|:---|
 | ONNX | ONNX = interchange format (graph + weights); TRT = optimizer + runtime NVIDIA |
 | ONNX Runtime | ORT đa EP; TRT native = API / `trtexec`; cũng có TensorRT EP trong ORT |
 | Triton | Triton = serving (HTTP/gRPC, batching, repo, metrics); TRT = engine Triton có thể serve |
@@ -140,7 +140,7 @@ flowchart LR
 Ba cách dùng phổ biến:
 
 | Cách | Luồng |
-|:-----|:------|
+|:---|:---|
 | 1 | ONNX → `trtexec` → `.plan` |
 | 2 | ONNX → TensorRT Python/C++ API → `.plan` |
 | 3 | ONNX Runtime + TensorRT EP (dùng TRT gián tiếp) |
@@ -178,7 +178,7 @@ Nhớ chuỗi: **Builder** (+ NetworkDefinition + BuilderConfig) tạo **engine*
 :::
 
 | Object | Mental model | Việc chính |
-|:-------|:-------------|:-----------|
+|:---|:---|:---|
 | `Builder` | Compiler driver | Nhận network + config (precision, workspace, profiles, timing cache) → serialized engine |
 | `NetworkDefinition` | Graph nội bộ TRT | Từ ONNX Parser hoặc tự `network.add_convolution_nd(...)` / `mark_output` |
 | `BuilderConfig` | Compiler flags | Precision, memory pool/workspace, profiles, timing cache, profiling, compatibility, DLA… |
@@ -226,7 +226,7 @@ flowchart LR
 ```
 
 | Pha | Việc làm |
-|:----|:---------|
+|:---|:---|
 | Build | Parse ONNX, validate, infer shapes, fold constants, fuse, chọn format/precision, benchmark tactics, memory plan, serialize |
 | Runtime | Deserialize, tạo context, allocate buffers, set shape, set addresses, enqueue, sync/copy khi cần |
 
@@ -355,7 +355,7 @@ for each layer or fused subgraph:
 ```
 
 | Cơ chế | Vai trò |
-|:-------|:--------|
+|:---|:---|
 | Workspace / memory pool | Cho phép (hoặc loại) tactic cần buffer tạm lớn |
 | Timing cache | First build: time nhiều tactic → lưu; lần sau reuse → nhanh hơn |
 | Accuracy | Chủ yếu perf; FP16 overflow, INT8 quant error vẫn cần metric |
@@ -392,7 +392,7 @@ max: [32, 3, 224, 224]
 ```
 
 | Trường | Ý nghĩa |
-|:-------|:--------|
+|:---|:---|
 | `min` | Shape nhỏ nhất engine cho phép |
 | `opt` | Shape builder ưu tiên tối ưu performance |
 | `max` | Shape lớn nhất engine cho phép |
@@ -417,7 +417,7 @@ flowchart LR
 Batch cũng là shape dimension (explicit batch). Muốn batch động → profile cho `N` trong `[N,3,224,224]`.
 
 | Tình huống | Gợi ý |
-|:-----------|:------|
+|:---|:---|
 | Traffic chủ yếu batch 1 | `opt` gần batch 1; đừng `opt=32` chỉ vì `max=32` |
 | Real-time batch 1–4 + job 16–64 | Hai profiles, không một range 1–64 |
 | Ảnh 224 và 512 | Profiles tách theo độ phân giải |
@@ -497,7 +497,7 @@ Rule: **profile phản ánh traffic thật** — không tạo profile siêu rộ
 :::
 
 | Precision | Đặc điểm | Khi dùng |
-|:----------|:---------|:---------|
+|:---|:---|:---|
 | FP32 | Baseline accuracy; tốn bandwidth hơn | Reference khi validate |
 | TF32 | Ampere+; range gần FP32, mantissa thấp hơn; thường mặc định một số matmul | Cần reproducibility chặt → kiểm config |
 | FP16 | 16-bit float; Tensor Cores; range nhỏ hơn → overflow/underflow | Optimization đầu tiên nên thử |
@@ -518,7 +518,7 @@ trtexec \
 ```
 
 | Flag | Ý nghĩa |
-|:-----|:--------|
+|:---|:---|
 | `--onnx` | Input ONNX |
 | `--saveEngine` | Output serialized engine |
 | `--shapes` | Shape build/benchmark |
@@ -575,14 +575,14 @@ x_dequant = 1.27
 ```
 
 | Scale | Hệ quả |
-|:------|:-------|
+|:---|:---|
 | Quá nhỏ | Ít rounding cho value nhỏ; dễ clamp value lớn |
 | Quá lớn | Ít clamp value lớn; rounding thô hơn cho value nhỏ |
 
 Calibration / QAT tìm scale khớp distribution thật.
 
 | Phương pháp | Flow | Ưu / nhược |
-|:------------|:-----|:-----------|
+|:---|:---|:---|
 | PTQ | FP32 → calibration set → ước range/scale → INT8 | Nhanh, không retrain; accuracy có thể giảm nếu data kém |
 | QAT | Train với fake-quant → export QDQ ONNX → TRT INT8 | Thường giữ accuracy tốt hơn; cần data + pipeline train |
 | Explicit Q/DQ | `QuantizeLinear`/`DequantizeLinear` trong graph (nội bộ TRT: QuantizeLayer / DequantizeLayer) | Semantics rõ, dễ debug, TRT ít “đoán” |
@@ -650,7 +650,7 @@ D2H Latency: mean = 0.000 ms
 ```
 
 | Metric | Cách đọc |
-|:-------|:---------|
+|:---|:---|
 | Throughput | Inferences/s; batch=8 → phân biệt batch/s vs item/s (`100 batch/s × 8 = 800 images/s`) |
 | Latency | E2E theo config `trtexec`; production quan tâm p95/p99 |
 | GPU Compute Time | Kernels thuần; Latency ≫ compute → copy/CPU/sync/alloc/queue/pre-post |
@@ -784,7 +784,7 @@ context.execute_async_v3(stream_handle=stream_handle)
 ```
 
 | Memory | Ý nghĩa |
-|:-------|:--------|
+|:---|:---|
 | Host | CPU RAM |
 | Device | GPU VRAM — kernels TRT chạy ở đây |
 | H2D / D2H | `CPU → GPU` trước infer; `GPU → CPU` nếu cần trả về host |
@@ -819,7 +819,7 @@ Luôn so `accuracy_metric(TensorRT)` với reference (PyTorch FP32 / ORT FP32 / 
 :::
 
 | Task | Gợi ý so sánh |
-|:-----|:--------------|
+|:---|:---|
 | Classification | top-1/top-k, max/mean abs error, cosine logits |
 | Detection | mAP, box IoU, confidence distribution, NMS diff |
 | Segmentation | mIoU, pixel accuracy, boundary |
@@ -899,7 +899,7 @@ Hầu hết sự cố thuộc vài nhóm: unsupported op, profile/shape mismatch
 ### Debug playbook {.unnumbered}
 
 | Triệu chứng | Nguyên nhân / xử lý đầu |
-|:------------|:------------------------|
+|:---|:---|
 | `No importer registered for op: X` | Opset, simplify, rewrite, GraphSurgeon, plugin, split/ORT TRT EP fallback |
 | Shape outside profile / `set_input_shape` fail | Shape trong `[min,max]`; đúng profile index & input name; set shape trước execute |
 | Build rất chậm | Timing cache; thu hẹp/bớt profiles; build offline CI; không build trên request path |
@@ -990,14 +990,14 @@ Triton thêm: scheduling, dynamic batching, concurrent execution, versioning, me
 ### Best practices và misconceptions {.unnumbered}
 
 | Nhóm | Thực hành |
-|:-----|:----------|
+|:---|:---|
 | Build | Offline; lưu engine + metadata; timing cache; profile theo traffic; workspace đủ; validate sớm bằng `trtexec` |
 | Precision | FP32 baseline → FP16 trước INT8; validate sau mỗi đổi; INT8: data đại diện hoặc QAT; ưu tiên Q/DQ |
 | Runtime | Deserialize một lần; reuse context/buffers; tránh alloc/copy thừa; stream + sync đúng |
 | Profiling | `trtexec` trước app; dump layer/profile; Nsight; tách compute vs H2D/D2H; p50/p95/p99 |
 
 | Hiểu nhầm | Thực tế |
-|:----------|:--------|
+|:---|:---|
 | TRT luôn nhanh hơn mọi runtime | Phụ thuộc model, shape, precision, HW, transfer, app |
 | Bật FP16 = mọi layer FP16 | Có thể chọn theo layer |
 | INT8 chỉ cần `--int8` | Cần scale / calibration / QDQ + validate |
@@ -1113,7 +1113,7 @@ Tìm: layer % latency cao nhất; layer vẫn FP32; reformat; tên tactic; bottl
 Deliverables: `model.onnx`, `model_fp32.plan`, `model_fp16.plan`, `model_dynamic_fp16.plan`, `benchmark_results.md`, `accuracy_report.md` (INT8 optional).
 
 | Engine | Shape | Precision | Median | P99 | Throughput | GPU compute | Notes |
-|:-------|:------|:----------|-------:|----:|-----------:|------------:|:------|
+|:---|:---|:---|---:|---:|---:|---:|:---|
 | ORT CUDA | 1×3×224×224 | FP32 | | | | | |
 | TRT | 1×3×224×224 | FP32 | | | | | |
 | TRT | 1×3×224×224 | FP16 | | | | | |
@@ -1165,7 +1165,7 @@ Câu hỏi phản tư:
 ## Glossary {.unnumbered}
 
 | Thuật ngữ | Giải thích ngắn |
-|:----------|:----------------|
+|:---|:---|
 | TensorRT | SDK NVIDIA optimize + chạy inference trên GPU NVIDIA |
 | Engine / plan file | Compiled model serialize (`.plan` / `.engine` / `.trt`) |
 | Builder | Compiler driver tạo engine |

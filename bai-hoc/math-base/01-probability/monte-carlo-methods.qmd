@@ -63,7 +63,7 @@ $$\text{Sai số} \propto \frac{1}{\sqrt{N}}$$
 Các phương pháp dạng lưới tăng chi phí theo cấp số nhân khi số chiều tăng. Monte Carlo thì không.
 
 | Số chiều             | Điểm lưới (10/trục)    | Monte Carlo |
-| :------------------- | :--------------------- | :---------- |
+|:---|:---|:---|
 | 1D (đường thẳng)     | 10                     | ~100        |
 | 3D (khối lập phương) | 1,000                  | ~100        |
 | 10D                  | 10 tỷ                  | ~1,000      |

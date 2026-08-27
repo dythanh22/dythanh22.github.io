@@ -22,7 +22,7 @@ aliases:
 ## Lộ trình bài học
 
 | # | Phần | Trả lời câu hỏi | Thời lượng |
-|:--|:-----|:----------------|:-----------|
+|:---|:---|:---|:---|
 | 1–2 | Vì sao đo / metrics | Tool nào cho câu hỏi nào? Latency đo ở đâu? | 20 phút |
 | 3–4 | p99, knee, methodology | SLO fail dù mean đẹp? Warmup? Control variables? | 20 phút |
 | 5 | trtexec | Engine ceiling, H2D/enqueue, layer profile? | 25 phút |
@@ -87,7 +87,7 @@ Benchmarking without bottleneck analysis is just number collection.
 ## Prerequisites {.unnumbered}
 
 | Chủ đề | Cần nắm |
-|:-------|:--------|
+|:---|:---|
 | Shape / batch | Tensor shape, batch dimension |
 | ONNX | Input/output names |
 | TensorRT | Engine, optimization profile (Lesson 4) |
@@ -127,7 +127,7 @@ Client → (serialization, network) → Triton frontend
 Engine nhanh trong `trtexec` nhưng Triton chậm thường vì: concurrency thấp, batching không gom được, serialize/preprocess đắt, output copy lớn, network, `instance_group` chưa khớp, queue lâu, hoặc GPU chia sẻ.
 
 | Câu hỏi | Tool phù hợp | Điều bạn đo được |
-|:--------|:-------------|:-----------------|
+|:---|:---|:---|
 | TensorRT engine chạy nhanh nhất khoảng bao nhiêu? | `trtexec` | latency/throughput engine-level |
 | Layer nào trong engine tốn thời gian nhất? | `trtexec --dumpProfile` | per-layer runtime |
 | Triton service đạt throughput bao nhiêu với concurrency N? | Perf Analyzer | service throughput, client/server latency |
@@ -140,7 +140,7 @@ Engine nhanh trong `trtexec` nhưng Triton chậm thường vì: concurrency th�
 | Model version mới làm performance regress không? | Benchmark report + CI | baseline comparison |
 
 | Category | Ví dụ biến |
-|:---------|:-----------|
+|:---|:---|
 | Model / artifact | ONNX opset, precision, dynamic shape profile |
 | Runtime | TensorRT / ORT version, CUDA Graph, I/O Binding |
 | Serving | `max_batch_size`, dynamic batching, `instance_group` |
@@ -171,7 +171,7 @@ Latency chỉ có nghĩa khi kèm **điểm đo**. Throughput phải kèm batch 
 :::
 
 | Điểm đo | Định nghĩa |
-|:--------|:-----------|
+|:---|:---|
 | Client-side latency | Client send start → client nhận response |
 | Server-side latency | Server nhận request → server gửi response |
 | Backend compute | Backend bắt đầu → output sẵn sàng |
@@ -182,7 +182,7 @@ Câu hỏi bắt buộc kèm: đo ở đâu? Có network / serialization / queue
 **Throughput** thường báo dạng requests/s, inferences/s, samples/s, tokens/s, images/s. Ví dụ: batch = 8 và 100 rps → **800 samples/s**. Báo throughput mà không nói batch là thiếu ngữ cảnh.
 
 | Khái niệm | Ý nghĩa |
-|:----------|:--------|
+|:---|:---|
 | **Concurrency** | Số request outstanding cùng lúc (vd. 1 vs 32) |
 | **Batch size** | Số samples trong một request / một batch execution |
 | **Request rate** | Tốc độ client cố tình gửi (vd. 500 rps) — mô phỏng arrival |
@@ -190,7 +190,7 @@ Câu hỏi bắt buộc kèm: đo ở đâu? Có network / serialization / queue
 Triton dynamic batching có thể gom nhiều request (concurrency cao) thành một batch execution lớn hơn.
 
 | Percentile | Ý nghĩa |
-|:-----------|:--------|
+|:---|:---|
 | p50 | 50% request ≤ giá trị |
 | p90 / p95 | 90% / 95% request ≤ giá trị |
 | p99 / p999 | 99% / 99.9% request ≤ giá trị |
@@ -222,14 +222,14 @@ SLO thường gắn **p99**, không phải mean. Gần saturation, latency ≈ s
 SLO giả định: **p99 < 100 ms**.
 
 | Run | mean | p50 | p95 | p99 | Kết luận |
-|:----|-----:|----:|----:|----:|:---------|
+|:---|---:|---:|---:|---:|:---|
 | A | 25 ms | 20 | 60 | **180** | **FAIL** SLO |
 | B | 30 ms | 26 | 70 | **95** | **PASS** |
 
 Run A mean tốt hơn nhưng fail; Run B mean xấu hơn nhưng đạt SLO.
 
 | Vùng | Đặc điểm | Hành động |
-|:-----|:---------|:----------|
+|:---|:---|:---|
 | **Underutilized** | Concurrency thấp, GPU chưa fill, TP thấp, latency thấp | Tăng concurrency/batch để lấy throughput |
 | **Knee** | TP gần plateau, latency tăng rõ, gần saturation | Thường là **operating point** tốt nếu SLO cho phép |
 | **Overload** | TP không tăng, latency/p99/queue tăng mạnh, timeout | Không vận hành ổn định ở đây |
@@ -258,7 +258,7 @@ flowchart LR
 ## Nguyên nhân tail latency thường gặp
 
 | Nguyên nhân | Ghi chú |
-|:------------|:--------|
+|:---|:---|
 | Queueing / dynamic batch delay | Gần saturation hoặc max queue delay lớn |
 | GPU shared / thermal / power | Jitter định kỳ |
 | CPU preprocess không ổn định | GC, malloc, logging |
@@ -291,7 +291,7 @@ trtexec --loadEngine=model_fp16.plan --shapes=input:8x3x224x224
 ```
 
 | Thời lượng | Mục đích |
-|:-----------|:---------|
+|:---|:---|
 | 30–60 s / config | Dev iteration nhanh |
 | Vài phút × nhiều lần | Baseline nghiêm túc |
 | Soak dài | Production readiness |
@@ -340,7 +340,7 @@ trtexec --onnx=resnet50-v1-12.onnx --shapes=data:4x3x224x224 --fp16 \
 `--noDataTransfers` tập trung GPU compute; production nếu copy PCIe mỗi request thì **cũng** phải bench có transfer. `--useCudaGraph` giảm launch overhead; `--useSpinWait` ổn định latency hơn (CPU busy hơn).
 
 | Metric | Ý nghĩa | Nếu cao thì nghĩ tới |
-|:-------|:--------|:---------------------|
+|:---|:---|:---|
 | Throughput | tốc độ inference | so với SLO và batch |
 | Host Latency | H2D + GPU + D2H | end-to-end engine path |
 | Enqueue | CPU enqueue/launch | CPU bottleneck, tiny kernels, thiếu CUDA Graph |
@@ -351,7 +351,7 @@ trtexec --onnx=resnet50-v1-12.onnx --shapes=data:4x3x224x224 --fp16 \
 | Total GPU Compute | tổng GPU time | so với walltime → độ fill |
 
 | Case | Pattern | Hướng xử lý |
-|:-----|:--------|:------------|
+|:---|:---|:---|
 | A | GPU ≈ Host; H2D/D2H/Enqueue nhỏ | Precision, batch, fusion, architecture, layer profile |
 | B | H2D hoặc D2H lớn | Giữ tensor trên GPU, I/O Binding/shared mem, giảm output, pinned |
 | C | Enqueue > GPU Compute | CUDA Graph, tăng batch, fusion, tránh sync, async |
@@ -458,7 +458,7 @@ flowchart LR
 ## Đọc Perf Analyzer theo 6 câu hỏi + HTTP/gRPC + MA report
 
 | # | Câu hỏi | Tín hiệu |
-|:--|:--------|:---------|
+|:---|:---|:---|
 | Q1 | TP còn tăng khi concurrency tăng? | Tăng nhẹ latency → chưa saturated; plateau + latency↑ mạnh → gần/overload |
 | Q2 | p99 vượt SLO? | p50 tốt / p99 xấu → queue, jitter, batching, outlier |
 | Q3 | Server Queue tăng? | Tăng instance, chỉnh batch delay, giảm target concurrency, scale, tối ưu compute |
@@ -523,7 +523,7 @@ perf_analyzer -m resnet50 -i grpc --concurrency-range 8
 CPU timeline xem: client/server/backend/Python threads, CUDA API, sync, NVTX. GPU timeline xem: kernels, memcpy H2D/D2H, streams, idle gaps.
 
 | Pattern timeline | Gợi ý |
-|:-----------------|:------|
+|:---|:---|
 | Gap giữa kernels | GPU chờ CPU launch hoặc data |
 | Nhiều tiny kernels (10 µs + gap 30 µs) | Launch overhead → fusion / CUDA Graph |
 | H2D→kernels→D2H lặp | Copy về CPU giữa pipeline |
@@ -563,7 +563,7 @@ Chuỗi bắt buộc: **symptom → metric evidence → hypothesis → experimen
 :::
 
 | Triệu chứng | Bằng chứng | Nguyên nhân có thể | Hành động |
-|:------------|:-----------|:-------------------|:----------|
+|:---|:---|:---|:---|
 | `trtexec` nhanh, Triton chậm | PA queue/client latency cao | service, batching, network, config | PA breakdown, metrics, config sweep |
 | GPU util thấp, latency cao | GPU thấp + CPU busy / client high | CPU/network/preprocess | profile CPU, gRPC, tối ưu preprocess |
 | GPU util thấp, TP thấp | concurrency/batch thấp | không đủ load | tăng concurrency/batch/dynamic batch |
@@ -608,7 +608,7 @@ Correctness trước performance. Workflow: env → `trtexec` shapes → Triton 
 :::
 
 | Step | Việc làm | Lệnh / ghi chú chính |
-|:-----|:---------|:---------------------|
+|:---|:---|:---|
 | 0 | Correctness | ONNX≈PT, TRT≈ONNX, INT8 accuracy, Triton shape/type |
 | 1 | Environment | `nvidia-smi` + print TensorRT/ORT versions |
 | 2 | Baseline `trtexec` | build FP16 dynamic; loop batch 1…32 + dumpProfile |
@@ -621,7 +621,7 @@ Correctness trước performance. Workflow: env → `trtexec` shapes → Triton 
 | 11 | Report | reproducible: env, tables, curve, bottleneck, recommendation |
 
 | Mistake | Sai | Đúng |
-|:--------|:----|:-----|
+|:---|:---|:---|
 | 1 | “Latency = 5 ms” | Nêu tool, batch, shape, precision, có/không transfer |
 | 2 | FP16 trên A100 vs INT8 trên T4 | Cùng GPU/driver/TRT/input/batch/concurrency |
 | 3 | Max TP bỏ p99 | Maximize TP **subject to** p99 SLO |
@@ -718,7 +718,7 @@ Lab 1 làm được không GPU. Lab 2–4 cần TensorRT / Triton / Nsight khi c
 Tạo `benchmark_ledger.md` với Environment (Date, Machine, GPU, Driver, CUDA, TRT, Triton, ORT, Model, artifact, precision, shape, batch, profile, notes) và Experiment Matrix:
 
 | ID | Tool | Config | Metric target | Result | Notes |
-|:---|:-----|:-------|:--------------|:-------|:------|
+|:---|:---|:---|:---|:---|:---|
 | E001 | trtexec | FP16 batch=1 | latency | | |
 | E002 | trtexec | FP16 batch=8 | throughput | | |
 | E003 | perf_analyzer | concurrency 1:64 | p99 | | |
@@ -874,7 +874,7 @@ Deploy `model_fp16.plan` with:
 ## Glossary {.unnumbered}
 
 | Thuật ngữ | Định nghĩa |
-|:----------|:-----------|
+|:---|:---|
 | **Benchmark** | Đo performance theo methodology cụ thể |
 | **Profiling** | Phân tích nơi thời gian/tài nguyên bị tiêu thụ |
 | **Latency** | Thời gian từ start tới finish (cần nêu điểm đo) |

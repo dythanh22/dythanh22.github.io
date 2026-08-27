@@ -99,7 +99,7 @@ Dù trông giống nhau, chúng trả lời hai câu hỏi khác nhau:
 ## A/B Testing: So sánh thực tế
 
 | Đặc điểm | Frequentist A/B Testing | Bayesian A/B Testing |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | **Thiết lập** | Phải định trước kích thước mẫu | Bắt đầu với prior |
 | **Kết quả** | Nhị phân: Có ý nghĩa / Không | Liên tục: “92% khả năng B tốt hơn” |
 | **Peeking** | Không được phép | Cho phép (cập nhật liên tục) |
@@ -128,7 +128,7 @@ Tư duy Bayesian đã được tích hợp trong ML:
 ## Khi nào dùng cái nào?
 
 | Tình huống | Nên dùng | Lý do |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | Dataset lớn, cần khách quan | **Frequentist** | Prior không còn quan trọng |
 | Dataset nhỏ + domain knowledge | **Bayesian** | Prior giúp ổn định |
 | Quyết định realtime | **Bayesian** | Cập nhật liên tục |

@@ -43,7 +43,7 @@ $$CI = \bar{x} \pm (z^* \times \frac{\sigma}{\sqrt{n}})$$
 
 
 | Mức tin cậy | Alpha (phần đuôi) | Giá trị tới hạn ($z^*$) |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | 90% | 0.10 | 1.645 |
 | 95% | 0.05 | 1.960 |
 | 99% | 0.01 | 2.576 |
@@ -54,7 +54,7 @@ $$CI = \bar{x} \pm (z^* \times \frac{\sigma}{\sqrt{n}})$$
 Việc chọn phân phối phù hợp là rất quan trọng:
 
 | Trường hợp | Phân phối | Công thức |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | **Mẫu lớn ($n \ge 30$)** hoặc biết $\sigma$ | Phân phối Z (chuẩn) | $\bar{x} \pm z^* \frac{\sigma}{\sqrt{n}}$ |
 | **Mẫu nhỏ ($n < 30$)** và không biết $\sigma$ | Phân phối t (Student) | $\bar{x} \pm t^* \frac{s}{\sqrt{n}}$ |
 

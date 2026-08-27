@@ -26,7 +26,7 @@ Các mạng nơ-ron truyền thống giả định dữ liệu có cấu trúc c
 Làm phẳng một đồ thị thành vector đặc trưng cho một MLP tiêu chuẩn sẽ làm mất thông tin quan trọng.
 
 | Vấn Đề Khi Làm Phẳng                                               | GNNs Cung Cấp                                                        |
-|:-------------------------------------------------------------------|:---------------------------------------------------------------------|
+|:---|:---|
 | Đồ thị có kích thước thay đổi và không có chiều đầu vào cố định.   | Xử lý đồ thị với kích thước tùy ý.                                   |
 | Thứ tự các nút là tùy ý; tồn tại vô số hoán vị.                    | Bất biến/đồng biến theo hoán vị (Permutation invariant/equivariant). |
 | Ma trận kề có độ phức tạp $O(n^2)$ và phần lớn là số 0.            | Mở rộng theo số cạnh thay vì bình phương số nút.                     |
@@ -124,7 +124,7 @@ Việc chồng nhiều lớp mở rộng khoảng cách mà thông tin có thể
 ## Các Kiến Trúc Phổ Biến
 
 | Kiến trúc     | Ý tưởng chính                            | Cơ chế tổng hợp             |
-|:--------------|:-----------------------------------------|:----------------------------|
+|:---|:---|:---|
 | **GCN**       | Xấp xỉ spectral convolution              | Tổng chuẩn hóa              |
 | **GraphSAGE** | Lấy mẫu hàng xóm, học inductive          | Mean/LSTM/Pool              |
 | **GAT**       | Attention trên hàng xóm                  | Tổng có trọng số (học được) |

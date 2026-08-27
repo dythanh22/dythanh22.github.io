@@ -40,7 +40,7 @@ $$f(\theta) \text{ is convex if } f(\alpha\theta_1 + (1-\alpha)\theta_2) \leq \a
 ### Phân Loại Bài Toán
 
 | Bài Toán Lồi ✓              | Bài Toán Không Lồi ✗          |
-|:----------------------------|:------------------------------|
+|:---|:---|
 | Linear/Ridge regression     | Neural networks (mọi độ sâu)  |
 | Logistic regression         | Matrix factorization          |
 | Support Vector Machines     | Hầu hết mô hình deep learning |
@@ -71,7 +71,7 @@ Tại một critical point, ma trận Hessian có $n$ eigenvalue (mỗi chiều 
 Không phải mọi cực tiểu đều như nhau. **Flat minima (cực tiểu phẳng)** thường tổng quát hóa tốt hơn **sharp minima (cực tiểu sắc nhọn)**.
 
 | Flat Minimum                                                          | Sharp Minimum                                          |
-|:----------------------------------------------------------------------|:-------------------------------------------------------|
+|:---|:---|
 | **Eigenvalue Hessian nhỏ** - độ cong nhẹ                              | **Eigenvalue Hessian lớn** - độ cong dốc               |
 | **Ổn định với nhiễu** - nhiễu tham số ít ảnh hưởng                    | **Nhạy với nhiễu** - thay đổi nhỏ gây tăng loss mạnh   |
 | **Tổng quát hóa tốt hơn** - thường có test error thấp hơn             | **Có thể overfit** - ghi nhớ dữ liệu huấn luyện        |

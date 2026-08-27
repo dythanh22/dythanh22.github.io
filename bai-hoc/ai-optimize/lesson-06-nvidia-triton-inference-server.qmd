@@ -21,7 +21,7 @@ Hiểu **NVIDIA Triton** như inference **serving system** thật — không ch�
 ## Lộ trình bài học
 
 | # | Phần | Trả lời câu hỏi | Thời lượng |
-|:--|:-----|:----------------|:-----------|
+|:---|:---|:---|:---|
 | 1 | Vì sao Triton / mental model | Khác TRT, ORT, FastAPI thế nào? | 15 phút |
 | 2 | Repository + `config.pbtxt` | Layout, `max_batch_size`, I/O dims? | 20 phút |
 | 3 | Backends + protocols | TRT vs ONNX vs Python; HTTP/gRPC? | 15 phút |
@@ -122,7 +122,7 @@ client → HTTP/gRPC → frontend → per-model scheduler
 ```
 
 | Công cụ | Vai trò | Liên quan Triton |
-|:--------|:--------|:-----------------|
+|:---|:---|:---|
 | ONNX | IR / interchange | Serve qua ORT backend |
 | ONNX Runtime | Chạy ONNX | Có ORT backend |
 | TensorRT | Compiler/runtime NVIDIA | Serve `.plan` |
@@ -173,7 +173,7 @@ flowchart TB
 ```
 
 | Lớp | Việc |
-|:----|:-----|
+|:---|:---|
 | Frontend | Protocol, model name/version, tensor metadata |
 | Scheduler | Khi nào chạy; có batch với request khác không |
 | Backend | Gọi TRT / ORT / PyTorch / Python / custom |
@@ -294,14 +294,14 @@ output [
 ```
 
 | Field | Ý nghĩa |
-|:------|:--------|
+|:---|:---|
 | `name` | Nên trùng tên thư mục; set rõ cho đọc được |
 | `backend` / `platform` | Loại runtime; hiện đại đọc docs backend |
 | `max_batch_size` | Batch tối đa Triton được tạo; `0` = không batching |
 | `input`/`output` | `name`, `data_type`, `dims` khớp model |
 
 | Artifact | Khai báo thường gặp | File |
-|:---------|:--------------------|:-----|
+|:---|:---|:---|
 | ONNX | `backend: "onnxruntime"` | `model.onnx` |
 | TensorRT | `platform: "tensorrt_plan"` | `model.plan` |
 | Python | `backend: "python"` | `model.py` |
@@ -348,7 +348,7 @@ torch.onnx.export(
 :::
 
 | Backend | Artifact | Ưu | Nhược |
-|:--------|:---------|:---|:------|
+|:---|:---|:---|:---|
 | TensorRT | `model.plan` | Latency/throughput tốt; fusion/tactics/precision | Portability; profiles; build phức tạp |
 | ONNX Runtime | `model.onnx` | Dễ deploy; CPU/GPU | Có thể chậm hơn TRT; fallback EP |
 | PyTorch | `model.pt` | Gần training stack | Thường không tối ưu bằng TRT |
@@ -373,7 +373,7 @@ output [{ name: "logits" data_type: TYPE_FP32 dims: [ 1000 ] }]
 ## Protocols và client
 
 | Port (mặc định) | Vai trò |
-|:----------------|:--------|
+|:---|:---|
 | `:8000` | HTTP inference / health / model metadata |
 | `:8001` | gRPC |
 | `:8002` | Prometheus metrics |
@@ -415,7 +415,7 @@ Trực giác gom batch:
 `dynamic_batching { }` = bước đầu: **không chờ mãi** đến khi đầy `max_batch_size`. Delay dài hơn → batch lớn hơn → thr↑, rủi ro p99↑.
 
 | Có ích khi | Ít ích khi |
-|:-----------|:-----------|
+|:---|:---|
 | Nhiều request batch-1 | Traffic thấp |
 | GPU chưa saturate | Model không batch / shape lệch nhiều |
 | SLO cho phép delay nhỏ | Pre/post là bottleneck; p99 quá chặt |
@@ -438,7 +438,7 @@ dynamic_batching {
 ```
 
 | Tham số | Ý nghĩa |
-|:--------|:--------|
+|:---|:---|
 | `max_batch_size` | Batch tối đa; quá lớn → latency/memory/profile spike |
 | `max_queue_delay_microseconds` | Giữ request chờ thêm peer; dài hơn → batch lớn hơn, p99 rủi ro hơn |
 | `preferred_batch_size` | Ưu tiên các batch “ngon”; không đặt mặc định |
@@ -633,7 +633,7 @@ Repo cần đủ 4 model dirs; ensemble version dir có thể có file placehold
 :::
 
 | Chọn ORT khi | Chọn TRT khi |
-|:-------------|:-------------|
+|:---|:---|
 | Deploy nhanh, đang experiment | Latency/throughput GPU critical |
 | ONNX đã validate | Architecture hỗ trợ TRT tốt |
 | Perf đã đủ SLO | Benchmark thấy lợi rõ + CI build engine |
@@ -671,7 +671,7 @@ Control modes: **`none`** (load hết lúc start, immutable — thường tốt 
 :::
 
 | Mode | Hành vi | Khi dùng |
-|:-----|:--------|:---------|
+|:---|:---|:---|
 | `none` | Load all lúc start; ignore FS changes | Prod đơn giản, immutable repo/pod |
 | `explicit` | Load theo `--load-model` + API | Nhiều model, on-demand, controlled reload |
 | `poll` | Poll repo định kỳ | Chỉ khi atomic update được kiểm soát chặt |
@@ -720,7 +720,7 @@ curl localhost:8002/metrics
 ```
 
 | Metric group | Đọc gì |
-|:-------------|:-------|
+|:---|:---|
 | Request success/fail | Error rate |
 | Queue duration | Serving/scheduler bottleneck |
 | Compute input duration | Copy / data movement vào compute |
@@ -787,7 +787,7 @@ perf_analyzer -m tiny_classifier_onnx -b 4 --concurrency-range 1:64:4
 **Scenarios so sánh:**
 
 | Scenario | Client batch | Dyn batch |
-|:---------|:------------:|:---------:|
+|:---|:---:|:---:|
 | A | 1 | bật |
 | B | 4 | tắt |
 | C | 4 | bật |
@@ -812,7 +812,7 @@ Workflow: định nghĩa candidates → chạy Model Analyzer → so thr vs lat 
 :::
 
 | Triệu chứng | Kiểm tra đầu |
-|:------------|:-------------|
+|:---|:---|
 | Model không load | Log Triton; path file; `config.pbtxt`; backend; I/O names; plan/CUDA version |
 | Shape mismatch | `max_batch_size` vs dims; client gửi `[B]+dims` đúng chưa |
 | Dyn batch “không chạy” | `max_batch_size>0`? có `dynamic_batching`? shapes compatible? traffic đủ? |
@@ -1130,7 +1130,7 @@ grep tiny_classifier_onnx metrics.txt | head -50
 Tìm: success/fail, queue, compute input/infer/output, execution/inference count.
 
 | Case | Quan sát | Ý nghĩa |
-|:-----|:---------|:--------|
+|:---|:---|:---|
 | A | queue↑ infer↓ | Scheduler / instances / traffic |
 | B | infer↑ GPU↑ | Model/backend compute |
 | C | compute input↑ | Data movement |
@@ -1153,11 +1153,11 @@ Tìm: success/fail, queue, compute input/infer/output, execution/inference count
 
 ## Configs tested
 | Config | Backend | Dyn batch | Instances | Max batch | Delay |
-|:-------|:--------|:---------:|:---------:|:---------:|------:|
+|:---|:---|:---:|:---:|:---:|---:|
 
 ## Benchmark results
 | Config | thr | p50 | p95 | p99 | GPU util | mem | Notes |
-|:-------|----:|----:|----:|----:|---------:|----:|:------|
+|:---|---:|---:|---:|---:|---:|---:|:---|
 
 ## Analysis
 - Best thr / best lat / production candidate
@@ -1205,7 +1205,7 @@ Tìm: success/fail, queue, compute input/infer/output, execution/inference count
 ## Glossary {.unnumbered}
 
 | Thuật ngữ | Giải thích ngắn |
-|:----------|:----------------|
+|:---|:---|
 | Triton Inference Server | Server serve inference đa backend/model |
 | Model repository | FS layout: artifact + config + versions |
 | `config.pbtxt` | Cấu hình model Triton |

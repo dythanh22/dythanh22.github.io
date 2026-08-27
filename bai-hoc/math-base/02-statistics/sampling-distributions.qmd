@@ -64,7 +64,7 @@ $$\sigma_{\bar{x}} = \frac{\sigma}{\sqrt{n}}$$
 Đây là câu hỏi phỏng vấn rất phổ biến:
 
 | Chỉ số | Ký hiệu | Công thức | Ý nghĩa |
-| :--- | :--- | :--- | :--- |
+|:---|:---|:---|:---|
 | **Độ lệch chuẩn** | $\sigma$ hoặc $s$ | $\sigma$ | Độ biến thiên của **dữ liệu cá nhân** |
 | **Sai số chuẩn** | $SE$ hoặc $\sigma_{\bar{x}}$ | $\frac{\sigma}{\sqrt{n}}$ | Độ biến thiên của **trung bình mẫu** |
 

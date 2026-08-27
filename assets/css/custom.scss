@@ -560,17 +560,6 @@ nav.page-navigation {
   color: var(--bs-secondary-color);
 }
 
-.sidebar-navigation a.sidebar-link.is-read {
-  color: var(--bs-secondary-color);
-}
-
-.sidebar-navigation a.sidebar-link.is-read::after {
-  content: " ✓";
-  font-size: 0.75em;
-  opacity: 0.7;
-  font-weight: 600;
-}
-
 .series-completion {
   margin: 2rem 0 1rem;
   padding: 1rem 1.15rem;
@@ -584,12 +573,6 @@ nav.page-navigation {
 .series-completion strong {
   display: block;
   margin-bottom: 0.35rem;
-}
-
-.series-completion .series-completion-stats {
-  color: var(--bs-secondary-color);
-  font-size: 0.875rem;
-  margin: 0.35rem 0 0.75rem;
 }
 
 // About

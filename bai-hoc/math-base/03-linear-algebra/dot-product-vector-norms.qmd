@@ -179,7 +179,7 @@ Các thuật toán như KNN và K-Means dựa vào khoảng cách L2: $||\mathbf
 ## Xem xét tính toán
 
 | Phép toán                  | Độ phức tạp thời gian  |
-|:---------------------------|:-----------------------|
+|:---|:---|
 | Tích vô hướng ($n$-chiều)  | $O(n)$                 |
 | Tính chuẩn                 | $O(n)$                 |
 

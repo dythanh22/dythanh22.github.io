@@ -77,7 +77,7 @@ $$\log(P_1 \cdot P_2) = \log(P_1) + \log(P_2)$$
 ### Ví dụ về hàm lượng thông tin
 
 | Xác suất $P(x)$ | Thông tin $I(x)$ | Diễn giải                 |
-| :-- | : | : |
+|:---|:---:|:---:|
 | **1.0**         | 0 bits           | Chắc chắn: Không bất ngờ  |
 | **0.5**         | 1 bit            | Tung đồng xu công bằng    |
 | **0.001**       | 9.97 bits        | Sự kiện hiếm: Rất bất ngờ |

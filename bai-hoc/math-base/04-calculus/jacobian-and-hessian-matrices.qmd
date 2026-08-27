@@ -27,7 +27,7 @@ Trong giải tích một biến, ta có $f'(x)$ (đạo hàm bậc nhất/độ 
 Loại đạo hàm phụ thuộc vào số chiều đầu vào và đầu ra:
 
 | Đầu vào               | Đầu ra                | Đạo hàm              | Kích thước    |
-|:----------------------|:----------------------|:---------------------|:--------------|
+|:---|:---|:---|:---|
 | Vô hướng ($x$)        | Vô hướng ($y$)        | Đạo hàm              | $1 \times 1$  |
 | Vector ($\mathbf{x}$) | Vô hướng ($y$)        | Gradient             | $n \times 1$  |
 | Vector ($\mathbf{x}$) | Vector ($\mathbf{y}$) | **Jacobian**         | $m \times n$  |

@@ -16,7 +16,7 @@ Kiểm định giả thuyết là phương pháp thống kê dùng để đưa r
 Logic của kiểm định giả thuyết tương tự một phiên tòa hình sự, điều này giải thích tại sao ta nói "không bác bỏ" thay vì "chấp nhận".
 
 | Thành phần | Tương tự trong tòa án | Ý nghĩa thống kê |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | **Giả thuyết không ($H_0$)** | "Bị cáo vô tội" | Trạng thái ban đầu; giả định không có hiệu ứng hoặc khác biệt |
 | **Giả thuyết đối ($H_1$)** | "Bị cáo có tội" | Giả thuyết cần chứng minh; cho rằng có hiệu ứng đáng kể |
 | **Phán quyết** | "Không có tội" | **"Không bác bỏ $H_0$"** – Bằng chứng chưa đủ mạnh |
@@ -56,7 +56,7 @@ Xác suất quan sát được dữ liệu hiện tại (hoặc cực đoan hơn
 ### Lựa chọn thống kê kiểm định
 
 | Kiểm định | Khi sử dụng |
-| :--- | :--- |
+|:---|:---|
 | **Z-Test** | Biết phương sai tổng thể hoặc mẫu lớn ($n > 30$) |
 | **T-Test** | Không biết phương sai tổng thể và mẫu nhỏ ($n < 30$) |
 | **Chi-Square** | Dữ liệu phân loại (so sánh quan sát vs kỳ vọng) |

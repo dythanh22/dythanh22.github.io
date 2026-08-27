@@ -26,7 +26,7 @@ Khác với Z-test (yêu cầu biết độ lệch chuẩn tổng thể $\sigma$
 Bạn nên dùng One-Sample T-Test khi dữ liệu thỏa mãn các điều kiện sau:
 
 | Bạn CÓ | Bạn KHÔNG CÓ |
-| --- | --- |
+|---|---|
 | Một biến liên tục (cân nặng, thời gian, chiều cao,...) | Hai nhóm riêng biệt (dùng Independent T-Test) |
 | Một giá trị chuẩn hoặc giả thuyết ($\mu_0$) | Cùng một nhóm đo hai lần (dùng Paired T-Test) |
 | Các quan sát độc lập | Hơn hai nhóm (dùng ANOVA) |
@@ -51,7 +51,7 @@ Bạn nên dùng One-Sample T-Test khi dữ liệu thỏa mãn các điều ki�
 Việc chọn giả thuyết quyết định loại kiểm định (1 phía hoặc 2 phía):
 
 | Loại kiểm định | Câu hỏi | $H_0$ | $H_1$ |
-| --- | --- | --- | --- |
+|---|---|---|---|
 | **Hai phía** | Trung bình có khác không? | $\mu = \mu_0$ | $\mu \neq \mu_0$ |
 | **Phải (Right-tailed)** | Có lớn hơn không? | $\mu \le \mu_0$ | $\mu > \mu_0$ |
 | **Trái (Left-tailed)** | Có nhỏ hơn không? | $\mu \ge \mu_0$ | $\mu < \mu_0$ |

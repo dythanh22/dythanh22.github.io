@@ -179,7 +179,7 @@ Nên có [Math Base](../math-base/index.qmd) trước khi ôn nhanh tại đây.
 **Math Base (nền đầy đủ):** vài bài cửa ngõ Theory đã gắn callout **Nền đầy đủ (Math Base)**. Bản đồ rút gọn:
 
 | Theory AI (ôn nhanh + code) | Math Base (đọc kỹ) |
-|-----------------------------|--------------------|
+|---|---|
 | [Bernoulli](01-probability/bernoulli-pmf-moments.qmd) / [Expected value](01-probability/expected-value-discrete.qmd) | [Phân phối xác suất](../math-base/01-probability/probability-distributions.qmd), [Biến ngẫu nhiên & Kỳ vọng](../math-base/01-probability/random-variables-and-expectation.qmd), [Conditional Probability](../math-base/01-probability/conditional-probability.qmd) |
 | [Mean / Median / Mode](02-statistics/mean-median-mode.qmd), [One-sample t-test](02-statistics/one-sample-t-test.qmd) | [Thống kê mô tả](../math-base/02-statistics/descriptive-statistics-study-guide.qmd), [One-Sample T-Test](../math-base/02-statistics/one-sample-t-test.qmd) |
 | [Pearson correlation](02-statistics/pearson-correlation-matrix.qmd) | [Tương quan và hiệp phương sai](../math-base/02-statistics/correlation-and-covariance.qmd) |
@@ -191,7 +191,7 @@ Nên có [Math Base](../math-base/index.qmd) trước khi ôn nhanh tại đây.
 Một số bài Theory đã gắn callout **Học tiếp / Ôn nền tảng** tới Architecture Models và AI Optimization (và ngược lại). Bản đồ rút gọn:
 
 | Theory AI | Architecture Models | AI Optimization |
-|-----------|---------------------|-----------------|
+|---|---|---|
 | [ReLU](07-activations-losses/relu-activation.qmd) / [GELU](07-activations-losses/gelu-activation.qmd) | [AlexNet ReLU](../architecture-models/AlexNet/activation-func.qmd), [Transformer FFN](../architecture-models/Transformer/ffn.qmd) | — |
 | [Dropout](09-deep-learning/dropout-training-mode.qmd) | [AlexNet Dropout](../architecture-models/AlexNet/dropout.qmd) | — |
 | [Positional Encoding](09-deep-learning/positional-encoding.qmd), [Causal Mask](09-deep-learning/causal-masking-for-attention.qmd) | [Transformer PE](../architecture-models/Transformer/positional-encoding.qmd) | [Lesson 9 LLM](../ai-optimize/lesson-09-llm-inference-systems.qmd) |

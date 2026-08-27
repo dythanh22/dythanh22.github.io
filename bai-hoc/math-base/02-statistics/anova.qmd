@@ -54,7 +54,7 @@ $$F = \frac{\text{MS}_{Between}}{\text{MS}_{Within}} = \frac{\text{SSB} / (k-1)}
 **Bối cảnh:** Một công ty nhập sợi filament từ 3 nhà cung cấp (A, B, C). Ta kiểm tra 20 bóng đèn từ mỗi nhà cung cấp ($N=60, k=3$).
 
 | Nguồn | SS | $df$ | MS | F |
-| :--- | :--- | :--- | :--- | :--- |
+|:---|:---|:---|:---|:---|
 | **Between** | 288,000 | 2 | 144,000 | **6.4** |
 | **Within** | 1,282,500 | 57 | 22,500 | - |
 

@@ -117,7 +117,7 @@ Hiện vẫn tồn tại tranh luận xoay quanh việc sử dụng Adam hay SGD
 ### Bảng Tóm Tắt
 
 | Optimizer    | Đặc Điểm Chính                            | Phù Hợp Nhất                               |
-|:-------------|:------------------------------------------|:-------------------------------------------|
+|:---|:---|:---|
 | **SGD**      | Không có trí nhớ                          | Bài toán lồi đơn giản                      |
 | **Momentum** | Tích lũy vận tốc                          | Vision (thường tổng quát hóa tốt hơn Adam) |
 | **AdaGrad**  | Tổng bình phương gradient                 | Dữ liệu NLP thưa                           |

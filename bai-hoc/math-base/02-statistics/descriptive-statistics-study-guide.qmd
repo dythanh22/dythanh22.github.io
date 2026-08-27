@@ -103,7 +103,7 @@ Các đại lượng này đo mức độ mỗi điểm dữ liệu lệch khỏ
 ## Bảng tổng hợp công thức
 
 | Chỉ số | Công thức | Khi sử dụng |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | **Mean (Trung bình)** | $\bar{x} = \frac{1}{n}\sum x_i$ | Dữ liệu đối xứng, không có outliers |
 | **Median (Trung vị)** | Giá trị giữa (đã sắp xếp) | Dữ liệu lệch hoặc có outliers |
 | **Mode** | Giá trị xuất hiện nhiều nhất | Dữ liệu phân loại |

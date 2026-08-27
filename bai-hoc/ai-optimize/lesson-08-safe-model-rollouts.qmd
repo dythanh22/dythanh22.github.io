@@ -22,7 +22,7 @@ aliases:
 ## Lộ trình bài học
 
 | # | Phần | Trả lời câu hỏi | Thời lượng |
-|:--|:-----|:----------------|:-----------|
+|:---|:---|:---|:---|
 | 1–2 | Vì sao khó / SLO | Model rollout khác code rollout thế nào? SLO là gì? | 20 phút |
 | 3–4 | Strategies / Canary | Khi nào dùng gì? Canary schedule, gate, rollback? | 25 phút |
 | 5 | A/B + Shadow | Canary vs A/B? Shadow dùng khi nào? | 20 phút |
@@ -112,7 +112,7 @@ Câu hỏi đúng không phải “v2 tốt không?” mà: *Với traffic thậ
 ## Prerequisites {.unnumbered}
 
 | Chủ đề | Cần nắm |
-|:-------|:--------|
+|:---|:---|
 | Triton | Model repo, `config.pbtxt`, dynamic batching, `instance_group` (Lesson 6) |
 | Benchmarking | p50/p95/p99, Perf Analyzer, Prometheus metrics (Lesson 7) |
 | Kubernetes | Pod, Deployment, Service, HPA ở mức khái niệm |
@@ -140,7 +140,7 @@ Code release thay đổi logic rõ ràng: `total = price * quantity` → `total 
 Ngoài ra, một model release không chỉ là một file — đây là điểm nhiều team bỏ qua:
 
 | Artifact | Ví dụ | Rủi ro nếu lệch |
-|:---------|:------|:----------------|
+|:---|:---|:---|
 | Model weight | `model.plan`, `model.onnx` | Wrong inference |
 | Config | `config.pbtxt` | Wrong shapes/dtypes |
 | Preprocessing | `preprocess.py`, `tokenizer.json` | Silent accuracy drop |
@@ -200,7 +200,7 @@ Không có định nghĩa "ổn" thì không biết khi nào promote, khi nào r
 **SLO** (Service Level Objective) là mục tiêu định lượng nội bộ:
 
 | Chiều | Ví dụ SLO |
-|:------|:----------|
+|:---|:---|
 | Availability | 99.9% requests thành công trong rolling 30 ngày |
 | Latency | 99% requests < 100 ms server-side trong 7 ngày |
 | Timeout | Timeout rate < 0.1% trong 1 ngày |
@@ -253,7 +253,7 @@ flowchart LR
 ```
 
 | Strategy | Mục tiêu chính | Ảnh hưởng user | Phù hợp cho |
-|:---------|:--------------|:---------------|:------------|
+|:---|:---|:---|:---|
 | Rolling update | Deploy đơn giản | Có, trong khi swap | Change ít rủi ro, behavior gần như không đổi |
 | Blue/green | Rollback nhanh bằng switch | Có khi switch | Service critical, cần instant rollback |
 | Canary | Rollout an toàn, giới hạn blast radius | Có nhưng nhỏ ban đầu | Model release production tiêu chuẩn |
@@ -290,7 +290,7 @@ Canary cần **metric gates** để tự động promote hoặc rollback. Không
 **Canary schedule**:
 
 | Bước | Traffic | Thời gian tối thiểu | Requests tối thiểu |
-|:-----|:--------|:--------------------|:-------------------|
+|:---|:---|:---|:---|
 | Warmup | 0% | Load + warmup | 100–1,000 |
 | Step 1 | 1% | 10–30 phút | 10,000 |
 | Step 2 | 5% | 10–30 phút | 25,000 |
@@ -302,7 +302,7 @@ Canary cần **metric gates** để tự động promote hoặc rollback. Không
 **Metric gates**: mỗi bước chỉ advance khi tất cả gates pass.
 
 | Gate | Ví dụ điều kiện |
-|:-----|:----------------|
+|:---|:---|
 | Availability | `candidate_success_rate >= stable_success_rate - 0.1%` |
 | Latency | `candidate_p99_latency <= stable_p99_latency * 1.10` |
 | Timeout | `candidate_timeout_rate <= stable_timeout_rate + 0.05%` |
@@ -412,7 +412,7 @@ Luôn validate PromQL trong Prometheus UI trước khi dùng trong rollout autom
 **Canary vs A/B testing**:
 
 | Tiêu chí | Canary | A/B Testing |
-|:---------|:-------|:------------|
+|:---|:---|:---|
 | Mục tiêu | Safety | Business impact |
 | Thời gian | Ngắn (giờ/ngày) | Dài hơn (ngày/tuần) |
 | Rollback | Nhanh và thường xuyên | Ít rollback hơn |
@@ -568,7 +568,7 @@ version_policy: { specific: { versions: [2] } }
 **Model control modes**:
 
 | Mode | Cách hoạt động | Dùng khi |
-|:-----|:---------------|:---------|
+|:---|:---|:---|
 | `NONE` | Load tại startup, không thay đổi runtime | Dev/test đơn giản |
 | `POLL` | Tự kiểm tra repo theo chu kỳ, load khi thay đổi | Deploy qua filesystem sync |
 | `EXPLICIT` | Load/unload qua API | Production: load/unload có kiểm soát |
@@ -588,7 +588,7 @@ curl -X POST localhost:8000/v2/repository/models/image_classifier_candidate/unlo
 ## Triton metrics quan trọng nhất
 
 | Metric | Ý nghĩa |
-|:-------|:--------|
+|:---|:---|
 | `nv_inference_request_success` | Requests thành công |
 | `nv_inference_request_failure` | Requests lỗi |
 | `nv_inference_pending_request_count` | Queue depth |
@@ -636,7 +636,7 @@ flowchart TB
 **Golden signals** cho inference service:
 
 | Signal | Metrics quan trọng |
-|:-------|:------------------|
+|:---|:---|
 | Latency | client p50/p95/p99, server-side queue + compute infer duration |
 | Traffic | request rate, inference rate, batch size distribution |
 | Errors | HTTP/gRPC error, model failure, timeout, invalid schema, NaN/Inf output |
@@ -665,7 +665,7 @@ flowchart TB
 **Quality monitoring** — model quality không thể luôn đo real-time:
 
 | Tầng | Metric | Khi có |
-|:-----|:-------|:-------|
+|:---|:---|:---|
 | Online immediate | Schema validity, confidence distribution, disagreement with stable, fallback rate | Ngay lập tức |
 | Delayed labels | Accuracy, precision/recall, conversion, user feedback | Giờ → ngày |
 | Data drift | Input feature distribution, token length, embedding norm | Batch job |
@@ -739,7 +739,7 @@ flowchart TB
 **Autoscaling signals** — so sánh:
 
 | Signal | CPU inference | GPU inference |
-|:-------|:-------------|:-------------|
+|:---|:---|:---|
 | CPU utilization | Tốt | Thường thấp dù GPU nghẽn |
 | GPU utilization | — | Hữu ích nhưng nonlinear vs latency |
 | Pending requests | Tốt | **Tốt nhất cho overload signal** |
@@ -779,7 +779,7 @@ spec:
 **Overload management**:
 
 | Cơ chế | Mô tả |
-|:-------|:------|
+|:---|:---|
 | Timeout | Giới hạn thời gian request được phép chờ |
 | Max queue size | Từ chối request khi queue đầy |
 | Rate limiting | Giới hạn RPS vào service |
@@ -886,7 +886,7 @@ Train → Offline eval → Export ONNX → Validate ONNX
 **Quality gates trong CI/CD**:
 
 | Gate | Điều kiện pass |
-|:-----|:--------------|
+|:---|:---|
 | ONNX validation | `onnxruntime` validate không lỗi |
 | TRT engine build | Build thành công cho target GPU |
 | Unit + schema tests | 100% pass |
@@ -1144,7 +1144,7 @@ kubectl rollout undo deploy/image-classifier
 ## Glossary {.unnumbered}
 
 | Thuật ngữ | Định nghĩa |
-|:----------|:-----------|
+|:---|:---|
 | **A/B testing** | Thí nghiệm so sánh hai variants để đo impact trên metric định nghĩa trước |
 | **Blameless postmortem** | Báo cáo sau sự cố tập trung vào hệ thống, không đổ lỗi cá nhân |
 | **Blue/green deployment** | Chạy hai environment và switch traffic giữa chúng |
@@ -1187,7 +1187,7 @@ A safe model rollout is a measurement-driven, reversible production change.
 ## Common failure patterns
 
 | Pattern | Triệu chứng | Fix |
-|:--------|:------------|:----|
+|:---|:---|:---|
 | Canary không có metric gate | Traffic tăng dần nhưng không promote/rollback rõ | Thêm success, p99, timeout, schema, quality gates |
 | Dashboard không tách version | Metric chung “ổn” nhưng candidate lỗi | Label `model_version` / `variant` / `experiment_id` |
 | Shadow gây overload | Stable latency tăng sau khi bật shadow | Sample + rate-limit candidate; capacity riêng |
