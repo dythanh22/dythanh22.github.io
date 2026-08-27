@@ -1,0 +1,1261 @@
+---
+title: "Xác suất có điều kiện (Conditional Probability)"
+order: 1
+date: 2026-08-27
+description: "Chúng ta liên tục cập nhật niềm tin dựa trên thông tin mới. Nếu trời nhiều mây, bạn điều chỉnh ước lượng về xác suất có mưa. Nếu một xét nghiệm y tế cho kết quả dương tính, bác sĩ cập nhật đánh giá…"
+series: math-base
+categories: [math-base, probability]
+group: probability
+---
+# Xác suất có điều kiện (Conditional Probability)
+
+## Giới thiệu
+
+Chúng ta liên tục cập nhật niềm tin dựa trên thông tin mới. Nếu trời nhiều mây, bạn điều chỉnh ước lượng về xác suất có mưa. Nếu một xét nghiệm y tế cho kết quả dương tính, bác sĩ cập nhật đánh giá về việc bệnh nhân có mắc bệnh hay không.
+
+**Conditional Probability (xác suất có điều kiện)** trả lời câu hỏi: “Khả năng $E$ xảy ra là bao nhiêu *biết rằng* $F$ đã xảy ra?”
+
+Được viết là $P(E|F)$, đọc là “xác suất của $E$ cho trước $F$.”
+
+### Ví dụ đơn giản: Gieo xúc xắc
+
+Gieo một con xúc xắc sáu mặt công bằng. $P(\text{gieo được mặt 5})$ là bao nhiêu?
+
+* **Trả lời:** $P(5) = 1/6$ vì có 6 kết quả đồng khả năng.
+
+Bây giờ có người nói với bạn rằng *kết quả gieo là số lẻ*. $P(5 | \text{lẻ})$ là bao nhiêu?
+
+* Các kết quả có thể bây giờ là ${1, 3, 5}$. Chỉ một trong ba kết quả này là 5.
+* **Kết quả:** $P(5 | \text{lẻ}) = 1/3$
+
+Xác suất tăng từ $1/6$ lên $1/3$ vì việc điều kiện hóa đã loại bỏ một nửa không gian mẫu.
+
+
+
+## Định nghĩa hình thức
+
+Công thức toán học của xác suất có điều kiện là:
+
+$$P(E|F) = \frac{P(E \cap F)}{P(F)}$$
+
+với điều kiện $P(F) > 0$.
+
+* **$P(E \cap F)$**: Xác suất cả $E$ và $F$ cùng xảy ra (giao).
+* **$P(F)$**: Xác suất $F$ xảy ra (“vũ trụ” mới).
+* **Rescaling (tái chuẩn hóa)**: Ta chia cho $P(F)$ để tái chuẩn hóa các xác suất theo không gian mẫu mới $F$.
+
+
+
+## Các ví dụ có lời giải
+
+### Gợi ý phim
+
+Netflix muốn dự đoán liệu một người dùng có xem “Life is Beautiful” ($E$) hay không, biết rằng họ đã xem “Amelie” ($F$).
+
+* **Tổng thể:** $P(E) = 0.02$ (2% tổng số người dùng)
+* **Biết đã xem Amelie:** $P(E|F) = 0.09$ (9%)
+
+Việc xem “Amelie” khiến người dùng **có khả năng cao hơn 4.5 lần** để xem “Life is Beautiful.” Đây là lý do các hệ thống gợi ý theo dõi xác suất có điều kiện.
+
+### Thành phần gia đình
+
+Một gia đình có 4 người con. Biết rằng họ có ít nhất một con trai, xác suất $P(\text{đúng 2 con trai})$ là bao nhiêu?
+
+1. Gọi $E =$ “đúng 2 con trai”, $F =$ “ít nhất 1 con trai”.
+2. Tất cả 16 chuỗi (BBBB, BBBG, ..., GGGG) là đồng khả năng.
+3. $F$ chỉ loại bỏ GGGG, còn lại 15 kết quả.
+4. Trong 15 kết quả này, có đúng 6 kết quả có hai con trai.
+
+$$P(E|F) = \frac{6/16}{15/16} = \frac{6}{15} = 0.4$$
+
+
+
+## Tính độc lập
+
+Hai biến cố là **independent (độc lập)** nếu việc biết một biến cố đã xảy ra không làm thay đổi xác suất của biến cố còn lại.
+
+* **Định nghĩa 1:** $P(E|F) = P(E)$
+* **Định nghĩa 2 (tương đương):** $P(E \cap F) = P(E) \cdot P(F)$
+
+### Kiểm tra tính độc lập
+
+Gieo một con xúc xắc. Gọi $A = {3}$ và $B = {1, 3, 5}$ (các số lẻ).
+
+* $P(A) = 1/6$
+* $P(B) = 1/2$
+* $P(A \cap B) = P({3}) = 1/6$
+
+**Kiểm tra:** $P(A) \times P(B) = (1/6)(1/2) = 1/12$. Vì $1/12 \neq 1/6$, các biến cố **KHÔNG độc lập**.
+
+> **Lưu ý:** Các biến cố loại trừ lẫn nhau ($P(E \cap F) = 0$) với xác suất khác 0 thì **không bao giờ** độc lập. Biết $A$ đã xảy ra cho bạn biết chắc chắn rằng $B$ KHÔNG xảy ra.
+
+
+
+## Quy tắc dây chuyền (Quy tắc nhân)
+
+Biến đổi công thức xác suất có điều kiện cho ta **Chain Rule (quy tắc dây chuyền)**:
+
+$$P(E \cap F) = P(F) \cdot P(E|F)$$
+$$P(E \cap F) = P(E) \cdot P(F|E)$$
+
+Quy tắc này mở rộng cho số lượng biến cố bất kỳ. Với ba biến cố:
+$$P(A \cap B \cap C) = P(A) \cdot P(B|A) \cdot P(C|A, B)$$
+
+### Ví dụ: Rút bi
+
+Một lọ có 7 viên bi đen và 3 viên bi trắng. Rút hai viên không hoàn lại. Xác suất $P(\text{cả hai đều đen})$ là bao nhiêu?
+
+* $P(B_1) = 7/10$
+* $P(B_2 | B_1) = 6/9$ (sau khi lấy ra một viên đen, còn 6 viên đen trong tổng số 9 viên)
+* $P(B_1 \cap B_2) = (7/10)(6/9) = 42/90 = 0.467$
+
+
+
+## Liên hệ với Định lý Bayes
+
+Vì $P(A \cap B) = P(B \cap A)$, ta có thể đặt hai dạng của quy tắc dây chuyền bằng nhau để suy ra **Bayes' Theorem (Định lý Bayes)**:
+
+$$P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}$$
+
+* **Prior (xác suất tiên nghiệm):** $P(A)$
+* **Likelihood (hàm hợp lý):** $P(B|A)$
+* **Posterior (xác suất hậu nghiệm):** $P(A|B)$
+* **Evidence (bằng chứng):** $P(B)$
+
+
+
+## Ứng dụng trong học máy
+
+* **Naive Bayes:** Giả định các đặc trưng độc lập có điều kiện khi biết lớp:
+  $$P(C|X) \propto P(C) \prod_i P(X_i|C)$$
+* **Autoregressive Language Models (mô hình ngôn ngữ tự hồi quy, GPT):** Sử dụng quy tắc dây chuyền để ước lượng xác suất của một chuỗi:
+  $$P(w_1, w_2, \ldots, w_n) = P(w_1) \cdot P(w_2|w_1) \cdot P(w_3|w_1, w_2) \cdots$$
+* **Hidden Markov Models (mô hình Markov ẩn):** Mô hình hóa chuỗi bằng xác suất chuyển trạng thái $P(s_t | s_{t-1})$ và xác suất phát xạ $P(o_t | s_t)$.
+* **Reinforcement Learning (học tăng cường):** Chính sách là các phân phối có điều kiện:
+  $$\pi(a|s) = P(\text{action}=a | \text{state}=s)$$
+
+
+
+## Những lỗi thường gặp
+
+* **Nhầm lẫn $P(A|B)$ với $P(B|A)$:** Còn được gọi là “Prosecutor's Fallacy (ngụy biện công tố viên).” $P(\text{test}+ | \text{disease}) = 99\%$ KHÔNG có nghĩa là $P(\text{disease} | \text{test}+) = 99\%$.
+* **Giả định tính độc lập:** Chỉ vì các biến cố “có vẻ” không liên quan không có nghĩa là chúng độc lập về mặt thống kê.
+* **Bỏ qua tỷ lệ nền:** Ngay cả với bằng chứng mạnh, một xác suất tiên nghiệm rất thấp (tỷ lệ nền) vẫn khiến xác suất hậu nghiệm thấp.
+* **Áp dụng sai quy tắc dây chuyền:** Mỗi hạng tử phải điều kiện trên **TẤT CẢ** các biến cố trước đó (ví dụ, $P(A)P(B|A)P(C|A,B)$ là đúng, trong khi $P(A)P(B|A)P(C|B)$ thường là sai).
+
+
+----
+Dĩ nhiên. Mình sẽ giảng lại bài này theo hướng **dễ hiểu → công thức → cách giải bài tập → ví dụ → lỗi hay gặp**.
+
+# 1. Xác suất có điều kiện là gì?
+
+**Xác suất có điều kiện** dùng khi ta muốn tính xác suất của một sự kiện **sau khi đã biết một thông tin mới**.
+
+Ký hiệu:
+
+$$
+P(E|F)
+$$
+
+đọc là:
+
+> Xác suất của (E), biết rằng (F) đã xảy ra.
+
+Ví dụ đời thường:
+
+> Xác suất hôm nay mưa là bao nhiêu, **biết rằng trời đang nhiều mây**?
+
+Ở đây:
+
+$$
+P(\text{mưa}|\text{trời nhiều mây})
+$$
+
+Thông tin “trời nhiều mây” làm ta **thu hẹp không gian xét**. Ta không còn xét tất cả các ngày nữa, mà chỉ xét những ngày trời nhiều mây.
+
+---
+
+# 2. Trực giác quan trọng nhất
+
+Công thức:
+
+$$
+P(E|F) = \frac{P(E \cap F)}{P(F)}
+$$
+
+Trong đó:
+
+$$
+E \cap F
+$$
+
+nghĩa là **E và F cùng xảy ra**.
+
+Ý tưởng chính:
+
+> Khi biết (F) đã xảy ra, ta chỉ xét bên trong tập (F). Sau đó hỏi: trong tập (F), phần nào cũng thuộc (E)?
+
+Nói đơn giản:
+
+$$
+P(E|F) = \frac{\text{số trường hợp vừa thuộc E vừa thuộc F}}{\text{số trường hợp thuộc F}}
+$$
+
+nếu các trường hợp đồng khả năng.
+
+---
+
+# 3. Ví dụ xúc xắc
+
+Gieo một con xúc xắc công bằng.
+
+Không gian mẫu ban đầu:
+
+$$
+S = {1,2,3,4,5,6}
+$$
+
+Hỏi:
+
+$$
+P(5)
+$$
+
+Ta có:
+
+$$
+P(5)=\frac{1}{6}
+$$
+
+Bây giờ biết rằng kết quả là **số lẻ**.
+
+Tập số lẻ là:
+
+$$
+F = {1,3,5}
+$$
+
+Hỏi:
+
+$$
+P(5|\text{lẻ})
+$$
+
+Bây giờ ta chỉ xét trong tập:
+
+$$
+{1,3,5}
+$$
+
+Trong 3 kết quả đó, chỉ có 1 kết quả là 5.
+
+Vậy:
+
+$$
+P(5|\text{lẻ})=\frac{1}{3}
+$$
+
+Điểm mấu chốt:
+
+> Xác suất thay đổi vì ta đã có thêm thông tin.
+
+Ban đầu có 6 khả năng.
+Sau khi biết là số lẻ, chỉ còn 3 khả năng.
+
+---
+
+# 4. Cách hiểu bằng hình học tập hợp
+
+Giả sử có hai biến cố (E) và (F).
+
+Khi tính:
+
+$$
+P(E|F)
+$$
+
+ta không còn quan tâm toàn bộ không gian mẫu nữa. Ta coi (F) là “vũ trụ mới”.
+
+Vì vậy:
+
+$$
+P(E|F)
+$$
+
+chính là tỷ lệ phần của (F) nằm trong (E).
+
+Công thức:
+
+$$
+P(E|F)=\frac{P(E \cap F)}{P(F)}
+$$
+
+có thể đọc là:
+
+> Trong tất cả trường hợp mà (F) xảy ra, có bao nhiêu phần cũng làm (E) xảy ra?
+
+---
+
+# 5. Công thức cần nhớ
+
+## Công thức xác suất có điều kiện
+
+$$
+P(A|B)=\frac{P(A \cap B)}{P(B)}
+$$
+
+với:
+
+$$
+P(B)>0
+$$
+
+## Công thức giao từ xác suất có điều kiện
+
+Từ công thức trên, ta suy ra:
+
+$$
+P(A \cap B)=P(B)P(A|B)
+$$
+
+hoặc:
+
+$$
+P(A \cap B)=P(A)P(B|A)
+$$
+
+Đây chính là **quy tắc nhân**.
+
+---
+
+# 6. Cách giải bài xác suất có điều kiện
+
+Khi gặp bài dạng:
+
+> Tính xác suất (A), biết rằng (B) đã xảy ra.
+
+Ta làm theo 4 bước:
+
+## Bước 1: Xác định biến cố cần tính
+
+Ví dụ:
+
+$$
+A = \text{đúng 2 con trai}
+$$
+
+## Bước 2: Xác định điều kiện đã biết
+
+Ví dụ:
+
+$$
+B = \text{ít nhất 1 con trai}
+$$
+
+## Bước 3: Dùng công thức
+
+$$
+P(A|B)=\frac{P(A \cap B)}{P(B)}
+$$
+
+## Bước 4: Tính tử số và mẫu số
+
+Tử số:
+
+$$
+P(A \cap B)
+$$
+
+Mẫu số:
+
+$$
+P(B)
+$$
+
+Nếu bài có số trường hợp đồng khả năng, ta có thể dùng:
+
+$$
+P(A|B)=\frac{\text{số trường hợp A và B cùng đúng}}{\text{số trường hợp B đúng}}
+$$
+
+Cách này thường dễ hơn.
+
+---
+
+# 7. Ví dụ gia đình có 4 người con
+
+Bài toán:
+
+> Một gia đình có 4 người con. Biết rằng họ có ít nhất một con trai. Xác suất để gia đình đó có đúng 2 con trai là bao nhiêu?
+
+Giả sử mỗi người con có thể là trai hoặc gái với xác suất bằng nhau.
+
+Ký hiệu:
+
+* (B): con trai
+* (G): con gái
+
+Với 4 người con, tổng số khả năng là:
+
+$$
+2^4=16
+$$
+
+Ví dụ:
+
+$$
+BBBB, BBBG, BBGB, \ldots, GGGG
+$$
+
+Điều kiện đã biết:
+
+$$
+F = \text{ít nhất 1 con trai}
+$$
+
+Tức là loại trường hợp không có con trai nào:
+
+$$
+GGGG
+$$
+
+Vậy số trường hợp thỏa mãn (F) là:
+
+$$
+16 - 1 = 15
+$$
+
+Biến cố cần tính:
+
+$$
+E = \text{đúng 2 con trai}
+$$
+
+Số cách chọn đúng 2 vị trí là con trai trong 4 người con:
+
+$$
+\binom{4}{2}=6
+$$
+
+Vậy:
+
+$$
+P(E|F)=\frac{6}{15}=\frac{2}{5}=0.4
+$$
+
+Kết luận:
+
+$$
+P(\text{đúng 2 con trai}|\text{ít nhất 1 con trai})=0.4
+$$
+
+---
+
+# 8. Một ví dụ quan trọng: xét nghiệm bệnh
+
+Đây là ví dụ rất hay để hiểu vì sao không được nhầm:
+
+$$
+P(A|B)
+$$
+
+với:
+
+$$
+P(B|A)
+$$
+
+Giả sử:
+
+* 1% dân số mắc bệnh.
+* Nếu mắc bệnh, xét nghiệm dương tính 99%.
+* Nếu không mắc bệnh, xét nghiệm vẫn có thể dương tính giả 5%.
+
+Gọi:
+
+$$
+D = \text{mắc bệnh}
+$$
+
+$$
+
+* = \text{xét nghiệm dương tính}
+$$
+
+Ta có:
+
+$$
+P(D)=0.01
+$$
+
+$$
+P(+|D)=0.99
+$$
+
+$$
+P(+|\neg D)=0.05
+$$
+
+Câu hỏi:
+
+> Nếu xét nghiệm dương tính, xác suất thật sự mắc bệnh là bao nhiêu?
+
+Tức là cần tính:
+
+$$
+P(D|+)
+$$
+
+Không phải:
+
+$$
+P(+|D)
+$$
+
+Dùng Bayes:
+
+$$
+P(D|+)=\frac{P(+|D)P(D)}{P(+)}
+$$
+
+Trong đó:
+
+$$
+P(+)=P(+|D)P(D)+P(+|\neg D)P(\neg D)
+$$
+
+Thay số:
+
+$$
+P(+)=0.99 \cdot 0.01 + 0.05 \cdot 0.99
+$$
+
+$$
+P(+)=0.0099+0.0495=0.0594
+$$
+
+Vậy:
+
+$$
+P(D|+)=\frac{0.99 \cdot 0.01}{0.0594}
+$$
+
+$$
+P(D|+)=\frac{0.0099}{0.0594}\approx 0.1667
+$$
+
+Tức là khoảng:
+
+$$
+16.67\%
+$$
+
+Điểm cực kỳ quan trọng:
+
+> Dù xét nghiệm có độ nhạy 99%, nếu bệnh rất hiếm, thì người có kết quả dương tính chưa chắc có xác suất mắc bệnh rất cao.
+
+Đây gọi là vấn đề **tỷ lệ nền**.
+
+---
+
+# 9. Tính độc lập
+
+Hai biến cố (A) và (B) độc lập nếu biết (B) xảy ra **không làm thay đổi xác suất của (A)**.
+
+Tức là:
+
+$$
+P(A|B)=P(A)
+$$
+
+Ví dụ:
+
+Gieo một đồng xu và một xúc xắc.
+
+* (A): đồng xu ra mặt ngửa.
+* (B): xúc xắc ra số 6.
+
+Việc xúc xắc ra số 6 không ảnh hưởng đến đồng xu ra ngửa.
+
+Do đó:
+
+$$
+P(A|B)=P(A)
+$$
+
+Hai biến cố độc lập.
+
+---
+
+# 10. Công thức kiểm tra độc lập
+
+Có hai cách kiểm tra.
+
+## Cách 1
+
+Kiểm tra:
+
+$$
+P(A|B)=P(A)
+$$
+
+Nếu bằng nhau, độc lập.
+
+## Cách 2
+
+Kiểm tra:
+
+$$
+P(A \cap B)=P(A)P(B)
+$$
+
+Nếu bằng nhau, độc lập.
+
+---
+
+# 11. Ví dụ không độc lập
+
+Gieo một xúc xắc.
+
+Gọi:
+
+$$
+A = {3}
+$$
+
+$$
+B = {1,3,5}
+$$
+
+Trong đó (B) là biến cố “ra số lẻ”.
+
+Ta có:
+
+$$
+P(A)=\frac{1}{6}
+$$
+
+$$
+P(B)=\frac{3}{6}=\frac{1}{2}
+$$
+
+$$
+A \cap B = {3}
+$$
+
+nên:
+
+$$
+P(A \cap B)=\frac{1}{6}
+$$
+
+Nếu độc lập thì phải có:
+
+$$
+P(A \cap B)=P(A)P(B)
+$$
+
+Nhưng:
+
+$$
+P(A)P(B)=\frac{1}{6}\cdot \frac{1}{2}=\frac{1}{12}
+$$
+
+Trong khi:
+
+$$
+P(A \cap B)=\frac{1}{6}
+$$
+
+Vì:
+
+$$
+\frac{1}{6} \neq \frac{1}{12}
+$$
+
+nên (A) và (B) **không độc lập**.
+
+Trực giác:
+
+> Nếu biết kết quả là số lẻ, xác suất ra số 3 tăng từ (1/6) lên (1/3). Vì xác suất thay đổi nên hai biến cố không độc lập.
+
+---
+
+# 12. Loại trừ lẫn nhau không phải là độc lập
+
+Hai biến cố **loại trừ lẫn nhau** nghĩa là không thể cùng xảy ra.
+
+Ví dụ khi gieo xúc xắc:
+
+$$
+A = \text{ra số 2}
+$$
+
+$$
+B = \text{ra số 5}
+$$
+
+Không thể vừa ra 2 vừa ra 5.
+
+Vậy:
+
+$$
+P(A \cap B)=0
+$$
+
+Nếu (A) đã xảy ra, thì (B) chắc chắn không xảy ra.
+
+$$
+P(B|A)=0
+$$
+
+Nhưng:
+
+$$
+P(B)=\frac{1}{6}
+$$
+
+Vì:
+
+$$
+P(B|A) \neq P(B)
+$$
+
+nên chúng **không độc lập**.
+
+Điểm dễ nhầm:
+
+> Loại trừ lẫn nhau nghĩa là “không thể cùng xảy ra”.
+> Độc lập nghĩa là “biết cái này không ảnh hưởng xác suất cái kia”.
+
+Hai khái niệm này khác nhau.
+
+---
+
+# 13. Quy tắc nhân / quy tắc dây chuyền
+
+Từ:
+
+$$
+P(A|B)=\frac{P(A \cap B)}{P(B)}
+$$
+
+ta nhân hai vế với (P(B)):
+
+$$
+P(A \cap B)=P(B)P(A|B)
+$$
+
+Tương tự:
+
+$$
+P(A \cap B)=P(A)P(B|A)
+$$
+
+Đây là **quy tắc nhân**.
+
+Ý nghĩa:
+
+> Xác suất (A) và (B) cùng xảy ra bằng xác suất (A) xảy ra nhân với xác suất (B) xảy ra sau khi (A) đã xảy ra.
+
+---
+
+# 14. Ví dụ rút bi không hoàn lại
+
+Một lọ có:
+
+* 7 viên bi đen
+* 3 viên bi trắng
+
+Tổng cộng:
+
+$$
+10
+$$
+
+Rút 2 viên không hoàn lại.
+
+Tính xác suất cả hai viên đều đen.
+
+Gọi:
+
+$$
+B_1 = \text{viên thứ nhất đen}
+$$
+
+$$
+B_2 = \text{viên thứ hai đen}
+$$
+
+Ta cần tính:
+
+$$
+P(B_1 \cap B_2)
+$$
+
+Dùng quy tắc nhân:
+
+$$
+P(B_1 \cap B_2)=P(B_1)P(B_2|B_1)
+$$
+
+Xác suất viên đầu tiên đen:
+
+$$
+P(B_1)=\frac{7}{10}
+$$
+
+Nếu viên đầu tiên đã đen, còn lại:
+
+* 6 viên đen
+* 3 viên trắng
+* tổng 9 viên
+
+Vậy:
+
+$$
+P(B_2|B_1)=\frac{6}{9}
+$$
+
+Do đó:
+
+$$
+P(B_1 \cap B_2)=\frac{7}{10}\cdot \frac{6}{9}
+$$
+
+$$
+=\frac{42}{90}
+$$
+
+$$
+=\frac{7}{15}
+$$
+
+$$
+\approx 0.467
+$$
+
+---
+
+# 15. Quy tắc dây chuyền cho nhiều biến cố
+
+Với 3 biến cố:
+
+$$
+P(A \cap B \cap C)=P(A)P(B|A)P(C|A,B)
+$$
+
+Với nhiều biến cố hơn:
+
+$$
+P(A_1,A_2,\ldots,A_n)
+=====================
+
+P(A_1)P(A_2|A_1)P(A_3|A_1,A_2)\cdots P(A_n|A_1,\ldots,A_{n-1})
+$$
+
+Điểm quan trọng:
+
+> Mỗi xác suất phía sau phải điều kiện trên tất cả những biến cố trước đó.
+
+Ví dụ đúng:
+
+$$
+P(A)P(B|A)P(C|A,B)
+$$
+
+Ví dụ thường sai:
+
+$$
+P(A)P(B|A)P(C|B)
+$$
+
+Trừ khi có giả định đặc biệt, ta không được tự ý bỏ (A) trong điều kiện của (C).
+
+---
+
+# 16. Liên hệ với định lý Bayes
+
+Ta có:
+
+$$
+P(A \cap B)=P(A)P(B|A)
+$$
+
+và cũng có:
+
+$$
+P(A \cap B)=P(B)P(A|B)
+$$
+
+Vì hai vế đều là xác suất (A) và (B) cùng xảy ra, nên:
+
+$$
+P(A)P(B|A)=P(B)P(A|B)
+$$
+
+Suy ra:
+
+$$
+P(A|B)=\frac{P(B|A)P(A)}{P(B)}
+$$
+
+Đây là **Định lý Bayes**.
+
+---
+
+# 17. Ý nghĩa của Bayes
+
+Công thức:
+
+$$
+P(A|B)=\frac{P(B|A)P(A)}{P(B)}
+$$
+
+Trong đó:
+
+* (P(A)): prior — xác suất ban đầu
+* (P(B|A)): likelihood — xác suất quan sát được bằng chứng (B) nếu (A) đúng
+* (P(A|B)): posterior — xác suất sau khi đã quan sát (B)
+* (P(B)): evidence — xác suất của bằng chứng
+
+Nói đơn giản:
+
+> Bayes cho phép ta cập nhật niềm tin khi có thêm bằng chứng.
+
+Ví dụ:
+
+Ban đầu ta nghĩ xác suất bệnh nhân mắc bệnh là thấp.
+Sau khi xét nghiệm dương tính, ta cập nhật xác suất đó.
+Nhưng mức cập nhật còn phụ thuộc vào bệnh đó hiếm hay phổ biến.
+
+---
+
+# 18. Ứng dụng trong Machine Learning
+
+## 18.1. Naive Bayes
+
+Naive Bayes dùng công thức Bayes để phân loại.
+
+Ví dụ phân loại email là spam hay không spam.
+
+Ta muốn tính:
+
+$$
+P(\text{Spam}|\text{các từ trong email})
+$$
+
+Nếu email chứa các từ như:
+
+* “free”
+* “winner”
+* “click”
+* “money”
+
+thì mô hình tính xác suất email thuộc lớp spam.
+
+Naive Bayes giả định rằng các đặc trưng độc lập có điều kiện khi biết lớp:
+
+$$
+P(C|X) \propto P(C)\prod_i P(X_i|C)
+$$
+
+Trong đó:
+
+* (C): lớp, ví dụ spam hoặc not spam
+* (X_i): từng đặc trưng, ví dụ từng từ trong email
+
+“Naive” nghĩa là giả định độc lập này khá đơn giản, không hoàn toàn đúng trong thực tế, nhưng vẫn hoạt động tốt trong nhiều bài toán.
+
+---
+
+## 18.2. Language Model như GPT
+
+Một mô hình ngôn ngữ cần tính xác suất của một chuỗi từ:
+
+$$
+P(w_1,w_2,\ldots,w_n)
+$$
+
+Dùng quy tắc dây chuyền:
+
+$$
+P(w_1,w_2,\ldots,w_n)
+=====================
+
+P(w_1)P(w_2|w_1)P(w_3|w_1,w_2)\cdots P(w_n|w_1,\ldots,w_{n-1})
+$$
+
+Ví dụ câu:
+
+> Tôi đang học xác suất
+
+Mô hình sẽ ước lượng:
+
+$$
+P(\text{Tôi})
+$$
+
+$$
+P(\text{đang}|\text{Tôi})
+$$
+
+$$
+P(\text{học}|\text{Tôi đang})
+$$
+
+$$
+P(\text{xác suất}|\text{Tôi đang học})
+$$
+
+Đây chính là cách mô hình tự hồi quy sinh từng token một.
+
+---
+
+## 18.3. Reinforcement Learning
+
+Trong học tăng cường, chính sách của agent thường được viết là:
+
+$$
+\pi(a|s)
+$$
+
+nghĩa là:
+
+> Xác suất chọn hành động (a), biết rằng agent đang ở trạng thái (s).
+
+Ví dụ:
+
+$$
+\pi(\text{đi sang phải}|\text{đang đứng trước tường})
+$$
+
+Một agent học tốt sẽ gán xác suất thấp cho hành động vô ích và xác suất cao cho hành động có lợi.
+
+---
+
+# 19. Những lỗi thường gặp
+
+## Lỗi 1: Nhầm (P(A|B)) với (P(B|A))
+
+Đây là lỗi cực kỳ phổ biến.
+
+Ví dụ:
+
+$$
+P(\text{xét nghiệm dương tính}|\text{mắc bệnh})=99\%
+$$
+
+không có nghĩa là:
+
+$$
+P(\text{mắc bệnh}|\text{xét nghiệm dương tính})=99\%
+$$
+
+Hai xác suất này khác nhau.
+
+Một cái hỏi:
+
+> Nếu đã mắc bệnh, khả năng test dương tính là bao nhiêu?
+
+Cái kia hỏi:
+
+> Nếu test dương tính, khả năng mắc bệnh là bao nhiêu?
+
+---
+
+## Lỗi 2: Quên thu hẹp không gian mẫu
+
+Khi có điều kiện (B), ta chỉ xét các trường hợp trong (B).
+
+Ví dụ:
+
+$$
+P(5|\text{lẻ})
+$$
+
+không được lấy:
+
+$$
+\frac{1}{6}
+$$
+
+mà phải lấy:
+
+$$
+\frac{1}{3}
+$$
+
+vì không gian mẫu đã đổi từ:
+
+$$
+{1,2,3,4,5,6}
+$$
+
+thành:
+
+$$
+{1,3,5}
+$$
+
+---
+
+## Lỗi 3: Nghĩ “không liên quan” là độc lập
+
+Hai biến cố nhìn có vẻ không liên quan chưa chắc độc lập.
+
+Muốn chứng minh độc lập, cần kiểm tra bằng công thức:
+
+$$
+P(A \cap B)=P(A)P(B)
+$$
+
+hoặc:
+
+$$
+P(A|B)=P(A)
+$$
+
+---
+
+## Lỗi 4: Nhầm loại trừ lẫn nhau với độc lập
+
+Nếu hai biến cố không thể cùng xảy ra, thì biết một biến cố xảy ra sẽ làm xác suất biến cố kia bằng 0.
+
+Vì vậy, nếu cả hai có xác suất khác 0, chúng không độc lập.
+
+---
+
+# 20. Một số bài tập mẫu
+
+## Bài 1
+
+Gieo xúc xắc. Biết kết quả lớn hơn 3. Tính xác suất kết quả là 6.
+
+Không gian sau điều kiện:
+
+$$
+{4,5,6}
+$$
+
+Trong đó chỉ có một kết quả là 6.
+
+Vậy:
+
+$$
+P(6|\text{lớn hơn 3})=\frac{1}{3}
+$$
+
+---
+
+## Bài 2
+
+Rút một lá bài từ bộ bài 52 lá. Biết lá bài là chất cơ. Tính xác suất lá bài là Át.
+
+Trong bộ bài có 13 lá cơ.
+
+Trong 13 lá cơ có 1 lá Át cơ.
+
+Vậy:
+
+$$
+P(\text{Át}|\text{cơ})=\frac{1}{13}
+$$
+
+---
+
+## Bài 3
+
+Một lớp có 60 sinh viên:
+
+* 35 sinh viên học Python
+* 25 sinh viên học Machine Learning
+* 15 sinh viên học cả hai
+
+Chọn ngẫu nhiên một sinh viên. Biết sinh viên đó học Python. Tính xác suất sinh viên đó học Machine Learning.
+
+Gọi:
+
+$$
+P = \text{học Python}
+$$
+
+$$
+M = \text{học Machine Learning}
+$$
+
+Cần tính:
+
+$$
+P(M|P)
+$$
+
+Dùng công thức:
+
+$$
+P(M|P)=\frac{P(M \cap P)}{P(P)}
+$$
+
+Vì đang xét số lượng, ta dùng:
+
+$$
+P(M|P)=\frac{\text{số sinh viên học cả hai}}{\text{số sinh viên học Python}}
+$$
+
+$$
+P(M|P)=\frac{15}{35}=\frac{3}{7}\approx 0.429
+$$
+
+---
+
+# 21. Tóm tắt ngắn gọn
+
+Bạn chỉ cần nhớ các ý chính sau:
+
+$$
+P(A|B)=\frac{P(A \cap B)}{P(B)}
+$$
+
+nghĩa là:
+
+> Xác suất của (A), sau khi đã biết (B), bằng phần (A) nằm trong (B) chia cho toàn bộ (B).
+
+Quy tắc nhân:
+
+$$
+P(A \cap B)=P(A)P(B|A)
+$$
+
+Độc lập:
+
+$$
+P(A|B)=P(A)
+$$
+
+hoặc:
+
+$$
+P(A \cap B)=P(A)P(B)
+$$
+
+Bayes:
+
+$$
+P(A|B)=\frac{P(B|A)P(A)}{P(B)}
+$$
+
+Trong Machine Learning:
+
+* Naive Bayes dùng xác suất có điều kiện để phân loại.
+* GPT dùng quy tắc dây chuyền để dự đoán token tiếp theo.
+* Reinforcement Learning dùng (\pi(a|s)), tức xác suất chọn hành động biết trạng thái.
+
+Cách học tốt nhất là luôn tự hỏi:
+
+> “Khi biết điều kiện này rồi, không gian mẫu còn lại là gì?”
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Ôn nhanh (Theory AI)
+Phân phối rời rạc + code: [Bernoulli](../../theory-ai/01-probability/bernoulli-pmf-moments.qmd) · [Binomial](../../theory-ai/01-probability/binomial-pmf.qmd) · [Expected value](../../theory-ai/01-probability/expected-value-discrete.qmd).
+:::

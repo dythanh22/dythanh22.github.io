@@ -1,0 +1,127 @@
+---
+title: "Chuỗi Markov: Toán học của điều xảy ra tiếp theo (Markov chain)"
+order: 10
+date: 2026-08-27
+description: "Chuỗi Markov mô hình hóa các hệ thống chuyển từ trạng thái này sang trạng thái khác theo xác suất, trong đó tương lai chỉ phụ thuộc vào hiện tại, không phụ thuộc vào quá khứ. Tính chất “không nhớ”…"
+series: math-base
+categories: [math-base, probability]
+group: probability
+---
+# Chuỗi Markov: Toán học của điều xảy ra tiếp theo
+
+Chuỗi Markov mô hình hóa các hệ thống chuyển từ trạng thái này sang trạng thái khác theo xác suất, trong đó tương lai chỉ phụ thuộc vào hiện tại, không phụ thuộc vào quá khứ. Tính chất “không nhớ” này giúp chúng dễ phân tích về mặt toán học nhưng vẫn rất mạnh mẽ. 
+
+
+
+## Hệ không nhớ
+
+Hãy tưởng tượng một người say rượu đang đi trên trục số. Bước tiếp theo (sang trái hoặc phải) chỉ phụ thuộc vào vị trí *hiện tại*, không phụ thuộc vào cách họ đã đi đến đó. Họ không “nhớ” đường đi của mình. Đây là một **Random Walk (bước đi ngẫu nhiên)**, là trường hợp đặc biệt của chuỗi Markov.
+
+
+
+## Tính chất Markov
+
+Cốt lõi của chuỗi Markov là tính chất Markov, phát biểu rằng tương lai độc lập với quá khứ khi đã biết hiện tại.
+
+### Định nghĩa toán học
+
+$$P(X_{t+1} | X_t, X_{t-1}, ..., X_0) = P(X_{t+1} | X_t)$$
+
+Một chuỗi Markov được xác định đầy đủ bởi:
+
+* **Không gian trạng thái (State Space):** Tập tất cả các trạng thái có thể (ví dụ: ${Sunny, Rainy}$ hoặc ${0, 1, 2, ..., N}$).
+* **Xác suất chuyển trạng thái (Transition Probabilities):** Xác suất chuyển từ trạng thái $i$ sang trạng thái $j$, ký hiệu $P_{ij}$.
+* **Phân phối ban đầu (Initial Distribution):** Xác suất bắt đầu ở mỗi trạng thái.
+
+
+
+## Ma trận chuyển trạng thái
+
+Tất cả xác suất chuyển có thể được biểu diễn bằng một **Stochastic Matrix (ma trận ngẫu nhiên)** $T$. Mỗi hàng phải có tổng bằng $1$ vì hệ thống phải chuyển sang một trạng thái nào đó.
+
+### Ví dụ: Mô hình thời tiết
+
+Nếu hôm nay trời nắng, có 80% khả năng ngày mai vẫn nắng.
+
+$$
+T = \begin{bmatrix} 
+P(S \to S) & P(S \to R) \\
+ P(R \to S) & P(R \to R) 
+ \end{bmatrix} = 
+\begin{bmatrix} 0.8 & 0.2 \ 0.4 & 0.6 
+\end{bmatrix}$$
+
+### Tính trạng thái tương lai
+
+Nếu $\pi_0$ là phân phối trạng thái ban đầu (vector hàng), thì phân phối sau $k$ bước là:
+
+$$\pi_k = \pi_0 T^k$$
+
+Lũy thừa ma trận cho phép “nhảy nhanh” tới tương lai mà không cần mô phỏng từng bước riêng lẻ.
+
+
+## Phân phối dừng
+
+Nếu mô phỏng chạy đủ lâu, xác suất ở mỗi trạng thái thường hội tụ về một giá trị không đổi $\pi$. Đây được gọi là **Stationary Distribution (phân phối dừng)** (hay phân phối cân bằng).
+
+### Phương trình phân phối dừng
+
+$$\pi T = \pi$$
+
+*thoả mãn điều kiện:*
+
+$$\sum \pi_i = 1$$
+
+Phương trình này cho thấy $\pi$ là một **vector riêng trái (left eigenvector)** của ma trận chuyển với giá trị riêng bằng $1$.
+
+**Kết quả ví dụ thời tiết:**
+Giải $\pi T = \pi$ cho chuỗi trên thu được $\pi = [2/3, 1/3]$. Về lâu dài, trời nắng khoảng 67% thời gian và mưa 33%, независимо trạng thái ban đầu.
+
+
+## Nghiên cứu tình huống: Quản lý tồn kho bóng đèn
+
+**Bối cảnh:**
+Một kho hàng lưu trữ bóng đèn. Nhu cầu hàng tuần là ngẫu nhiên: $0, 1, 2, \text{ hoặc } 3$ đơn vị với xác suất $0.1, 0.4, 0.3, \text{ và } 0.2$. Nếu tồn kho về $0$, một đơn hàng $5$ đơn vị sẽ đến vào tuần sau.
+
+**Mô hình:**
+Trạng thái là mức tồn kho hiện tại ($0-5$). Chuyển trạng thái chỉ phụ thuộc vào mức hiện tại và nhu cầu ngẫu nhiên. Bằng cách xây dựng ma trận chuyển $6 \times 6$ và tính phân phối dừng, ta có thể xác định xác suất dài hạn bị hết hàng.
+
+**Kết quả:**
+Giải $\pi$ cho thấy $P(\text{Tồn kho} = 0) = 12\%$. Nghĩa là kho hết hàng 12% thời gian.
+
+
+## Trạng thái hấp thụ
+
+Trạng thái hấp thụ là trạng thái mà một khi đã vào thì không thể rời đi ($P(i \to i) = 1$).
+
+### Ví dụ: Bài toán phá sản của con bạc
+
+* **Thiết lập:** Bắt đầu với $50$. Mỗi vòng cược $1$ vào tung đồng xu công bằng.
+* **Mục tiêu:** Dừng ở $100$ (thắng) hoặc $0$ (phá sản).
+* **Phân tích:** Cả $0$ và $100$ đều là trạng thái hấp thụ. Phân tích Markov cho thấy xác suất cuối cùng phá sản là $50\%$, với số vòng kỳ vọng khoảng $2{,}500$ trước khi kết thúc.
+
+* **Câu hỏi chính với chuỗi hấp thụ:**
+
+1. Xác suất bị hấp thụ vào trạng thái A so với trạng thái B là bao nhiêu?
+2. Số bước kỳ vọng trước khi bị hấp thụ là bao nhiêu?
+
+
+## Mô hình Markov ẩn (Hidden Markov Models - HMMs)
+
+Trong một số hệ thống, trạng thái Markov không thể quan sát trực tiếp; thay vào đó ta chỉ thấy các quan sát nhiễu (emissions) phụ thuộc vào trạng thái ẩn.
+
+| Chuỗi Markov thông thường                  | Mô hình Markov ẩn                                |
+| :----------------------------------------- | :----------------------------------------------- |
+| Trạng thái quan sát trực tiếp              | Trạng thái bị ẩn                                 |
+| Ví dụ: Quan sát thời tiết ($Sunny, Rainy$) | Ví dụ: Quan sát người mang ô để suy ra thời tiết |
+
+**Ví dụ chất lượng bóng đèn:**
+Máy trong nhà máy có trạng thái ẩn: ${Hiệu chuẩn tốt, Lệch chuẩn}$. Ta chỉ quan sát tỷ lệ lỗi (emissions). Tỷ lệ lỗi cao gợi ý trạng thái “Lệch chuẩn”. **Thuật toán Viterbi** được dùng để tìm chuỗi trạng thái ẩn có khả năng cao nhất.
+
+
+## Ứng dụng trong học máy
+
+* **Mô hình ngôn ngữ (N-Gram):** Bigram là chuỗi Markov trong đó trạng thái là từ trước đó. Các LLM hiện đại dùng attention để có bộ nhớ dài hơn, nhưng trực giác bắt đầu từ đây.
+* **Học tăng cường (MDP):** Môi trường được mô hình hóa bằng Markov Decision Process, trong đó trạng thái tiếp theo chỉ phụ thuộc vào trạng thái hiện tại và hành động.
+* **PageRank (Google Search):** Web được mô hình như chuỗi Markov, trạng thái là các trang và chuyển trạng thái là liên kết. PageRank chính là phân phối dừng của chuỗi này.
+* **MCMC (Markov Chain Monte Carlo):** Dùng trong suy luận Bayes khi posterior không thể tính giải tích. Nó xây dựng một chuỗi Markov mà phân phối dừng chính là posterior mong muốn.

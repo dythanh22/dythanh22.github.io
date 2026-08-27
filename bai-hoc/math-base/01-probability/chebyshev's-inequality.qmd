@@ -1,0 +1,145 @@
+---
+title: "Bất đẳng thức Chebyshev (Chebyshev's Inequality)"
+order: 8
+date: 2026-08-27
+description: "Giới hạn xác suất đuôi mà không cần giả định."
+series: math-base
+categories: [math-base, probability]
+group: probability
+---
+# Bất đẳng thức Chebyshev
+
+**Giới hạn xác suất đuôi mà không cần giả định.** 
+
+
+
+## Đảm bảo phổ quát
+
+Trong thống kê, ta thường biết giá trị trung bình ($\mu$) và độ lệch chuẩn ($\sigma$) của một phân phối, nhưng không biết hình dạng chính xác của nó. Nó là phân phối chuẩn? Đều? Hay là một dạng đa đỉnh phức tạp?
+
+**Chebyshev's Inequality (Bất đẳng thức Chebyshev)** trả lời: “Các giá trị có thể lệch khỏi trung bình bao xa một cách hợp lý?” Điểm đặc biệt là nó **không cần bất kỳ giả định nào về phân phối**. Nó áp dụng cho *mọi* phân phối có trung bình và phương sai hữu hạn.
+
+> ### Vì sao quan trọng
+>
+> Dữ liệu thực tế thường không tuân theo phân phối chuẩn (đuôi dày, lệch). Chebyshev cung cấp các đảm bảo trong trường hợp xấu nhất khi không thể giả định tính chuẩn. Đây là nền tảng của thống kê bền vững và học máy lý thuyết.
+
+
+
+## Phát biểu
+
+$$P(|X - \mu| \geq k\sigma) \leq \frac{1}{k^2}$$
+
+*"Xác suất để một giá trị cách trung bình hơn $k$ độ lệch chuẩn là nhiều nhất $1/k^2$."*
+
+### Bảng tra nhanh
+
+| $k$ (Độ lệch chuẩn) | Giới hạn Chebyshev | Phân phối chuẩn (Thực tế) |
+| :--- | :--- | :--- |
+| 1                   | $\leq 100\%$        | ~32%                      |
+| 2                   | $\leq 25\%$         | ~5%                       |
+| 3                   | $\leq 11.1\%$       | ~0.3%                     |
+| 4                   | $\leq 6.25\%$       | ~0.006%                   |
+| 5                   | $\leq 4\%$          | ~0.00006%                 |
+
+**Lưu ý:** Chebyshev mang tính **bảo thủ**. Với phân phối chuẩn, xác suất thực tế nhỏ hơn rất nhiều. Nhưng Chebyshev phải đúng với *mọi* phân phối, kể cả các trường hợp “xấu nhất”.
+
+
+
+## Phác thảo chứng minh (qua bất đẳng thức Markov)
+
+Chứng minh rất thanh lịch và dựa trên **Markov's Inequality (Bất đẳng thức Markov)**.
+
+### Bước 1: Bất đẳng thức Markov
+
+$$P(Y \geq a) \leq \frac{E[Y]}{a}$$
+
+Áp dụng cho mọi biến ngẫu nhiên không âm $Y$ và $a > 0$. Giá trị kỳ vọng không thể nhỏ nếu xác suất tập trung nhiều ở các giá trị lớn.
+
+### Bước 2: Áp dụng cho phương sai
+
+Đặt $Y = (X - \mu)^2$. Đây là biến không âm! Và $E[Y] = Var(X) = \sigma^2$.
+
+$$P((X-\mu)^2 \geq k^2\sigma^2) \leq \frac{\sigma^2}{k^2\sigma^2} = \frac{1}{k^2}$$
+
+Vì $(X-\mu)^2 \geq k^2\sigma^2$ tương đương với $|X-\mu| \geq k\sigma$, chứng minh hoàn tất.
+
+
+
+## Nghiên cứu tình huống: Kiểm soát chất lượng tuổi thọ bóng đèn
+
+### Bối cảnh
+
+Nhà máy của bạn công bố tuổi thọ trung bình là 1.200 giờ với độ lệch chuẩn 100 giờ. Một khách hàng hỏi: “Xác suất tối đa để một bóng đèn chỉ hoạt động dưới 900 giờ là bao nhiêu?” Bạn không biết phân phối chính xác.
+
+### Tính toán
+
+* 900 giờ cách trung bình $(1200 - 900) / 100 =$ **3 độ lệch chuẩn**.
+* Theo Chebyshev: $P(|X - 1200| \geq 300) \leq 1/9 \approx 11.1\%$.
+* Đây là giới hạn cho *cả hai phía*. Để xét riêng phía bên trái, ta dùng bất đẳng thức Cantelli.
+
+### Đảm bảo
+
+**Tối đa ~11%** số bóng đèn sẽ lệch hơn 300 giờ so với trung bình (theo cả hai hướng). Đây là đảm bảo trong trường hợp xấu nhất, đúng với *mọi* phân phối có cùng trung bình và phương sai.
+
+
+
+## Bất đẳng thức Cantelli (Chebyshev một phía)
+
+Thường ta chỉ quan tâm một phía. “Xác suất nhỏ hơn một ngưỡng là bao nhiêu?” Bất đẳng thức Cantelli cho giới hạn chặt hơn trong trường hợp một phía.
+
+$$P(X - \mu \geq k\sigma) \leq \frac{1}{1 + k^2}$$
+$$P(X - \mu \leq -k\sigma) \leq \frac{1}{1+k^2}$$
+
+**Ví dụ bóng đèn (xét lại):**
+$P(\text{Tuổi thọ} < 900 \text{ giờ}) \leq 1 / (1 + 3^2) = 1/10 =$ **10%**. Chặt hơn so với 11.1% của Chebyshev hai phía!
+
+
+
+## Liên hệ với Định luật số lớn
+
+Bất đẳng thức Chebyshev là công cụ để chứng minh **Weak Law of Large Numbers (Định luật số lớn yếu - WLLN)**.
+
+### Phát biểu WLLN
+
+$$\bar{X}_n \xrightarrow{P} \mu \text{ khi } n \to \infty$$
+
+Trung bình mẫu hội tụ theo xác suất về trung bình thực.
+
+**Phác thảo chứng minh:**
+Phương sai của $\bar{X}_n$ là $\sigma^2/n$. Áp dụng Chebyshev:
+
+$$P(|\bar{X}_n - \mu| \geq \epsilon) \leq \frac{\sigma^2}{n\epsilon^2} \to 0$$
+
+Khi $n \to \infty$, giới hạn tiến về 0. Trung bình mẫu tiến gần tùy ý đến trung bình thực với xác suất cao.
+
+
+
+## Giới hạn Chernoff
+
+Chebyshev cho tốc độ suy giảm đa thức ($1/k^2$). Với tổng các biến độc lập (như Bernoulli), ta có thể đạt **suy giảm theo hàm mũ** bằng giới hạn Chernoff.
+
+$$P(X \geq (1+\delta)\mu) \leq e^{-\frac{\delta^2 \mu}{2+\delta}}$$
+
+*Áp dụng cho tổng của $n$ phép thử Bernoulli độc lập với kỳ vọng $\mu = np$.*
+
+**Vì sao chặt hơn?** Chebyshev chỉ dùng hai moment đầu (trung bình, phương sai). Chernoff sử dụng hàm sinh moment (toàn bộ thông tin moment), nên cho giới hạn chặt hơn.
+
+
+
+## Ứng dụng trong học máy
+
+### PAC Learning
+
+Lý thuyết PAC ("Probably Approximately Correct" – gần đúng với xác suất cao) sử dụng các bất đẳng thức như Chebyshev/Hoeffding để chứng minh độ phức tạp mẫu. Nó trả lời: “Cần bao nhiêu mẫu huấn luyện để đảm bảo mô hình nằm trong sai số $\epsilon$ với xác suất $1-\delta$?”
+
+### Giới hạn tổng quát hóa
+
+Khoảng cách giữa lỗi huấn luyện và lỗi kiểm tra có thể được chặn bằng các bất đẳng thức tập trung (Chebyshev, Hoeffding, Rademacher). Đây là nền tảng của lý thuyết học thống kê.
+
+### Phát hiện ngoại lai
+
+Nếu tuổi thọ bóng đèn lệch quá $3\sigma$, Chebyshev cho biết tối đa 11% số bóng có thể như vậy. Nếu bạn quan sát thấy 20%, quy trình sản xuất có vấn đề.
+
+### Thống kê bền vững
+
+Khi dữ liệu không Gaussian (đuôi dày, có ngoại lai), các phương pháp dựa trên Chebyshev được ưu tiên hơn giả định Gaussian. Median Absolute Deviation (MAD) và trung bình cắt ngọn (trimmed mean) là các lựa chọn thay thế bền vững.

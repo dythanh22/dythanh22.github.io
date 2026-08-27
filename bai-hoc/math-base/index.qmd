@@ -1,0 +1,150 @@
+---
+short-title: "Tổng quan chuỗi"
+title: "Math Base"
+subtitle: "Nền tảng toán cho AI — xác suất, thống kê, đại số tuyến tính, giải tích, tối ưu, thông tin và đồ thị"
+date: 2026-08-27
+order: 0
+categories: [math-base]
+series: math-base
+role: "Tổng quan chuỗi Math Base"
+description: "Chuỗi ~67 bài nền toán: probability → statistics → linear algebra → calculus → optimization → information theory → graph theory. Đọc trước Theory AI."
+toc: true
+page-layout: article
+listing:
+  - id: roadmap-probability
+    contents: ["01-probability/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
+    max-description-length: 100
+  - id: roadmap-statistics
+    contents: ["02-statistics/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
+    max-description-length: 100
+  - id: roadmap-linear-algebra
+    contents: ["03-linear-algebra/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
+    max-description-length: 100
+  - id: roadmap-calculus
+    contents: ["04-calculus/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
+    max-description-length: 100
+  - id: roadmap-optimization
+    contents: ["05-optimization/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
+    max-description-length: 100
+  - id: roadmap-information-theory
+    contents: ["06-information-theory/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
+    max-description-length: 100
+  - id: roadmap-graph-theory
+    contents: ["07-graph-theory/*.qmd"]
+    type: table
+    sort: "order"
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [order, title]
+    field-display-names: {order: "#", title: "Bài"}
+    max-description-length: 100
+---
+
+Chuỗi **Math Base**: **67 bài** nền tảng toán cho AI — đọc kỹ, giữ chiều sâu. Đây là **bước ưu tiên trước** [Theory AI](../theory-ai/index.qmd) (ôn nhanh + code).
+
+Mỗi mục dưới đây chỉ liệt kê **#** và tiêu đề (bấm để mở bài). Dùng TOC hoặc sidebar để nhảy chapter.
+
+::: {.callout-note icon=false}
+## Cách đọc
+Dùng sidebar theo 7 chapter. Trong mỗi chapter, đọc theo cột `#` (`order`). Vào từ menu **Bài học → Math Base**, hoặc [Tất cả chuỗi](/bai-hoc/).
+
+Sau Math Base, dùng [Theory AI](../theory-ai/index.qmd) để ôn lại khái niệm liên quan kèm ví dụ số và Python ngắn.
+:::
+
+{{< include /_partials/reading-modes.md >}}
+
+## Liên kết với Theory AI
+
+Math Base = đọc kỹ. [Theory AI](../theory-ai/index.qmd) = ôn nhanh + ví dụ số + Python. Vài bài cửa ngõ có callout **Ôn nhanh (Theory AI)**; bản đồ rút gọn:
+
+| Math Base | Theory AI (ôn nhanh + code) |
+|-----------|------------------------------|
+| [Conditional Probability](01-probability/conditional-probability.qmd), [Phân phối xác suất](01-probability/probability-distributions.qmd) | [Bernoulli](../theory-ai/01-probability/bernoulli-pmf-moments.qmd), [Binomial](../theory-ai/01-probability/binomial-pmf.qmd), [Expected value](../theory-ai/01-probability/expected-value-discrete.qmd) |
+| [Biến ngẫu nhiên & Kỳ vọng](01-probability/random-variables-and-expectation.qmd) | [Expected value](../theory-ai/01-probability/expected-value-discrete.qmd) |
+| [Thống kê mô tả](02-statistics/descriptive-statistics-study-guide.qmd), [One-Sample T-Test](02-statistics/one-sample-t-test.qmd) | [Mean / Median / Mode](../theory-ai/02-statistics/mean-median-mode.qmd), [One-sample t-test](../theory-ai/02-statistics/one-sample-t-test.qmd) |
+| [Tương quan và hiệp phương sai](02-statistics/correlation-and-covariance.qmd) | [Pearson correlation](../theory-ai/02-statistics/pearson-correlation-matrix.qmd) |
+| [Tích vô hướng & Chuẩn vector](03-linear-algebra/dot-product-vector-norms.qmd) | [Norm 3D](../theory-ai/03-linear-algebra/3d-vector-norm.qmd), [Cosine](../theory-ai/03-linear-algebra/cosine-similarity.qmd), [Euclidean](../theory-ai/03-linear-algebra/euclidean-distance.qmd) |
+| [Eigenvalues & Eigenvectors](03-linear-algebra/eigenvalues-eigenvectors.qmd), [Determinants & Inverses](03-linear-algebra/determinants-inverses.qmd) | [Eigenvalues](../theory-ai/03-linear-algebra/calculate-eigenvalues-of-a-matrix.qmd), [Matrix inverse](../theory-ai/03-linear-algebra/matrix-inverse.qmd) |
+| [Quy tắc chuỗi](04-calculus/the-chain-rule.qmd) | [Nesterov](../theory-ai/08-optimizers/nesterov-momentum-nag.qmd), [Adam](../theory-ai/08-optimizers/adam-optimizer-step.qmd) (dùng gradient sau chain rule) |
+| [Shannon Entropy](06-information-theory/shannon-entropy.qmd), [KL Divergence](06-information-theory/kullback-leibler-divergence.qmd) | [KL Divergence](../theory-ai/07-activations-losses/kl-divergence.qmd) |
+| [Momentum & NAG](05-optimization/momentum-nesterov-accelerated-gradient.qmd), [Adaptive LR](05-optimization/adaptive-learning-rates.qmd) | [Nesterov](../theory-ai/08-optimizers/nesterov-momentum-nag.qmd), [Adam](../theory-ai/08-optimizers/adam-optimizer-step.qmd) |
+
+## 1. Probability {#probability}
+
+::: {#roadmap-probability}
+:::
+
+## 2. Statistics {#statistics}
+
+::: {#roadmap-statistics}
+:::
+
+## 3. Linear Algebra {#linear-algebra}
+
+::: {#roadmap-linear-algebra}
+:::
+
+## 4. Calculus {#calculus}
+
+::: {#roadmap-calculus}
+:::
+
+## 5. Optimization {#optimization}
+
+::: {#roadmap-optimization}
+:::
+
+## 6. Information Theory {#information-theory}
+
+::: {#roadmap-information-theory}
+:::
+
+## 7. Graph Theory {#graph-theory}
+
+::: {#roadmap-graph-theory}
+:::
+
+**Tiếp theo:** [Theory AI](../theory-ai/index.qmd) → Architecture Models → AI Optimization.

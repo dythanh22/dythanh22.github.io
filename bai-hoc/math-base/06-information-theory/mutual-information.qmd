@@ -1,0 +1,129 @@
+---
+title: "Mutual Information: Beyond Correlation (Mutual Information)"
+order: 4
+date: 2026-08-27
+description: "Thước đo phụ thuộc tối thượng. Biết giúp ta biết thêm bao nhiêu về ?"
+series: math-base
+categories: [math-base, information-theory]
+group: information-theory
+---
+# Mutual Information: Beyond Correlation
+
+Thước đo phụ thuộc tối thượng. Biết $X$ giúp ta biết thêm bao nhiêu về $Y$? 
+
+
+
+## Giới thiệu
+
+Chúng ta thường hỏi: “Hai biến này có liên hệ với nhau không?” Thống kê truyền thống cung cấp [Pearson Correlation](https://www.tensortonic.com/ml-math/statistics/correlation), nhưng nó chỉ đo được các mối quan hệ *tuyến tính*.
+
+Điều gì xảy ra nếu mối quan hệ là $y = x^2$? Một parabol hoàn hảo. Correlation có thể gần bằng 0 vì nó không phát hiện được các mẫu phi tuyến.
+
+**Mutual Information (MI)** là lời giải theo lý thuyết thông tin. Nó đo *mọi* loại quan hệ — tuyến tính hay phi tuyến, đơn điệu hay hỗn loạn. Nó đặt câu hỏi: “Khi quan sát $X$, ta loại bỏ được bao nhiêu bit bất định về $Y$?”
+
+> ### Sức mạnh của MI
+>
+> Không giống correlation, MI bằng 0 khi và chỉ khi $X$ và $Y$ **thực sự độc lập**. Đây là tiêu chuẩn vàng để phát hiện mọi dạng phụ thuộc thống kê.
+
+
+
+## Trực giác: Thông tin được chia sẻ
+
+Hãy xem [entropy](https://www.tensortonic.com/ml-math/information-theory/shannon-entropy) như một “vòng tròn” bất định. $X$ có vòng tròn bất định $H(X)$, và $Y$ có vòng tròn $H(Y)$. Nếu $X$ và $Y$ liên hệ với nhau, hai vòng tròn này sẽ chồng lấp.
+
+* **$H(X)$:** Tổng độ bất định của $X$.
+* **$H(Y)$:** Tổng độ bất định của $Y$.
+* **$H(X, Y)$:** Độ bất định kết hợp (phần hợp).
+* **$I(X; Y)$:** Mutual Information (phần giao). Lượng thông tin được chia sẻ giữa $X$ và $Y$.
+
+
+
+## Correlation vs Mutual Information
+
+Đây là khác biệt cực kỳ quan trọng trong phân tích thống kê.
+
+| Thước đo              | Pearson Correlation                                             | Mutual Information                                          |
+|:----------------------|:----------------------------------------------------------------|:------------------------------------------------------------|
+| **Phạm vi phát hiện** | Chỉ các quan hệ **tuyến tính**.                                 | Phát hiện **mọi** dạng phụ thuộc.                           |
+| **$y = x$**           | $\rho = 1.0$                                                    | MI cao                                                      |
+| **$y = x^2$**         | $\rho \approx 0$                                                | MI cao                                                      |
+| **$y = \sin(x)$**     | $\rho \approx 0$                                                | MI cao                                                      |
+| **Giá trị bằng 0**    | Không có quan hệ tuyến tính; các biến vẫn có thể liên hệ mạnh.  | **Độc lập thực sự**. Không tồn tại bất kỳ mối quan hệ nào.  |
+
+
+
+## Công thức toán học
+
+Mutual Information là [KL Divergence](https://www.tensortonic.com/ml-math/information-theory/kl-divergence) giữa phân phối kết hợp $P(X, Y)$ và tích của các phân phối biên $P(X)P(Y)$.
+
+$$I(X; Y) = \sum_{x} \sum_{y} P(x, y) \log \left( \frac{P(x, y)}{P(x)P(y)} \right)$$
+
+### Tại sao là $P(X)P(Y)$?
+
+Nếu $X$ và $Y$ độc lập, phân phối kết hợp của chúng sẽ phân tích được thành:
+$$P(X, Y) = P(X)P(Y)$$
+
+MI đo mức độ thực tế khác biệt so với trạng thái độc lập đó.
+
+### Dạng thay thế bằng Entropy
+
+$$I(X; Y) = H(X) + H(Y) - H(X, Y)$$
+
+
+
+## Các tính chất quan trọng
+
+### 1. Không âm
+
+$$I(X; Y) \geq 0$$
+
+Mutual Information không bao giờ âm. Bạn không thể “mất” thông tin khi quan sát một điều gì đó. Tệ nhất, quan sát đó không cho thêm thông tin mới ($MI = 0$).
+
+### 2. Đối xứng
+
+$$I(X; Y) = I(Y; X)$$
+
+Thông tin mà $X$ tiết lộ về $Y$ chính xác bằng thông tin mà $Y$ tiết lộ về $X$.
+
+### 3. Bằng 0 khi và chỉ khi độc lập
+
+$$I(X; Y) = 0 \iff X \perp!!!\perp Y$$
+
+Đây là tiêu chuẩn xác định tính độc lập thống kê. Không giống correlation, $MI = 0$ đảm bảo rằng không tồn tại bất kỳ quan hệ hàm số nào.
+
+### 4. Tự thông tin bằng Entropy
+
+$$I(X; X) = H(X)$$
+
+Mutual Information của một biến với chính nó bằng entropy của biến đó. Điều này dẫn đến cận trên:
+$$I(X; Y) \leq \min(H(X), H(Y))$$
+
+### 5. Bất đẳng thức xử lý dữ liệu
+
+$$X \to Y \to Z \implies I(X; Z) \leq I(X; Y)$$
+
+Quá trình xử lý chỉ có thể làm mất thông tin, không thể tạo thêm thông tin mới. Trong deep learning, mỗi lớp tiếp theo chỉ có thể loại bỏ thông tin về đầu vào ban đầu.
+
+
+
+## Ví dụ thực tế
+
+* **Dự báo thời tiết:** $I(\text{Temperature}; \text{Humidity})$ cao vì biết một đại lượng giúp suy ra đại lượng còn lại. Tuy nhiên,
+  $I(\text{Temperature}; \text{Lottery Numbers}) = 0$.
+* **Chẩn đoán y khoa:** $I(\text{Symptoms}; \text{Disease})$ định lượng mức độ hữu ích của triệu chứng, giúp xếp hạng tầm quan trọng của triệu chứng trong AI y tế.
+* **Biểu hiện gene:** $I(\text{Gene A}; \text{Gene B})$ tiết lộ quan hệ điều hòa, cho thấy các gene có thể đồng điều hòa hoặc thuộc cùng một pathway.
+
+
+
+## Ứng dụng trong Machine Learning
+
+* **Feature Selection:** Tính $I(X_i; Y_{target})$ cho tất cả các đặc trưng và chọn ra $k$ đặc trưng tốt nhất. Phương pháp này phát hiện được các predictor phi tuyến mà correlation bỏ sót.
+* **Đánh giá Clustering (NMI):** Normalized Mutual Information so sánh các cụm dự đoán với ground truth. $NMI = 1$ nghĩa là khớp hoàn hảo.
+* **Decision Trees:** **Information Gain** trong ID3 và C4.5 thực chất chính là mutual information giữa đặc trưng và nhãn.
+* **Representation Learning (InfoNCE):** Các phương pháp như CLIP tối đa hóa cận dưới của MI giữa các góc nhìn khác nhau của cùng dữ liệu để học biểu diễn tốt.
+* **Neural Network Compression:** Information Bottleneck Theory cho rằng mạng nơ-ron tối đa hóa
+  $I(\text{Hidden}; \text{Label})$
+  đồng thời tối thiểu hóa
+  $I(\text{Hidden}; \text{Input})$
+  để cải thiện khả năng tổng quát hóa.
+* **Phát hiện quan hệ nhân quả:** Transfer Entropy (conditional MI) giúp xác định liệu $X$ có dự đoán tương lai của $Y$ tốt hơn chiều ngược lại hay không.

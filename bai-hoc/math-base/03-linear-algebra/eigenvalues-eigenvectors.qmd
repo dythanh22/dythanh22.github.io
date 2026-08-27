@@ -1,0 +1,162 @@
+---
+title: "Giá trị riêng & Vector riêng (Eigenvalues & Eigenvectors)"
+order: 7
+date: 2026-08-27
+description: "DNA đặc trưng của một phép biến đổi ma trận. Nền tảng của PCA, PageRank và các phương pháp phổ (spectral methods)."
+series: math-base
+categories: [math-base, linear-algebra]
+group: linear-algebra
+---
+# Giá trị riêng & Vector riêng (Eigenvalues & Eigenvectors)
+
+DNA đặc trưng của một phép biến đổi ma trận. Nền tảng của PCA, PageRank và các phương pháp phổ (spectral methods).
+
+
+
+## Giới thiệu
+
+"Eigen" trong tiếng Đức nghĩa là "riêng" hoặc "đặc trưng". Một vector riêng (eigenvector) là vector thể hiện **hành vi đặc trưng** của một phép biến đổi ma trận.
+
+Khi một ma trận biến đổi hầu hết các vector, nó vừa quay vừa co giãn chúng. Nhưng vector riêng là đặc biệt: chúng **chỉ bị co giãn**. Chúng vẫn nằm trên đường thẳng ban đầu đi qua gốc tọa độ. Mức độ co giãn đó chính là **giá trị riêng (eigenvalue)**.
+
+### Tại sao điều này quan trọng
+
+Giá trị riêng và vector riêng giúp khám phá “hành vi tự nhiên” của ma trận. Chúng là nền tảng cho:
+
+* **PCA** để giảm chiều dữ liệu.
+* **Google PageRank** cho tìm kiếm web.
+* **Phân cụm phổ (Spectral Clustering)** để phân tích đồ thị.
+* **Phân tích ổn định (Stability Analysis)** cho các hệ động lực.
+
+
+
+## Trực giác hình học
+
+Hãy tưởng tượng áp dụng một phép biến đổi ma trận lên mọi vector trong không gian 2D. Hầu hết các vector sẽ đổi hướng, nhưng một số vector đặc biệt chỉ bị kéo dài hoặc thu ngắn, vẫn nằm trên đường thẳng ban đầu.
+
+* **Vector thông thường ($v \to Av$):** Sau biến đổi, vector đổi sang hướng hoàn toàn khác. Nó bị cả quay và co giãn.
+* **Vector riêng ($v \to \lambda v$):** Vector có thể dài hơn, ngắn hơn, hoặc đảo chiều, nhưng vẫn nằm trên cùng một đường thẳng qua gốc. Chỉ có co giãn xảy ra.
+
+> **Ẩn dụ Mona Lisa:** Hãy tưởng tượng bạn làm biến dạng bức Mona Lisa (làm nghiêng). Hầu hết các mũi tên trên bức tranh sẽ đổi hướng. Nhưng một mũi tên nằm ngang ở giữa có thể chỉ dài ra mà không bị nghiêng. Hướng ngang đó chính là một **vector riêng** của phép biến dạng.
+
+
+
+## Định nghĩa hình thức
+
+Với ma trận vuông $A$, một vector khác không $\mathbf{v}$ là vector riêng nếu:
+
+$$A\mathbf{v} = \lambda\mathbf{v}$$
+
+* **$\mathbf{v}$**: Vector riêng (hướng).
+* **$\lambda$**: Giá trị riêng (hệ số co giãn).
+
+Phương trình này có nghĩa là biến đổi $\mathbf{v}$ bằng $A$ tương đương với việc nhân $\mathbf{v}$ với một số vô hướng $\lambda$.
+
+
+
+## Tìm giá trị riêng
+
+Biến đổi lại phương trình $Av = \lambda v$ ta được phương trình quan trọng để tìm giá trị riêng:
+
+1. **Biến đổi:** $(A - \lambda I)\mathbf{v} = \mathbf{0}$
+2. **Điều kiện suy biến:** Để $\mathbf{v} \neq 0$, ma trận $(A - \lambda I)$ phải suy biến.
+3. **Phương trình đặc trưng:** Tìm $\lambda$ bằng cách giải:
+   $$\det(A - \lambda I) = 0$$
+
+### Ví dụ: 
+$A = \begin{bmatrix} 1 & 2 \\
+ 5 & 4 \end{bmatrix}$
+
+* $\det\left(\begin{bmatrix} 1-\lambda & 2 \\ 5 & 4-\lambda \end{bmatrix}\right) = 0$
+* $(1-\lambda)(4-\lambda) - 10 = 0$
+* $\lambda^2 - 5\lambda - 6 = 0$
+* $(\lambda - 6)(\lambda + 1) = 0$
+* **Giá trị riêng:** $\lambda = 6, -1$
+
+
+
+## Phân rã theo trị riêng (Eigendecomposition)
+
+Nếu $A$ có $n$ vector riêng độc lập tuyến tính, ta có thể phân tích:
+
+$$A = Q\Lambda Q^{-1}$$
+
+* **$Q$**: Ma trận chứa các vector riêng làm cột.
+* **$\Lambda$**: Ma trận đường chéo chứa các giá trị riêng.
+* **$Q^{-1}$**: Nghịch đảo của $Q$.
+
+### Lũy thừa ma trận
+
+Phân rã này giúp tính lũy thừa ma trận hiệu quả:
+$$A^{100} = Q \Lambda^{100} Q^{-1}$$
+Lũy thừa của ma trận đường chéo rất dễ tính.
+
+
+
+## Các loại ma trận đặc biệt
+
+* **Đối xứng ($A = A^T$):** Giá trị riêng luôn là **số thực**, và các vector riêng **trực giao**. Ma trận hiệp phương sai là đối xứng, đó là lý do PCA hiệu quả.
+* **Xác định dương (Positive Definite):** Tất cả giá trị riêng đều **dương** ($\lambda > 0$). Biểu diễn dạng “bát úp”; ma trận Hessian là xác định dương tại cực tiểu địa phương.
+* **Trực giao ($Q^TQ = I$):** Giá trị riêng có $|\lambda| = 1$. Biểu diễn phép quay/phản xạ, bảo toàn độ dài và góc.
+* **Ngẫu nhiên (Stochastic - Markov):** Tổng mỗi cột bằng 1 và có ít nhất một giá trị riêng $\lambda = 1$. Phân phối dừng là vector riêng ứng với $\lambda = 1$.
+
+
+
+## Lặp lũy thừa (Power Iteration)
+
+Với ma trận lớn, giải đa thức đặc trưng là không khả thi. **Power Iteration** là phương pháp lặp đơn giản để tìm vector riêng trội:
+
+1. Bắt đầu với vector ngẫu nhiên $v_0$.
+2. Lặp lại phép nhân với $A$: $v_{k+1} = A v_k$.
+3. Chuẩn hóa sau mỗi bước: $v_{k+1} = \frac{A v_k}{||A v_k||}$.
+4. $v_k$ hội tụ về **vector riêng trội** (giá trị riêng có $|\lambda|$ lớn nhất).
+
+
+
+## Liên hệ với SVD
+
+Phân rã trị riêng áp dụng cho ma trận vuông. Với ma trận không vuông, ta dùng **Phân rã giá trị kỳ dị (Singular Value Decomposition - SVD)**:
+
+* **Phân rã trị riêng:** $A = Q \Lambda Q^{-1}$ (chỉ cho ma trận vuông).
+* **SVD:** $A = U \Sigma V^T$ (mọi dạng ma trận).
+
+**Mối liên hệ:** Các giá trị kỳ dị của $A$ là căn bậc hai của các giá trị riêng của $A^TA$. Ma trận $V$ chứa các vector riêng của $A^TA$, còn $U$ chứa các vector riêng của $AA^T$.
+
+
+
+## Các tính chất quan trọng
+
+* **Trace:** $\text{tr}(A) = \sum \lambda_i$
+* **Định thức:** $\det(A) = \prod \lambda_i$
+* **Giá trị riêng bằng 0:** Nếu $\lambda = 0$, ma trận suy biến (không khả nghịch).
+* **Giá trị riêng phức:** Ma trận quay thường có giá trị riêng phức, nghĩa là không tồn tại vector riêng thực.
+
+### Phép toán trên giá trị riêng
+
+* **$A^{-1}$**: Giá trị riêng là $1/\lambda$.
+* **$A^k$**: Giá trị riêng là $\lambda^k$.
+* **$A + cI$**: Giá trị riêng là $\lambda + c$.
+
+
+
+## Ứng dụng trong ML
+
+* **PCA (Giảm chiều):** Chiếu dữ liệu lên $k$ vector riêng lớn nhất của ma trận hiệp phương sai để giảm chiều nhưng vẫn giữ được phương sai tối đa.
+* **Google PageRank:** Vector riêng trội của ma trận chuyển trạng thái (stochastic matrix) dùng để xếp hạng mức độ quan trọng của website.
+* **Phân cụm phổ:** Sử dụng vector riêng của Laplacian đồ thị để tìm các cụm tự nhiên trong dữ liệu có dạng không lồi.
+* **Phân tích ổn định:** Giá trị riêng của ma trận trọng số trong RNN hoặc Neural ODE quyết định gradient sẽ tiêu biến hay bùng nổ.
+* **Eigenfaces:** Các vector riêng của tập dữ liệu khuôn mặt (“khuôn mặt ma”) kết hợp để tái tạo bất kỳ khuôn mặt nào trong các hệ thống nhận diện ban đầu.
+
+
+
+## Xem xét tính toán
+
+* **Thuật toán QR:** Thuật toán lặp tiêu chuẩn được các thư viện như NumPy (`eig`) sử dụng để tính tất cả giá trị riêng.
+* **Lanczos/Arnoldi:** Các phương pháp chuyên dụng cho ma trận thưa lớn, chỉ cần phép nhân ma trận-vector.
+* **Cảnh báo ổn định:** Việc tính giá trị riêng có thể kém điều kiện. Thay đổi nhỏ trong $A$ có thể dẫn đến thay đổi lớn trong giá trị riêng. Luôn sử dụng các thư viện ổn định. 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Ôn nhanh (Theory AI)
+Tính trị riêng trên ma trận nhỏ: [Calculate eigenvalues](../../theory-ai/03-linear-algebra/calculate-eigenvalues-of-a-matrix.qmd).
+:::

@@ -1,0 +1,137 @@
+---
+title: "Backpropagation & Gradient Descent (Backpropagation and Gradient Descent)"
+order: 9
+date: 2026-08-27
+description: "Tính gradient bằng tay và sử dụng chúng để huấn luyện mạng nơ-ron. Đây là nền tảng toán học của deep learning."
+series: math-base
+categories: [math-base, calculus]
+group: calculus
+---
+# Backpropagation & Gradient Descent
+
+Tính gradient bằng tay và sử dụng chúng để huấn luyện mạng nơ-ron. Đây là nền tảng toán học của deep learning.
+
+## Giới thiệu
+
+Trong các framework deep learning hiện đại, gradient được tính tự động. Tuy nhiên, để hiểu tối ưu hóa, bạn cần có khả năng tự tính gradient cho các mạng đơn giản. Quá trình này giúp củng cố hiểu biết về **quy tắc chuỗi (chain rule)** và **đạo hàm riêng (partial derivatives)**.
+
+Chúng ta sẽ xét một neuron đơn sử dụng hàm kích hoạt **Sigmoid** và hàm mất mát **Mean Squared Error (MSE)** để hiểu backpropagation và gradient descent.
+
+
+
+## Thiết lập: Một neuron đơn
+
+Chúng ta định nghĩa một đồ thị tính toán gồm đầu vào, trọng số, bias và giá trị mục tiêu.
+
+### Các biến
+
+* **Đầu vào ($x$):** $2.0$
+* **Trọng số ($w$):** $3.0$
+* **Bias ($b$):** $1.0$
+* **Giá trị mục tiêu ($y_{true}$):** $1.0$
+
+### Các hàm
+
+* **Tổ hợp tuyến tính ($z$):** $z = wx + b$
+* **Kích hoạt ($a$):** $a = \sigma(z) = \frac{1}{1 + e^{-z}}$
+* **Hàm mất mát ($L$):** $L = (a - y)^2$
+
+**Luồng tính toán:**
+$(x, w, b) \rightarrow z = wx + b \rightarrow a = \sigma(z) \rightarrow L = (a - y)^2$
+
+
+
+## Forward Pass
+
+Để tính đầu ra và giá trị loss ban đầu, ta tính từ trái sang phải:
+
+1. **Tổ hợp tuyến tính:**
+   $$z = (3.0)(2.0) + 1.0 = 7.0$$
+2. **Kích hoạt Sigmoid:**
+   $$a = \sigma(7.0) = \frac{1}{1 + e^{-7}} \approx 0.999089$$
+3. **MSE Loss:**
+   $$L = (0.999089 - 1.0)^2 \approx 8.3 \times 10^{-7}$$
+
+
+
+## Backward Pass (Backpropagation)
+
+Mục tiêu của backpropagation là tính gradient của loss theo các tham số: $\frac{\partial L}{\partial w}$ và $\frac{\partial L}{\partial b}$. Ta áp dụng **quy tắc chuỗi** để phân rã các đạo hàm này thành các gradient cục bộ.
+
+### 1. Phân rã theo quy tắc chuỗi
+
+$$\frac{\partial L}{\partial w} = \frac{\partial L}{\partial a} \cdot \frac{\partial a}{\partial z} \cdot \frac{\partial z}{\partial w}$$
+
+### 2. Tính các gradient cục bộ
+
+* **Phần A: Loss theo Activation**
+  $$\frac{\partial L}{\partial a} = 2(a - y) = 2(0.999089 - 1.0) = -0.001822$$
+* **Phần B: Activation theo Linear**
+  Đạo hàm của sigmoid là $\sigma'(z) = a(1-a)$.
+  $$\frac{\partial a}{\partial z} = 0.999089(1 - 0.999089) \approx 0.000910$$
+* **Phần C: Linear theo Weight và Bias**
+  $$\frac{\partial z}{\partial w} = x = 2.0$$
+  $$\frac{\partial z}{\partial b} = 1$$
+
+### 3. Tính gradient cuối cùng
+
+* **Gradient theo trọng số ($w$):**
+  $$\frac{\partial L}{\partial w} = (-0.001822) \times (0.000910) \times (2.0) \approx -3.316 \times 10^{-6}$$
+* **Gradient theo bias ($b$):**
+  $$\frac{\partial L}{\partial b} = (-0.001822) \times (0.000910) \times (1) \approx -1.658 \times 10^{-6}$$
+
+> **Lưu ý:** Các gradient rất nhỏ vì dự đoán hiện tại (0.999) đã rất gần giá trị mục tiêu (1.0), và sigmoid bị bão hòa tại $z=7$, dẫn đến đạo hàm rất nhỏ.
+
+
+
+## Gradient Descent: Tối ưu hóa
+
+**Gradient Descent (thuật toán hạ dốc)** sử dụng các gradient đã tính để cập nhật tham số lặp đi lặp lại nhằm giảm hàm mất mát.
+
+### Quy tắc cập nhật
+
+Với tham số bất kỳ $\theta$ (như $w$ hoặc $b$):
+$$\theta_{new} = \theta_{old} - \alpha \nabla J(\theta_{old})$$
+
+* **$\theta$:** Các tham số cần tối ưu.
+* **$\alpha$:** **Learning Rate (tốc độ học)**, siêu tham số điều chỉnh kích thước bước.
+* **$\nabla J$:** Vector gradient, chỉ hướng tăng nhanh nhất.
+
+**Vì sao trừ?** Gradient chỉ hướng đi lên. Để giảm loss, ta đi ngược lại.
+
+### Phân tích Learning Rate
+
+Learning rate là siêu tham số quan trọng nhất:
+
+* **Quá nhỏ:** Huấn luyện rất chậm, dễ bị kẹt sớm.
+* **Vừa phải:** Hội tụ ổn định.
+* **Quá lớn:** Vượt quá cực tiểu → dao động hoặc diverge (NaN).
+
+
+
+## Các biến thể Gradient Descent
+
+Lượng dữ liệu dùng cho mỗi lần cập nhật quyết định loại thuật toán:
+
+| Biến thể                 | Dữ liệu mỗi bước   | Ưu điểm                        | Nhược điểm            |
+|:-------------------------|:-------------------|:-------------------------------|:----------------------|
+| **Batch GD**             | Toàn bộ dữ liệu    | Ổn định, gradient chính xác    | Chậm, tốn bộ nhớ      |
+| **Stochastic GD (SGD)**  | Một mẫu            | Nhanh, có nhiễu giúp thoát bẫy | Không ổn định         |
+| **Mini-Batch GD**        | Nhóm nhỏ (32–128)  | Chuẩn thực tế, tối ưu GPU      | Cần tuning batch size |
+
+
+
+## Hội tụ và ứng dụng
+
+### Điều kiện hội tụ
+
+* **Hàm lồi:** (Linear/Logistic Regression) → đảm bảo tìm cực tiểu toàn cục.
+* **Hàm không lồi:** (Neural Networks) → không đảm bảo do saddle point và cực tiểu cục bộ.
+
+### Kỹ thuật nâng cao
+
+* **Momentum:** Tích lũy vận tốc
+  $$v_t = \beta v_{t-1} + \nabla J$$
+* **Adam Optimizer:** Kết hợp momentum và learning rate thích nghi.
+* **Gradient Clipping:** Giới hạn độ lớn gradient để tránh bùng nổ.
+* **Learning Rate Finder:** Tìm LR tối ưu bằng cách thử nhiều giá trị.

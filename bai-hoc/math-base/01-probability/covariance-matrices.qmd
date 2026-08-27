@@ -1,0 +1,110 @@
+---
+title: "Ma trận hiệp phương sai (Covariance Matrices)"
+order: 5
+date: 2026-08-27
+description: "Trong 1D, phương sai cho biết dữ liệu phân tán như thế nào dọc theo một trục duy nhất. Tuy nhiên, dữ liệu trong thế giới thực thường tồn tại đồng thời trong nhiều chiều. Chẳng hạn, chất lượng của…"
+series: math-base
+categories: [math-base, probability]
+group: probability
+---
+# Ma trận hiệp phương sai (Covariance Matrices)
+
+## Phương sai đa chiều
+
+Trong 1D, phương sai cho biết dữ liệu phân tán như thế nào dọc theo một trục duy nhất. Tuy nhiên, dữ liệu trong thế giới thực thường tồn tại đồng thời trong nhiều chiều. Chẳng hạn, chất lượng của một bóng đèn có thể được đặc trưng cùng lúc bởi độ dày dây tóc, áp suất khí và độ trong của thủy tinh.
+
+Trong không gian đa chiều, dữ liệu có thể phân tán theo các hướng khác nhau. **Covariance Matrix (ma trận hiệp phương sai)** nắm bắt hình dạng này, không chỉ cho biết từng biến biến thiên riêng lẻ bao nhiêu, mà còn cho biết chúng biến thiên *cùng nhau* như thế nào.
+
+
+
+## Ma trận hiệp phương sai ($\Sigma$)
+
+Với $n$ biến, ma trận hiệp phương sai là một ma trận đối xứng kích thước $n \times n$:
+
+$$\Sigma = \begin{bmatrix} 
+Var(X_1) & Cov(X_1,X_2) & \cdots & Cov(X_1,X_n) \\ 
+Cov(X_2,X_1) & Var(X_2) & \cdots & Cov(X_2,X_n) \\
+\vdots & \vdots & \ddots & \vdots \\
+Cov(X_n,X_1) & Cov(X_n,X_2) & \cdots & Var(X_n) 
+\end{bmatrix}$$
+
+### Các thành phần của ma trận
+
+* **Phần tử trên đường chéo:** Biểu diễn phương sai của từng biến riêng lẻ, cho thấy mỗi biến tự nó phân tán như thế nào.
+* **Phần tử ngoài đường chéo:** Biểu diễn hiệp phương sai giữa các cặp biến, cho thấy chúng thay đổi trong mối quan hệ với nhau như thế nào.
+
+
+
+## Các tính chất chính
+
+1. **Đối xứng:** $Cov(X,Y) = Cov(Y,X)$. Ma trận là đối xứng, nghĩa là $\Sigma = \Sigma^T$.
+2. **Positive Semi-Definite (bán xác định dương, PSD):** Với mọi vector $x$, $x^T \Sigma x \geq 0$. Điều này là vì phương sai không thể âm, và dạng toàn phương biểu diễn một phép tính phương sai.
+3. **Biến đổi tuyến tính:** Nếu $Y = AX$, thì $\Sigma_Y = A \Sigma_X A^T$. Tính chất này mô tả cách hiệp phương sai lan truyền qua các phép toán tuyến tính.
+4. **Correlation Matrix (ma trận tương quan):** Một phiên bản chuẩn hóa của ma trận hiệp phương sai, trong đó mỗi phần tử được chia cho $\sigma_i \sigma_j$. Ma trận này có các giá trị 1 trên đường chéo và các giá trị từ $-1$ đến $1$ ngoài đường chéo.
+
+
+
+## Trực giác hình học
+
+Ma trận hiệp phương sai xác định một **ellipsoid (hình elip-xoit)**, tức một hình cầu bị kéo giãn, trong không gian $n$ chiều. Phương trình $(x - \mu)^T \Sigma^{-1} (x - \mu) = c$ xác định một đường/mặt mức elip có xác suất không đổi.
+
+* **Dạng cầu (hiệp phương sai đồng nhất):** Các biến không tương quan và có phương sai bằng nhau, tạo thành một hình cầu hoàn hảo.
+* **Dạng elip-xoit (hiệp phương sai tổng quát):** Các biến có phương sai và tương quan khác nhau, tạo thành một elip-xoit bị nghiêng.
+
+
+
+## Phân rã riêng (Định lý phổ)
+
+Vì $\Sigma$ là đối xứng và PSD, nó có thể được phân rã thành:
+
+$$\Sigma = V \Lambda V^T$$
+
+* **Eigenvectors (vector riêng, $V$):** Các cột của $V$ chỉ theo hướng của các trục chính của elip-xoit. Chúng biểu diễn các trục tọa độ “tự nhiên”, nơi các biến không tương quan.
+* **Eigenvalues (giá trị riêng, $\Lambda$):** Một ma trận đường chéo, trong đó $\lambda_i$ là phương sai dọc theo trục chính thứ $i$. Giá trị riêng lớn hơn cho biết dữ liệu phân tán nhiều hơn theo hướng cụ thể đó.
+
+**Ý nghĩa:** Xoay dữ liệu sang cơ sở vector riêng sẽ **khử tương quan** giữa các biến, làm cho ma trận hiệp phương sai trở thành ma trận đường chéo. Đây là nền tảng toán học của Principal Component Analysis (phân tích thành phần chính, PCA).
+
+
+
+## Nghiên cứu tình huống: Kiểm soát chất lượng bóng đèn
+
+### Bối cảnh
+
+Bạn đo ba thuộc tính của 1.000 bóng đèn: Điện trở dây tóc ($\Omega$), Độ sáng (Lumen) và Nhiệt lượng tỏa ra ($^\circ$C).
+
+### Ma trận hiệp phương sai
+
+$$
+\Sigma = 
+\begin{bmatrix} 
+2.5 & 1.8 & 0.9 \\
+ 1.8 & 3.2 & 1.4 \\
+ 0.9 & 1.4 & 1.8 
+ \end{bmatrix}$$
+
+Các giá trị dương ngoài đường chéo cho thấy những thuộc tính này có tương quan dương với nhau, ví dụ bóng đèn sáng hơn thường nóng hơn.
+
+### Mahalanobis Distance (khoảng cách Mahalanobis, phát hiện bất thường)
+
+$$D_M = \sqrt{(x - \mu)^T \Sigma^{-1} (x - \mu)}$$
+
+Khác với khoảng cách Euclid, khoảng cách Mahalanobis tính đến cấu trúc hiệp phương sai. Nó có thể nhận diện các điểm ngoại lai trông có vẻ bình thường ở từng chiều riêng lẻ nhưng vi phạm cấu trúc tương quan chung, ví dụ một bóng đèn rất nóng nhưng lại mờ.
+
+
+
+## PCA (Principal Component Analysis, phân tích thành phần chính)
+
+PCA xác định các vector riêng của ma trận hiệp phương sai và chiếu dữ liệu lên những vector quan trọng nhất.
+
+### Thuật toán
+
+1. **Căn giữa dữ liệu:** Trừ giá trị trung bình khỏi mỗi cột.
+2. **Tính ma trận hiệp phương sai:** $\Sigma = \frac{1}{n-1} X^T X$.
+3. **Tìm các thành phần riêng:** Xác định các vector riêng và giá trị riêng của $\Sigma$.
+4. **Sắp xếp:** Sắp xếp các thành phần theo giá trị riêng, từ lớn nhất đến nhỏ nhất.
+5. **Chiếu:** $Z = XV$, trong đó $V$ chứa $k$ vector riêng hàng đầu.
+
+### Các khái niệm chính
+
+* **Variance Explained (phương sai được giải thích):** Tỷ lệ phương sai được giải thích bởi PC $i$ là $\lambda_i / \sum \lambda_j$.
+* **Whitening/Sphering (làm trắng/cầu hóa):** Nhân tỉ lệ mỗi PC với $1/\sqrt{\lambda_i}$ biến elip-xoit dữ liệu trở lại thành hình cầu, không tương quan và có phương sai đơn vị; đây là một bước tiền xử lý phổ biến cho mạng nơ-ron.

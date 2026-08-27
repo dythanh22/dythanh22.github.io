@@ -1,0 +1,99 @@
+---
+title: "Sai lầm loại I và loại II (Type I and Type II Errors)"
+order: 8
+date: 2026-08-27
+description: "Trong kiểm định giả thuyết, chúng ta đưa ra suy luận dựa trên mẫu thay vì sự thật tuyệt đối. Vì làm việc với thông tin không đầy đủ, mọi quyết định nhị phân (Bác bỏ hoặc Không bác bỏ ) đều đi kèm…"
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# Sai lầm loại I và loại II (Type I and Type II Errors)
+
+## Giới thiệu
+Trong kiểm định giả thuyết, chúng ta đưa ra suy luận dựa trên mẫu thay vì sự thật tuyệt đối. Vì làm việc với thông tin không đầy đủ, mọi quyết định nhị phân (Bác bỏ $H_0$ hoặc Không bác bỏ $H_0$) đều đi kèm rủi ro sai lầm. Hiểu rõ các sai lầm này là cực kỳ quan trọng trong A/B testing, chẩn đoán y khoa và đánh giá mô hình machine learning.
+
+
+## Ma trận quyết định
+Khi đưa ra một quyết định thống kê, có hai cách đúng và hai cách sai.
+
+| Quyết định              | $H_0$ đúng (Thực tế)              | $H_0$ sai (Thực tế)               |
+|-------------------------|-----------------------------------|-----------------------------------|
+| **Không bác bỏ $H_0$** | ✅ Đúng (True Negative)           | ❌ Sai lầm loại II (False Negative) |
+| **Bác bỏ $H_0$**       | ❌ Sai lầm loại I (False Positive) | ✅ Đúng (True Positive)           |
+* **Mẹo nhớ:**  
+  Type **I** = bác bỏ **sai** giả thuyết đúng  
+  Type **II** = không bác bỏ **sai** giả thuyết sai  
+
+
+
+## Sai lầm loại I (False Positive)
+Sai lầm loại I xảy ra khi bạn bác bỏ một giả thuyết không **đúng**. Bạn kết luận có hiệu ứng trong khi thực tế không có.
+
+* **Xác suất ($\alpha$):**  
+  Chính là mức ý nghĩa bạn chọn. Nếu $\alpha = 0.05$ → có 5% xác suất false positive.
+
+* **Hậu quả:**  
+  Dẫn đến hành động không cần thiết (ví dụ: triển khai feature không hiệu quả, kê đơn thuốc vô ích).
+
+* **Ví dụ:**  
+  **Báo động giả** – Chuông báo cháy kêu nhưng không có cháy.
+
+
+
+## Sai lầm loại II (False Negative)
+Sai lầm loại II xảy ra khi bạn không bác bỏ một giả thuyết không **sai**. Bạn bỏ lỡ một hiệu ứng thực sự tồn tại.
+
+* **Xác suất ($\beta$):**  
+  Không được thiết lập trực tiếp. Phụ thuộc vào kích thước mẫu, độ lớn hiệu ứng, phương sai và $\alpha$.
+
+* **Hậu quả:**  
+  **Bỏ lỡ cơ hội** (ví dụ: không phát hiện bệnh nguy hiểm, bỏ lỡ phát hiện khoa học).
+
+* **Ví dụ:**  
+  **Cháy âm thầm** – Có cháy nhưng chuông không kêu.
+
+
+
+## Power (Độ mạnh kiểm định) ($1 - \beta$)
+Power là xác suất kiểm định **phát hiện đúng hiệu ứng** khi nó tồn tại.
+
+* **Mục tiêu phổ biến:**  
+  Power ≈ **80%**
+
+* **Trade-off:**  
+  Power 80% → $\beta = 0.20$ → 20% khả năng bỏ lỡ hiệu ứng thật
+
+### Các yếu tố làm tăng Power:
+1. **Tăng kích thước mẫu:**  
+   Giảm overlap giữa các phân phối → giảm cả hai loại sai lầm
+
+2. **Tăng $\alpha$:**  
+   Dễ bác bỏ $H_0$ hơn → tăng power nhưng tăng false positive
+
+3. **Hiệu ứng lớn hơn:**  
+   Dễ phát hiện hơn so với hiệu ứng nhỏ
+
+
+
+## Trade-off giữa Alpha và Beta
+Thông thường, bạn không thể giảm đồng thời cả hai loại sai lầm nếu không tăng kích thước mẫu.
+
+* **Alpha nhỏ (0.01):**  
+  Giảm false positive nhưng tăng false negative
+
+* **Alpha lớn (0.10):**  
+  Tăng power nhưng dễ báo động giả hơn
+
+
+
+## 7. Ứng dụng thực tế và tối ưu hóa
+
+| Bối cảnh | $H_0$ / $H_1$ | Sai lầm nguy hiểm hơn | Chiến lược                  |
+| --- | --- | --- |-----------------------------|
+| **Phiên tòa** | Vô tội / Có tội | **Type I:** Kết án người vô tội | Alpha thấp (0.01)           |
+| **Xét nghiệm y tế** | Khỏe / Bệnh | **Type II:** Bỏ sót bệnh | Power cao / Alpha cao hơn   |
+| **Spam filter** | Email thật / Spam | **Type I:** Chặn email quan trọng | Giảm Type I                 |
+
+**Insight quan trọng:**  
+Không có ngưỡng “đúng” chung cho mọi bài toán. Lựa chọn tối ưu phụ thuộc vào chi phí tương đối giữa Type I và Type II trong từng domain cụ thể.
+

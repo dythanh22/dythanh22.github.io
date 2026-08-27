@@ -1,0 +1,92 @@
+---
+title: "Phương pháp lấy mẫu lại (Resampling)"
+order: 13
+date: 2026-08-27
+description: "Thống kê truyền thống thường dựa vào các công thức giả định phân phối dữ liệu cụ thể (ví dụ: “giả sử dữ liệu phân phối chuẩn”). Resampling cho phép chúng ta ước lượng độ chính xác của các thống kê…"
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# Phương pháp lấy mẫu lại (Resampling)
+
+## Giới thiệu: “Tự kéo mình lên”
+Thống kê truyền thống thường dựa vào các công thức giả định phân phối dữ liệu cụ thể (ví dụ: “giả sử dữ liệu phân phối chuẩn”). **Resampling** cho phép chúng ta ước lượng độ chính xác của các thống kê mẫu (median, variance, percentiles) bằng cách sử dụng lại chính dữ liệu hiện có. Nó đánh đổi sức mạnh tính toán để lấy sự đơn giản về mặt toán học.
+
+
+
+## Bootstrap
+Được Bradley Efron phát minh năm 1979, Bootstrap coi mẫu hiện tại như thể nó là toàn bộ tổng thể.
+
+### Thuật toán
+1. Lấy mẫu ban đầu $S$ có kích thước $n$  
+2. Lấy mẫu mới $S^*$ kích thước $n$ từ $S$ **có hoàn lại (with replacement)**  
+3. Tính thống kê (mean, median,...) trên $S^*$  
+4. Lặp lại 10,000+ lần để xây dựng phân phối  
+
+### Tại sao phải “có hoàn lại”?
+Nếu lấy mẫu không hoàn lại, ta chỉ hoán vị lại dữ liệu cũ. Khi lấy có hoàn lại, mỗi mẫu bootstrap là một tập con ngẫu nhiên khác nhau, mô phỏng việc lấy mẫu từ tổng thể thật.
+
+$\Rightarrow$ Trung bình khoảng **63.2%** điểm dữ liệu gốc xuất hiện trong mỗi mẫu bootstrap.
+
+
+
+## Jackknife
+Phiên bản “cổ điển” và có tính xác định của Bootstrap. Thay vì lấy mẫu ngẫu nhiên, Jackknife loại bỏ từng quan sát một cách có hệ thống.
+
+| Đặc điểm | Bootstrap | Jackknife |
+| :--- | :--- | :--- |
+| **Phương pháp** | Lấy mẫu ngẫu nhiên có hoàn lại | Loại bỏ từng phần tử (leave-one-out) |
+| **Số mẫu** | Có thể tạo vô hạn | Chính xác $n$ mẫu |
+| **Ứng dụng** | Dùng cho mọi thống kê | Chủ yếu để ước lượng bias |
+| **Hạn chế** | Phổ biến hiện nay | Không tốt với thống kê không trơn (median) |
+
+### Công thức hiệu chỉnh bias Jackknife
+$$\hat{\theta}_{Jack} = n\hat{\theta} - \frac{n-1}{n}\sum_{i=1}^{n} \hat{\theta}_{(i)}$$
+
+*(trong đó $\hat{\theta}_{(i)}$ là thống kê khi bỏ quan sát thứ $i$)*
+
+
+
+## Khoảng tin cậy Bootstrap
+
+Resampling đặc biệt hữu ích cho các thống kê không có công thức đơn giản như median.
+
+* **Phương pháp Percentile:**  
+  Với CI 95%, lấy **percentile 2.5% và 97.5%** của phân phối bootstrap  
+
+* **BCa (Bias-Corrected and Accelerated):**  
+  Điều chỉnh bias và skewness → chính xác hơn, đặc biệt với mẫu nhỏ  
+
+
+
+## Permutation Test
+Dùng cho kiểm định giả thuyết.
+
+1. Giả sử $H_0$ đúng (nhãn nhóm không quan trọng)  
+2. Xáo trộn nhãn dữ liệu nhiều lần  
+3. Tính chênh lệch trung bình mỗi lần  
+4. Tỷ lệ lần mà chênh lệch ≥ thực tế → chính là **P-value**  
+
+
+
+## Ứng dụng trong Machine Learning
+
+### Bagging (Bootstrap Aggregating)
+Cốt lõi của **Random Forest**
+
+* Tạo nhiều mẫu bootstrap từ dữ liệu train  
+* Train một Decision Tree trên mỗi mẫu  
+* Lấy trung bình dự đoán  
+
+$\Rightarrow$ **Lợi ích:** Giảm **variance** mà không tăng **bias**
+
+
+
+### Out-of-Bag (OOB) Error
+Khoảng 37% dữ liệu không được dùng trong mỗi model → dùng làm tập validation miễn phí để ước lượng lỗi tổng quát hóa mà không cần hold-out set riêng.
+
+
+
+### Ước lượng bất định của mô hình
+Train cùng một model trên nhiều bootstrap samples → quan sát độ biến thiên của dự đoán → ước lượng uncertainty của model.
+

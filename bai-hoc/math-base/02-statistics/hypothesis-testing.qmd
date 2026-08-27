@@ -1,0 +1,127 @@
+---
+title: "Kiểm định giả thuyết (Hypothesis Testing)"
+order: 6
+date: 2026-08-27
+description: "Kiểm định giả thuyết là phương pháp thống kê dùng để đưa ra quyết định trong điều kiện bất định. Nó sử dụng dữ liệu mẫu để lựa chọn giữa hai giả thuyết đối lập về tổng thể. Trong Machine Learning,…"
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# Kiểm định giả thuyết (Hypothesis Testing)
+## Giới thiệu
+Kiểm định giả thuyết là phương pháp thống kê dùng để đưa ra quyết định trong điều kiện bất định. Nó sử dụng dữ liệu mẫu để lựa chọn giữa hai giả thuyết đối lập về tổng thể. Trong Machine Learning, khung này giúp xác định liệu sự cải thiện hiệu năng của mô hình là hiệu ứng thực sự hay chỉ là do ngẫu nhiên.
+
+
+## Ví dụ tòa án (Courtroom Analogy)
+Logic của kiểm định giả thuyết tương tự một phiên tòa hình sự, điều này giải thích tại sao ta nói "không bác bỏ" thay vì "chấp nhận".
+
+| Thành phần | Tương tự trong tòa án | Ý nghĩa thống kê |
+| :--- | :--- | :--- |
+| **Giả thuyết không ($H_0$)** | "Bị cáo vô tội" | Trạng thái ban đầu; giả định không có hiệu ứng hoặc khác biệt |
+| **Giả thuyết đối ($H_1$)** | "Bị cáo có tội" | Giả thuyết cần chứng minh; cho rằng có hiệu ứng đáng kể |
+| **Phán quyết** | "Không có tội" | **"Không bác bỏ $H_0$"** – Bằng chứng chưa đủ mạnh |
+
+
+
+## Các định nghĩa cốt lõi
+
+### Các giả thuyết
+* **Giả thuyết không ($H_0$):** Giả định ban đầu (ví dụ: $H_0: \mu = 50$)
+* **Giả thuyết đối ($H_1$):** Khẳng định có sự khác biệt (ví dụ: $H_1: \mu \neq 50$)
+
+### Mức ý nghĩa ($\alpha$)
+Ngưỡng xác suất để bác bỏ $H_0$ khi nó thực sự đúng.
+
+* Thường chọn **$\alpha = 0.05$** (5%)
+* Đại diện cho tiêu chuẩn "beyond reasonable doubt" (vượt qua nghi ngờ hợp lý)
+
+### P-value
+Xác suất quan sát được dữ liệu hiện tại (hoặc cực đoan hơn), **giả sử $H_0$ là đúng**.
+
+* **$P \le \alpha$:** Bác bỏ $H_0$ (dữ liệu hiếm khi xảy ra nếu $H_0$ đúng)
+* **$P > \alpha$:** Không bác bỏ $H_0$ (kết quả chưa đủ thuyết phục)
+
+
+
+## Các loại kiểm định và thống kê kiểm định
+
+### Kiểm định một phía vs hai phía
+
+* **Kiểm định hai phía (Two-tailed):** Kiểm tra khác biệt theo **cả hai hướng**  
+  $H_1: \mu \neq 50$
+
+* **Kiểm định một phía (One-tailed):** Kiểm tra thay đổi theo **một hướng cụ thể**  
+  $H_1: \mu > 50$ (phải) hoặc $H_1: \mu < 50$ (trái)
+
+### Lựa chọn thống kê kiểm định
+
+| Kiểm định | Khi sử dụng |
+| :--- | :--- |
+| **Z-Test** | Biết phương sai tổng thể hoặc mẫu lớn ($n > 30$) |
+| **T-Test** | Không biết phương sai tổng thể và mẫu nhỏ ($n < 30$) |
+| **Chi-Square** | Dữ liệu phân loại (so sánh quan sát vs kỳ vọng) |
+| **ANOVA** | So sánh trung bình của 3 nhóm trở lên |
+
+
+
+## Sai lầm loại I và loại II
+
+* **Sai lầm loại I ($\alpha$):** **Dương tính giả (False Positive)**  
+  Kết tội người vô tội (bác bỏ $H_0$ khi $H_0$ đúng)
+
+* **Sai lầm loại II ($\beta$):** **Âm tính giả (False Negative)**  
+  Thả người có tội (không bác bỏ $H_0$ khi $H_0$ sai)
+
+* **Power ($1 - \beta$):** Xác suất phát hiện đúng hiệu ứng (True Positive)
+
+
+## Quy trình 6 bước
+
+1. **Xây dựng giả thuyết:** Xác định rõ $H_0$ và $H_1$ trước khi thu thập dữ liệu  
+2. **Chọn $\alpha$:** Thường là 0.05  
+3. **Thu thập dữ liệu:** Thiết kế thí nghiệm và lấy mẫu đúng cách  
+4. **Tính thống kê kiểm định:** Tính Z, T hoặc Chi-Square  
+5. **Tính P-value:** So sánh với phân phối dưới $H_0$  
+6. **Ra quyết định:** Bác bỏ hoặc không bác bỏ $H_0$, và diễn giải ý nghĩa thực tế  
+
+
+
+## Ví dụ thực tế: Z-Test (IQ)
+
+**Bài toán:** Tổng thể có $\mu = 100$, $\sigma = 15$.  
+Mẫu $n = 36$ học sinh có $\bar{x} = 106$
+
+* **Bước 1:**  
+  $H_0: \mu = 100$  
+  $H_1: \mu > 100$
+
+* **Bước 2:**  
+  $\alpha = 0.05$ (Giá trị tới hạn $Z = 1.645$)
+
+* **Bước 3 (Tín hiệu vs Nhiễu):**
+  * Tín hiệu: $106 - 100 = 6$
+  * Nhiễu (SE): $15 / \sqrt{36} = 2.5$
+
+* **Bước 4 (Thống kê Z):**
+  $$Z = \frac{6}{2.5} = 2.4$$
+
+* **Bước 5 (Quyết định):**  
+  Vì $2.4 > 1.645$ ⇒ **Bác bỏ $H_0$**  
+  → Nhóm học sinh có IQ cao hơn đáng kể so với trung bình
+
+
+
+## Ứng dụng trong Machine Learning
+
+1. **Feature Selection:** Dùng Pearson Correlation hoặc Chi-Square để loại bỏ feature không liên quan  
+2. **A/B Testing:** Dùng Z-test hai mẫu để so sánh tỷ lệ chuyển đổi  
+3. **So sánh mô hình:** Dùng paired T-test trên kết quả cross-validation  
+
+
+
+## Hạn chế và bẫy thường gặp
+
+* **Ý nghĩa thống kê vs thực tiễn:** Dataset lớn có thể khiến khác biệt nhỏ trở nên "có ý nghĩa thống kê" nhưng vô dụng  
+* **P-hacking:** Điều chỉnh tham số để đạt $P < 0.05$, làm tăng false positive  
+* **File Drawer Effect:** Kết quả có ý nghĩa dễ được công bố hơn → gây bias trong tài liệu nghiên cứu  
+

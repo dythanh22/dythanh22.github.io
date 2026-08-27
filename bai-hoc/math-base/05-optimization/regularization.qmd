@@ -1,0 +1,160 @@
+---
+title: "Regularization (L1, L2, Dropout)"
+order: 6
+date: 2026-08-27
+description: "Nghệ thuật làm cho mô hình “ngu hơn” để trở nên thông minh hơn trên dữ liệu mới. Chống overfitting bằng các ràng buộc."
+series: math-base
+categories: [math-base, optimization]
+group: optimization
+---
+# Regularization (L1, L2, Dropout)
+
+Nghệ thuật làm cho mô hình “ngu hơn” để trở nên thông minh hơn trên dữ liệu mới. Chống overfitting bằng các ràng buộc. 
+
+## Giới thiệu
+
+Một mạng nơ-ron sâu với hàng triệu tham số là một "universal function approximator (bộ xấp xỉ hàm phổ quát)". Nó có thể ghi nhớ từng pixel trong dữ liệu huấn luyện. Với một mô hình đủ mạnh và hàm mất mát cross-entropy, mô hình có thể fit hoàn hảo tập huấn luyện.
+
+Đây là một vấn đề. Khi mô hình ghi nhớ dữ liệu huấn luyện thay vì học các quy luật tổng quát, nó sẽ thất bại nghiêm trọng trên dữ liệu mới chưa từng thấy. Đây là hiện tượng **overfitting**, và hiểu về loss landscape giúp giải thích tại sao điều này xảy ra.
+
+**Regularization (chuẩn hóa/ràng buộc hóa)** chủ động giới hạn năng lực của mô hình. Chúng ta buộc mô hình phải “đơn giản hơn”, điều này nghịch lý thay lại giúp nó tổng quát hóa tốt hơn. Nó giống như luyện tập với các bất lợi để thi đấu tốt hơn trong môi trường thực tế.
+
+
+
+## Bias-Variance Tradeoff
+
+Sai số của mọi mô hình ML có thể được phân tách thành ba thành phần:
+
+$$\text{Error} = \text{Bias}^2 + \text{Variance} + \text{Irreducible Noise}$$
+
+### So Sánh Chẩn Đoán
+
+* **Bias Cao (Underfitting):** Mô hình quá đơn giản. Không thể nắm bắt quy luật thực sự. Ví dụ: Fit một đường thẳng vào dữ liệu parabol.
+* **Variance Cao (Overfitting):** Mô hình quá phức tạp. Fit cả nhiễu trong dữ liệu huấn luyện. Ví dụ: Đa thức bậc 20 đi qua 10 điểm.
+
+Regularization làm tăng bias một chút nhưng giảm variance rất mạnh. Sự đánh đổi này thường đáng giá.
+
+
+
+## L2 Regularization (Ridge)
+
+L2 regularization thêm tổng bình phương trọng số vào hàm mất mát. Trong gradient descent, điều này phạt các trọng số lớn:
+
+$$\mathcal{L}*{\text{total}} = \mathcal{L}*{\text{data}} + \lambda \sum_i w_i^2$$
+
+### Cập Nhật Gradient và Weight Decay
+
+Gradient của thành phần phạt là $2\lambda w$:
+
+$$w_{new} = w - \eta(\nabla L + 2\lambda w)$$
+$$w_{new} = w(1 - 2\eta\lambda) - \eta \nabla L$$
+
+Điều này được gọi là **Weight Decay (suy giảm trọng số)**. Mỗi bước, trọng số được nhân với một hệ số nhỏ hơn 1 một chút.
+
+### Ảnh Hưởng của L2
+
+L2 phạt các trọng số lớn theo hàm bậc hai. Một trọng số bằng 10 bị phạt mạnh hơn 100× so với trọng số bằng 1. Kết quả: các trọng số bị kéo về gần 0 nhưng **hiếm khi bằng chính xác 0**. Mọi đặc trưng vẫn đóng góp, chỉ với hệ số nhỏ hơn. Thành phần phạt L2 cũng là hàm lồi, giúp tối ưu hóa dễ xử lý hơn.
+
+
+
+## L1 Regularization (Lasso)
+
+L1 regularization thêm tổng giá trị tuyệt đối của trọng số:
+
+$$\mathcal{L}*{\text{total}} = \mathcal{L}*{\text{data}} + \lambda \sum_i |w_i|$$
+
+### Cập Nhật Gradient và Tính Thưa
+
+Gradient của $|w|$ là $\text{sign}(w)$ (hoặc +1 hoặc -1):
+
+$$w_{new} = w - \eta(\nabla L + \lambda \cdot \text{sign}(w))$$
+
+Thành phần phạt trừ đi một **hằng số** khỏi độ lớn trọng số ở mỗi bước, bất kể giá trị hiện tại của trọng số là bao nhiêu.
+
+### Ảnh Hưởng của L1: Tính Thưa (Sparsity)
+
+Khác với L2, L1 đẩy trọng số về **chính xác bằng 0**. Điều này tạo ra các mô hình thưa (sparse models), nơi nhiều đặc trưng bị bỏ qua hoàn toàn. L1 thực hiện hiệu quả việc **feature selection (lựa chọn đặc trưng)**.
+
+
+
+## Trực Giác Hình Học
+
+Điểm kỳ diệu của tính thưa trong L1 đến từ hình học. Hãy xem regularization như việc ép các trọng số nằm trong một vùng giới hạn.
+
+* **L1: Hình Kim Cương:** $|w_1| + |w_2| \le C$. Có các góc nhọn trên các trục. Các đường đồng mức của loss dễ chạm vào góc trước, khiến một trọng số bị triệt tiêu.
+* **L2: Hình Tròn:** $w_1^2 + w_2^2 \le C$. Không có góc nhọn. Các đường đồng mức chạm vào cạnh mượt. Cả hai trọng số đều khác 0.
+
+
+
+## Elastic Net
+
+Elastic Net kết hợp cả thành phần phạt L1 và L2:
+
+$$\mathcal{L} = \mathcal{L}_{data} + \lambda_1 \sum |w_i| + \lambda_2 \sum w_i^2$$
+
+Elastic Net tận dụng khả năng lựa chọn đặc trưng của L1 trong khi tránh được tính không ổn định khi các đặc trưng tương quan với nhau.
+
+### Grouping Effect
+
+L1 regularization có một điểm yếu đã biết: nếu một nhóm đặc trưng có tương quan cao, L1 thường chọn ngẫu nhiên một đặc trưng và triệt tiêu các đặc trưng còn lại. Thành phần L2 trong Elastic Net tạo ra **grouping effect (hiệu ứng nhóm)**: các đặc trưng tương quan được giữ lại cùng nhau và nhận các trọng số tương tự nhau.
+
+
+
+## Diễn Giải Bayesian
+
+Regularization tương đương với việc đặt prior belief (niềm tin tiên nghiệm) lên các trọng số.
+
+* **L2 = Gaussian Prior:** “Tôi tin rằng trọng số tuân theo phân phối chuẩn quanh 0.” $P(w) \propto e^{-w^2}$.
+* **L1 = Laplace Prior:** “Tôi tin rằng hầu hết trọng số nên bằng 0.” $P(w) \propto e^{-|w|}$.
+
+Regularized loss tương đương với ước lượng **Maximum A Posteriori (MAP)**. Chúng ta đang tìm bộ trọng số có xác suất cao nhất dựa trên cả dữ liệu VÀ niềm tin tiên nghiệm.
+
+
+
+## Dropout
+
+Dropout ngẫu nhiên đặt một phần đầu ra của neuron về 0 trong mỗi batch huấn luyện.
+
+### Cách Hoạt Động
+
+Với mỗi batch huấn luyện, mỗi neuron có xác suất $p$ bị loại bỏ. Chúng ta áp dụng một vector mặt nạ $r$ gồm các biến ngẫu nhiên Bernoulli:
+
+$$r_j \sim \text{Bernoulli}(p)$$
+$$h = f(W(x \odot r) + b)$$
+
+### Ngăn Chặn Co-Adaptation
+
+Không có dropout, các neuron phát triển các phụ thuộc phức tạp lẫn nhau. Với dropout, các neuron liên quan có thể bị loại bỏ, nên mỗi neuron buộc phải hữu ích một cách độc lập. Điều này ngăn các đặc trưng chuyên biệt dễ vỡ và buộc mạng học các biểu diễn tổng quát hơn.
+
+
+
+## Inverted Dropout & Scaling
+
+Trong quá trình huấn luyện, chỉ có $(1-p)$ neuron hoạt động. Khi suy luận (test time), tất cả neuron đều hoạt động. Để đảm bảo độ lớn kỳ vọng của activation không thay đổi, chúng ta sử dụng **Inverted Dropout**.
+
+### Giải Pháp
+
+Chúng ta scale activation lên **trong quá trình huấn luyện**:
+
+$$y = \frac{1}{1-p} \cdot \text{mask} \cdot x$$
+
+Với $p=0.5$, chúng ta nhân các activation còn sống với 2. Điều này cho phép mạng chạy bình thường ở giai đoạn suy luận mà không cần scale hay masking thêm.
+
+
+
+## Dropout như Ensemble
+
+Dropout ngầm huấn luyện một **ensemble** gồm $2^N$ mạng khác nhau (với $N$ là số neuron).
+
+Mỗi dropout mask tạo ra một mạng con "thinned" khác nhau. Khi huấn luyện với các mask ngẫu nhiên, chúng ta đang huấn luyện đồng thời số lượng khổng lồ mạng con chia sẻ cùng trọng số. Khi suy luận, việc sử dụng toàn bộ neuron xấp xỉ việc lấy trung bình dự đoán của tất cả các mạng con này.
+
+
+
+## Bảng So Sánh
+
+| Kỹ Thuật        | Phù Hợp Nhất                      | Hiệu Ứng                       |
+|:----------------|:----------------------------------|:-------------------------------|
+| **L1 (Lasso)**  | Feature selection, mô hình thưa   | Đẩy trọng số về chính xác 0    |
+| **L2 (Ridge)**  | Mục đích tổng quát, weight decay  | Thu nhỏ đồng đều mọi trọng số  |
+| **Elastic Net** | Đặc trưng tương quan              | Kết hợp L1 + L2                |
+| **Dropout**     | Deep neural networks              | Buộc học các biểu diễn dư thừa |

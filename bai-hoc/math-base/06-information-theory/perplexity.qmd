@@ -1,0 +1,166 @@
+---
+title: "Perplexity in LLMs (Perplexity)"
+order: 6
+date: 2026-08-27
+description: "Thước đo đánh giá tiêu chuẩn cho các mô hình ngôn ngữ. Mô hình của bạn “bối rối” đến mức nào?"
+series: math-base
+categories: [math-base, information-theory]
+group: information-theory
+---
+# Perplexity in LLMs
+
+Thước đo đánh giá tiêu chuẩn cho các mô hình ngôn ngữ. Mô hình của bạn “bối rối” đến mức nào? 
+
+
+
+## Giới thiệu
+
+Khi bạn đọc câu “The cat sat on the ___”, não bạn gần như ngay lập tức dự đoán các từ như “mat”, “floor” hoặc “couch”. Bạn khá chắc chắn về từ tiếp theo. Nhưng với câu “I really want to ___”, có rất nhiều khả năng: eat, sleep, dance, leave, scream. Bạn ít chắc chắn hơn.
+
+**Perplexity (PPL)** đo chính xác điều này: mức độ “ngạc nhiên” hoặc “bối rối” của mô hình ngôn ngữ khi dự đoán từ tiếp theo. Nó định lượng độ bất định của mô hình trên toàn bộ văn bản.
+
+### Tại sao cần Perplexity?
+
+Các mô hình ngôn ngữ như GPT xuất ra phân phối xác suất trên hàng nghìn token tiếp theo có thể xảy ra. Perplexity tóm gọn câu hỏi “Các dự đoán này tốt đến mức nào?” thành một thang đo duy nhất và dễ diễn giải.
+
+Liên hệ với lý thuyết thông tin: **Entropy** đo độ bất định bằng bit. Perplexity biến entropy thành “số lựa chọn hiệu dụng” bằng cách lấy lũy thừa:
+$$PPL = 2^H$$
+
+> **Ý tưởng cốt lõi:** Perplexity = “Mô hình đang chọn giữa bao nhiêu lựa chọn có khả năng ngang nhau?”
+
+Nếu một mô hình ngôn ngữ có perplexity bằng 50, điều đó nghĩa là nó “bối rối như thể phải chọn đồng đều giữa 50 lựa chọn ở mỗi vị trí.” Perplexity càng thấp thì mô hình càng tự tin và dự đoán càng tốt.
+
+
+
+## Trực giác: Số lựa chọn hiệu dụng
+
+Các mô hình thực tế xuất ra các phân phối xác suất phức tạp. Perplexity chuyển phân phối đó thành một con số tương đương với “phân phối đều trên $N$ lựa chọn”.
+
+* **Perplexity thấp (Tốt):** “The capital of France is ___” — Mô hình tự tin 95% rằng đáp án là “Paris.”
+  $PPL \approx 1.2$
+* **Perplexity cao (Bối rối):** “I really like to ___” — Có thể là eat, sleep, dance, run,...
+  $PPL \approx 50+$
+
+
+
+## Công thức
+
+Với một phân phối đơn có entropy $H$:
+
+$$PPL = 2^H$$
+
+Perplexity là 2 mũ entropy (tính theo bit).
+
+Với chuỗi gồm $N$ token, ta sử dụng **average negative log-likelihood**:
+
+$$
+PPL
+=
+\exp\left(
+-\frac{1}{N}
+\sum_{i=1}^{N}
+\ln p_{\text{model}}
+\left(
+x_i \mid x_{1:i-1}
+\right)
+\right)
+$$
+
+### Bits vs Nats
+
+* Dùng $\log_2$ cho entropy tính theo **bits** và:
+  $$PPL = 2^H$$
+* Dùng $\ln$ cho entropy tính theo **nats** (log tự nhiên) và:
+  $$PPL = e^H$$
+
+Các framework deep learning thường dùng nats, nhưng ý nghĩa hoàn toàn giống nhau.
+
+
+
+## Tính toán từng bước
+
+Xét chuỗi gồm 4 từ: **"The cat sat down"**
+
+1. **Lấy xác suất từ mô hình:**
+
+   * $P(\text{"The"} | \text{<BOS>}) = 0.15$
+   * $P(\text{"cat"} | \text{"The"}) = 0.05$
+   * $P(\text{"sat"} | \text{"The cat"}) = 0.20$
+   * $P(\text{"down"} | \text{"The cat sat"}) = 0.25$
+
+2. **Tính log xác suất ($\ln$):**
+
+   * $\ln(0.15) = -1.897$
+   * $\ln(0.05) = -2.996$
+   * $\ln(0.20) = -1.609$
+   * $\ln(0.25) = -1.386$
+
+3. **Average Negative Log-Likelihood (NLL):**
+   $$NLL = \frac{1.897 + 2.996 + 1.609 + 1.386}{4} = 1.972 \text{ nats}$$
+
+4. **Lấy số mũ:**
+   $$PPL = e^{1.972} \approx 7.18$$
+
+Mô hình “bối rối như thể đang chọn giữa 7 từ có xác suất ngang nhau” ở mỗi bước trung bình.
+
+
+
+## Benchmark cho LLM
+
+Perplexity là thước đo tiêu chuẩn để so sánh các mô hình ngôn ngữ trên các bộ dữ liệu như WikiText-103.
+
+| Model        | WikiText-103  | Parameters  |
+|:-------------|:--------------|:------------|
+| GPT-2 Small  | 37.5          | 117M        |
+| GPT-2 Large  | 22.1          | 762M        |
+| GPT-3        | ~20           | 175B        |
+| LLaMA 2      | ~7            | 70B         |
+
+*Lưu ý: Giá trị perplexity chỉ có thể so sánh khi sử dụng **cùng tokenizer** và **cùng tập kiểm tra**.*
+
+
+
+## Bits Per Character (BPC)
+
+Đối với các mô hình mức ký tự, **Bits Per Character** được dùng như một thước đo độc lập với tokenizer.
+
+$$BPC = \frac{\text{Cross-Entropy Loss}}{\ln(2)}$$
+
+Một mô hình ngôn ngữ mức ký tự tốt thường đạt khoảng **1.0 - 1.5 BPC**. Có thể chuyển từ BPC sang Perplexity bằng:
+$$PPL = 2^{BPC}$$
+
+
+
+## Liên hệ với Entropy
+
+Tối thiểu hóa Perplexity tương đương về mặt toán học với tối thiểu hóa hàm mất mát **Cross-Entropy**.
+
+| Khái niệm         | Định nghĩa       | Ý nghĩa                    |
+| :- | : | :- |
+| **Entropy**       | $H$              | Số bit cần thiết           |
+| **Cross-Entropy** | $H(p, q)$        | Hàm mất mát khi huấn luyện |
+| **Perplexity**    | $2^H$ hoặc $e^H$ | Số lựa chọn hiệu dụng      |
+
+**Mối quan hệ quan trọng:**
+$$PPL = \exp(\text{Cross-Entropy Loss})$$
+
+Khi training loss giảm 0.1, perplexity sẽ được nhân với:
+$$e^{-0.1} \approx 0.9$$
+
+
+
+## Hạn chế & Lưu ý
+
+1. **Không đặc thù theo tác vụ:** Perplexity thấp không đồng nghĩa với khả năng suy luận, độ chính xác thực tế hay khả năng làm theo hướng dẫn tốt hơn.
+2. **Phụ thuộc tokenizer:** Không thể so sánh trực tiếp perplexity giữa các mô hình dùng tokenizer khác nhau.
+3. **Nhạy cảm với miền dữ liệu:** Mô hình huấn luyện trên tin tức sẽ có perplexity cao khi đánh giá trên văn bản y khoa hoặc mã nguồn.
+4. **Ghi nhớ vs Hiểu biết:** Perplexity thấp bất thường có thể là dấu hiệu của rò rỉ dữ liệu hoặc overfitting thay vì khả năng tổng quát hóa thực sự.
+
+
+
+## Ứng dụng trong Machine Learning
+
+* **Đánh giá LLM:** Benchmark tiêu chuẩn cho các mô hình như GPT và LLaMA.
+* **Machine Translation:** Đo độ trôi chảy của bản dịch được sinh ra.
+* **Siêu tham số trong t-SNE:** Xác định kích thước lân cận hiệu dụng cho giảm chiều dữ liệu.
+* **Speech Recognition:** Perplexity thấp hơn thường dẫn đến Word Error Rate (WER) tốt hơn.

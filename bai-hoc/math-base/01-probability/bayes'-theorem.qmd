@@ -1,0 +1,85 @@
+---
+title: "Định lý Bayes & Suy luận Bayes (Bayes' Theorem)"
+order: 6
+date: 2026-08-27
+description: "Trong logic thường ngày, chúng ta hay suy nghĩ từ nguyên nhân đến kết quả (ví dụ: “Nếu trời mưa, cỏ sẽ ướt”). Tuy nhiên, trong thực tế, chúng ta thường quan sát kết quả và phải suy ra nguyên nhân…"
+series: math-base
+categories: [math-base, probability]
+group: probability
+---
+# Định lý Bayes & Suy luận Bayes
+
+## Giới thiệu
+
+Trong logic thường ngày, chúng ta hay suy nghĩ từ nguyên nhân đến kết quả (ví dụ: “Nếu trời mưa, cỏ sẽ ướt”). Tuy nhiên, trong thực tế, chúng ta thường quan sát **kết quả** và phải suy ra **nguyên nhân** (ví dụ: “Cỏ ướt; liệu có phải do mưa hay do hệ thống tưới nước?”).
+
+**Bayes' Theorem (Định lý Bayes)** cung cấp khung toán học để *đảo ngược* các xác suất có điều kiện này, cho phép ta tính $P(\text{nguyên nhân} | \text{kết quả})$ khi biết $P(\text{kết quả} | \text{nguyên nhân})$. Đây là nền tảng của **Bayesian Inference (suy luận Bayes)**, nơi việc học được xem như quá trình cập nhật phân phối xác suất khi có dữ liệu mới.
+
+
+
+## Trực giác cốt lõi
+
+Mối quan hệ có thể được tóm tắt như sau: **Prior + Evidence = Posterior**.
+
+* **Prior $P(A)$ (xác suất tiên nghiệm):** Niềm tin ban đầu trước khi quan sát dữ liệu mới.
+* **Likelihood $P(B|A)$ (khả năng xảy ra):** Mức độ phù hợp của dữ liệu quan sát với giả thuyết.
+* **Posterior $P(A|B)$ (xác suất hậu nghiệm):** Niềm tin được cập nhật sau khi kết hợp bằng chứng mới.
+
+
+
+## Công thức
+
+Biểu thức toán học tiêu chuẩn của Định lý Bayes là:
+
+$$P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}$$
+
+* **$P(A|B)$ (Posterior):** Xác suất của giả thuyết $A$ khi biết bằng chứng $B$.
+* **$P(B|A)$ (Likelihood):** Xác suất của bằng chứng $B$ khi giả thuyết $A$ đúng.
+* **$P(A)$ (Prior):** Xác suất của giả thuyết $A$ trước khi quan sát $B$.
+* **$P(B)$ (Evidence):** Xác suất tổng của bằng chứng, đóng vai trò là hằng số chuẩn hóa.
+
+### Dạng tỉ lệ
+
+Trong nhiều ngữ cảnh học máy, ta bỏ qua mẫu số $P(B)$ và tập trung vào mối quan hệ:
+$$P(A|B) \propto P(B|A) \cdot P(A)$$
+
+
+
+## Nghịch lý dương tính giả
+
+Ví dụ kinh điển này minh họa vì sao trực giác về xác suất thường dễ gây hiểu lầm.
+
+### Thiết lập
+
+* **Tỷ lệ mắc bệnh (Prior):** $1\%$ dân số $(0.01)$.
+* **Độ nhạy của xét nghiệm:** Chính xác $99\%$ với người bệnh $(0.99)$.
+* **Tỷ lệ dương tính giả:** $1\%$ với người khỏe mạnh $(0.01)$.
+
+**Câu hỏi:** Nếu bạn có kết quả dương tính, xác suất thực sự mắc bệnh là bao nhiêu $P(D \mid {+})$?
+
+1. **Tử số (dương tính thật):** $P({+} \mid D) \times P(D) = 0.99 \times 0.01 = 0.0099$.
+2. **Mẫu số (tất cả dương tính):** 
+   $P({+}) = P({+} \mid D)P(D) + P({+} \mid H)P(H) = 0.99(0.01) + 0.01(0.99) = 0.0198$.
+3. **Kết quả:** $P(D \mid {+}) = 0.0099 / 0.0198 = \mathbf{50\%}$.
+
+**Tại sao?** Vì bệnh hiếm gặp, số ca dương tính thật từ $1\%$ người bệnh bằng đúng số cảnh báo sai từ $99\%$ người khỏe, dẫn đến xác suất thực sự mắc bệnh chỉ là $50\%$.
+
+
+## Suy luận Bayes trong học máy
+
+Trong học máy, ta thay các sự kiện trừu tượng bằng tham số ($\theta$) và dữ liệu ($D$):
+
+$$P(\theta | D) = \frac{P(D | \theta) \cdot P(\theta)}{P(D)}$$
+
+* **Maximum A Posteriori (MAP) Estimation (ước lượng hậu nghiệm cực đại):** Tìm $\theta$ tối đa hóa posterior: $\theta_{MAP} = \arg\max_\theta P(D|\theta)P(\theta)$.
+* **Maximum Likelihood Estimation (MLE) (ước lượng hợp lý cực đại):** Trường hợp đặc biệt của MAP khi giả định prior là phân bố đều: $\theta_{MLE} = \arg\max_\theta P(D|\theta)$.
+* **Bài toán mẫu số:** Việc tính $P(D)$ đòi hỏi tích phân trên toàn bộ không gian $\theta$, điều này thường không khả thi về mặt toán học với các mô hình phức tạp như mạng nơ-ron. Các phương pháp giải quyết bao gồm MCMC hoặc Variational Inference (suy luận biến phân).
+
+
+
+## Ứng dụng trong học máy
+
+* **Naive Bayes Classifier (bộ phân loại Bayes ngây thơ):** Dùng cho phân loại văn bản nhanh bằng giả định các đặc trưng độc lập.
+* **Regularization (chuẩn hóa):** Chuẩn hóa L2 tương đương về mặt toán học với việc đặt prior Gaussian lên trọng số mô hình ($P(\theta) \sim \mathcal{N}(0, \sigma^2)$).
+* **Bayesian Neural Networks (mạng nơ-ron Bayes):** Duy trì phân phối trên trọng số thay vì một giá trị điểm, cho phép định lượng độ bất định.
+* **Thompson Sampling:** Phương pháp cân bằng giữa khám phá và khai thác trong học tăng cường bằng cách lấy mẫu từ posterior.

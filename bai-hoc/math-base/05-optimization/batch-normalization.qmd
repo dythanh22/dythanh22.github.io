@@ -1,0 +1,111 @@
+---
+title: "Batch Normalization (Batch Normalization)"
+order: 7
+date: 2026-08-27
+description: "Một trong những đổi mới quan trọng nhất trong deep learning. Chuẩn hóa đầu vào của các tầng để tăng tốc huấn luyện và cải thiện khả năng tổng quát hóa."
+series: math-base
+categories: [math-base, optimization]
+group: optimization
+---
+# Batch Normalization
+
+Một trong những đổi mới quan trọng nhất trong deep learning. Chuẩn hóa đầu vào của các tầng để tăng tốc huấn luyện và cải thiện khả năng tổng quát hóa. 
+
+## Giới thiệu
+
+Batch Normalization (BN), được giới thiệu bởi Ioffe và Szegedy (2015), đã cách mạng hóa việc huấn luyện deep learning. Trước BN, việc huấn luyện các mạng rất sâu nổi tiếng là khó khăn: gradient sẽ biến mất (vanish) hoặc bùng nổ (explode) trong quá trình backpropagation, đòi hỏi khởi tạo cẩn thận và learning rate thấp.
+
+BN giải quyết vấn đề này bằng cách chuẩn hóa đầu vào của mỗi tầng, giúp huấn luyện nhanh hơn, ổn định hơn và ít nhạy cảm với khởi tạo. Hiện nay, BN là thành phần tiêu chuẩn trong hầu hết các kiến trúc hiện đại.
+
+> **Tác động:** Với BatchNorm, bạn có thể sử dụng learning rate cao hơn rất nhiều (10–100×), huấn luyện các mạng sâu hơn (100+ tầng), và thường có thể loại bỏ hoàn toàn dropout.
+
+
+
+## Vấn Đề: Internal Covariate Shift
+
+Xét một mạng sâu nơi mỗi tầng biến đổi đầu vào của nó:
+
+$$h^{(l)} = f(W^{(l)} h^{(l-1)} + b^{(l)})$$
+
+Trong quá trình huấn luyện, khi các trọng số $W^{(l-1)}$ ở các tầng trước được cập nhật, phân phối của $h^{(l-1)}$ thay đổi. Điều này khiến tầng $l$ liên tục nhận đầu vào từ một **phân phối đang thay đổi**, hiện tượng được gọi là *Internal Covariate Shift (ICS)*.
+
+### Hệ Quả của ICS
+
+* **Gradient Biến Mất/Bùng Nổ:** Activation không bị chặn có thể gây mất ổn định gradient, buộc phải dùng learning rate rất nhỏ.
+* **Activation Bão Hòa:** Các activation như sigmoid hoặc tanh bị bão hòa (gradient $\approx 0$) khi đầu vào quá lớn, làm quá trình học bị “tê liệt”.
+* **Hội Tụ Chậm:** Các tầng phải liên tục thích nghi lại với phân phối đầu vào thay đổi, làm huấn luyện chậm đi đáng kể.
+
+
+
+## Thuật Toán
+
+Batch Normalization chuẩn hóa từng đặc trưng để có trung bình bằng 0 và phương sai bằng 1 trên mini-batch. Với mini-batch kích thước $m$ có vector đặc trưng $x$:
+
+### Bước 1: Tính Thống Kê Batch
+
+Tính trung bình ($\mu_B$) và phương sai ($\sigma_B^2$) cho mini-batch:
+
+$$\mu_B = \frac{1}{m} \sum_{i=1}^m x_i$$
+$$\sigma_B^2 = \frac{1}{m} \sum_{i=1}^m (x_i - \mu_B)^2$$
+
+### Bước 2: Chuẩn Hóa
+
+Scale activation. Một giá trị nhỏ $\epsilon$ (thường là $10^{-5}$) được thêm vào để đảm bảo ổn định số học:
+
+$$\hat{x}_i = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}$$
+
+### Bước 3: Scale và Shift (Có Thể Học)
+
+Để đảm bảo việc chuẩn hóa không quá hạn chế, mạng học các tham số scale ($\gamma$) và shift ($\beta$) tối ưu để khôi phục khả năng biểu diễn:
+
+$$y_i = \gamma \hat{x}_i + \beta$$
+
+
+
+## Training vs. Inference
+
+Batch Normalization hoạt động khác nhau tùy thuộc vào chế độ của mô hình:
+
+| Giai Đoạn      | Hành Vi                                                                           | Mục Đích                                                                    |
+|:---------------|:----------------------------------------------------------------------------------|:----------------------------------------------------------------------------|
+| **Training**   | Sử dụng thống kê tính từ mini-batch hiện tại ($\mu_B$, $\sigma_B^2$).             | Ổn định huấn luyện và tạo hiệu ứng regularization thông qua nhiễu batch.    |
+| **Inference**  | Sử dụng running statistics (trung bình toàn cục) được tích lũy trong huấn luyện.  | Đảm bảo đầu ra xác định cho cùng đầu vào và cho phép xử lý batch size = 1.  |
+
+### Cập Nhật Running Statistics
+
+Trong huấn luyện, mô hình duy trì exponential moving average (EMA):
+
+$$\mu_{\text{running}} \leftarrow (1 - \alpha) \mu_{\text{running}} + \alpha \mu_B$$
+$$\sigma^2_{\text{running}} \leftarrow (1 - \alpha) \sigma^2_{\text{running}} + \alpha \sigma^2_B$$
+
+*Giá trị $\alpha$ (momentum) điển hình là 0.1.*
+
+
+
+## Vì Sao Nó Hoạt Động
+
+Các nghiên cứu gần đây cho thấy BN mang lại nhiều lợi ích cốt lõi vượt xa việc chỉ giảm ICS:
+
+1. **Làm Mượt Loss Landscape:** BN khiến bề mặt tối ưu hóa dễ dự đoán và dễ điều hướng hơn, cho phép learning rate lớn hơn.
+2. **Ngăn Chặn Vấn Đề Gradient:** Giữ activation trong phạm vi hợp lý giúp gradient không biến mất cũng không bùng nổ trong backpropagation.
+3. **Regularization Ngầm:** Vì mỗi mẫu được chuẩn hóa tương đối với batch của nó, nhiễu được tạo ra giúp giảm overfitting, tương tự dropout.
+4. **Giảm Độ Nhạy với Khởi Tạo:** Chuẩn hóa giúp chuẩn hóa thang đo activation, khiến mô hình ít phụ thuộc vào các chiến lược khởi tạo trọng số cụ thể.
+
+
+
+## Các Biến Thể & Mở Rộng
+
+* **Layer Normalization (LayerNorm):** Chuẩn hóa theo đặc trưng thay vì theo batch. Đây là chuẩn tiêu chuẩn cho Transformers và RNNs — nơi batch size có thể gây vấn đề.
+* **Instance Normalization:** Chuẩn hóa từng mẫu độc lập; chủ yếu dùng trong style transfer và GANs.
+* **Group Normalization:** Chia các channel thành nhiều nhóm và chuẩn hóa trong từng nhóm. Lý tưởng cho các tác vụ batch size nhỏ như object detection.
+* **Weight Normalization:** Chuẩn hóa trọng số thay vì activation để tách biệt độ lớn và hướng của vector trọng số.
+
+
+
+## Các Lưu Ý Thực Tế và Hạn Chế
+
+* **Vị Trí Đặt:** Mặc dù bài báo gốc đề xuất đặt BN trước activation function, thực tế hiện đại sử dụng cả trước và sau activation.
+* **Batch Size:** BN yêu cầu batch tương đối lớn ($\geq 8\text{--}16$) để tạo thống kê đáng tin cậy. Batch quá nhỏ dẫn đến ước lượng nhiễu và làm giảm hiệu năng.
+* **RNNs:** BN khó áp dụng cho RNN do độ dài chuỗi thay đổi; LayerNorm thường được ưu tiên hơn.
+* **Độ Chính Xác Số Thực:** BN có thể mất ổn định số học khi dùng mixed precision (FP16). Khuyến nghị giữ tham số BN ở FP32.
+* **Các Giải Pháp Thay Thế Hiện Đại:** Một số kiến trúc mới như **NFNets (Normalizer-Free Networks)** sử dụng adaptive gradient clipping thay vì BN, trong khi **Transformers** dựa vào LayerNorm.

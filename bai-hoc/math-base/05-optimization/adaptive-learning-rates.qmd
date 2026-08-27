@@ -1,0 +1,132 @@
+---
+title: "Adaptive Learning Rates (Adaptive Learning Rates)"
+order: 4
+date: 2026-08-27
+description: "Từ AdaGrad đến AdamW: hành trình tự động hóa siêu tham số nhạy cảm nhất trong deep learning."
+series: math-base
+categories: [math-base, optimization]
+group: optimization
+---
+# Adaptive Learning Rates
+
+Từ AdaGrad đến AdamW: hành trình tự động hóa siêu tham số nhạy cảm nhất trong deep learning. 
+
+## Giới thiệu
+
+Trong các phương pháp dựa trên momentum, chúng ta sử dụng một learning rate $\eta$ duy nhất cho tất cả tham số. Tuy nhiên, mạng nơ-ron chứa hàng triệu tham số và không phải tham số nào cũng giống nhau:
+
+* **Đặc trưng phổ biến (Frequent features):** Các tham số liên kết với các thành phần xuất hiện thường xuyên (như từ phổ biến hoặc pixel sáng) nhận được gradient lớn và ổn định.
+* **Đặc trưng hiếm (Rare features):** Các tham số liên kết với thành phần bất thường (như từ hiếm hoặc edge case) nhận được gradient nhỏ và nhiễu.
+
+**Ý tưởng cốt lõi:** Adaptive optimizers (bộ tối ưu hóa thích nghi) gán cho mỗi tham số một learning rate riêng, được tự động điều chỉnh dựa trên lịch sử gradient. Điều này chuẩn hóa không gian tối ưu hóa và cho phép các đặc trưng hiếm học hiệu quả cùng với các đặc trưng phổ biến.
+
+
+
+## Vấn Đề với Global Learning Rate
+
+Hãy xét việc huấn luyện một mô hình word embedding. Một từ phổ biến như "the" xuất hiện hàng triệu lần, tạo ra gradient lớn và ổn định. Một từ hiếm như "serendipity" chỉ xuất hiện vài lần, tạo ra gradient nhỏ và thiếu tin cậy.
+
+* **Nếu LR lớn:** "the" overshoot và dao động, trong khi "serendipity" cuối cùng mới bắt đầu học.
+* **Nếu LR nhỏ:** "the" hội tụ hiệu quả, nhưng "serendipity" gần như không thay đổi trong suốt quá trình huấn luyện.
+
+**Giải pháp:** Chia learning rate cho độ lớn của các gradient gần đây. Gradient lớn nhận effective learning rate nhỏ hơn, trong khi gradient nhỏ nhận effective learning rate lớn hơn, giúp cân bằng cuộc chơi.
+
+
+
+## AdaGrad (Adaptive Gradient, 2011)
+
+Được đề xuất bởi Duchi và cộng sự, AdaGrad là bước đột phá cho các bài toán dữ liệu thưa (sparse data). Nó duy trì một bộ tích lũy bình phương gradient cho từng tham số:
+
+**Bộ Tích Lũy:**
+$$G_t = G_{t-1} + g_t^2$$
+
+**Cập Nhật Tham Số:**
+$$\theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{G_t + \epsilon}} \cdot g_t$$
+
+* **Đặc trưng phổ biến:** Tích lũy $G_t$ lớn, dẫn tới effective LR nhỏ.
+* **Đặc trưng hiếm:** Tích lũy $G_t$ nhỏ, cho phép effective LR duy trì lớn.
+* **$\epsilon$:** Thường là $10^{-8}$, dùng để tránh chia cho 0.
+
+### Điểm Yếu Chí Mạng của AdaGrad
+
+Bộ tích lũy $G_t$ là tổng của các số dương, nghĩa là nó chỉ tăng lên. Khi huấn luyện tiếp tục, $G_t \to \infty$, khiến effective learning rate $\frac{\eta}{\sqrt{G_t}} \to 0$. Mô hình có thể “đóng băng” trước khi đạt cực tiểu tối ưu — một vấn đề nghiêm trọng trong các không gian deep learning phi lồi.
+
+
+
+## RMSprop (Root Mean Square Propagation)
+
+RMSprop, được đề xuất bởi Geoff Hinton, giải quyết điểm yếu của AdaGrad bằng cách thay tổng tích lũy bằng **exponential moving average (EMA - trung bình trượt theo hàm mũ)** của bình phương gradient. Bộ tích lũy “rò rỉ” này quên dần lịch sử xa và giữ ổn định.
+
+**Bộ Tích Lũy Rò Rỉ:**
+$$E[g^2]*t = \beta E[g^2]*{t-1} + (1-\beta) g_t^2$$
+
+**Cập Nhật Tham Số:**
+$$\theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{E[g^2]_t + \epsilon}} \cdot g_t$$
+
+Với $\beta=0.9$, bộ tích lũy trung bình khoảng 10 gradient bình phương gần nhất, cho phép việc học tiếp tục vô thời hạn.
+
+
+
+## Adam (Adaptive Moment Estimation, 2015)
+
+Adam (Kingma & Ba) kết hợp momentum và RMSprop bằng cách theo dõi cả trung bình và phương sai của gradient.
+
+* **Moment Bậc Nhất (Mean):** Giống momentum, làm mượt hướng gradient.
+  $$m_t = \beta_1 m_{t-1} + (1-\beta_1)g_t$$
+* **Moment Bậc Hai (Variance):** Giống RMSprop, điều chỉnh learning rate.
+  $$v_t = \beta_2 v_{t-1} + (1-\beta_2)g_t^2$$
+
+**Quy Tắc Cập Nhật Adam:**
+$$\theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{\hat{v}_t} + \epsilon} \cdot \hat{m}_t$$
+*trong đó $\hat{m}_t$ và $\hat{v}_t$ là các moment đã được hiệu chỉnh bias.*
+
+### Hiệu Chỉnh Bias
+
+Vì $m_t$ và $v_t$ được khởi tạo bằng 0, chúng bị bias mạnh về 0 trong các bước đầu huấn luyện. Adam hiệu chỉnh điều này bằng cách chia các ước lượng cho $(1 - \beta^t)$:
+
+$$\hat{m}_t = \frac{m_t}{1 - \beta_1^t} \quad \text{và} \quad \hat{v}_t = \frac{v_t}{1 - \beta_2^t}$$
+
+**Các Siêu Tham Số Mặc Định:**
+
+* **Learning Rate ($\eta$):** $0.001$
+* **$\beta_1$:** $0.9$
+* **$\beta_2$:** $0.999$
+
+
+
+## AdamW: Decoupled Weight Decay
+
+Nghiên cứu cho thấy Adam tổng quát hóa kém hơn SGD+Momentum trong các bài toán thị giác máy tính do cách nó xử lý regularization $L_2$. Trong Adam, regularization $L_2$ bị scale bởi hệ số thích nghi, nghĩa là các tham số có gradient lớn nhận *ít* regularization hơn mong muốn.
+
+**AdamW** tách weight decay ra khỏi cập nhật thích nghi bằng cách áp dụng trực tiếp lên trọng số *sau* bước cập nhật thích nghi:
+
+$$w_{t+1} = w_t - \eta\frac{\hat{m}_t}{\sqrt{\hat{v}_t}+\epsilon} - \eta\lambda w_t$$
+
+Điều này đảm bảo **regularization đồng đều** trên mọi tham số và làm cho siêu tham số weight decay $\lambda$ độc lập với learning rate. AdamW hiện là optimizer tiêu chuẩn cho các Transformer hiện đại (BERT, GPT, ViT).
+
+
+
+## So Sánh và Tranh Luận
+
+Hiện vẫn tồn tại tranh luận xoay quanh việc sử dụng Adam hay SGD+Momentum.
+
+* **Adam/AdamW thắng:** Hội tụ nhanh ở giai đoạn đầu, rất tốt cho tạo nguyên mẫu, NLP, và các môi trường giới hạn tài nguyên tính toán.
+* **SGD+Momentum thắng:** Thường tìm được các flat minima (cực tiểu phẳng) tổng quát hóa tốt hơn trên dữ liệu kiểm thử trong các bài toán thị giác máy tính.
+* **Thỏa hiệp thực tế:** Bắt đầu với Adam để nhanh chóng đến vùng tối ưu tốt, sau đó chuyển sang SGD để fine-tuning.
+
+### Bảng Tóm Tắt
+
+| Optimizer    | Đặc Điểm Chính                            | Phù Hợp Nhất                               |
+|:-------------|:------------------------------------------|:-------------------------------------------|
+| **SGD**      | Không có trí nhớ                          | Bài toán lồi đơn giản                      |
+| **Momentum** | Tích lũy vận tốc                          | Vision (thường tổng quát hóa tốt hơn Adam) |
+| **AdaGrad**  | Tổng bình phương gradient                 | Dữ liệu NLP thưa                           |
+| **RMSprop**  | Trung bình rò rỉ của bình phương gradient | RNNs, Reinforcement Learning               |
+| **Adam**     | Momentum + RMSprop + Bias Correction      | Lựa chọn mặc định cho hầu hết bài toán     |
+| **AdamW**    | Adam + Decoupled Weight Decay             | Transformers (BERT, GPT, ViT)              |
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Ôn nhanh (Theory AI)
+Adam / AdamW từng bước: [Adam](../../theory-ai/08-optimizers/adam-optimizer-step.qmd) · [AdamW](../../theory-ai/08-optimizers/adamw-decoupled-weight-decay.qmd).
+:::

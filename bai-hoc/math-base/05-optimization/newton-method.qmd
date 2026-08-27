@@ -1,0 +1,97 @@
+---
+title: "Newton's Method (Newton Method)"
+order: 8
+date: 2026-08-27
+description: "Tối ưu hóa bậc hai để hội tụ nhanh hơn. Hiểu độ cong để thực hiện các bước đi thông minh hơn."
+series: math-base
+categories: [math-base, optimization]
+group: optimization
+---
+# Newton's Method
+
+Tối ưu hóa bậc hai để hội tụ nhanh hơn. Hiểu độ cong để thực hiện các bước đi thông minh hơn.
+
+## Vượt Ra Khỏi Gradient Descent
+
+Gradient descent chỉ sử dụng đạo hàm bậc nhất. Nó biết hướng giảm nhanh nhất nhưng không biết độ cong của hàm. **Newton's Method (phương pháp Newton)** sử dụng đạo hàm bậc hai (Hessian) để thực hiện các bước đi thông minh hơn.
+
+* **Gradient Descent**: Chỉ dùng $\nabla f$. Xấp xỉ tuyến tính. Thực hiện nhiều bước nhỏ.
+* **Newton's Method**: Dùng cả $\nabla f$ và $\nabla^2 f$. Xấp xỉ bậc hai. Ít bước hơn nhưng lớn hơn.
+
+### Sự Đánh Đổi
+
+Newton's Method hội tụ nhanh hơn (bậc hai thay vì tuyến tính), nhưng mỗi vòng lặp tốn kém hơn. Nó đặc biệt hiệu quả cho các bài toán quy mô nhỏ đến trung bình nơi việc tính Hessian là khả thi.
+
+
+## Thuật Toán
+
+### Cho Bài Toán Tìm Nghiệm
+
+Để giải phương trình $f(x) = 0$ (tìm nơi hàm cắt trục hoành):
+$$x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}$$
+
+### Cho Bài Toán Tối Ưu Hóa
+
+Để tìm cực tiểu của hàm $g(x)$, chúng ta tìm nghiệm của đạo hàm $g'(x) = 0$:
+$$x_{n+1} = x_n - \frac{g'(x_n)}{g''(x_n)}$$
+
+**Trực Giác Hình Học**: Tại mỗi điểm, ta khớp một parabol (xấp xỉ Taylor bậc hai) với hàm số bằng cách sử dụng đạo hàm bậc nhất và bậc hai. Cực tiểu của parabol này chính là dự đoán tiếp theo. Với các hàm bậc hai thực sự, Newton tìm được cực tiểu chỉ trong một bước.
+
+
+## Hội Tụ Bậc Hai
+
+Newton's Method có đặc tính **hội tụ bậc hai (quadratic convergence)**. Gần nghiệm, sai số gần như bị bình phương sau mỗi vòng lặp.
+
+$$|x_{n+1} - x^*| \approx C \cdot |x_n - x^*|^2$$
+
+Điều này nghĩa là mỗi vòng lặp gần như tăng gấp đôi số chữ số chính xác. So sánh với gradient descent có hội tụ tuyến tính, nơi sai số chỉ giảm theo một hệ số cố định ở mỗi bước.
+
+### Ví Dụ: Tính $\sqrt{2}$
+
+| Vòng Lặp ($n$) | $x_n$    | Sai Số   | Chữ Số Chính Xác |
+| :------------- | :------- | :------- | :--------------- |
+| 0              | 2.000000 | 0.585786 | 0                |
+| 1              | 1.500000 | 0.085786 | 1                |
+| 2              | 1.416667 | 0.002453 | 3                |
+| 3              | 1.414216 | 0.000002 | 6                |
+
+
+## Newton's Method Đa Biến
+
+Đối với các hàm nhiều biến, **ma trận Hessian** thay thế đạo hàm bậc hai.
+
+$$\theta_{n+1} = \theta_n - H^{-1} \nabla f(\theta_n)$$
+
+* $H$ = ma trận Hessian (đạo hàm bậc hai)
+* $\nabla f$ = gradient
+
+### Chi Phí: $O(n^3)$
+
+Việc tính Hessian yêu cầu bộ nhớ $O(n^2)$, và nghịch đảo ma trận có chi phí $O(n^3)$. Với mạng nơ-ron có hàng triệu tham số, điều này là không khả thi về mặt tính toán.
+
+
+## Case Study: Logistic Regression
+
+Phân loại nhị phân bằng logistic regression yêu cầu tối thiểu hóa hàm mất mát cross-entropy, vốn là hàm lồi. Với bài toán có $n$ mẫu và $d$ đặc trưng:
+
+* **Độ Phức Tạp Hessian**: $O(nd + d^3)$ cho mỗi vòng lặp.
+* **Newton's Method**: Thường hội tụ sau 5–10 vòng lặp.
+* **Gradient Descent**: Có thể cần hàng nghìn vòng lặp.
+
+Trong thực tế, các thư viện như `scikit-learn` sử dụng các phương pháp kiểu Newton (như L-BFGS) mặc định cho `LogisticRegression`, điều này giải thích tốc độ huấn luyện rất cao của nó.
+
+
+## Hạn Chế & Failure Modes
+
+1. **Chi Phí Tính Toán**: Bộ nhớ $O(n^2)$ và nghịch đảo $O(n^3)$ là bất khả thi đối với deep learning quy mô lớn.
+2. **Hessian Suy Biến**: Tại saddle points, Hessian có thể suy biến hoặc có eigenvalue âm, khiến thuật toán thất bại hoặc di chuyển sai hướng.
+3. **Nhạy Với Khởi Tạo**: Newton có thể phân kỳ nếu điểm khởi tạo quá xa nghiệm. Hội tụ bậc hai chỉ đúng gần cực tiểu tối ưu.
+4. **Loss Landscape Không Lồi**: Trong các loss landscape phức tạp của deep learning, Newton's Method có thể bị hút vào saddle points thay vì minima. Thú vị là nhiễu của SGD lại giúp thoát khỏi các điểm này.
+
+
+## Ứng Dụng & Biến Thể trong ML
+
+* **L-BFGS**: Limited-memory BFGS xấp xỉ nghịch đảo Hessian bằng các gradient trước đó. Nó chỉ yêu cầu bộ nhớ $O(n)$, khiến nó thực tế cho các bài toán quy mô trung bình.
+* **Natural Gradient**: Sử dụng Fisher Information Matrix (Hessian kỳ vọng) thay cho Hessian thực. Hiệu quả cho phân phối xác suất và Reinforcement Learning (RL).
+* **Hessian-Free Optimization**: Tính các tích Hessian-vector mà không cần xây dựng toàn bộ ma trận, sử dụng conjugate gradients để giải hệ tuyến tính.
+* **Trust Region Methods**: Các thuật toán như TRPO (Trust Region Policy Optimization) sử dụng xấp xỉ bậc hai để học policy ổn định trong RL.

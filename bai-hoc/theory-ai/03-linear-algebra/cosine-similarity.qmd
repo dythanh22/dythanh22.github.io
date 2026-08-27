@@ -222,6 +222,13 @@ def cosine_similarity(a, b):
 
 ```
 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Nền đầy đủ (Math Base)
+Tích vô hướng / chuẩn / góc: [Dot Product & Vector Norms](../../math-base/03-linear-algebra/dot-product-vector-norms.qmd).
+:::
+
 <!-- auto-self-check -->
 
 ::: {.callout-note}

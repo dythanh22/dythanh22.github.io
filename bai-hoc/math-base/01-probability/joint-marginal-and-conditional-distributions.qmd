@@ -1,0 +1,92 @@
+---
+title: "Phân phối đồng thời, biên & có điều kiện (Joint Marginal and Conditional Distributions)"
+order: 4
+date: 2026-08-27
+description: "Trong machine learning, các biến hiếm khi được xử lý riêng lẻ. Các đặc trưng tương tác với nhau, nhãn phụ thuộc vào đầu vào, và các tham số mô hình thường có liên hệ lẫn nhau. Để mô hình hóa các mối…"
+series: math-base
+categories: [math-base, probability]
+group: probability
+---
+# Phân phối đồng thời, biên & có điều kiện
+
+## Giới thiệu
+
+Trong machine learning, các biến hiếm khi được xử lý riêng lẻ. Các đặc trưng tương tác với nhau, nhãn phụ thuộc vào đầu vào, và các tham số mô hình thường có liên hệ lẫn nhau. Để mô hình hóa các mối quan hệ phức tạp này, chúng ta sử dụng **multivariate probability (xác suất đa biến)**.
+
+Bạn có thể hình dung một tập dữ liệu có nhiều cột, dẫn đến ba góc nhìn cơ bản:
+
+* **Joint (đồng thời):** Bức tranh đầy đủ bao gồm tất cả các biến.
+* **Marginal (biên):** Tập trung vào một cột và bỏ qua các cột khác.
+* **Conditional (có điều kiện):** Xem xét một cột khi đã biết trạng thái của cột khác.
+
+
+
+## Bộ ba định nghĩa
+
+### Joint Distribution: $P(X, Y)$
+
+Xác suất để $X$ nhận giá trị $x$ **và** $Y$ nhận giá trị $y$ đồng thời.
+
+* **Chuẩn hóa:** Với biến rời rạc, tổng trên tất cả các tổ hợp phải bằng 1:
+  $$\sum_x \sum_y P(X=x, Y=y) = 1$$
+* **Trường hợp liên tục:** Tích phân kép của hàm mật độ đồng thời $f(x, y)$ bằng 1.
+
+### Marginal Distribution: $P(X)$
+
+Xác suất của $X$ xảy ra, **không phụ thuộc** vào giá trị của $Y$. Được tính bằng cách “lấy tổng ra” (marginalizing – biên hóa) các biến khác.
+
+* **Quy tắc tổng:**
+  $$P(X=x) = \sum_y P(X=x, Y=y)$$
+
+### Conditional Distribution: $P(Y|X)$
+
+Xác suất để $Y$ xảy ra **biết rằng** $X$ đã được quan sát. Nó biểu diễn một “lát cắt” của phân phối đồng thời, được tái chuẩn hóa sao cho tổng xác suất trong lát cắt đó bằng 1.
+
+* **Công thức:**
+  $$P(Y|X) = \frac{P(X, Y)}{P(X)}$$
+
+
+
+## Quy tắc tích & Quy tắc dây chuyền (Product Rule & Chain Rule)
+
+Định nghĩa của xác suất có điều kiện có thể biến đổi thành **Product Rule (quy tắc tích)**:
+$$P(X, Y) = P(Y | X) \cdot P(X)$$
+Điều này cho thấy: **Phân phối đồng thời = Phân phối có điều kiện $\times$ Phân phối biên**.
+
+### Quy tắc dây chuyền
+
+Khi mở rộng cho $n$ biến, quy tắc tích trở thành **Chain Rule (quy tắc dây chuyền)**:
+$$P(X_1, X_2, ..., X_n) = P(X_1) \cdot P(X_2|X_1) \cdot P(X_3|X_1, X_2) \cdots P(X_n|X_1, ..., X_{n-1})$$
+
+
+
+## Ứng dụng trong Machine Learning
+
+### Mô hình phân biệt (Discriminative Models)
+
+Các mô hình này trực tiếp ánh xạ đặc trưng sang nhãn bằng cách mô hình hóa **phân phối có điều kiện** $P(Y|X)$ (hay $P(\text{nhãn} | \text{đặc trưng})$).
+
+* **Ví dụ:** Logistic Regression, Neural Networks, Support Vector Machines (SVMs).
+
+### Mô hình sinh (Generative Models)
+
+Các mô hình này nhằm mô hình hóa **phân phối đồng thời** $P(X, Y) = P(X|Y)P(Y)$. Vì mô hình hóa toàn bộ phân phối, chúng có thể tạo ra dữ liệu mới.
+
+* **Ví dụ:** Naive Bayes, Generative Adversarial Networks (GANs), Variational Autoencoders (VAEs), Diffusion Models.
+
+### Suy luận Bayes
+
+Khung phương pháp để cập nhật niềm tin dựa trên dữ liệu quan sát:
+$$P(\theta|D) \propto P(D|\theta)P(\theta)$$
+Trong đó, mẫu số $P(D)$ là một xác suất biên, thường liên quan đến một tích phân khó tính.
+
+### Mô hình biến ẩn (Latent Variable Models)
+
+Các mô hình có chứa biến ẩn $Z$. Để tính xác suất của dữ liệu quan sát $X$, ta **biên hóa** qua các biến ẩn:
+$$P(X) = \sum_Z P(X, Z)$$
+
+* **Ví dụ:** VAEs, Gaussian Mixture Models, Hidden Markov Models (HMMs).
+
+### Mô hình ngôn ngữ lớn (LLMs)
+
+Các mô hình tự hồi quy như GPT sử dụng **quy tắc dây chuyền** để tính $P(\text{từ tiếp theo} | \text{tất cả các từ trước})$. Mỗi token được sinh ra bằng cách điều kiện hóa trên toàn bộ các token trước đó.

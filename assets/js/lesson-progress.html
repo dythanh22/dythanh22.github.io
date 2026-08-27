@@ -79,7 +79,8 @@
     const isCapstone = /lesson-10-end-to-end-capstone/.test(path);
     const isUNetComplete = /UNet\/complete-unet/.test(path);
     const isTheoryComplete = /theory-ai\/15-mlops\/retraining-trigger-design/.test(path);
-    if (!isCapstone && !isUNetComplete && !isTheoryComplete) return;
+    const isMathComplete = /math-base\/07-graph-theory\/message-passing-neural-networks/.test(path);
+    if (!isCapstone && !isUNetComplete && !isTheoryComplete && !isMathComplete) return;
 
     const content = document.querySelector("#quarto-document-content");
     if (!content) return;
@@ -91,19 +92,27 @@
 
     let title;
     let next;
-    if (isTheoryComplete) {
+    if (isMathComplete) {
+      title = "Bạn đã hoàn thành chuỗi Math Base";
+      next =
+        '<a href="../../theory-ai/">Tiếp: Theory AI →</a>' +
+        ' · <a href="../../architecture-models/">Architecture Models →</a>';
+    } else if (isTheoryComplete) {
       title = "Bạn đã hoàn thành chuỗi Theory AI";
       next =
         '<a href="../architecture-models/">Tiếp: Architecture Models →</a>' +
-        ' · <a href="../ai-optimize/">AI Optimization →</a>';
+        ' · <a href="../ai-optimize/">AI Optimization →</a>' +
+        ' · <a href="../math-base/">Ôn Math Base →</a>';
     } else if (isCapstone) {
       title = "Bạn đã hoàn thành chuỗi AI Optimization";
       next = '<a href="../architecture-models/">Quay lại Architecture Models →</a>' +
-        ' · <a href="../theory-ai/">Ôn Theory AI →</a>';
+        ' · <a href="../theory-ai/">Ôn Theory AI →</a>' +
+        ' · <a href="../math-base/">Ôn Math Base →</a>';
     } else {
       title = "Bạn đã hoàn thành Architecture Models (U-Net)";
       next =
-        '<a href="../../theory-ai/">Ôn Theory AI →</a>' +
+        '<a href="../../math-base/">Ôn Math Base →</a>' +
+        ' · <a href="../../theory-ai/">Ôn Theory AI →</a>' +
         ' · <a href="../../ai-optimize/">Tiếp: AI Optimization →</a>';
     }
 
@@ -117,10 +126,13 @@
     content.appendChild(box);
   };
 
-  /** P1-B: crumb section tự trỏ về trang hiện tại → chuyển về tổng quan chuỗi (+ neo nếu có) */
-  const fixTheoryBreadcrumb = () => {
-    if (!/\/bai-hoc\/theory-ai\//.test(location.pathname)) return;
-    if (/\/theory-ai\/(index\.html)?$/.test(location.pathname.replace(/\/+$/, ""))) return;
+  /** Crumb section tự trỏ về trang hiện tại → chuyển về tổng quan chuỗi (+ neo nếu có) */
+  const fixSeriesBreadcrumb = () => {
+    const path = location.pathname;
+    const isTheory = /\/bai-hoc\/theory-ai\//.test(path);
+    const isMath = /\/bai-hoc\/math-base\//.test(path);
+    if (!isTheory && !isMath) return;
+    if (/\/(theory-ai|math-base)\/(index\.html)?$/.test(path.replace(/\/+$/, ""))) return;
 
     const crumbs = document.querySelectorAll(
       "nav.quarto-page-breadcrumbs ol.breadcrumb > li.breadcrumb-item > a"
@@ -128,7 +140,7 @@
     if (crumbs.length < 2) return;
 
     const first = crumbs[0];
-    const current = location.pathname.replace(/\/$/, "");
+    const current = path.replace(/\/$/, "");
     let firstPath;
     try {
       firstPath = new URL(first.href, location.origin).pathname.replace(/\/$/, "");
@@ -140,7 +152,7 @@
     }
 
     const label = (first.textContent || "").trim();
-    const slugMap = {
+    const theorySlugMap = {
       "1. Probability": "probability",
       "2. Statistics": "statistics",
       "3. Linear Algebra": "linear-algebra",
@@ -157,7 +169,16 @@
       "14. Recommender": "recommender",
       "15. MLOps": "mlops",
     };
-    // Quarto heading ids: "1. Probability" → often "probability" after strip numbers, or "1-probability"
+    const mathSlugMap = {
+      "1. Probability": "probability",
+      "2. Statistics": "statistics",
+      "3. Linear Algebra": "linear-algebra",
+      "4. Calculus": "calculus",
+      "5. Optimization": "optimization",
+      "6. Information Theory": "information-theory",
+      "7. Graph Theory": "graph-theory",
+    };
+    const slugMap = isMath ? mathSlugMap : theorySlugMap;
     const slug = slugMap[label] || label.toLowerCase().replace(/^\d+\.\s*/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     first.setAttribute("href", "../../index.html#" + slug);
   };
@@ -233,7 +254,7 @@
   const run = () => {
     markCurrentRead();
     markSidebarRead();
-    fixTheoryBreadcrumb();
+    fixSeriesBreadcrumb();
     injectBadge();
     injectCompletion();
   };

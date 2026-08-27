@@ -347,6 +347,13 @@ def expected_value_discrete(x, p):
     return float(np.sum(x * p))
 ```
 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Nền đầy đủ (Math Base)
+Biến ngẫu nhiên & kỳ vọng (chiều sâu): [Random Variables and Expectation](../../math-base/01-probability/random-variables-and-expectation.qmd).
+:::
+
 <!-- SELFCHECK_EXPEV -->
 
 ::: {.callout-note}

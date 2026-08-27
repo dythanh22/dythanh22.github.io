@@ -1,0 +1,228 @@
+---
+title: "Tính trực giao (Orthogonality)"
+order: 4
+date: 2026-08-27
+description: "Tính độc lập, thông tin không chồng lấp, và sự ổn định trong Deep Learning."
+series: math-base
+categories: [math-base, linear-algebra]
+group: linear-algebra
+---
+# Tính trực giao (Orthogonality)
+
+Tính độc lập, thông tin không chồng lấp, và sự ổn định trong Deep Learning.
+
+
+## Giới thiệu
+
+"Orthogonal" (trực giao) bắt nguồn từ tiếng Hy Lạp *orthos* (vuông góc) và *gonia* (góc), nghĩa là "vuông góc". Trong học máy, nó biểu diễn **sự độc lập hoàn toàn**: hai vector trực giao không chia sẻ bất kỳ hướng chung nào. Các đặc trưng trực giao cung cấp thông tin không dư thừa, nghĩa là biết giá trị của một đặc trưng không cho ta biết gì về đặc trưng còn lại.
+
+### Tại sao tính trực giao quan trọng trong ML
+
+* **Độc lập đặc trưng (Feature Independence):** Tối đa hóa lượng thông tin riêng biệt của mỗi đặc trưng.
+* **Ổn định số (Numerical Stability):** Ma trận trực giao có số điều kiện (condition number) hoàn hảo bằng 1.
+* **Dòng gradient (Gradient Flow):** Bảo toàn độ lớn của gradient trong các mạng sâu.
+* **Tính toán hiệu quả:** Nghịch đảo của ma trận trực giao đơn giản chỉ là chuyển vị của nó.
+
+
+## Vector trực giao
+
+Hai vector $\mathbf{u}$ và $\mathbf{v}$ trong $\mathbb{R}^n$ là **trực giao** (ký hiệu $\mathbf{u} \perp \mathbf{v}$) nếu tích vô hướng của chúng bằng 0:
+
+$$\mathbf{u} \cdot \mathbf{v} = \mathbf{u}^T \mathbf{v} = \sum_{i=1}^{n} u_i v_i = 0$$
+
+### Các khái niệm chính
+
+* **Vector không:** $\mathbf{0}$ trực giao với mọi vector vì $\mathbf{0} \cdot \mathbf{v} = 0$.
+* **Tập trực giao:** Một tập ${\mathbf{v}_1, \mathbf{v}_2, \ldots, \mathbf{v}_k}$ là trực giao nếu $\mathbf{v}_i \cdot \mathbf{v}_j = 0$ với mọi $i \neq j$.
+* **Độc lập tuyến tính:** Một tập các vector trực giao khác 0 luôn độc lập tuyến tính, khiến chúng trở thành các ứng viên lý tưởng cho vector cơ sở.
+
+
+## Trực giác hình học
+
+Diễn giải hình học của tích vô hướng giải thích mối quan hệ này:
+
+$$\mathbf{u} \cdot \mathbf{v} = ||\mathbf{u}|| \cdot ||\mathbf{v}|| \cdot \cos(\theta)$$
+
+Khi các vector vuông góc ($\theta = 90^\circ$), $\cos(90^\circ) = 0$, dẫn đến tích vô hướng bằng 0.
+
+### Phép chiếu và phần dư (Projection & Rejection)
+
+Tích vô hướng đo xem bao nhiêu phần của $\mathbf{u}$ nằm theo hướng của $\mathbf{v}$:
+
+$$\text{proj}_{\mathbf{v}}(\mathbf{u}) = \frac{\mathbf{u} \cdot \mathbf{v}}{||\mathbf{v}||^2} \mathbf{v}$$
+
+Nếu các vector trực giao, phép chiếu bằng 0. Vector $\mathbf{u}$ có thể được phân tách thành một thành phần song song (projection) và một thành phần vuông góc (rejection).
+
+### Định lý Pythagoras
+
+Với các vector trực giao, ta có:
+
+$$||\mathbf{u} + \mathbf{v}||^2 = ||\mathbf{u}||^2 + ||\mathbf{v}||^2$$
+
+Do hạng tử chéo $2(\mathbf{u} \cdot \mathbf{v})$ triệt tiêu.
+
+
+## Cơ sở trực chuẩn (Orthonormal Bases)
+
+Một tập **trực chuẩn (orthonormal)** là tập trực giao mà mỗi vector đều có độ dài đơn vị ($||\mathbf{e}_i|| = 1$). Đây là tiêu chuẩn cho các hệ tọa độ.
+
+* **Tính chất:** $\mathbf{e}_i \cdot \mathbf{e}*j = \delta*{ij}$ (delta Kronecker).
+* **Ưu điểm:** Việc tìm tọa độ trong cơ sở trực chuẩn trở nên đơn giản. Thay vì giải hệ phương trình, ta dùng tích vô hướng:
+  $$\mathbf{x} = \sum_{i=1}^{n} (\mathbf{x} \cdot \mathbf{e}_i) \mathbf{e}_i$$
+
+
+## Ma trận trực giao
+
+Một **ma trận trực giao (orthogonal matrix)** $Q$ là ma trận vuông mà các cột của nó tạo thành một tập trực chuẩn.
+
+### Các tính chất định nghĩa
+
+* $Q^T Q = Q Q^T = I$ 
+  - Which implies $Q^{-1} = Q^T$
+
+### Examples
+
+- **Rotation Matrix**
+
+$$
+\begin{bmatrix}
+\cos\theta & -\sin\theta \\
+\sin\theta & \cos\theta
+\end{bmatrix}
+$$
+
+
+- **Reflection Matrix**
+
+$$
+\begin{bmatrix}
+1 & 0 \\
+0 & -1
+\end{bmatrix}
+$$
+
+
+- **Permutation Matrix**
+
+$$
+\begin{bmatrix}
+0 & 1 \\
+1 & 0
+\end{bmatrix}
+$$
+
+- **Identity Matrix**
+
+$$
+\begin{bmatrix}
+1 & 0 \\
+0 & 1
+\end{bmatrix}
+$$
+
+### Các tính chất toán học quan trọng
+
+1. **Đẳng cấu khoảng cách (Isometry):** Nhân với \(Q\) không làm thay đổi độ dài. 
+   - $||Q\mathbf{x}|| = ||\mathbf{x}||$.
+   - Proof: 
+$$
+\|Qx\|^2
+=
+(Qx)^T(Qx)
+=
+x^T Q^T Q x
+=
+x^T I x
+=
+\|x\|^2
+$$
+
+  
+2. **Bảo toàn góc:** Tích vô hướng (và do đó cả góc) được bảo toàn.
+  
+   - $(Q\mathbf{x}) \cdot (Q\mathbf{y}) = \mathbf{x} \cdot \mathbf{y}$.
+   - Proof:
+$$
+(Qx)^T(Qy)
+=
+x^T Q^T Q y
+=
+x^T I y
+=
+x^T y
+$$
+
+3. **Định thức:** $\det(Q) = \pm 1$.
+  - Proof: 
+$$
+\det(Q^TQ)=\det(I)=1
+$$
+  
+
+4. **Giá trị riêng:** Mọi giá trị riêng thỏa $|\lambda| = 1$, nằm trên đường tròn đơn vị trong mặt phẳng phức.
+  - Proof:
+
+$$
+\det(Q^TQ)=\det(I)=1
+$$ 
+, and 
+$$
+\det(Q^T)=\det(Q)
+$$
+, so
+$$
+\det(Q)^2=1
+$$
+
+**Ưu điểm về tính toán**: Việc đảo ngược một ma trận tổng quát là O(n³). Việc đảo ngược một ma trận trực giao là O(n²) (chỉ cần chuyển vị!). Ngoài ra, số điều kiện = 1 có nghĩa là độ ổn định số học hoàn hảo.
+
+## Quá trình Gram-Schmidt
+
+**Quá trình Gram-Schmidt (Gram-Schmidt process)** là một thuật toán biến đổi một tập vector độc lập tuyến tính ${\mathbf{v}_1, \ldots, \mathbf{v}_k}$ thành một cơ sở trực chuẩn ${\mathbf{e}_1, \ldots, \mathbf{e}_k}$.
+
+
+
+### Thuật toán
+
+1. **Chuẩn hóa vector đầu tiên:** $\mathbf{e}_1 = \frac{\mathbf{v}_1}{||\mathbf{v}_1||}$
+2. **Trừ phép chiếu trên e1**
+   
+$$
+u_2=v_2-(v_2\cdot e_1)e_1
+$$
+
+$$
+e_2=\frac{u_2}{\|u_2\|}
+$$
+3. **Loại bỏ các thành phần chiếu với các vector tiếp theo:** 
+
+$$\mathbf{u}_k = \mathbf{v}*k - \sum*{j=1}^{k-1} (\mathbf{v}_k \cdot \mathbf{e}_j)\mathbf{e}_j$$
+
+$$\mathbf{e}_k = \frac{\mathbf{u}_k}{||\mathbf{u}_k||}$$
+
+
+## Phân rã QR
+
+Phân rã QR (QR Decomposition) là dạng ma trận của quá trình Gram-Schmidt:
+
+$$A = QR$$
+
+* **Q:** Ma trận trực giao chứa các vector trực chuẩn $\mathbf{e}_i$.
+* **R:** Ma trận tam giác trên chứa các tích vô hướng (hệ số chiếu).
+
+Nó được sử dụng để giải bài toán bình phương tối thiểu ($Rx = Q^T b$) và tìm giá trị riêng.
+
+
+## Ứng dụng trong ML
+
+### Khởi tạo trọng số trực giao
+
+Khởi tạo trọng số của RNN/LSTM dưới dạng ma trận trực giao giúp tránh hiện tượng tiêu biến hoặc bùng nổ gradient. Vì $|\lambda| = 1$, độ lớn tín hiệu được bảo toàn theo thời gian.
+
+### PCA & Khử tương quan
+
+Phân tích thành phần chính (PCA) tìm các hướng trực giao có phương sai lớn nhất để “làm trắng” (whiten) hoặc khử tương quan dữ liệu, giúp việc học phía sau đơn giản hơn.
+
+### Regularization trực giao
+
+Thêm một hạng tử mất mát $||W^T W - I||^2$ khuyến khích trọng số duy trì tính trực giao trong quá trình huấn luyện, giúp cải thiện độ ổn định trong các kiến trúc như GAN.

@@ -398,6 +398,13 @@ def mean_median_mode(x):
     return mean, median, mode
 ```
 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Nền đầy đủ (Math Base)
+Thống kê mô tả đầy đủ: [Descriptive Statistics](../../math-base/02-statistics/descriptive-statistics-study-guide.qmd).
+:::
+
 <!-- auto-self-check -->
 
 ::: {.callout-note}

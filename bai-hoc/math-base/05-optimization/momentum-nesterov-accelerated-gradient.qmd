@@ -1,0 +1,164 @@
+---
+title: "Momentum & Nesterov Acceleration (Momentum Nesterov Accelerated Gradient)"
+order: 3
+date: 2026-08-27
+description: "Mang lại cho gradient descent cảm giác về vận tốc và khả năng dự đoán trước. Cơ chế vật lý phía sau sự hội tụ nhanh hơn."
+series: math-base
+categories: [math-base, optimization]
+group: optimization
+---
+# Momentum & Nesterov Acceleration
+
+Mang lại cho gradient descent cảm giác về vận tốc và khả năng dự đoán trước. Cơ chế vật lý phía sau sự hội tụ nhanh hơn. 
+
+## Giới thiệu
+
+Vanilla Gradient Descent (gradient descent cơ bản) là thuật toán không có trí nhớ. Mỗi bước, nó nhìn gradient hiện tại, thực hiện một bước cập nhật, rồi lập tức quên toàn bộ quá khứ. Nó không biết liệu mình đã di chuyển cùng một hướng trong 1000 vòng lặp hay vừa mới đổi hướng.
+
+Điều này gây ra hai vấn đề lớn:
+
+* **Dao động (Oscillation):** Trong các thung lũng hẹp (ravines), SGD bật qua bật lại giữa các bức tường dốc, lãng phí tính toán.
+* **Tiến triển chậm (Slow Progress):** Dọc theo các hướng phẳng, gradient rất nhỏ. SGD bò rất chậm và không bao giờ tích lũy được tốc độ.
+
+**Giải pháp:** Momentum giải quyết cả hai vấn đề bằng cách cung cấp cho optimizer trí nhớ. Nesterov cải thiện hơn nữa bằng cách bổ sung khả năng nhìn trước.
+
+
+
+## Vấn Đề của SGD: Ravines
+
+Các bề mặt hàm mất mát thực tế không phải là những cái bát hình cầu hoàn hảo. Chúng thường là các **ravines (thung lũng kéo dài)**: những thung lũng mà bề mặt cong rất mạnh theo một hướng và cong nhẹ theo hướng còn lại.
+
+### Kịch Bản Ravine
+
+Xét hàm $f(x,y) = x^2 + 10y^2$. Hướng y có độ cong lớn hơn hướng x tới 10×.
+
+* **Hướng Y (Tường Dốc):** Gradient = $20y$ (RẤT LỚN). SGD thực hiện các bước lớn, vượt quá điểm tối ưu rồi bật ngược lại.
+* **Hướng X (Đáy Phẳng):** Gradient = $2x$ (nhỏ). SGD chỉ đi các bước nhỏ và tiến triển rất chậm.
+
+**Kết quả:** SGD zigzag dữ dội qua lại trong ravine (theo hướng y) trong khi bò chậm dọc theo đáy thung lũng (theo hướng x). Phần lớn tính toán bị lãng phí cho dao động thay vì tiến gần tới cực tiểu.
+
+
+
+## Cơ Chế Vật Lý của Momentum
+
+Giải pháp đến từ vật lý. SGD tiêu chuẩn xem biến tối ưu hóa như một hạt không có khối lượng: áp dụng lực (gradient), nó di chuyển ngay; bỏ lực đi, nó dừng ngay.
+
+**Momentum** xem nó như một quả bóng nặng lăn xuống đồi. Quả bóng có *quán tính*. Một khi đã chuyển động, nó có xu hướng tiếp tục di chuyển theo cùng hướng, ngay cả khi độ dốc cục bộ thay đổi.
+
+* **Vận tốc ($v$):** Quả bóng không di chuyển chỉ dựa trên gradient hiện tại; nó di chuyển dựa trên **vận tốc tích lũy**. Gradient chỉ đóng vai trò như lực làm thay đổi vận tốc đó.
+* **Ma sát ($\beta$):** Nếu không có ma sát, quả bóng sẽ dao động mãi trong cái bát. Chúng ta cần một hệ số suy giảm (giống lực cản không khí) để quả bóng cuối cùng dừng lại ở đáy.
+
+
+
+## Classical Momentum
+
+Thay vì cập nhật trọng số trực tiếp bằng gradient, chúng ta cập nhật một vector vận tốc:
+
+### Cập Nhật Vận Tốc
+
+$$v_{t+1} = \beta v_t + \eta \nabla L(\theta_t)$$
+
+### Cập Nhật Tham Số
+
+$$\theta_{t+1} = \theta_t - v_{t+1}$$
+
+### Các Tham Số Quan Trọng
+
+* **$\beta$:** Hệ số momentum (thường là 0.9). Điều khiển lượng "trí nhớ" được giữ lại.
+* **$\eta$:** Learning rate.
+* **$v_t$:** Vận tốc tại bước $t$. Là trung bình trượt theo hàm mũ (exponential moving average) của các gradient trước đó.
+
+**Trung Bình Trượt Theo Hàm Mũ:** Với $\beta = 0.9$, vận tốc xấp xỉ trung bình của $1/(1-0.9) = 10$ gradient gần nhất. Gradient gần đây quan trọng nhất; lịch sử xa dần bị quên đi.
+
+
+
+## Momentum Loại Bỏ Dao Động Như Thế Nào
+
+Trong ravine, gradient luân phiên: tường trái → tường phải → tường trái. Không có momentum, SGD mù quáng đi theo từng gradient và dao động mãi.
+
+### Với Momentum
+
+Khi gradient đổi hướng trái-phải-trái-phải, chúng **triệt tiêu lẫn nhau** trong vận tốc. Thành phần vận tốc theo hướng y giảm gần về 0.
+
+Trong khi đó, thành phần theo hướng x (dọc đáy thung lũng) không bị triệt tiêu. Nó được tích lũy! Optimizer tăng tốc theo hướng nhất quán và bỏ qua các dao động.
+
+Điều này giống hệt bộ giảm xóc của xe hơi: chúng triệt tiêu các rung động tần số cao trong khi vẫn giữ quỹ đạo dài hạn mượt mà.
+
+
+
+## Nesterov Acceleration
+
+Classical momentum có một vấn đề tinh vi: nó mang tính phản ứng. Nó tính gradient tại vị trí hiện tại rồi mới áp dụng momentum. Nhưng chúng ta sắp di chuyển do momentum rồi. Vậy tại sao không nhìn trước vị trí đó?
+
+### Vị Trí Nhìn Trước
+
+$$\tilde{\theta}_t = \theta_t - \beta v_t$$
+
+### Cập Nhật Vận Tốc (tại vị trí nhìn trước)
+
+$$v_{t+1} = \beta v_t + \eta \nabla L(\tilde{\theta}_t)$$
+
+### Cập Nhật Tham Số
+
+$$\theta_{t+1} = \theta_t - v_{t+1}$$
+
+Chúng ta tính gradient không phải tại $\theta_t$, mà tại vị trí "nhìn trước" $\tilde{\theta}_t$ — nơi momentum sẽ đưa chúng ta tới. Điều này mang lại sức mạnh dự đoán cho Nesterov.
+
+### Trực Giác về Lookahead của Nesterov
+
+| Classical Momentum                            | Nesterov                         |
+| :--- | :--- |
+| 1. Quan sát gradient hiện tại                 | 1. Nhảy tới trước (momentum)     |
+| 2. Cập nhật vận tốc                           | 2. Quan sát gradient tại đó      |
+| 3. Di chuyển                                  | 3. Hiệu chỉnh bước nhảy          |
+| **Reactive:** phản ứng sau khi sự việc xảy ra | **Proactive:** dự đoán tương lai |
+
+**Vì Sao Điều Này Hữu Ích:** Nếu momentum sắp vượt quá điểm tối ưu, gradient tại vị trí nhìn trước sẽ hướng ngược lại, giúp "hiệu chỉnh" momentum trước khi quá muộn. Nesterov phát hiện sai lầm sớm hơn, dẫn đến hội tụ nhanh hơn.
+
+
+
+## Tinh Chỉnh Beta
+
+Beta ($\beta$) điều khiển độ mạnh của momentum. $\beta$ cao hơn = nhiều trí nhớ hơn, suy giảm chậm hơn.
+
+* **$\beta = 0$:** Không có momentum. Chỉ là SGD cơ bản. Quên mọi thứ ngay lập tức.
+* **$\beta = 0.9$:** Lựa chọn tiêu chuẩn. Trung bình khoảng 10 gradient trước đó. Tốt cho hầu hết bài toán.
+* **$\beta = 0.99$:** Momentum cao. Trung bình khoảng 100 gradient. Rất mượt nhưng có thể overshoot.
+
+
+
+## Tốc Độ Hội Tụ
+
+Đối với các hàm lồi trơn (smooth convex functions), tốc độ hội tụ đã được chứng minh là:
+
+* **SGD (không momentum):** $O(1/t)$
+* **Momentum:** $O(1/t)$
+* **Nesterov:** $O(1/t^2)$
+
+**Nesterov Là Tối Ưu Theo Lý Thuyết:** Với các hàm lồi trơn, $O(1/t^2)$ là tốc độ *tốt nhất có thể đạt được* nếu chỉ sử dụng thông tin gradient. Nesterov đã chứng minh điều này vào năm 1983 và chỉ ra rằng phương pháp của ông đạt được tốc độ đó. Không có phương pháp bậc một (first-order method) nào có thể tốt hơn.
+
+
+
+## Hướng Dẫn Thực Tế
+
+### Khi Nào Nên Dùng Momentum
+
+* Gần như luôn luôn. Hiếm khi có lý do để dùng vanilla SGD.
+* **Computer Vision (thị giác máy tính):** SGD + Momentum thường tổng quát hóa tốt hơn Adam.
+* Nếu quá trình huấn luyện quá nhiễu, hãy thử beta thấp hơn (0.5–0.8).
+
+### Nesterov vs Momentum Thông Thường
+
+* Nesterov thường tốt hơn hoặc ít nhất ngang bằng. Hãy dùng mặc định.
+* Trong PyTorch: `optimizer = SGD(..., nesterov=True)`
+* Cải thiện rõ rệt hơn trong các bài toán lồi hoặc gần lồi.
+
+### Momentum vs Adam
+
+Đây là chủ đề còn nhiều tranh luận. Adam hội tụ nhanh hơn ở giai đoạn đầu huấn luyện, nhưng SGD+Momentum thường tìm được các flat minima (cực tiểu phẳng) có khả năng tổng quát hóa tốt hơn. Nhiều bài báo về thị giác máy tính sử dụng SGD+Momentum cho kết quả cuối cùng, ngay cả khi họ tạo nguyên mẫu bằng Adam.
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Ôn nhanh (Theory AI)
+Bước cập nhật NAG + code: [Nesterov momentum](../../theory-ai/08-optimizers/nesterov-momentum-nag.qmd).
+:::

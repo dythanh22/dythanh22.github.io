@@ -50,7 +50,7 @@ Chọn **chuỗi** bên dưới, rồi đọc từng bài theo thứ tự trong 
 <details>
 <summary><strong>Tất cả bài trên site</strong> (lọc theo chuỗi / chủ đề — cột “Trong chuỗi” chỉ đúng trong từng chuỗi, không phải thứ tự toàn site)</summary>
 
-Lọc `theory-ai`, `architecture-models`, `ai-optimize`, hoặc tên model. Sắp theo chuỗi rồi `order`, hoặc theo ngày.
+Lọc `math-base`, `theory-ai`, `architecture-models`, `ai-optimize`, hoặc tên model. Sắp theo chuỗi rồi `order`, hoặc theo ngày.
 
 ::: {#danh-sach-bai}
 :::

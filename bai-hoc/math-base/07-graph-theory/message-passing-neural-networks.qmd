@@ -1,0 +1,165 @@
+---
+title: "Message Passing Neural Networks (MPNN)"
+order: 6
+date: 2026-08-27
+description: "Mô hình nền tảng phía sau mọi kiến trúc GNN hiện đại. Hiểu điều này là hiểu GNNs."
+series: math-base
+categories: [math-base, graph-theory]
+group: graph-theory
+---
+# Message Passing Neural Networks (MPNN)
+
+Mô hình nền tảng phía sau mọi kiến trúc GNN hiện đại. Hiểu điều này là hiểu GNNs.
+
+
+
+## Giới Thiệu
+
+Message Passing là framework hình thức thống nhất gần như mọi kiến trúc Graph Neural Network (GNN). Ý tưởng cốt lõi là mỗi nút gửi “thông điệp” đến các nút lân cận, thu thập thông điệp từ hàng xóm, rồi sử dụng chúng để cập nhật biểu diễn của chính nó.
+
+Các kiến trúc GNN khác nhau như GCN, GAT, GraphSAGE và GIN thực chất chỉ là các cách triển khai khác nhau của cùng một cơ chế nền tảng này.
+
+### Tại Sao Nó Hoạt Động
+
+Message passing đóng vai trò như một dạng **neural network inductive bias (thiên kiến quy nạp của mạng nơ-ron)**. Bằng cách buộc các nút học từ vùng lân cận cục bộ, mô hình giả định rằng “những thứ được kết nối thì có liên quan”. Điều này tương tự cách Convolutional Neural Networks (CNNs) hoạt động dựa trên giả định rằng “các pixel gần nhau có liên quan”.
+
+
+
+## Framework MPNN
+
+Được giới thiệu bởi Gilmer et al. (2017), framework MPNN định nghĩa quy trình ba bước tổng quát cho một lớp:
+
+### Bước 1: MESSAGE
+
+Mỗi nút lân cận $u$ tính một thông điệp gửi đến nút đích $v$ bằng cách sử dụng đặc trưng của chúng cùng với thuộc tính cạnh tùy chọn:
+
+$$m_{v \leftarrow u} = \text{MESSAGE}(h_u^{(l)}, h_v^{(l)}, e_{uv})$$
+
+### Bước 2: AGGREGATE
+
+Nút đích $v$ thu thập và kết hợp tất cả thông điệp đến từ vùng lân cận $\mathcal{N}(v)$. Hàm này phải **bất biến theo hoán vị (permutation-invariant)**:
+
+$$m_v = \text{AGGREGATE}({m_{v \leftarrow u} : u \in \mathcal{N}(v)})$$
+
+### Bước 3: UPDATE
+
+Nút kết hợp thông điệp đã tổng hợp với đặc trưng hiện tại để tạo embedding mới:
+
+$$h_v^{(l+1)} = \text{UPDATE}(h_v^{(l)}, m_v)$$
+
+
+
+## Các Hàm Tổng Hợp (Aggregation Functions)
+
+Vì đồ thị không có thứ tự nút cố định, các hàm tổng hợp phải bất biến theo hoán vị. Các lựa chọn phổ biến bao gồm:
+
+### SUM
+
+$$m_v = \sum_{u \in \mathcal{N}(v)} m_{v \leftarrow u}$$
+
+* **Ưu điểm:** Giữ lại thông tin về kích thước vùng lân cận (nắm bắt “bao nhiêu” tín hiệu).
+* **Nhược điểm:** Tỷ lệ thay đổi theo bậc nút; thường cần chuẩn hóa.
+* **Được dùng bởi:** GIN, các spectral GNN nguyên bản.
+
+### MEAN
+
+$$m_v = \frac{1}{|\mathcal{N}(v)|} \sum_{u \in \mathcal{N}(v)} m_{v \leftarrow u}$$
+
+* **Ưu điểm:** Chuẩn hóa theo bậc; ổn định trên các đồ thị kích thước khác nhau.
+* **Nhược điểm:** Mất thông tin về số lượng tuyệt đối của hàng xóm.
+* **Được dùng bởi:** GCN, GraphSAGE-mean.
+
+### MAX
+
+$$m_v = \max_{u \in \mathcal{N}(v)} m_{v \leftarrow u}$$
+
+* **Ưu điểm:** Nắm bắt tín hiệu mạnh nhất; bền vững với outliers.
+* **Nhược điểm:** Bỏ qua thông tin từ các hàng xóm không phải cực đại.
+* **Được dùng bởi:** GraphSAGE-pool, PointNet.
+
+### ATTENTION (Tổng Có Trọng Số)
+
+$$m_v = \sum_{u \in \mathcal{N}(v)} \alpha_{vu} \cdot m_{v \leftarrow u}$$
+
+* **Ưu điểm:** Học được hàng xóm nào quan trọng nhất thông qua trọng số thích nghi.
+* **Nhược điểm:** Chậm hơn về mặt tính toán; dễ overfit trên tập dữ liệu nhỏ.
+* **Được dùng bởi:** GAT, Graph Transformers.
+
+
+
+## Các Hàm Cập Nhật (Update Functions)
+
+Hàm cập nhật quyết định mức độ giữ lại danh tính gốc của nút so với thông tin mới từ hàng xóm.
+
+* **Simple Replace:** $h'_v = \sigma(W \cdot m_v)$. Có nguy cơ mất thông tin của chính nút sau nhiều lớp.
+* **Concatenate + MLP:** $h'_v = \text{MLP}([h_v , | , m_v])$. Cách tiếp cận linh hoạt nhất.
+* **Skip Connection:** $h'_v = h_v + \sigma(W \cdot m_v)$. Cực kỳ quan trọng cho việc huấn luyện GNN sâu.
+* **GRU Update:** $h'_v = \text{GRU}(h_v, m_v)$. Dùng cho message passing tuần tự.
+
+> ### Vấn Đề Over-Smoothing
+>
+> Các GNN sâu (nhiều lớp) thường gặp hiện tượng **over-smoothing**, nơi biểu diễn của các nút trở nên không thể phân biệt được. Vì vậy, hầu hết GNN thực tế chỉ sử dụng 2–4 lớp.
+
+
+
+## Các Kiến Trúc Phổ Biến
+
+### GCN: Graph Convolutional Network
+
+GCN sử dụng chuẩn hóa phổ cố định để ngăn tín hiệu bùng nổ:
+
+$$H^{(l+1)} = \sigma\left( \tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2} H^{(l)} W^{(l)} \right)$$
+
+* **MESSAGE:** $W \cdot h_u$
+* **AGGREGATE:** Tổng chuẩn hóa sử dụng $\frac{1}{\sqrt{d_u \cdot d_v}}$.
+* **UPDATE:** Bao gồm self-loops thông qua ma trận kề $\tilde{A}$.
+
+### GraphSAGE
+
+Giới thiệu **lấy mẫu vùng lân cận (neighborhood sampling)** để xử lý đồ thị quy mô cực lớn và sử dụng **concatenation** cho self-loops:
+
+$$h_v^{(l+1)} = \sigma\left( W \cdot \text{CONCAT}\left( h_v^{(l)}, \text{AGG}({h_u^{(l)} : u \in \mathcal{N}(v)}) \right) \right)$$
+
+Bằng cách lấy mẫu số lượng hàng xóm cố định, độ phức tạp huấn luyện trở thành $O(1)$ trên mỗi nút bất kể bậc của nó.
+
+### GAT: Graph Attention Network
+
+GAT học trọng số riêng cho từng cạnh bằng attention coefficients $\alpha_{vu}$:
+
+$$e_{vu} = \text{LeakyReLU}\left( \mathbf{a}^T [W h_v | W h_u] \right)$$
+
+$$\alpha_{vu} = \text{softmax}*u(e*{vu})$$
+
+$$h_v^{(l+1)} = \sigma\left( \sum_{u \in \mathcal{N}(v)} \alpha_{vu} W h_u \right)$$
+
+### GIN: Graph Isomorphism Network
+
+Được thiết kế để có khả năng biểu diễn tương đương kiểm định đẳng cấu đồ thị Weisfeiler-Lehman (WL):
+
+$$h_v^{(l+1)} = \text{MLP}\left( (1 + \epsilon) \cdot h_v^{(l)} + \sum_{u \in \mathcal{N}(v)} h_u^{(l)} \right)$$
+
+GIN nhấn mạnh cơ chế tổng hợp **SUM** và cập nhật bằng **MLP** để giữ lại chữ ký cấu trúc độc nhất của vùng lân cận.
+
+
+
+## Readout & Các Bài Toán Mức Đồ Thị
+
+Đối với các bài toán dự đoán ở cấp độ đồ thị (ví dụ: độc tính phân tử), một hàm **READOUT** sẽ tổng hợp tất cả node embeddings thành một vector mức đồ thị duy nhất $h_G$:
+
+$$h_G = \text{READOUT}({h_v^{(L)} : v \in V})$$
+
+* **Global Sum/Mean:** Đơn giản và hiệu quả.
+* **Hierarchical Pooling:** Coarsening đồ thị theo từng bước.
+* **Set2Set:** Sử dụng attention dựa trên LSTM.
+* **Virtual Node:** Thêm một “super node” kết nối với mọi nút để biểu diễn toàn bộ đồ thị.
+
+
+
+## Tóm Tắt Kiến Trúc
+
+| Mô hình        | Tổng hợp       | Self-Loop                 | Khả năng biểu diễn | Tốt nhất cho                     |      |
+|:---------------|:---------------|:--------------------------|:-------------------|:---------------------------------|------|
+| **GCN**        | Tổng chuẩn hóa | Trong ma trận $\tilde{A}$ | Thấp (1-WL)        | Phân loại nút                    |      |
+| **GraphSAGE**  | Mean/Max/LSTM  | Concatenate               | Trung bình         | Quy mô lớn, Inductive            |      |
+| **GAT**        | Attention      | Trong attention           | Trung bình         | Tầm quan trọng hàng xóm thay đổi |      |
+| **GIN**        | Sum + MLP      | Trọng số $(1+\epsilon)$   | Cao (WL-equiv)     | Phân loại đồ thị                 |      |

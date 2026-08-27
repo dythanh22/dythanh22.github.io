@@ -281,6 +281,13 @@ def calculate_eigenvalues(matrix):
 
 ```
 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Nền đầy đủ (Math Base)
+Trị riêng & vector riêng: [Eigenvalues & Eigenvectors](../../math-base/03-linear-algebra/eigenvalues-eigenvectors.qmd).
+:::
+
 <!-- auto-self-check -->
 
 ::: {.callout-note}

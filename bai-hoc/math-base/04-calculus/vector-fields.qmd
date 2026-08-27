@@ -1,0 +1,91 @@
+---
+title: "Trường vector (Vector Fields)"
+order: 7
+date: 2026-08-27
+description: "Hiểu gradient như một trường các mũi tên."
+series: math-base
+categories: [math-base, calculus]
+group: calculus
+---
+# Trường vector (Vector Fields)
+
+Hiểu gradient như một trường các mũi tên.
+
+
+
+## Trường trong không gian
+
+**Trường vector (vector field)** gán một vector cho mỗi điểm trong không gian. Hãy tưởng tượng các mẫu gió trên bản đồ thời tiết hoặc dòng chảy của nước trong đại dương. Tại mỗi vị trí, tồn tại một hướng và độ lớn cụ thể.
+
+Trong Machine Learning (ML), trường vector quan trọng nhất là **trường gradient (gradient field)**. Tại mỗi điểm trong không gian tham số, gradient cho biết hướng mà hàm mất mát tăng nhanh nhất.
+
+### Biểu diễn toán học
+
+Một trường vector 2D được định nghĩa như sau:
+$$\vec{F}(x, y) = P(x, y)\hat{i} + Q(x, y)\hat{j}$$
+Tại mỗi điểm $(x, y)$, tồn tại một vector với các thành phần $P$ và $Q$.
+
+
+
+## Trường gradient
+
+Gradient của một hàm vô hướng tạo thành một trường vector. Nếu $f(x, y)$ là bề mặt mất mát, thì $\nabla f$ là trường gradient.
+
+$$\nabla f = \frac{\partial f}{\partial x}\hat{i} + \frac{\partial f}{\partial y}\hat{j}$$
+
+### Trường bảo toàn
+
+Các trường gradient là **trường bảo toàn (conservative fields)**. Tích phân đường giữa hai điểm không phụ thuộc vào đường đi. Điều này có nghĩa là tồn tại một "thế năng" xác định rõ (hàm mất mát) mà ta đang giảm dần.
+
+### Gradient descent như dòng chảy
+
+Gradient descent đi theo các đường dòng của trường gradient âm:
+$$\frac{d\theta}{dt} = -\nabla L(\theta)$$
+Ta "chảy xuống dốc" qua trường gradient để tiến tới cực tiểu.
+
+
+
+## Phân kỳ (Divergence)
+
+Phân kỳ đo mức độ một trường vector "lan ra" tại một điểm. Đây là một trường vô hướng được suy ra từ trường vector.
+
+$$\nabla \cdot \vec{F} = \frac{\partial P}{\partial x} + \frac{\partial Q}{\partial y}$$
+
+* **$\text{div } F > 0$ (Nguồn):** Vector lan ra ngoài, như thể có khối lượng được tạo ra tại điểm đó.
+* **$\text{div } F < 0$ (Hút):** Vector hội tụ vào trong, như thể khối lượng bị mất đi.
+* **$\text{div } F = 0$ (Không nén được):** Không có dòng chảy thuần tại điểm.
+
+
+
+## Xoáy (Curl)
+
+Curl đo mức độ quay hoặc "xoáy" của trường vector quanh một điểm. Trong 2D, curl là một đại lượng vô hướng biểu diễn thành phần theo trục $z$.
+
+$$\nabla \times \vec{F} = \left(\frac{\partial Q}{\partial x} - \frac{\partial P}{\partial y}\right)\hat{k}$$
+
+### Tính chất quan trọng
+
+* **Trường gradient có curl bằng 0:** Nếu $\vec{F} = \nabla f$ thì $\nabla \times \vec{F} = 0$. Điều này do các đạo hàm riêng hỗn hợp bằng nhau ($\frac{\partial^2 f}{\partial x \partial y} = \frac{\partial^2 f}{\partial y \partial x}$).
+* **Ví dụ trường xoáy:** $\vec{F} = \langle -y, x \rangle$ biểu diễn chuyển động quay thuần và có curl dương.
+
+
+
+## Nghiên cứu tình huống: Điều hướng bề mặt mất mát
+
+Khi huấn luyện mạng nơ-ron dự đoán tuổi thọ bóng đèn, hàm mất mát $L(\theta)$ xác định một bề mặt trong không gian tham số nhiều chiều.
+
+1. **Xác định bề mặt mất mát:** $L(\theta)$ ánh xạ tham số sang giá trị mất mát vô hướng, tạo thành một "địa hình".
+2. **Tính trường gradient:** Tại mỗi điểm $\theta$, tính $\nabla L(\theta) = [\frac{\partial L}{\partial \theta_1}, \frac{\partial L}{\partial \theta_2}, \dots]$. Vector này chỉ hướng "lên dốc".
+3. **Đi theo gradient âm:** Di chuyển theo hướng $-\nabla L(\theta)$ để giảm loss. Đây chính là gradient descent.
+4. **Quan sát điểm tới hạn:** Khi $\nabla L = 0$, ta đạt điểm tới hạn. Giá trị riêng của Hessian quyết định đó là cực tiểu hay điểm yên ngựa.
+
+
+
+## Ứng dụng trong ML
+
+* **Gradient Flow:** Gradient descent liên tục ($\frac{d\theta}{dt} = -\nabla L$) tạo ra quỹ đạo trong trường gradient, được dùng trong Neural ODE.
+* **Normalizing Flows:** Biến đổi phân phối xác suất bằng các trường vector khả nghịch. Sự thay đổi mật độ liên quan đến định thức Jacobian.
+* **Physics-Informed Neural Networks (PINNs):** Mã hóa các phương trình vi phân riêng phần (PDEs) liên quan đến divergence, curl và gradient vào hàm mất mát.
+* **Score Matching (Diffusion Models):** Mạng học hàm score $\nabla \log p(x)$, tức gradient của log-mật độ, để sinh mẫu mới.
+
+

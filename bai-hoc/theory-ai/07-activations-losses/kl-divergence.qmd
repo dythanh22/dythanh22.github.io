@@ -221,6 +221,13 @@ def kl_divergence(p, q, eps=1e-12):
 KL trong VAE (regularize posterior): [VAE — KL Divergence](../../architecture-models/VAE/kl-divergence.qmd) · [ELBO](../../architecture-models/VAE/elbo.qmd).
 :::
 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Nền đầy đủ (Math Base)
+Entropy & KL (chiều sâu): [Shannon Entropy](../../math-base/06-information-theory/shannon-entropy.qmd) · [KL Divergence](../../math-base/06-information-theory/kullback-leibler-divergence.qmd).
+:::
+
 <!-- auto-self-check -->
 
 ::: {.callout-note}

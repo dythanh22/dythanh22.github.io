@@ -355,6 +355,13 @@ def vector_norm_3d(v):
 
 ```
 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Nền đầy đủ (Math Base)
+Dot product & các chuẩn: [Dot Product & Vector Norms](../../math-base/03-linear-algebra/dot-product-vector-norms.qmd).
+:::
+
 <!-- auto-self-check -->
 
 ::: {.callout-note}

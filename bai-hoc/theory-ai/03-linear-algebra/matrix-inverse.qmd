@@ -197,6 +197,13 @@ Khi $A$ không khả nghịch (hoặc thậm chí không vuông), pseudoinverse 
 
 Pseudoinverse luôn tồn tại và cho nghiệm “tốt nhất” theo nghĩa least-squares.
 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Nền đầy đủ (Math Base)
+Định thức & nghịch đảo: [Determinants & Inverses](../../math-base/03-linear-algebra/determinants-inverses.qmd).
+:::
+
 <!-- auto-self-check -->
 
 ::: {.callout-note}

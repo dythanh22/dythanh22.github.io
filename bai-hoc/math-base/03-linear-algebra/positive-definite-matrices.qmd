@@ -1,0 +1,94 @@
+---
+title: "Ma trận xác định dương (Positive Definite Matrices)"
+order: 8
+date: 2026-08-27
+description: "Những ma trận đảm bảo tính lồi và nghiệm cực tiểu duy nhất."
+series: math-base
+categories: [math-base, linear-algebra]
+group: linear-algebra
+---
+# Ma trận xác định dương (Positive Definite Matrices)
+
+Những ma trận đảm bảo tính lồi và nghiệm cực tiểu duy nhất.
+
+
+
+## Ma trận xác định dương là gì?
+
+Một ma trận đối xứng $A$ được gọi là **xác định dương (positive definite)** nếu với mọi vector khác không $x$, dạng toàn phương $x^T A x > 0$. Trực giác, điều này có nghĩa ma trận luôn “cong lên trên” và có một điểm cực tiểu duy nhất tại gốc tọa độ.
+
+Ma trận xác định dương là các ma trận “dễ xử lý” trong tối ưu hóa. Chúng đảm bảo rằng gradient descent sẽ tìm được một cực tiểu toàn cục duy nhất. Chúng xuất hiện ở khắp nơi: ma trận hiệp phương sai, ma trận Hessian của các hàm lồi, và ma trận kernel.
+
+### Tính chất cốt lõi
+
+$x^T A x > 0$ với mọi $x \neq 0$. Điều kiện duy nhất này có những hệ quả sâu sắc trong tối ưu hóa, thống kê và ổn định số.
+
+
+
+## Dạng toàn phương
+
+Biểu thức $x^T A x$ được gọi là **dạng toàn phương (quadratic form)** gắn với $A$. Với ma trận đối xứng $2 \times 2$, nó khai triển thành:
+
+$$x^T \begin{bmatrix} a & b \\ b & c \end{bmatrix} x = ax_1^2 + 2bx_1x_2 + cx_2^2$$
+
+Điều này biểu diễn một paraboloid trong không gian 3D, và hình dạng của nó phụ thuộc vào các phần tử của ma trận.
+
+### Phân loại
+
+* **Xác định dương:** Dạng “cái bát” (bowl). Có cực tiểu duy nhất tại gốc. Các đường mức là ellipse.
+* **Không xác định (Indefinite):** Dạng yên ngựa (saddle). Không có cực trị tại gốc. Đường mức là hyperbol.
+* **Xác định âm:** Dạng “bát úp ngược”. Có cực đại duy nhất tại gốc. Đường mức là ellipse.
+
+
+
+## Các kiểm tra tính xác định
+
+Có nhiều cách tương đương để kiểm tra một ma trận đối xứng có xác định dương hay không:
+
+1. **Kiểm tra giá trị riêng:** Tất cả các giá trị riêng đều dương.
+2. **Tiêu chuẩn Sylvester:** Tất cả các định thức con chính (leading principal minors) đều dương.
+3. **Kiểm tra Cholesky:** Phân rã Cholesky $A = LL^T$ tồn tại với các phần tử đường chéo dương.
+4. **Kiểm tra pivot:** Trong phân rã LU, tất cả các pivot đều dương.
+
+### Với ma trận $2 \times 2$
+
+$A = \begin{bmatrix} a & b \\ b & c \end{bmatrix}$ là xác định dương nếu $a > 0$ và $ac - b^2 > 0$.
+
+> **Mẹo tính toán:** Trong thực tế, hãy thử phân rã Cholesky. Nếu thành công, ma trận là xác định dương.
+
+
+
+## Phân rã Cholesky
+
+Một ma trận xác định dương $A$ có thể được phân tích duy nhất dưới dạng $A = LL^T$, trong đó $L$ là ma trận tam giác dưới với các phần tử đường chéo dương. Đây về cơ bản là “căn bậc hai” của ma trận.
+
+$$A = LL^T$$
+
+### Tại sao dùng Cholesky?
+
+* **Tốc độ:** Nhanh gấp 2 lần LU vì tận dụng tính đối xứng.
+* **Ổn định:** Không cần pivot (đảm bảo ổn định với ma trận xác định dương).
+* **Lấy mẫu:** Để lấy mẫu từ $\mathcal{N}(0, \Sigma)$, ta tính $L$ từ $\Sigma = LL^T$, sau đó $x = Lz$ với $z \sim \mathcal{N}(0, I)$.
+
+
+
+## Phổ tính xác định
+
+Phân loại ma trận đối xứng phụ thuộc vào dấu của các giá trị riêng:
+
+| Loại                   | Giá trị riêng           | Dạng toàn phương | Tối ưu               |
+|:-----------------------|:------------------------|:-----------------|:---------------------|
+| **Xác định dương**     | Tất cả $\lambda > 0$    | $x^TAx > 0$      | Cực tiểu duy nhất    |
+| **Bán xác định dương** | Tất cả $\lambda \geq 0$ | $x^TAx \geq 0$   | Không gian cực tiểu  |
+| **Không xác định**     | Dấu hỗn hợp             | Có cả $+$ và $-$ | Điểm yên ngựa        |
+| **Bán xác định âm**    | Tất cả $\lambda \leq 0$ | $x^TAx \leq 0$   | Không gian cực đại   |
+| **Xác định âm**        | Tất cả $\lambda < 0$    | $x^TAx < 0$      | Cực đại duy nhất     |
+
+
+
+## Ứng dụng trong ML
+
+* **Ma trận hiệp phương sai:** Ma trận hiệp phương sai mẫu luôn bán xác định dương. Trong phân phối Gaussian, ta cần ma trận hiệp phương sai xác định dương để mật độ được xác định đúng.
+* **Tối ưu lồi:** Một hàm là lồi nếu ma trận Hessian của nó là PSD tại mọi điểm. Điều này đảm bảo gradient descent hội tụ đến cực tiểu toàn cục.
+* **Ma trận kernel:** Một hàm kernel hợp lệ phải tạo ra ma trận Gram bán xác định dương (điều kiện Mercer), đảm bảo không gian đặc trưng ngầm được xác định đúng.
+* **Gaussian Processes:** Các prior GP yêu cầu ma trận hiệp phương sai xác định dương để lấy mẫu. Cholesky được dùng để sinh các mẫu tương quan từ phân phối hậu nghiệm GP.

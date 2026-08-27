@@ -1,0 +1,98 @@
+---
+title: "Cực tiểu cục bộ vs Điểm yên ngựa (Local Minima vs Saddle Points)"
+order: 8
+date: 2026-08-27
+description: "Vì sao mạng nơ-ron hiện đại không bị mắc kẹt như bạn nghĩ."
+series: math-base
+categories: [math-base, calculus]
+group: calculus
+---
+# Cực tiểu cục bộ vs Điểm yên ngựa (Local Minima vs Saddle Points)
+
+Vì sao mạng nơ-ron hiện đại không bị mắc kẹt như bạn nghĩ.
+
+## Giới thiệu
+
+Khi huấn luyện mạng nơ-ron, nỗi lo kinh điển là bị mắc kẹt tại một **cực tiểu cục bộ (local minimum)** — một "thung lũng nhỏ" không phải điểm thấp nhất toàn cục. Tuy nhiên, nghiên cứu quan trọng (Dauphin et al., 2014) đã chỉ ra một sự thật bất ngờ: trong deep learning, cực tiểu cục bộ là hiếm. Phần lớn các điểm "bị kẹt" thực chất là **điểm yên ngựa (saddle points)**.
+
+Hiểu được sự khác biệt này giúp giải thích vì sao các thuật toán như Momentum và Adam lại cần thiết.
+
+## Định nghĩa
+
+### Cực tiểu cục bộ (Local Minimum)
+
+Một điểm mà giá trị hàm **nhỏ hơn** tất cả các điểm lân cận. Hãy tưởng tượng bạn đang đứng dưới đáy một **cái bát** — đi theo bất kỳ hướng nào cũng đi LÊN.
+
+### Điểm yên ngựa (Saddle Point)
+
+Một điểm mà gradient bằng 0, nhưng là cực tiểu theo một số hướng và cực đại theo các hướng khác. Hãy tưởng tượng một **yên ngựa** — theo hướng trước-sau thì đi LÊN, nhưng theo hướng trái-phải thì đi XUỐNG.
+
+### Điểm tới hạn (Critical Points)
+
+Cả cực tiểu cục bộ và điểm yên ngựa đều là "điểm tới hạn" nơi gradient bằng 0 ($\nabla f = 0$). Sự khác biệt nằm ở **độ cong**, được xác định bởi đạo hàm bậc hai.
+
+
+
+## Kiểm tra Hessian
+
+Tại một điểm tới hạn nơi $\nabla f = 0$, ta xét các giá trị riêng của ma trận Hessian ($\lambda_i$) để phân loại:
+
+| Giá trị riêng          | Độ cong                                | Phân loại           |
+| :--- | :--- | :--- |
+| Tất cả $\lambda_i > 0$ | Cong lên mọi hướng                     | **Cực tiểu cục bộ** |
+| Tất cả $\lambda_i < 0$ | Cong xuống mọi hướng                   | **Cực đại cục bộ**  |
+| Trái dấu               | Lên ở một số hướng, xuống ở hướng khác | **Điểm yên ngựa**   |
+
+
+
+## Lời nguyền không gian nhiều chiều
+
+Vì sao điểm yên ngựa phổ biến hơn cực tiểu cục bộ trong deep learning? Câu trả lời là xác suất.
+
+### Lập luận xác suất
+
+Để là một **cực tiểu cục bộ** trong không gian $n$ chiều, độ cong phải dương theo **tất cả $n$ hướng**. Nếu mỗi giá trị riêng có khoảng 50% khả năng là dương hoặc âm:
+
+$$P(\text{cực tiểu cục bộ}) = 0.5^n$$
+
+Với $n = 100$:
+$$P = 0.5^{100} = 8 \times 10^{-31}$$
+
+### Thực tế
+
+Các mạng nơ-ron hiện đại có hàng triệu hoặc hàng tỷ tham số. Xác suất để TẤT CẢ giá trị riêng đều dương gần như bằng 0. Hầu hết các điểm tới hạn là điểm yên ngựa với sự pha trộn giữa giá trị riêng dương và âm.
+
+
+
+## Vì sao điểm yên ngựa gây vấn đề
+
+Tại điểm yên ngựa, gradient bằng 0 (hoặc rất nhỏ). Gradient descent tiêu chuẩn dựa vào gradient để cập nhật:
+
+$$\theta_{new} = \theta_{old} - \alpha \cdot 0 = \theta_{old}$$
+
+Nếu gradient bằng 0, tham số không thay đổi, và mô hình tưởng rằng đã hội tụ.
+
+### Plateau (vùng phẳng)
+
+Gần điểm yên ngựa, gradient rất nhỏ (nhưng không hoàn toàn bằng 0), tạo ra các "plateau" nơi quá trình học bị trì trệ. Hàm mất mát trông như phẳng dù vẫn có hướng giảm.
+
+
+
+## Thoát khỏi điểm yên ngựa
+
+Vì gradient descent thuần túy dễ bị mắc kẹt, ta dùng các kỹ thuật thêm "động lượng" hoặc "nhiễu":
+
+* **Stochastic Gradient Descent (SGD):** Nhiễu từ mini-batch ngẫu nhiên giúp "đá" tham số ra khỏi điểm yên ngựa. Dù gradient trung bình bằng 0, gradient từng batch thường không bằng 0 theo hướng thoát.
+* **Momentum:** Giống quả bóng lăn xuống dốc. Khi vào vùng phẳng, vận tốc tích lũy giúp nó vượt qua.
+  $$v_t = \beta v_{t-1} + \nabla J$$
+* **Adam Optimizer:** Kết hợp momentum với learning rate thích nghi. Sử dụng cả moment bậc một (vận tốc) và moment bậc hai (phương sai).
+* **Learning Rate Warmup:** Bắt đầu với learning rate nhỏ rồi tăng dần giúp ổn định giai đoạn đầu trước khi tối ưu hiệu quả.
+
+
+
+## Ý nghĩa đối với Deep Learning
+
+* **Cực tiểu cục bộ thường đủ tốt:** Trong mạng over-parameterized, hầu hết cực tiểu cục bộ có loss gần bằng cực tiểu toàn cục.
+* **Cực tiểu phẳng tổng quát tốt hơn:** Các cực tiểu có giá trị riêng Hessian nhỏ (vùng "phẳng") thường tổng quát hóa tốt hơn cực tiểu "sắc".
+* **Over-parameterization giúp tối ưu:** Nhiều tham số tạo ra nhiều nghiệm tốt tương đương, giúp việc tối ưu dễ hơn.
+* **Skip Connections:** Các kiến trúc như ResNet làm mượt bề mặt mất mát, giảm số điểm yên ngựa và giúp huấn luyện mạng sâu dễ hơn.

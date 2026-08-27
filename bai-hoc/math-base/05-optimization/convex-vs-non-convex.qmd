@@ -1,0 +1,192 @@
+---
+title: "Tối ưu hóa lồi và không lồi (Convex vs Non-Convex Optimization)"
+order: 1
+date: 2026-08-27
+description: "Sự phân biệt quan trọng nhất trong lý thuyết tối ưu hóa. Nó quyết định liệu bạn có thể tin tưởng bộ tối ưu hóa của mình sẽ tìm được nghiệm tốt nhất hay không."
+series: math-base
+categories: [math-base, optimization]
+group: optimization
+---
+# Tối ưu hóa lồi và không lồi (Convex vs Non-Convex Optimization)
+
+Sự phân biệt quan trọng nhất trong lý thuyết tối ưu hóa. Nó quyết định liệu bạn có thể tin tưởng bộ tối ưu hóa của mình sẽ tìm được nghiệm tốt nhất hay không.
+
+## Giới thiệu
+
+Mọi bài toán tối ưu hóa trong Machine Learning (học máy) đều quy về điều này: bạn có một loss function (hàm mất mát) — một cảnh quan gồm núi và thung lũng — và bạn muốn tìm điểm thấp nhất. Câu hỏi quyết định mọi thứ là: *Cảnh quan của bạn trông như thế nào?*
+
+Nếu cảnh quan của bạn là một **cái bát** (convex — lồi), thì chỉ có đúng một điểm thấp nhất, và dù bạn bắt đầu thả một quả bóng ở đâu, nó cũng sẽ luôn lăn về đáy. Mọi thứ thật thuận lợi.
+
+Nếu cảnh quan của bạn là một **khay đựng trứng** (non-convex — không lồi), thì có vô số chỗ trũng và thung lũng nhỏ. Quả bóng của bạn có thể lăn vào một vũng nông và mắc kẹt ở đó, không bao giờ tìm thấy rãnh đại dương sâu tượng trưng cho nghiệm tốt nhất thực sự.
+
+### Sự khác biệt cốt lõi
+
+* **Convex (lồi):** Mọi local minimum (cực tiểu cục bộ) ĐỀU LÀ global minimum (cực tiểu toàn cục).
+* **Non-Convex (không lồi):** Các cực tiểu cục bộ có thể khiến bạn mắc kẹt rất xa nghiệm tốt nhất toàn cục.
+
+
+
+## Tại sao bạn nên quan tâm?
+
+Sự khác biệt này có những hệ quả thực tiễn rất lớn đối với các mô hình học máy:
+
+### Linear Regression, Logistic Regression, SVMs
+
+Đây là các bài toán lồi. Bạn được **bảo đảm** tìm được nghiệm tối ưu toàn cục. Nếu hai người huấn luyện cùng một mô hình với các khởi tạo khác nhau, họ sẽ thu được *chính xác cùng một* mô hình cuối cùng.
+
+### Neural Networks
+
+Đây là các bài toán không lồi. Hai người huấn luyện cùng một kiến trúc trên cùng một dữ liệu sẽ thu được các mô hình *khác nhau* tùy thuộc vào khởi tạo ngẫu nhiên. Không có bảo đảm nào cả.
+
+Hiểu về tính lồi giải thích vì sao SVMs từng thống trị trong những năm 2000 (nhờ các bảo đảm toán học!) và vì sao Deep Learning (học sâu) cần các thủ thuật như khởi tạo cẩn thận, batch normalization (chuẩn hóa theo lô), và Adam optimizer (bộ tối ưu Adam) để có thể hoạt động được.
+
+
+
+## Tập lồi
+
+Trước khi có thể thảo luận về hàm lồi, chúng ta cần hiểu tập lồi. Đây là nơi hình học bắt đầu.
+
+### Định nghĩa: Tập lồi
+
+Một tập $C$ là **convex (lồi)** nếu với bất kỳ hai điểm $x, y \in C$, toàn bộ đoạn thẳng nối chúng đều nằm trong $C$.
+
+$$\forall \lambda \in [0,1]: \quad \lambda x + (1-\lambda)y \in C$$
+
+| Tập lồi                        | Tập không lồi                          |
+|:-------------------------------|:---------------------------------------|
+| Hình tròn, hình cầu            | Hình bánh donut (có lỗ)                |
+| Hình chữ nhật, hình lập phương | Hình trăng lưỡi liềm                   |
+| Hình tam giác (được tô kín)    | Hình ngôi sao                          |
+| Nửa không gian                 | Bất kỳ hình nào có một phần "lõm vào"  |
+| Giao của các tập lồi           | Hình chữ L                             |
+
+**Bài kiểm tra "dây chun":** Hãy tưởng tượng kéo căng một sợi dây chun giữa bất kỳ hai điểm nào trong tập. Nếu dây chun từng "chọc ra ngoài" tập, thì tập đó không lồi. Với một tập lồi, dây chun luôn nằm bên trong.
+
+
+
+## Hàm lồi
+
+Một hàm là lồi nếu vùng phía trên đồ thị của nó là một tập lồi.
+
+### Định nghĩa: Hàm lồi
+
+Một hàm $f$ là convex (lồi) nếu đoạn thẳng nối bất kỳ hai điểm nào trên đồ thị nằm **phía trên hoặc nằm trên** đồ thị.
+
+$$f(\lambda x + (1-\lambda)y) \le \lambda f(x) + (1-\lambda)f(y)$$
+*với mọi $x, y$ và $\lambda$ trong $[0, 1]$*
+
+| Convex Functions | Non-Convex Functions |
+| :--- | :--- |
+| $f(x) = x^2$ (parabola) | $f(x) = \sin(x)$ |
+| $f(x) = e^x$ | $f(x) = x^3$ (cubic) |
+| $f(x) = |x|$ | $f(x) = -x^2$ (concave) |
+| $f(x) = x \log x$ | Neural network losses |
+| Norms: $||x||_1, ||x||_2$ | Any function with multiple local minima |                              | _1, |   | x |   | _2$ | Bất kỳ hàm nào có nhiều cực tiểu cục bộ |
+
+**Strictly Convex (lồi chặt):** Nếu bất đẳng thức là **chặt** ($<$ thay vì $\le$), hàm được gọi là *lồi chặt*. Điều này có nghĩa là có đúng **một** cực tiểu toàn cục. $x^2$ là lồi chặt; một đường thẳng nằm ngang là lồi nhưng không lồi chặt.
+
+
+
+## Kiểm tra tính lồi bằng Hessian
+
+Đối với các hàm khả vi hai lần, có một kiểm tra đơn giản sử dụng Hessian matrix (ma trận Hessian) $H$.
+
+### Kiểm tra đạo hàm bậc hai
+
+Một hàm khả vi hai lần $f$ là lồi khi và chỉ khi Hessian $H$ của nó là **Positive Semi-Definite (PSD — nửa xác định dương)** ở mọi nơi.
+
+$$H(x) \succeq 0 \quad \forall x$$
+
+**PSD có nghĩa là:** Tất cả các eigenvalues (trị riêng) của $H$ đều không âm. Về mặt hình học, hàm cong "hướng lên" (hoặc phẳng) theo mọi hướng.
+
+### Ví dụ: MSE Loss cho Linear Regression
+
+* **Loss:** $L(w) = ||Xw - y||^2$
+* **Hessian:** $H = 2X^TX$
+
+Vì $X^TX$ luôn là PSD (nó là một Gram matrix — ma trận Gram), MSE loss là lồi. Đây là lý do linear regression luôn có một nghiệm duy nhất.
+
+
+
+## Bất đẳng thức Jensen
+
+Bất đẳng thức này là hệ quả trực tiếp của tính lồi và xuất hiện trong khắp ML, đặc biệt là trong variational inference (suy luận biến phân) và EM algorithm (thuật toán EM).
+
+### Định nghĩa
+
+Với một hàm lồi $f$ và một biến ngẫu nhiên $X$:
+
+$$f(E[X]) \le E[f(X)]$$
+
+*"Hàm của kỳ vọng không lớn hơn kỳ vọng của hàm."*
+
+### Ví dụ minh họa
+
+Cho $f(x) = x^2$ (lồi). Cho $X$ nhận các giá trị $-2$ và $+2$ với xác suất bằng nhau.
+
+* **Vế trái:** $E[X] = 0$, nên $f(0) = 0$
+* **Vế phải:** $E[X^2] = (4 + 4)/2 = 4$
+* $0 \le 4$. Bất đẳng thức Jensen được thỏa mãn.
+
+**Tại sao Jensen quan trọng trong ML:** Trong Variational Autoencoders (VAEs — bộ mã hóa tự động biến phân), chúng ta không thể tính trực tiếp $\log p(x)$. Bất đẳng thức Jensen cho phép chúng ta xây dựng ELBO (Evidence Lower Bound — cận dưới bằng chứng), một cận dưới có thể xử lý được mà ta có thể tối đa hóa thay thế.
+
+
+
+## Thế giới lồi: Nơi mọi thứ thuận lợi
+
+Trong convex optimization (tối ưu hóa lồi), bạn có những bảo đảm toán học mạnh mẽ:
+
+1. **Cục bộ = Toàn cục:** Bất kỳ cực tiểu cục bộ nào cũng tự động là cực tiểu toàn cục. Không cần khởi động lại với các khởi tạo khác nhau.
+2. **Thuật toán hiệu quả:** Các bài toán lồi có thể được giải trong thời gian đa thức với các tốc độ hội tụ đã được chứng minh.
+3. **Duality (đối ngẫu):** Strong duality (đối ngẫu mạnh) được thỏa mãn. Bài toán đối ngẫu có cùng giá trị tối ưu.
+
+
+
+## Thực tại không lồi: Khu rừng rậm của học sâu
+
+Neural networks (mạng nơ-ron) là không lồi. Ngay khi bạn kết hợp các phép biến đổi tuyến tính với các hàm kích hoạt phi tuyến (ReLU, Sigmoid, v.v.), tính lồi bị phá vỡ.
+
+### Các nguy cơ
+
+* **Local Minima (cực tiểu cục bộ):** Những thung lũng không phải là sâu nhất. Mắc kẹt ở đây đồng nghĩa với một mô hình dưới tối ưu.
+* **Saddle Points (điểm yên ngựa):** Các điểm mà gradient = 0, nhưng chúng không phải là cực tiểu. Trong không gian nhiều chiều, chúng phổ biến hơn rất nhiều so với cực tiểu cục bộ.
+* **Plateaus (vùng bằng phẳng):** Những vùng phẳng rộng lớn nơi gradient rất nhỏ. Quá trình huấn luyện bị đình trệ trong hàng nghìn bước.
+* **Ill-Conditioning (điều kiện kém):** Các cảnh quan mất mát dốc theo một số hướng và phẳng theo các hướng khác, gây ra dao động.
+
+### Tại sao mạng nơ-ron không lồi
+
+Xét một mạng 2 lớp đơn giản: $f(x) = W_2 \sigma(W_1 x)$
+
+* **Độ cong do kích hoạt:** Hàm phi tuyến $\sigma$ làm uốn cong hàm.
+* **Tích trọng số:** $W_2 W_1$ tạo ra các thung lũng hyperbol.
+* **Đối xứng:** Hoán đổi các nơ-ron cho cùng đầu ra giống hệt nhau (nhiều cực tiểu).
+
+
+
+## Vì sao học sâu vẫn hoạt động
+
+Nếu tối ưu hóa không lồi khó đến vậy, vì sao mạng nơ-ron vẫn huấn luyện được?
+
+* **Số chiều cao là một lợi thế:** Hầu hết các điểm tới hạn trong học sâu là điểm yên ngựa, không phải cực tiểu cục bộ. Có thể thoát khỏi các điểm yên ngựa.
+* **Cực tiểu cục bộ thường đủ tốt:** Hầu hết các cực tiểu cục bộ có giá trị mất mát rất gần cực tiểu toàn cục. Các cực tiểu cục bộ "xấu" là hiếm.
+* **Quá tham số hóa tạo ra các đường đi dễ dàng:** Các nghiệm tạo thành những thung lũng liên thông (mode connectivity — tính liên thông giữa các mode), và gradient descent (thuật toán hạ dốc) có thể dễ dàng trượt dọc theo chúng.
+* **Nhiễu SGD giúp ích:** Nhiễu ngẫu nhiên từ mini-batch gradients (gradient theo lô nhỏ) có thể lay bộ tối ưu ra khỏi các cực tiểu cục bộ nông.
+
+
+
+## Hệ quả thực tiễn trong ML
+
+### Khi nào nên chọn mô hình lồi
+
+Nếu tính diễn giải được và hội tụ được bảo đảm là quan trọng, hãy cân nhắc logistic regression, SVMs, hoặc các mô hình tuyến tính.
+
+### Sống sót khi huấn luyện không lồi
+
+* Khởi tạo Xavier/He
+* Batch normalization (chuẩn hóa theo lô)
+* Skip connections (các kết nối tắt) (ResNets)
+* Momentum (động lượng)
+
+### Thủ thuật nới lỏng lồi
+
+"Relax" (nới lỏng) một bài toán không lồi thành một bài toán lồi, giải bài toán đó, rồi làm tròn trở lại. Một ví dụ phổ biến là dùng $L_1$ regularization (chính quy hóa $L_1$) như một phép nới lỏng của $L_0$.

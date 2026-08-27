@@ -1,0 +1,150 @@
+---
+title: "Biến ngẫu nhiên & Kỳ vọng (Random Variables and Expectation)"
+order: 3
+date: 2026-08-27
+description: "Trong đại số, một biến biểu diễn một số cố định. Trong xác suất, một Random Variable (biến ngẫu nhiên) biểu diễn một giá trị được quyết định bởi yếu tố ngẫu nhiên. Nó có thể nhận bất kỳ giá trị nào…"
+series: math-base
+categories: [math-base, probability]
+group: probability
+---
+# Biến ngẫu nhiên & Kỳ vọng
+
+## Giới thiệu
+
+Trong đại số, một biến $x$ biểu diễn một số cố định. Trong xác suất, một **Random Variable (biến ngẫu nhiên)** biểu diễn một giá trị được quyết định bởi yếu tố ngẫu nhiên. Nó có thể nhận bất kỳ giá trị nào trong một khoảng, mỗi giá trị đi kèm một xác suất.
+
+* **Random Variable (biến ngẫu nhiên):** Một hàm ánh xạ các kết quả của một quá trình ngẫu nhiên sang các số.
+* **Expectation (kỳ vọng):** Giá trị trung bình lý thuyết nếu ta lặp lại quá trình vô hạn lần.
+
+Trong Machine Learning (ML), đầu vào $X$, nhãn mục tiêu $Y$, và thậm chí tham số mô hình $\theta$ (trong học Bayes) đều được xem là các biến ngẫu nhiên. Hiểu về kỳ vọng là nền tảng để định nghĩa một mô hình “tốt” là gì.
+
+
+
+## Biến ngẫu nhiên là gì?
+
+### Định nghĩa hình thức
+
+Một biến ngẫu nhiên được định nghĩa là:
+$$X: \Omega \to \mathbb{R}$$
+
+Đây là một hàm gán một số thực cho mỗi kết quả có thể trong không gian mẫu $\Omega$.
+
+### Ví dụ: Tung hai đồng xu
+
+* **Không gian mẫu:** ${HH, HT, TH, TT}$
+* **$X$ = số mặt ngửa (Heads):**
+
+  * $X(HH) = 2$
+  * $X(HT) = X(TH) = 1$
+  * $X(TT) = 0$
+
+Biến ngẫu nhiên $X$ chuyển các kết quả định tính (như "$HT$") thành các giá trị số (như $1$) để có thể thực hiện các phép toán.
+
+
+
+## Biến ngẫu nhiên rời rạc và liên tục
+
+### Rời rạc
+
+* **Định nghĩa:** Các biến có giá trị đếm được, như kết quả xúc xắc, tung đồng xu, hoặc số lượng email.
+* **Đại lượng xác suất:** Được mô tả bởi **Probability Mass Function (PMF – hàm khối xác suất)**: $P(X = x)$.
+* **Quy tắc:** Mỗi giá trị có một xác suất cụ thể và tổng tất cả xác suất bằng $1$.
+
+### Liên tục
+
+* **Định nghĩa:** Các biến có thể nhận bất kỳ giá trị nào trong một khoảng, như chiều cao, thời gian hoặc nhiệt độ.
+* **Đại lượng xác suất:** Được mô tả bởi **Probability Density Function (PDF – hàm mật độ xác suất)**: $P(a < X < b) = \int_a^b f(x)dx$.
+* **Quy tắc:** Xác suất để $X$ nhận một giá trị *chính xác* là $0$ ($P(X = \text{giá trị chính xác}) = 0$). Chỉ các khoảng giá trị mới có xác suất khác 0.
+
+
+
+## Giá trị kỳ vọng (Mean)
+
+**Expectation (kỳ vọng)** $E[X]$ là trung bình có trọng số về mặt lý thuyết, thường được hình dung như “trọng tâm” của phân phối. Nó biểu diễn giá trị trung bình dài hạn nếu thí nghiệm được lặp lại vô hạn lần.
+
+### Cách tính
+
+| Loại         | Công thức                                       | Mô tả                                            |
+| :--- | :--- | :--- |
+| **Rời rạc**  | $E[X] = \sum_x x \cdot P(X=x)$                  | Tổng của (giá trị $\times$ xác suất)    |
+| **Liên tục** | $E[X] = \int_{-\infty}^{\infty} x \cdot f(x)dx$ | Tích phân của (giá trị $\times$ mật độ) |
+
+### Ví dụ: Xúc xắc bị lệch
+
+Xét một con xúc xắc mà xác suất ra $6$ là $50\%$, còn các số $1-5$ mỗi số có xác suất $10\%$:
+
+* $E[X] = (1)(0.1) + (2)(0.1) + (3)(0.1) + (4)(0.1) + (5)(0.1) + (6)(0.5)$
+* $E[X] = 0.1 + 0.2 + 0.3 + 0.4 + 0.5 + 3.0 = \mathbf{4.5}$
+
+Dù bạn không thể gieo ra giá trị $4.5$, nhưng xác suất cao của việc ra $6$ kéo giá trị trung bình lý thuyết lên.
+
+
+
+## Phương sai & Độ lệch chuẩn
+
+Trong khi kỳ vọng mô tả **trung tâm**, phương sai mô tả **độ phân tán** hoặc mức độ không chắc chắn của biến ngẫu nhiên.
+
+### Định nghĩa
+
+* **Variance (phương sai):** Kỳ vọng của bình phương độ lệch so với trung bình:
+  $$Var(X) = E[(X - \mu)^2]$$
+* **Công thức tính nhanh:**
+  $$Var(X) = E[X^2] - (E[X])^2$$
+* **Standard Deviation (độ lệch chuẩn, $\sigma$):** Căn bậc hai của phương sai:
+  $$\sigma = \sqrt{Var(X)}$$
+
+**Khác biệt chính:**
+
+* **Phương sai:** Đơn vị bị bình phương (ví dụ: đô la bình phương), khó diễn giải trực tiếp.
+* **Độ lệch chuẩn:** Có cùng đơn vị với $X$, dễ hiểu hơn.
+
+
+
+## Các tính chất quan trọng
+
+### Tính tuyến tính của kỳ vọng
+
+Với **mọi** biến ngẫu nhiên $X$ và $Y$, dù chúng phụ thuộc hay độc lập:
+$$E[aX + bY] = aE[X] + bE[Y]$$
+
+### Phương sai của tổng
+
+Nếu $X$ và $Y$ **độc lập**:
+$$Var(X + Y) = Var(X) + Var(Y)$$
+
+### Tính chất co giãn
+
+* **Kỳ vọng:** $E[aX] = aE[X]$
+* **Phương sai:** $Var(aX) = a^2 Var(X)$ (nhân với hằng số sẽ làm phương sai tăng theo bình phương hằng số).
+
+
+
+## Ứng dụng trong ML
+
+### Rủi ro kỳ vọng (Tối thiểu hóa hàm mất mát - Loss Minimization)
+
+Các mô hình ML được huấn luyện để tối thiểu hóa kỳ vọng của hàm mất mát trên dữ liệu chưa thấy:
+$$\theta^* = \arg\min_\theta E_{(x,y)}[L(f(x;\theta), y)]$$
+
+Vì kỳ vọng thực không thể tính trực tiếp, nó được xấp xỉ bằng trung bình thực nghiệm trên tập huấn luyện.
+
+### Cơ sở của Stochastic Gradient Descent (SGD)
+
+Dựa trên tính tuyến tính của kỳ vọng, gradient kỳ vọng của một mini-batch bằng gradient kỳ vọng của toàn bộ dữ liệu, điều này giải thích vì sao SGD hoạt động.
+
+### Reinforcement Learning
+
+**Value Function (hàm giá trị)** $V(s)$ được định nghĩa là kỳ vọng của tổng phần thưởng trong tương lai:
+$$V(s) = E\left[\sum_{t=0}^\infty \gamma^t r_t \mid s_0 = s\right]$$
+
+Các tác tử trong RL cố gắng tối đa hóa tổng phần thưởng kỳ vọng này.
+
+### Phương sai trong hiệu năng mô hình
+
+Phương sai cao trong dự đoán cho thấy mô hình quá nhạy với dữ liệu huấn luyện, hiện tượng này gọi là overfitting. **Đánh đổi bias-variance (bias-variance tradeoff)** về mặt toán học là sự cân bằng giữa $E[\text{error}]$ và $Var(\text{error})$. 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Ôn nhanh (Theory AI)
+Kỳ vọng rời rạc + snippet: [Expected value](../../theory-ai/01-probability/expected-value-discrete.qmd).
+:::

@@ -11,6 +11,7 @@ $primary: #0f766e;
   --home-accent: #0f766e;
   --home-accent-2: #1e3a5f;
   --home-accent-3: #b45309;
+  --home-accent-4: #475569;
   --home-ink: #0f172a;
   --home-muted: #64748b;
   --home-radius: 0.85rem;
@@ -317,6 +318,10 @@ body.layout-full #quarto-document-content > section > h2,
   background: var(--home-accent-3);
 }
 
+.series-card--math::before {
+  background: var(--home-accent-4);
+}
+
 .series-card:hover {
   border-color: var(--home-accent);
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
@@ -328,6 +333,10 @@ body.layout-full #quarto-document-content > section > h2,
 
 .series-card--theory:hover {
   border-color: var(--home-accent-3);
+}
+
+.series-card--math:hover {
+  border-color: var(--home-accent-4);
 }
 
 .series-card h3 {
@@ -381,12 +390,20 @@ body.layout-full #quarto-document-content > section > h2,
   color: var(--home-accent-3);
 }
 
+.series-card--math > a {
+  color: var(--home-accent-4);
+}
+
 [data-bs-theme="dark"] .series-card--opt > a {
   color: #93c5fd;
 }
 
 [data-bs-theme="dark"] .series-card--theory > a {
   color: #fdba74;
+}
+
+[data-bs-theme="dark"] .series-card--math > a {
+  color: #cbd5e1;
 }
 
 .series-card > a:hover {
@@ -604,6 +621,15 @@ nav.page-navigation {
 @media (max-width: 576px) {
   #quarto-document-content table {
     display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Long display formulas on narrow viewports (Math Base essays) */
+  #quarto-document-content .math.display,
+  #quarto-document-content mjx-container[jax="CHTML"][display="true"],
+  #quarto-document-content .MathJax_Display {
+    max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }

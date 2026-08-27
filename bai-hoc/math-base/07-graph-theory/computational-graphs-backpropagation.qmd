@@ -1,0 +1,172 @@
+---
+title: "Đồ Thị Tính Toán & Lan Truyền Ngược (Computational Graphs & Backpropagation)"
+order: 4
+date: 2026-08-27
+description: "Kiến trúc nền tảng vận hành các hệ thống deep learning hiện đại."
+series: math-base
+categories: [math-base, graph-theory]
+group: graph-theory
+---
+# Đồ Thị Tính Toán & Lan Truyền Ngược (Computational Graphs & Backpropagation)
+
+Kiến trúc nền tảng vận hành các hệ thống deep learning hiện đại.
+
+
+
+## Giới Thiệu
+
+Đồ thị tính toán (Computational Graphs) là cấu trúc dữ liệu cốt lõi mà các framework deep learning hiện đại sử dụng để tổ chức, tối ưu hóa và thực thi mạng lưới tính toán phức tạp cần thiết để huấn luyện mạng nơ-ron. Hiểu về chúng là chìa khóa để hiểu cách các framework như TensorFlow và PyTorch hoạt động bên trong.
+
+### Tại Sao Điều Này Quan Trọng
+
+Đồ thị tính toán quyết định cách chúng ta có thể huấn luyện và triển khai mô hình. Chúng cho phép:
+
+* **Automatic differentiation (vi phân tự động)**
+* **Distributed training (huấn luyện phân tán)**
+* **Efficient memory management (quản lý bộ nhớ hiệu quả)**
+
+
+
+## Đồ Thị Tính Toán Là Gì?
+
+Một đồ thị tính toán là một đồ thị có hướng bao gồm:
+
+* **Nút (Nodes):** Biểu diễn các phép toán (cộng, nhân, hàm kích hoạt) hoặc biến.
+* **Cạnh (Edges):** Biểu diễn luồng dữ liệu (tensor, scalar, gradient) giữa các phép toán.
+* **Dependencies (phụ thuộc):** Quy định thứ tự thực thi; một nút không thể thực thi cho đến khi tất cả các nút cha hoàn thành.
+
+> **Ý Tưởng Cốt Lõi (The Key Insight):** Các phép tính không nhất thiết phải diễn ra tuần tự. Các phép toán độc lập có thể chạy song song. Cấu trúc đồ thị tự động xác định các cơ hội này, quản lý sự phụ thuộc giữa các luồng hoặc hệ thống phân tán.
+
+
+
+## Một Ví Dụ Đồ Thị Đơn Giản
+
+Xét một phép biến đổi tuyến tính đơn giản:
+`z = (x * w) + b`
+
+Trong đồ thị này:
+
+* **Biến:** đầu vào ($x$), tham số ($w, b$).
+* **Phép toán:** nhân ($*$), cộng ($+$).
+* **Đầu ra:** ($z$).
+* **Cạnh:** biểu diễn luồng dữ liệu từ trái sang phải trong **forward pass (lan truyền xuôi)**.
+
+### Trong Quá Trình Backpropagation
+
+Gradient chảy theo hướng *ngược lại* (từ phải sang trái). Mỗi nút phép toán tính gradient cục bộ. Ví dụ, nút nhân tính:
+
+- `dL/dx = dL/dz * w`
+
+- `dL/dw = dL/dz * x`
+
+
+
+## Cấu Trúc Của Một Nút
+
+Mỗi nút hoạt động như một đơn vị xử lý thu nhỏ với vòng đời cụ thể:
+
+1. **Wait State (Trạng thái chờ):** Nút theo dõi các nút cha, chờ tất cả tài nguyên cần thiết (dữ liệu hoặc gradient) sẵn sàng.
+2. **Execute (Thực thi):** Khi tài nguyên đến, nút thực hiện phép tính toán học (ví dụ: nhân ma trận).
+3. **Propagate (Lan truyền):** Sau khi tính toán, nút cung cấp đầu ra cho các nút con.
+
+Thiết kế này hỗ trợ **multi-threading (đa luồng)** và **distributed computing (tính toán phân tán)**.
+
+
+
+## Tại Sao DAG Quan Trọng
+
+Hầu hết các đồ thị tính toán là **Directed Acyclic Graphs (DAGs - đồ thị có hướng không chu trình)**. Ràng buộc này mang lại nhiều đảm bảo:
+
+* **Không Deadlock:** Các nút không bao giờ chờ nhau theo vòng lặp phụ thuộc.
+* **Topological Ordering:** Luôn tồn tại một thứ tự thực thi hợp lệ.
+* **Backpropagation Rõ Ràng:** Gradient lan truyền ngược qua đồ thị một cách không mơ hồ.
+* **Song Song Hóa:** Các nút ở cùng “mức” có thể thực thi đồng thời.
+
+
+
+## Hiểu Về Backpropagation
+
+Automatic differentiation (backpropagation) sử dụng cấu trúc đồ thị để tự động tính gradient:
+
+| Giai đoạn          | Trách nhiệm                                                                                                           |
+|:-------------------|:----------------------------------------------------------------------------------------------------------------------|
+| **Forward Pass**   | Tính đầu ra từ đầu vào; lưu thông tin cần thiết để tính gradient sau này.                                             |
+| **Backward Pass**  | Nhận tín hiệu gradient từ các nút con; tính gradient theo đầu vào bằng chain rule; truyền gradient ngược về nút cha.  |
+
+**Điều Kỳ Diệu:** Bạn chỉ cần định nghĩa forward pass. Framework sẽ tự động tính gradient cho tất cả tham số bằng cách duyệt ngược đồ thị.
+
+### Các Quan Sát Toán Học Quan Trọng
+
+* **Phép cộng** phân phối gradient đều cho cả hai đầu vào.
+* **Phép nhân** hoán đổi: gradient của $x$ dùng $w$, và ngược lại.
+* Mỗi nút chỉ cần **gradient cục bộ (local gradient)** và **gradient truyền xuống (upstream gradient)**.
+* Đây chính là **Chain Rule (quy tắc dây chuyền)**:
+  $$\frac{\partial L}{\partial x} = \frac{\partial L}{\partial z} \cdot \frac{\partial z}{\partial x}$$
+
+
+
+## Trực Giác Về Gradient Descent
+
+**Gradient Descent (thuật toán hạ dốc)** là quá trình liên tục đi “xuống dốc” để tối thiểu hóa hàm mất mát. Vector gradient chỉ theo hướng tăng nhanh nhất, vì vậy chúng ta di chuyển theo hướng ngược lại.
+
+### Quy Tắc Cập Nhật
+
+$$\theta_{\text{new}} = \theta_{\text{old}} - \alpha \cdot \nabla L(\theta)$$
+
+* $\alpha$: Learning rate (tốc độ học).
+* $\nabla L(\theta)$: Gradient của hàm mất mát.
+
+**Đánh Đổi Của Learning Rate:**
+
+* Quá nhỏ: Hội tụ chậm.
+* Quá lớn: Vượt quá cực tiểu và gây mất ổn định.
+
+
+
+## Toán Học Đằng Sau
+
+Xét hàm tuyến tính $f(x) = w \cdot x + b$.
+
+### Bước 1: Tính Đạo Hàm Riêng
+
+Ta xác định cách đầu ra thay đổi theo từng tham số:
+
+* Đạo hàm theo trọng số: $\frac{\partial f}{\partial w} = x$
+* Đạo hàm theo bias: $\frac{\partial f}{\partial b} = 1$
+
+Các đạo hàm này tạo thành **vector gradient** $\langle \frac{\partial f}{\partial w}, \frac{\partial f}{\partial b} \rangle$.
+
+### Bước 2: Chain Rule Cho Mạng Sâu
+
+Với hợp thành hàm $f(g(x))$, gradient là:
+
+$$\frac{\partial f}{\partial x} = \frac{\partial f}{\partial g} \cdot \frac{\partial g}{\partial x}$$
+
+### Bước 3: Cập Nhật Tham Số
+
+Sử dụng hàm mất mát $L$ (như Mean Squared Error):
+
+$$w = w - \text{learning rate} \times \frac{\partial L}{\partial w}$$
+
+$$b = b - \text{learning rate} \times \frac{\partial L}{\partial b}$$
+
+
+
+## Mở Rộng Thành Neural Networks
+
+Các mạng thực tế mở rộng những khái niệm này thông qua:
+
+* **Non-linear Activations (Hàm kích hoạt phi tuyến):** Các hàm như ReLU, Sigmoid hoặc Tanh cho phép mạng học các mẫu phức tạp.
+* **Deep Architectures (Kiến trúc sâu):** Các lớp xếp chồng tạo thành hợp thành hàm, cho phép học biểu diễn phân cấp.
+* **Differentiable Loss Functions (Hàm mất mát khả vi):** MSE cho hồi quy hoặc Cross-Entropy cho phân loại.
+
+
+
+## Các Framework Hiện Đại
+
+Các framework deep learning xử lý việc xây dựng đồ thị, quản lý bộ nhớ và song song hóa GPU.
+
+* **PyTorch:** Sử dụng dynamic computational graphs (đồ thị tính toán động) được xây dựng tức thời. Mang phong cách Python tự nhiên và dễ debug hơn.
+* **TensorFlow:** Chủ yếu sử dụng static computational graphs (đồ thị tính toán tĩnh) (kèm eager execution). Được tối ưu cho triển khai production.
+
+**Sức Mạnh Của Sự Trừu Tượng:** Automatic differentiation cho phép các nhà nghiên cứu tập trung vào thiết kế mô hình thay vì tự tay suy diễn gradient. 

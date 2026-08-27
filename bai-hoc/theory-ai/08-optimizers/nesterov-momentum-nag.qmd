@@ -185,6 +185,13 @@ def nesterov_momentum_step(w, v, grad, lr, momentum):
 
 ```
 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Nền đầy đủ (Math Base)
+Momentum & NAG (lý thuyết): [Momentum & Nesterov](../../math-base/05-optimization/momentum-nesterov-accelerated-gradient.qmd).
+:::
+
 <!-- auto-self-check -->
 
 ::: {.callout-note}

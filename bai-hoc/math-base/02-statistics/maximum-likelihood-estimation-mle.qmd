@@ -1,0 +1,139 @@
+---
+title: "Ước lượng hợp lý tối đa (Maximum Likelihood Estimation - MLE)"
+order: 14
+date: 2026-08-27
+description: "Trong thực tế, chúng ta không bao giờ biết chính xác các tham số của tổng thể như trung bình () hay phương sai (). Ước lượng hợp lý tối đa (MLE) là phương pháp thống kê tiêu chuẩn dùng để ước lượng…"
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# Ước lượng hợp lý tối đa (Maximum Likelihood Estimation - MLE)
+
+## Giới thiệu
+Trong thực tế, chúng ta không bao giờ biết chính xác các tham số của tổng thể như trung bình ($\mu$) hay phương sai ($\sigma^2$). **Ước lượng hợp lý tối đa (MLE)** là phương pháp thống kê tiêu chuẩn dùng để ước lượng các tham số chưa biết này từ dữ liệu quan sát.
+
+**Câu hỏi cốt lõi:**  
+Với dữ liệu đã quan sát, giá trị tham số nào khiến dữ liệu đó có xác suất xảy ra cao nhất?
+
+
+
+## Ý tưởng lớn: Ví dụ túi bi
+Giả sử có một túi chứa 3 viên bi, mỗi viên có thể là Đỏ hoặc Xanh. Gọi $\theta$ là số lượng bi Xanh (chưa biết).
+
+**Thí nghiệm:** Lấy 4 lần *có hoàn lại* và quan sát: **Xanh, Đỏ, Xanh, Xanh**
+
+| Giả thuyết | $P(\text{Xanh})$ | $P(\text{Dữ liệu})$ | Kết luận |
+| ---: | :--- | :--- | :--- |
+| $\theta = 0$ | $0$ | $0$ | Không thể xảy ra |
+| $\theta = 1$ | $1/3$ | $0.025$ | Ít khả năng |
+| **$\theta = 2$** | **$2/3$** | **$0.099$** | **Ước lượng MLE (xác suất cao nhất)** |
+| $\theta = 3$ | $1$ | $0$ | Không thể (đã thấy bi Đỏ) |
+
+MLE chọn $\theta = 2$ vì nó làm cho dữ liệu quan sát có xác suất cao nhất.
+
+
+
+## Likelihood vs. Probability
+
+Mặc dù thường bị nhầm lẫn, chúng có ý nghĩa thống kê khác nhau:
+
+* **Probability $P(x|\theta)$:**  
+  Giữ **tham số cố định**, hỏi về dữ liệu  
+  *Ví dụ:* “Nếu đồng xu công bằng, xác suất ra 7 mặt ngửa là bao nhiêu?”
+
+* **Likelihood $L(\theta|x)$:**  
+  Giữ **dữ liệu cố định**, hỏi về tham số  
+  *Ví dụ:* “Tôi thấy 7 mặt ngửa, điều này phù hợp với giả thuyết đồng xu công bằng đến mức nào?”
+
+**Lưu ý:** Likelihood không phải phân phối xác suất theo $\theta$ và không cần tổng bằng 1. Nó chỉ đo mức độ phù hợp giữa dữ liệu và tham số.
+
+
+
+## Thủ thuật Log-Likelihood
+
+Khi có nhiều quan sát, likelihood là tích của nhiều số nhỏ → gây **underflow số học** và khó tính đạo hàm.
+
+**Giải pháp:** Tối đa hóa log tự nhiên của likelihood. Vì log là hàm đơn điệu tăng, giá trị tối đa không đổi.
+
+$$\ell(\theta) = \ln L(\theta) = \sum_{i=1}^n \ln f(x_i; \theta)$$
+
+
+
+## Suy diễn toán học
+
+### Ví dụ 1: Phân phối Bernoulli (tung đồng xu)
+Quan sát $n$ lần tung với $k$ lần ngửa:
+
+1. **Likelihood:**  
+   $L(p) = p^k (1-p)^{n-k}$
+
+2. **Log-likelihood:**  
+   $\ell(p) = k \ln(p) + (n-k) \ln(1-p)$
+
+3. **Đạo hàm:**  
+   $\frac{d\ell}{dp} = \frac{k}{p} - \frac{n-k}{1-p}$
+
+4. **Giải:**  
+   $k = np \Rightarrow \hat{p}_{MLE} = \frac{k}{n}$
+
+$\Rightarrow$ **Kết quả:** MLE của $p$ chính là tỷ lệ quan sát được.
+
+
+
+### Ví dụ 2: Phân phối chuẩn
+Cho dữ liệu $x_1, \dots, x_n \sim N(\mu, \sigma^2)$, ước lượng $\mu$:
+
+1. **Đạo hàm log-likelihood:**  
+   $\frac{d\ell}{d\mu} = \frac{1}{\sigma^2} \sum (x_i - \mu)$
+
+2. **Giải:**  
+   $\sum x_i = n\mu \Rightarrow \hat{\mu}_{MLE} = \bar{x}$
+
+$\Rightarrow$ **Kết quả:** MLE của trung bình là trung bình mẫu.
+
+
+
+## Các tính chất quan trọng của MLE
+
+Với dữ liệu lớn, MLE có các tính chất tối ưu:
+
+1. **Consistent:** Khi $n \to \infty$, ước lượng hội tụ về giá trị thật  
+2. **Efficient:** Có phương sai nhỏ nhất trong các ước lượng không chệch  
+3. **Invariant:** Nếu $\hat{\theta}$ là MLE của $\theta$, thì $g(\hat{\theta})$ là MLE của $g(\theta)$  
+4. **Asymptotically Normal:** Với $n$ lớn, phân phối của MLE xấp xỉ chuẩn  
+
+
+
+## MLE trong Machine Learning
+
+MLE là nền tảng của nhiều hàm loss:
+
+* **Mean Squared Error (MSE):**  
+  Tương đương MLE khi giả định nhiễu Gaussian  
+  $$-\ell(\mu) \propto \sum (x_i - \mu)^2$$
+
+* **Binary Cross-Entropy (BCE):**  
+  Tương đương MLE với phân phối Bernoulli  
+  $$-\ell(p) = -[y \ln(p) + (1-y)\ln(1-p)]$$
+
+* **Softmax + Cross-Entropy:**  
+  Tương đương MLE cho phân phối Categorical  
+
+
+
+## Hạn chế & giải pháp Bayesian (MAP)
+
+MLE có một điểm yếu lớn: **Vấn đề “Zero Count”**  
+Ví dụ: tung đồng xu 3 lần ra 3 lần ngửa → MLE kết luận $P(\text{tails}) = 0$ (overfit dữ liệu nhỏ)
+
+### Giải pháp: MAP (Maximum A Posteriori)
+
+MAP thêm **Prior** $P(\theta)$ vào mô hình:
+
+$$\hat{\theta}_{MAP} = \arg\max_{\theta} L(\theta) \cdot P(\theta)$$
+
+Trong ML, điều này tương ứng với **Regularization**:
+
+* **L2 Regularization** → Gaussian prior  
+* **L1 Regularization** → Laplace prior  
+

@@ -1,0 +1,97 @@
+---
+title: "Phân rã LU / QR (Decomposition)"
+order: 6
+date: 2026-08-27
+description: "Phân tách ma trận thành các thành phần đơn giản hơn để tính toán hiệu quả."
+series: math-base
+categories: [math-base, linear-algebra]
+group: linear-algebra
+---
+# Phân rã LU / QR (Decomposition)
+
+Phân tách ma trận thành các thành phần đơn giản hơn để tính toán hiệu quả.
+
+
+
+## Tại sao cần phân rã ma trận?
+
+Giải trực tiếp $Ax = b$ bằng cách tính $A^{-1}$ là tốn kém ($O(n^3)$) và không ổn định về mặt số. Các phương pháp phân rã ma trận tách $A$ thành các ma trận đơn giản hơn, giúp việc giải hệ nhanh hơn và ổn định hơn.
+
+* **Phân rã LU (LU Decomposition):** Phân tích ma trận thành Từ dưới $\times$ Tam giác trên. Phù hợp khi cần giải nhiều hệ với cùng $A$ nhưng khác $b$.
+* **Phân rã QR (QR Decomposition):** Phân tích thành Trực giao $\times$ Tam giác trên. Ổn định về số và phù hợp cho bài toán bình phương tối thiểu.
+
+
+
+## Phân rã LU
+
+Phân rã LU tách một ma trận vuông thành tích của ma trận tam giác dưới $L$ và ma trận tam giác trên $U$. Nó thực chất ghi lại các bước của khử Gauss (Gaussian Elimination).
+
+$$A = LU$$
+
+* **$L$ (Tam giác dưới):** Có các phần tử trên đường chéo chính bằng 1.
+* **$U$ (Tam giác trên):** Chứa các phần tử trụ (pivot) trên đường chéo.
+
+### Giải hệ bằng LU
+
+Để giải hệ bằng phân rã LU:
+
+1. **Phân tích một lần:** $A = LU$ (Chi phí: $O(n^3)$).
+2. **Thế tiến (Forward substitution):** Giải $Ly = b$ (Chi phí: $O(n^2)$).
+3. **Thế lùi (Back substitution):** Giải $Ux = y$ (Chi phí: $O(n^2)$).
+
+### Pivot từng phần (Partial Pivoting) ($PA = LU$)
+
+Trong thực tế, các hàng được hoán vị để tránh chia cho số nhỏ, giúp tăng độ ổn định. Khi đó ta có $PA = LU$, trong đó $P$ là ma trận hoán vị.
+
+
+
+## Phân rã QR
+
+Phân rã QR tách một ma trận bất kỳ (kể cả không vuông) thành ma trận trực giao $Q$ và ma trận tam giác trên $R$.
+
+$$A = QR$$
+
+* **$Q$ (Ma trận trực giao):** Các cột trực chuẩn ($Q^T Q = I$).
+* **$R$ (Tam giác trên):** Chứa các hệ số chiếu.
+
+### Vì sao QR ổn định
+
+Ma trận trực giao bảo toàn độ dài ($||Qx|| = ||x||$). Điều này có nghĩa sai số không bị khuếch đại trong quá trình tính toán; số điều kiện của $Q$ bằng 1.
+
+
+
+## Quá trình Gram-Schmidt
+
+Quá trình Gram-Schmidt là thuật toán dùng để xây dựng $Q$. Nó lặp lại việc trừ các thành phần chiếu để tạo tính trực giao.
+
+### Thuật toán
+
+1. Đặt $u_1 = a_1$, sau đó chuẩn hóa: $q_1 = u_1 / ||u_1||$.
+2. Trừ phần chiếu của $a_2$ lên $q_1$: $u_2 = a_2 - (a_2 \cdot q_1)q_1$.
+3. Chuẩn hóa kết quả: $q_2 = u_2 / ||u_2||$.
+4. Với mỗi vector tiếp theo $k$, trừ tất cả các phần chiếu trước đó:
+   $$u_k = a_k - \sum_{j=1}^{k-1}(a_k \cdot q_j)q_j$$
+5. Chuẩn hóa phần dư cuối cùng: $q_k = u_k / ||u_k||$.
+
+**Lưu ý:** Các thư viện hiện đại thường dùng **phản xạ Householder (Householder reflections)** thay vì Gram-Schmidt tiêu chuẩn để tính QR, vì nó ổn định số hơn.
+
+
+
+## So sánh: LU vs QR vs SVD
+
+| Đặc điểm         | LU                         | QR                          | SVD                             |
+| :--- |:---------------------------|:----------------------------|:--------------------------------|
+| **Dạng ma trận** | Chỉ vuông                  | Bất kỳ                      | Bất kỳ                          |
+| **Tốc độ**       | Nhanh nhất ($\sim n^3/3$)  | Trung bình ($\sim 2n^3/3$)  | Chậm nhất ($\sim 10n^3$)        |
+| **Ổn định**      | Cần pivot                  | Tốt                         | Tốt nhất (Total Least Squares)  |
+| **Phù hợp nhất** | Giải hệ ($Ax=b$)           | Bình phương tối thiểu       | Hạng, nén                       |
+
+
+
+## Ứng dụng trong ML
+
+* **Phân rã Cholesky ($LL^T$):** Trường hợp đặc biệt của LU cho ma trận đối xứng xác định dương (như ma trận hiệp phương sai). Nhanh gấp 2 lần LU và được dùng trong **Gaussian Processes** để lấy mẫu.
+* **Thuật toán giá trị riêng:** **Thuật toán QR (QR Algorithm)** lặp lại việc phân rã QR để tìm giá trị riêng. Đây là cách triển khai tiêu chuẩn cho ma trận không đối xứng trong các thư viện như NumPy.
+* **Hiệu quả lan truyền ngược (Backpropagation):** Tính gradient qua nghịch đảo ma trận thường sử dụng các thừa số LU đã tính trước để giải hệ tuyến tính hiệu quả.
+* **Đại số tuyến tính ngẫu nhiên:** ML quy mô lớn sử dụng QR ngẫu nhiên (lấy mẫu cột) để thu được phân rã xấp xỉ nhanh hơn nhiều so với SVD đầy đủ.
+* **Bình phương tối thiểu:** Với hệ xác định quá mức, QR giải $R\hat{a} = Q^T b$ bằng thế lùi, tránh các phương trình chuẩn kém điều kiện ($A^TA$).

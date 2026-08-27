@@ -1,0 +1,152 @@
+---
+title: "Lý Thuyết Đồ Thị Phổ (Spectral Graph Theory)"
+order: 2
+date: 2026-08-27
+description: "Cách các trị riêng (eigenvalues) tiết lộ cấu trúc ẩn của đồ thị. Đây là nền tảng toán học phía sau phân cụm, phát hiện cộng đồng và các Graph Neural Networks (GNNs) hiện đại."
+series: math-base
+categories: [math-base, graph-theory]
+group: graph-theory
+---
+# Lý Thuyết Đồ Thị Phổ (Spectral Graph Theory)
+
+Cách các trị riêng (eigenvalues) tiết lộ cấu trúc ẩn của đồ thị. Đây là nền tảng toán học phía sau phân cụm, phát hiện cộng đồng và các Graph Neural Networks (GNNs) hiện đại.
+
+
+
+## Giới Thiệu
+
+Đồ thị là các đối tượng tổ hợp bao gồm các nút và cạnh, trong khi đại số tuyến tính xử lý ma trận và không gian vector. Lý thuyết đồ thị phổ (Spectral Graph Theory) chính là cầu nối giữa chúng.
+
+Ý tưởng cốt lõi rất đơn giản nhưng sâu sắc: **chúng ta có thể biểu diễn một đồ thị dưới dạng ma trận, sau đó phân tích ma trận đó bằng trị riêng và vector riêng**. “Phổ” (spectrum) của một đồ thị (tập các trị riêng của nó) mã hóa thông tin cấu trúc mà mắt thường không thể nhận ra: đồ thị phân cụm như thế nào, liệu nó có liên thông hay không, và cách thông tin lan truyền qua nó.
+
+> **Ý Tưởng Lớn (The Big Idea):** Trị riêng đối với đồ thị giống như tần số đối với sóng âm. Một hợp âm nghe khác với một nốt đơn vì nó có nhiều tần số. Tương tự, một đồ thị có cụm “nghe khác” so với đồ thị ngẫu nhiên vì phổ trị riêng của nó có hình dạng khác nhau.
+
+
+
+## Tại Sao Gọi Là “Phổ” (Spectral)?
+
+Thuật ngữ “spectral” bắt nguồn từ vật lý. Khi ánh sáng trắng đi qua lăng kính, nó tách thành phổ màu, mỗi màu tương ứng với một tần số khác nhau. Trong đại số tuyến tính, **phổ của một ma trận** là tập các trị riêng của nó.
+
+Cũng giống như phổ màu tiết lộ thành phần của ánh sáng, phổ của ma trận tiết lộ các tính chất cơ bản của đồ thị:
+
+* **Tính liên thông (Connectivity):** Xác định số thành phần liên thông và liệu đồ thị có dễ bị chia cắt hay không.
+* **Phân cụm (Clustering):** Xác định các cộng đồng tự nhiên và mức độ tách biệt của chúng.
+* **Độ mở rộng (Expansion):** Đo tốc độ lan truyền thông tin và xác định các nút thắt cổ chai.
+* **Tính hai phía (Bipartiteness):** Xác định liệu các nút có thể chia thành hai nhóm sao cho cạnh chỉ tồn tại giữa hai nhóm hay không.
+
+
+
+## Ma Trận Laplacian Của Đồ Thị (Graph Laplacian)
+
+Mặc dù ma trận kề là một biểu diễn phổ biến, **Graph Laplacian** hữu ích hơn nhiều cho phân tích phổ. Nó được định nghĩa là:
+
+$$L = D - A$$
+
+* **$L$**: Ma trận Laplacian ($V \times V$)
+* **$D$**: Ma trận bậc (degree matrix) dạng đường chéo
+* **$A$**: Ma trận kề (adjacency matrix)
+
+### Xây Dựng Ma Trận Laplacian
+
+1. **Ma trận kề $A$**: $A[i][j] = 1$ nếu cạnh $(i, j)$ tồn tại, ngược lại bằng 0.
+2. **Ma trận bậc $D$**: Ma trận đường chéo trong đó $D[i][i] = \text{bậc của nút } i$.
+3. **Laplacian $L = D - A$**: Các phần tử đường chéo $L[i][i] = \text{bậc của nút } i$; các phần tử ngoài đường chéo $L[i][j] = -1$ nếu tồn tại cạnh, ngược lại bằng 0.
+
+Tổng các phần tử trên mỗi hàng của $L$ luôn bằng 0.
+
+> **Tại Sao Gọi Là “Laplacian”?**
+> Trong miền liên tục, toán tử Laplacian $\nabla^2 f = \frac{\partial^2 f}{\partial x^2} + \frac{\partial^2 f}{\partial y^2}$ đo sự khác biệt giữa một hàm và giá trị trung bình của vùng lân cận. Graph Laplacian là phiên bản rời rạc tương tự.
+
+
+
+## Dạng Toàn Phương & Độ Mượt (Quadratic Form & Smoothness)
+
+Sức mạnh thực sự của Laplacian xuất hiện thông qua **dạng toàn phương (quadratic form)**. Với bất kỳ vector $x$ nào gán giá trị cho các nút:
+
+$$x^T L x = \sum_{(i,j) \in E} (x_i - x_j)^2$$
+
+Biểu thức này đo **độ mượt (smoothness)** trên đồ thị:
+
+* **Giá trị thấp = Mượt:** Các nút kết nối có giá trị tương tự nhau; tín hiệu thay đổi chậm.
+* **Giá trị cao = Gồ ghề:** Các nút kết nối có giá trị rất khác nhau; tín hiệu thay đổi đột ngột.
+
+**Ứng dụng ML:** Trong học bán giám sát (semi-supervised learning), $x^T L x$ được thêm như một hạng tử regularization để khuyến khích các nút kết nối có nhãn tương tự nhau.
+
+
+
+## Các Tính Chất Của Laplacian
+
+1. **Đối xứng & xác định bán dương (Positive Semi-Definite):** Tất cả trị riêng đều là số thực và $\ge 0$.
+2. **Tổng hàng bằng 0:** Vector toàn số 1 (**1**) luôn là một vector riêng với trị riêng bằng 0.
+3. **Dạng toàn phương:** Đo độ mượt của tín hiệu trên đồ thị.
+4. **Trị riêng bằng 0:** Số lượng trị riêng bằng 0 bằng số thành phần liên thông của đồ thị.
+
+
+
+## Trị Riêng Và Ý Nghĩa Của Chúng
+
+Gọi các trị riêng của $L$ là $0 = \lambda_1 \le \lambda_2 \le \dots \le \lambda_n$.
+
+* **$\lambda_1 = 0$**: Luôn bằng 0, biểu diễn phân hoạch tầm thường nơi tất cả các nút thuộc cùng một cụm.
+* **$\lambda_2$ (Giá trị Fiedler / Algebraic Connectivity):** Đo mức độ liên thông của đồ thị.
+
+  * $\lambda_2 = 0$: Đồ thị không liên thông.
+  * $\lambda_2$ nhỏ: Đồ thị “gần như bị ngắt kết nối” với các nút thắt cổ chai.
+  * $\lambda_2$ lớn: Đồ thị khó bị cắt và liên thông mạnh.
+* **$\lambda_n$ (Trị riêng lớn nhất):** Liên quan đến bậc lớn nhất; giá trị lớn biểu thị các nút “hub” có bậc cao.
+* **Khoảng cách phổ (Spectral Gap):** Hiệu giữa $\lambda_1$ và $\lambda_2$ quyết định tốc độ hội tụ của random walks.
+
+
+
+## Vector Fiedler
+
+Vector riêng tương ứng với $\lambda_2$ được gọi là **vector Fiedler**. Nó tự nhiên phân hoạch đồ thị: các nút có giá trị vector Fiedler tương tự thường được kết nối dày đặc.
+
+**Quy tắc phân hoạch:**
+
+* Các nút với $v[i] < 0 \rightarrow$ Cụm 1.
+* Các nút với $v[i] \ge 0 \rightarrow$ Cụm 2.
+
+
+
+## Thuật Toán Spectral Clustering
+
+Spectral Clustering mở rộng ý tưởng vector Fiedler cho $k$ cụm:
+
+1. **Xây dựng Laplacian:** Tính $L = D - A$.
+2. **Tính các vector riêng:** Tìm $k$ vector riêng nhỏ nhất $v_1, v_2, \dots, v_k$.
+3. **Tạo ma trận embedding:** Tạo ma trận $n \times k$ là $U$ trong đó hàng thứ $i$ là $[v_1[i], \dots, v_k[i]]$.
+4. **Chạy k-Means:** Áp dụng k-means lên các hàng của $U$.
+
+Không gian embedding phổ “gỡ rối” các cấu trúc đồ thị phức tạp thành các cụm được tách biệt rõ ràng.
+
+
+
+## Bất Đẳng Thức Cheeger
+
+Bất đẳng thức Cheeger liên hệ $\lambda_2$ với **hằng số Cheeger** $h(G)$, đại lượng đo cách tối ưu để cắt một đồ thị:
+
+$$h(G) = \min_{S} \frac{|\text{các cạnh giữa } S \text{ và } \bar{S}|}{\min(|S|, |\bar{S}|)}$$
+
+**Bất đẳng thức Cheeger:**
+$$\frac{\lambda_2}{2} \le h(G) \le \sqrt{2 \lambda_2}$$
+
+$\lambda_2$ đóng vai trò như một xấp xỉ chặt trong thời gian đa thức cho bài toán NP-hard tìm chất lượng cắt tối ưu.
+
+
+
+## Laplacian Chuẩn Hóa (Normalized Laplacians)
+
+Để tránh thiên lệch từ các nút bậc cao, các biến thể chuẩn hóa thường được sử dụng:
+
+* **Chuẩn hóa đối xứng:** $L_{sym} = D^{-1/2} L D^{-1/2} = I - D^{-1/2} A D^{-1/2}$.
+* **Chuẩn hóa random walk:** $L_{rw} = D^{-1} L = I - D^{-1} A$.
+
+
+
+## Ứng Dụng Trong Machine Learning (Học Máy)
+
+* **Graph Neural Networks (GNNs):** Lan truyền thông tin bằng cách làm mượt đặc trưng trên các nút lân cận, về bản chất là áp dụng các bộ lọc thông thấp (low-pass filters) trên phổ của đồ thị.
+* **Phát hiện cộng đồng (Community Detection):** Sử dụng khoảng cách trong phổ trị riêng để xác định các cộng đồng xã hội hoặc sinh học.
+* **Phân đoạn ảnh (Image Segmentation):** Xem các pixel như các nút và sử dụng spectral clustering để nhóm các vùng trực quan tương đồng.
+* **Laplacian Eigenmaps:** Một kỹ thuật giảm chiều dữ liệu nhúng dữ liệu chiều cao vào không gian chiều thấp bằng cách sử dụng các vector riêng nhỏ nhất của Graph Laplacian. 

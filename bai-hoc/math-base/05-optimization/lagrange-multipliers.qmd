@@ -1,0 +1,136 @@
+---
+title: "Lagrange Multipliers & Duality (Lagrange Multipliers)"
+order: 9
+date: 2026-08-27
+description: "Cách tối ưu hóa khi bạn có những quy tắc không thể phá vỡ. Nền tảng toán học phía sau SVM và regularization."
+series: math-base
+categories: [math-base, optimization]
+group: optimization
+---
+# Lagrange Multipliers & Duality
+
+Cách tối ưu hóa khi bạn có những quy tắc không thể phá vỡ. Nền tảng toán học phía sau SVM và regularization. 
+
+## Giới thiệu
+
+Gradient descent tiêu chuẩn giải quyết bài toán tối ưu hóa **không ràng buộc (unconstrained optimization)**: “Tìm điểm thấp nhất ở bất kỳ đâu trong bề mặt này.”
+
+Nhưng các bài toán thực tế thường có **ràng buộc (constraints)**:
+
+* “Tối đa hóa lợi nhuận, nhưng không đầu tư quá $10,000.”
+* “Tìm điểm gần nhất với truy vấn, nhưng nó phải nằm trên bề mặt này.”
+* “Huấn luyện bộ phân loại với margin lớn nhất, nhưng phải phân loại đúng tất cả điểm huấn luyện.”
+
+### Phương Pháp Lagrange
+
+**Lagrange Multipliers (nhân tử Lagrange)** biến đổi các bài toán có ràng buộc thành các bài toán không ràng buộc mà chúng ta có thể giải bằng giải tích thông thường. Kỹ thuật này là nền tảng của Support Vector Machines (SVM) và giải thích tại sao regularization hoạt động.
+
+
+
+## Bài Toán Tối Ưu Có Ràng Buộc
+
+Dạng tổng quát của bài toán tối ưu hóa có ràng buộc là:
+
+**Tối thiểu hóa** $f(x)$
+với điều kiện:
+
+* $g_i(x) = 0$ (ràng buộc đẳng thức)
+* $h_j(x) \le 0$ (ràng buộc bất đẳng thức)
+
+### Ví Dụ: Bộ Phân Loại Margin Tối Đa
+
+* **Mục tiêu:** Tối thiểu hóa $||w||^2$ (trọng số nhỏ = margin rộng).
+* **Ràng buộc:** $y_i(w^T x_i + b) \ge 1$ với mọi điểm huấn luyện (phân loại đúng với margin).
+
+
+
+## Trực Giác Hình Học
+
+Hãy tưởng tượng một bản đồ địa hình với các đường đồng mức độ cao. Bạn muốn tìm điểm cao nhất, nhưng phải đi trên một con đường mòn cụ thể (ràng buộc).
+
+Khi bạn đi dọc theo con đường, bạn cắt qua các đường đồng mức của hàm mục tiêu. Bạn tiếp tục đi cho đến khi con đường trở nên **tiếp tuyến** với một đường đồng mức. Tại điểm này, con đường và đường đồng mức “chạm nhau”, và việc di chuyển dọc theo đường mòn không còn thay đổi độ cao nữa. Đây chính là nghiệm tối ưu có ràng buộc.
+
+### Điều Kiện Gradient Song Song
+
+Tại điểm tối ưu, gradient của hàm mục tiêu song song với gradient của ràng buộc:
+
+$$\nabla f = \lambda \nabla g$$
+
+Gradient $\nabla g$ vuông góc với bề mặt ràng buộc. Chỉ khi $\nabla f$ hoàn toàn vuông góc (song song với $\nabla g$), bạn mới ở điểm tối ưu, bởi vì bất kỳ thành phần nào của $\nabla f$ dọc theo bề mặt cũng cho phép bạn di chuyển và cải thiện mục tiêu.
+
+
+
+## Hàm Lagrangian
+
+Chúng ta mã hóa điều kiện gradient song song vào một hàm duy nhất gọi là **Lagrangian**:
+
+$$\mathcal{L}(x, \lambda) = f(x) - \lambda \cdot g(x)$$
+
+Điều này biến bài toán có ràng buộc với $n$ biến thành bài toán không ràng buộc với $n+1$ biến. Đặt gradient của Lagrangian bằng 0 cho ta một hệ phương trình:
+
+1. **Đạo hàm theo $x$:** $\nabla_x \mathcal{L} = \nabla f - \lambda \nabla g = 0$ (khôi phục điều kiện gradient song song).
+2. **Đạo hàm theo $\lambda$:** $\nabla_\lambda \mathcal{L} = -g(x) = 0$ (ép ràng buộc phải được thỏa mãn).
+
+**$\lambda$ là gì?** Nhân tử Lagrange $\lambda$ đại diện cho “shadow price (giá trị bóng)” của ràng buộc. Nó cho biết giá trị tối ưu sẽ cải thiện bao nhiêu nếu ràng buộc được nới lỏng một chút.
+
+
+
+## Điều Kiện KKT
+
+Ràng buộc đẳng thức được xử lý bằng nhân tử Lagrange, nhưng các ràng buộc bất đẳng thức ($h(x) \le 0$) yêu cầu các điều kiện **Karush-Kuhn-Tucker (KKT)**. Với các bài toán lồi, đây vừa là điều kiện cần vừa là điều kiện đủ cho tối ưu.
+
+### Bốn Điều Kiện KKT
+
+1. **Stationarity:** $\nabla f = \sum \lambda_i \nabla g_i + \sum \mu_j \nabla h_j$ (gradient của Lagrangian bằng 0).
+2. **Primal Feasibility:** $g_i(x) = 0$ và $h_j(x) \le 0$ (mọi ràng buộc đều được thỏa mãn).
+3. **Dual Feasibility:** $\mu_j \ge 0$ (các nhân tử cho bất đẳng thức phải không âm).
+4. **Complementary Slackness:** $\mu_j \cdot h_j(x) = 0$.
+
+### Complementary Slackness
+
+Với mỗi ràng buộc bất đẳng thức, sẽ xảy ra một trong hai trường hợp:
+
+* Ràng buộc **Active (đang hoạt động)** ($h_j(x) = 0$): Nằm trên biên; nhân tử $\mu_j$ có thể dương.
+* Ràng buộc **Inactive (không hoạt động)** ($h_j(x) < 0$): Nằm hẳn bên trong miền khả thi; nhân tử $\mu_j$ phải bằng 0.
+
+Trong SVM, điều này có nghĩa chỉ có **support vectors** (các điểm nằm trên margin) có nhân tử khác 0, khiến mô hình trở nên thưa và hiệu quả.
+
+
+
+## Lý Thuyết Đối Ngẫu
+
+Mọi bài toán tối ưu hóa có ràng buộc đều có một **bài toán đối ngẫu (dual problem)**:
+
+* **Bài toán nguyên thủy (Primal Problem):** Tối thiểu hóa $f(x)$ với các ràng buộc. Giá trị tối ưu: $p^*$.
+* **Bài toán đối ngẫu (Dual Problem):** Tối đa hóa Lagrangian theo các nhân tử ($\lambda, \mu$). Giá trị tối ưu: $d^*$.
+
+### Các Nguyên Lý Quan Trọng
+
+* **Weak Duality:** $d^* \le p^*$ luôn đúng. Bài toán đối ngẫu cung cấp cận dưới cho bài toán nguyên thủy.
+* **Strong Duality:** $d^* = p^*$ với các bài toán lồi thỏa mãn **Slater's Condition** (tồn tại một điểm nằm hoàn toàn bên trong miền khả thi).
+
+
+
+## Ứng Dụng trong SVM & Kernel Trick
+
+Support Vector Machines phụ thuộc mạnh vào tính đối ngẫu của Lagrangian. Dạng đối ngẫu của bài toán SVM chỉ phụ thuộc vào **tích vô hướng** ($x_i^T x_j$) giữa các điểm huấn luyện.
+
+**Kernel Trick:** Vì dạng đối ngẫu chỉ cần tích vô hướng, chúng ta có thể thay $x_i^T x_j$ bằng một kernel function $K(x_i, x_j)$. Điều này cho phép ánh xạ dữ liệu ngầm vào không gian nhiều chiều, tạo nên các kernel như RBF và polynomial kernels.
+
+
+
+## Ứng Dụng trong Machine Learning
+
+* **Constrained Reinforcement Learning:** Tối đa hóa phần thưởng với các ràng buộc an toàn.
+* **Fairness Constraints:** Tối thiểu hóa loss với các ràng buộc về công bằng nhân khẩu học.
+* **Portfolio Optimization:** Tối đa hóa lợi nhuận với một mức rủi ro xác định.
+* **Neural Architecture Search:** Tối thiểu hóa loss với các ràng buộc về FLOPS hoặc bộ nhớ.
+
+### Regularization như một Ràng Buộc
+
+Regularization (như Ridge Regression) thực chất là nhân tử Lagrange dưới một hình thức khác.
+
+* **Góc Nhìn Ràng Buộc:** Tối thiểu hóa Loss với điều kiện $||w||^2 \le C$.
+* **Góc Nhìn Lagrangian:** Tối thiểu hóa $\text{Loss} + \lambda ||w||^2$.
+
+Độ mạnh regularization $\lambda$ chính là nhân tử Lagrange cho ràng buộc trọng số. $\lambda$ càng lớn nghĩa là ràng buộc càng chặt và trọng số càng nhỏ.

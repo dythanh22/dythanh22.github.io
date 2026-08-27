@@ -1,0 +1,146 @@
+---
+title: "Các Biến Thể của SGD & Tinh Chỉnh Thực Tế (SGD Variants & Practical Tuning)"
+order: 2
+date: 2026-08-27
+description: "Từ batch gradient descent đến mini-batch SGD. Nghệ thuật thực tiễn trong việc huấn luyện mạng nơ-ron."
+series: math-base
+categories: [math-base, optimization]
+group: optimization
+---
+# Các Biến Thể của SGD & Tinh Chỉnh Thực Tế (SGD Variants & Practical Tuning)
+
+Từ batch gradient descent đến mini-batch SGD. Nghệ thuật thực tiễn trong việc huấn luyện mạng nơ-ron. 
+
+## Giới thiệu
+
+Tất cả các bộ tối ưu hóa (optimizer) mà chúng ta đã thảo luận (Momentum, Adam, v.v.) đều là các biến thể của một thuật toán cốt lõi: **Gradient Descent (thuật toán hạ dốc)**.
+
+Nhưng có một lựa chọn nền tảng xuất hiện trước mọi thứ khác: *Bạn sử dụng bao nhiêu dữ liệu để tính mỗi gradient?*
+
+### Lựa chọn Batch Size
+
+Lựa chọn này, gọi là **batch size (kích thước lô)**, ảnh hưởng đến mọi thứ: tốc độ hội tụ, khả năng tổng quát hóa, mức sử dụng bộ nhớ, và liệu quá trình huấn luyện có hoạt động hay không. Đây là một trong những siêu tham số (hyperparameter) quan trọng nhất trong deep learning.
+
+
+
+## Batch Gradient Descent
+
+Trong Gradient Descent cổ điển (Batch Gradient Descent), chúng ta tính gradient bằng cách sử dụng **toàn bộ tập dữ liệu**:
+
+$$\theta_{t+1} = \theta_t - \eta \cdot \frac{1}{N} \sum_{i=1}^{N} \nabla L(\theta_t; x_i, y_i)$$
+
+### Đánh đổi của Batch GD
+
+| Ưu điểm                                      | Nhược điểm                                       |
+|:---------------------------------------------|:-------------------------------------------------|
+| Gradient chính xác (không có nhiễu lấy mẫu)  | Rất chậm (mỗi bước = duyệt toàn bộ tập dữ liệu)  |
+| Hội tụ ổn định, dễ dự đoán                   | Yêu cầu toàn bộ dữ liệu nằm trong bộ nhớ         |
+| Dễ phân tích về mặt lý thuyết                | Không thể thoát khỏi local minima                |
+
+Batch GD không thực tế đối với deep learning hiện đại. Việc huấn luyện một mô hình lớn trên tập dữ liệu khổng lồ cho chỉ một lần cập nhật gradient có thể mất hàng năm.
+
+
+
+## Stochastic Gradient Descent (SGD)
+
+Ở cực đối lập, **Stochastic Gradient Descent (SGD ngẫu nhiên)** sử dụng một mẫu ngẫu nhiên duy nhất:
+
+$$\theta_{t+1} = \theta_t - \eta \cdot \nabla L(\theta_t; x_i, y_i)$$
+*trong đó $(x_i, y_i)$ là một mẫu được chọn ngẫu nhiên.*
+
+### Vì sao tính ngẫu nhiên lại hữu ích
+
+Gradient từ một mẫu là một xấp xỉ nhiễu của gradient thực. Nhưng nhiễu này không phải lúc nào cũng xấu:
+
+* Hoạt động như **khám phá (exploration)** trong không gian hàm mất mát
+* Giúp thoát khỏi các local minima nông và saddle point
+* Đóng vai trò như regularization ngầm (implicit regularization)
+
+
+
+## Mini-Batch SGD: Điểm Cân Bằng Tối Ưu
+
+Trong thực tế, chúng ta sử dụng **mini-batch**: các tập con ngẫu nhiên nhỏ của dữ liệu.
+
+$$\theta_{t+1} = \theta_t - \eta \cdot \frac{1}{B} \sum_{i \in \mathcal{B}} \nabla L(\theta_t; x_i, y_i)$$
+*trong đó $B$ là mini-batch có kích thước 32, 64, 128, 256, v.v.*
+
+### Các lợi ích chính
+
+* **Giảm phương sai (Variance Reduction):** Trung bình trên $B$ mẫu làm giảm nhiễu gradient theo hệ số $1/\sqrt{B}$.
+* **Hiệu quả phần cứng:** GPU được tối ưu cho các phép toán ma trận. Một batch 64 gần như xử lý nhanh tương đương batch 1.
+* **Giới hạn bộ nhớ:** Batch phải vừa với bộ nhớ GPU. Batch lớn hơn = sử dụng nhiều bộ nhớ hơn.
+
+
+
+## Đánh đổi của Batch Size
+
+| Khía cạnh              | Batch nhỏ (32)             | Batch lớn (2048+)        |
+|:-----------------------|:---------------------------|:-------------------------|
+| Nhiễu Gradient         | Cao                        | Thấp                     |
+| Khả năng khám phá      | Tốt (thoát local minima)   | Kém (dễ bị mắc kẹt)      |
+| Khả năng tổng quát hóa | Thường tốt hơn             | Có thể tệ hơn            |
+| Tốc độ huấn luyện      | Chậm hơn (nhiều bước hơn)  | Nhanh hơn (ít bước hơn)  |
+| Mức sử dụng GPU        | Chưa tận dụng hết          | Tận dụng tối đa          |
+| Bộ nhớ                 | Thấp                       | Cao                      |
+
+### Vấn đề Batch Lớn
+
+Keskar và cộng sự (2017) chỉ ra rằng huấn luyện với batch lớn dẫn đến các sharp minima (cực tiểu sắc nhọn) có khả năng tổng quát hóa kém. Nhiễu trong batch nhỏ hoạt động như regularization ngầm, đẩy mô hình tới các flat minima (cực tiểu phẳng) có khả năng tổng quát hóa tốt hơn.
+
+
+
+## Learning Rate Schedules
+
+Learning rate tối ưu thay đổi trong suốt quá trình huấn luyện. Bắt đầu với learning rate cao để tiến triển nhanh, sau đó giảm dần để tinh chỉnh nghiệm.
+
+### Các Schedule Phổ Biến
+
+* **Step Decay:** Giảm learning rate theo một hệ số (ví dụ: 10×) tại các epoch cố định.
+
+  * *Ví dụ:* epochs [30, 60, 90]: LR = $0.1 \rightarrow 0.01 \rightarrow 0.001$
+* **Cosine Annealing:** Giảm learning rate mượt theo đường cong cosine.
+  $$\eta_t = \eta_{min} + \frac{1}{2}(\eta_{max} - \eta_{min})(1 + \cos(\frac{t}{T}\pi))$$
+* **One Cycle Policy:** Learning rate tăng từ nhỏ lên cực đại, sau đó giảm xuống. Thường đạt cùng độ chính xác với số epoch ít hơn.
+
+
+
+## Linear Warmup
+
+Khởi đầu với learning rate lớn có thể làm huấn luyện mất ổn định vì trọng số ban đầu là ngẫu nhiên và gradient chưa đáng tin cậy. **Warmup** tăng dần learning rate trong vài epoch đầu tiên.
+
+### Warmup cho Huấn Luyện Batch Lớn
+
+Khi sử dụng batch lớn để tận dụng toàn bộ bộ nhớ GPU, warmup trở nên cực kỳ quan trọng. Quy tắc kinh nghiệm: số bước warmup = 5–10% tổng số bước huấn luyện. Điều này cho phép các ước lượng moment của Adam ổn định.
+
+
+
+## Hướng Dẫn Tinh Chỉnh Thực Tế
+
+### Bước 1: Bắt Đầu với Mặc Định
+
+* **Optimizer:** Adam hoặc AdamW
+* **Learning rate:** 3e-4 (hằng số nổi tiếng của Karpathy)
+* **Batch size:** Lớn nhất mà bộ nhớ GPU cho phép (64–256 là phổ biến)
+* **Warmup:** 5% tổng số bước
+
+### Bước 2: Tìm Kiếm Learning Rate
+
+Chạy bài kiểm tra learning rate range test (Leslie Smith, 2017):
+
+1. Bắt đầu với learning rate rất nhỏ ($1e-7$)
+2. Tăng theo hàm mũ sau mỗi bước
+3. Vẽ đồ thị loss theo learning rate
+4. Chọn learning rate tại nơi loss giảm nhanh nhất
+
+### Bước 3: Tinh Chỉnh Batch Size
+
+* Nếu huấn luyện không ổn định: Giảm batch size hoặc thêm warmup
+* Nếu validation loss dừng giảm quá sớm: Giảm batch size (nhiễu nhiều hơn giúp tổng quát hóa tốt hơn)
+* Nếu huấn luyện quá chậm: Tăng batch size (nếu bộ nhớ cho phép)
+
+### Các Lỗi Thường Gặp
+
+* **Loss bùng nổ:** Learning rate quá cao. Giảm 10×.
+* **Loss bị kẹt:** Learning rate quá thấp hoặc khởi tạo kém. Thử learning rate lớn hơn.
+* **Train tốt, validation kém:** Overfitting. Thêm regularization, giảm kích thước mô hình, hoặc dùng batch nhỏ hơn.

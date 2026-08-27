@@ -402,6 +402,13 @@ def t_test_one_sample(x, mu0):
     return float(t_stat)
 ```
 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Nền đầy đủ (Math Base)
+Cùng kiểm định, bài nền dài hơn: [One-Sample T-Test](../../math-base/02-statistics/one-sample-t-test.qmd).
+:::
+
 <!-- auto-self-check -->
 
 ::: {.callout-note}

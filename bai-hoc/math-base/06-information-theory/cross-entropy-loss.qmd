@@ -1,0 +1,126 @@
+---
+title: "Cross-Entropy Loss (Cross Entropy Loss)"
+order: 2
+date: 2026-08-27
+description: "Hàm mất mát tiêu chuẩn cho bài toán phân loại. Giải thích vì sao mạng nơ-ron học nhanh hơn khi chúng “bất ngờ”."
+series: math-base
+categories: [math-base, information-theory]
+group: information-theory
+---
+# Cross-Entropy Loss
+
+Hàm mất mát tiêu chuẩn cho bài toán phân loại. Giải thích vì sao mạng nơ-ron học nhanh hơn khi chúng “bất ngờ”. 
+
+
+
+## Giới thiệu
+
+Khi huấn luyện một bộ phân loại (nhận dạng ảnh, phát hiện spam, mô hình ngôn ngữ), mô hình xuất ra xác suất cho từng lớp. Với một ảnh mèo, mô hình có thể dự đoán: $\hat{y} = [0.8, 0.2]$ (80% Mèo, 20% Chó).
+
+Nhãn thật là $y = [1.0, 0.0]$ (100% Mèo). Chúng ta cần một cách để đo lường mức độ “sai” của dự đoán. **Cross-Entropy** chính là đại lượng đó.
+
+> **Tại sao gọi là "Cross"?**
+> Entropy đo mức độ bất định bằng cách sử dụng phân phối thật. Cross-Entropy đo mức độ bất định bằng cách sử dụng một phân phối khác (phân phối dự đoán). Từ “cross” ám chỉ việc dùng $P$ để lấy trọng số nhưng dùng $Q$ để tính thông tin.
+
+
+
+## Trực giác: Hình phạt cho mã hóa sai
+
+Hãy tưởng tượng bạn đang thiết kế một hệ mã nén cho văn bản tiếng Anh. Bạn gán mã ngắn cho các chữ cái phổ biến ('e', 't') và mã dài cho các chữ cái hiếm ('z', 'q').
+
+Nhưng điều gì xảy ra nếu bạn thiết kế hệ mã dựa trên tần suất chữ cái của **tiếng Pháp**? Bạn sẽ dùng sai độ dài mã. Một số chữ cái có mã dài lãng phí, số khác lại quá ngắn. Sự kém hiệu quả này được đo bằng Cross-Entropy.
+
+$$H(P, Q) = \text{Average bits using code Q for data from P}$$
+
+Nếu $Q = P$ (mô hình hoàn hảo), Cross-Entropy bằng Entropy. Nếu $Q$ sai, Cross-Entropy sẽ lớn hơn.
+
+
+
+## Công thức tổng quát
+
+Với các phân phối xác suất rời rạc $P$ (phân phối thật) và $Q$ (phân phối dự đoán):
+
+$$H(P, Q) = -\sum_{x} P(x) \ln Q(x)$$
+
+Chúng ta lấy trung bình theo $P$ (điều thực sự xảy ra) nhưng tính thông tin bằng $Q$ (xác suất do mô hình dự đoán).
+
+### Mối quan hệ quan trọng
+
+$$H(P, Q) = H(P) + D_{KL}(P || Q)$$
+
+Cross-Entropy = Entropy của $P$ + KL Divergence. Vì $H(P)$ là hằng số (dữ liệu cố định), việc tối thiểu hóa Cross-Entropy tương đương với tối thiểu hóa KL Divergence.
+
+
+
+## Binary Cross-Entropy (BCE)
+
+Đối với phân loại nhị phân (0 hoặc 1), ta có một neuron đầu ra với hàm kích hoạt Sigmoid. Gọi $y$ là nhãn (0 hoặc 1) và $\hat{y}$ là dự đoán.
+
+$$L = -[y \ln(\hat{y}) + (1-y) \ln(1-\hat{y})]$$
+
+* **Nếu $y = 1$ (Dương tính):** Loss $= -\ln(\hat{y})$. Ta muốn $\hat{y}$ gần 1. Nếu là 0.9, loss là 0.1. Nếu là 0.001, loss là 6.9!
+* **Nếu $y = 0$ (Âm tính):** Loss $= -\ln(1-\hat{y})$. Ta muốn $\hat{y}$ gần 0.
+
+**Ý tưởng cốt lõi:** Binary CE chỉ xét xác suất của lớp thật. Khi mô hình càng tự tin ($p \to 1$), loss càng giảm. Những dự đoán sai nhưng quá tự tin ($p \to 0$) sẽ gây loss cực lớn!
+
+
+
+## Categorical Cross-Entropy (CCE)
+
+Đối với phân loại nhiều lớp (MNIST chữ số 0-9, ImageNet với 1000 lớp), ta dùng hàm kích hoạt Softmax. Gọi $y$ là vector one-hot (ví dụ: $[0, 1, 0, ..., 0]$ cho chữ số 1).
+
+$$L = -\sum_{c=1}^C y_c \ln(\hat{y}_c)$$
+
+Vì $y$ là one-hot, chỉ còn lại thành phần của lớp thật:
+
+$$L = -\ln(\hat{y}_{true})$$
+
+Đây là lý do các framework (như `nn.CrossEntropyLoss` của PyTorch) thường chỉ cần chỉ số lớp; việc mã hóa one-hot được xử lý nội bộ.
+
+
+
+## Gradient tuyệt đẹp
+
+Một lý do khiến Cross-Entropy được ưa chuộng là gradient của nó với Softmax/Sigmoid cực kỳ đơn giản.
+
+### Với Softmax + CCE:
+
+$$\frac{\partial L}{\partial z_i} = \hat{y}_i - y_i$$
+
+Gradient đơn giản là: **dự đoán trừ nhãn thật**. Không có đạo hàm log hay biểu thức phức tạp. Điều này xảy ra vì log trong Cross-Entropy triệt tiêu hàm mũ trong Softmax.
+
+### Tại sao điều này quan trọng?
+
+Khi mô hình dự đoán rất sai ($\hat{y}$ khác xa $y$), gradient lớn, thúc đẩy việc sửa lỗi nhanh chóng. Khi mô hình gần đúng, gradient nhỏ. Tốc độ học được “tự điều chỉnh”.
+
+
+
+## Tại sao không dùng Mean Squared Error (MSE)?
+
+Mặc dù *có thể* dùng MSE cho bài toán phân loại, nhưng hiệu quả rất kém do vấn đề tiêu biến gradient (vanishing gradient).
+
+* **Vấn đề của MSE:** Với MSE + Sigmoid, gradient chứa $\sigma'(z)$. Khi $z$ rất sai (ví dụ: $z = -10$ nhưng $y = 1$), đạo hàm Sigmoid gần bằng 0. **Gradient tiêu biến. Việc học dừng lại.**
+* **Cách Cross-Entropy khắc phục:** Log trong CE triệt tiêu exp trong Sigmoid. Gradient rút gọn thành $(\hat{y} - y)$. **Sai số lớn = Gradient lớn.** Quá trình học tiếp tục mạnh mẽ.
+
+
+
+## Suy diễn từ Maximum Likelihood
+
+Cross-Entropy xuất hiện tự nhiên từ Maximum Likelihood Estimation (MLE) khi giả sử phân phối Bernoulli cho bài toán phân loại nhị phân.
+
+1. **Likelihood:** $L(\theta) = \prod_{i} P(y_i | x_i; \theta)$
+2. **Với Bernoulli:** $P(y|x) = \hat{y}^y (1-\hat{y})^{1-y}$
+3. **Log-Likelihood:** $\ln L(\theta) = \sum [y \ln(\hat{y}) + (1-y) \ln(1-\hat{y})]$
+
+**Negative Log-Likelihood = Binary Cross-Entropy!** Tối thiểu hóa Cross-Entropy tương đương với tối đa hóa xác suất quan sát được dữ liệu huấn luyện.
+
+
+
+## Ứng dụng trong Machine Learning
+
+* **Image Classification (CNNs):** ImageNet, CIFAR, MNIST sử dụng Categorical Cross-Entropy + Softmax. Biến thể nhị phân được dùng cho phát hiện một nhãn (ví dụ: mèo hay không phải mèo).
+* **Natural Language Processing:** Các mô hình ngôn ngữ (GPT, BERT) dự đoán token tiếp theo bằng CCE trên toàn bộ từ vựng. Phân tích cảm xúc sử dụng BCE.
+* **Medical Diagnosis:** Phân loại nhị phân để phát hiện bệnh. Focal Loss (một biến thể của CE) thường được dùng cho các bộ dữ liệu y khoa mất cân bằng.
+* **Recommender Systems:** Dự đoán click (BCE) và học xếp hạng bằng listwise CE.
+* **Reinforcement Learning:** Các phương pháp policy gradient sử dụng CE để huấn luyện phân phối hành động (ví dụ: PPO, A3C).
+* **Generative Models:** VAE dùng BCE để tái tạo dữ liệu nhị phân; GAN dùng BCE để huấn luyện discriminator.

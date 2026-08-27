@@ -1,0 +1,142 @@
+---
+title: "Information Gain (Information Gain)"
+order: 5
+date: 2026-08-27
+description: "Thước đo giúp Decision Tree biết câu hỏi nào nên được đặt tiếp theo. Ứng dụng thực tiễn của entropy."
+series: math-base
+categories: [math-base, information-theory]
+group: information-theory
+---
+# Information Gain
+
+Thước đo giúp Decision Tree biết câu hỏi nào nên được đặt tiếp theo. Ứng dụng thực tiễn của entropy.
+
+
+
+## Giới thiệu
+
+Xây dựng một Decision Tree bao gồm việc đặt ra một chuỗi câu hỏi để chia dữ liệu. Nhưng câu hỏi nào nên được hỏi trước?
+
+Ta nên hỏi “Có đang mưa không?” hay “Độ ẩm có cao không?” trước? Để trả lời điều này, chúng ta cần một cách đo lường xem dữ liệu trở nên “sạch” (thuần khiết) hơn bao nhiêu sau mỗi lần chia.
+
+**Information Gain (IG)** chính là thước đo đó. Nó định lượng mức giảm của [entropy](https://www.tensortonic.com/ml-math/information-theory/shannon-entropy) (độ bất định) khi chia theo một đặc trưng cụ thể. Về bản chất, nó chính là [Mutual Information](https://www.tensortonic.com/ml-math/information-theory/mutual-information) giữa đặc trưng và nhãn.
+
+
+
+## Trực giác: Trò chơi 20 câu hỏi
+
+Hãy tưởng tượng bạn đang chơi trò “20 Questions”. Mục tiêu là xác định một vật bí mật bằng các câu hỏi có/không.
+
+### Câu hỏi tệ
+
+* **Ví dụ:** “Vật đó có phải quả chuối không?”
+* **Kết quả:** 99% khả năng câu trả lời là “Không”. Bạn gần như vẫn còn nguyên sự bất định ban đầu. **Information Gain thấp.**
+
+### Câu hỏi tốt
+
+* **Ví dụ:** “Vật đó có phải sinh vật sống không?”
+* **Kết quả:** Chia thế giới thành hai nửa tương đối cân bằng. Dù câu trả lời là gì, bạn đã loại bỏ được khoảng 50% khả năng. **Information Gain cao.**
+
+Decision Tree sử dụng Information Gain để tìm các câu hỏi kiểu “Nó có sống không?”, chứ không phải kiểu “Nó có phải quả chuối không?”.
+
+
+
+## Ôn lại: Entropy như độ hỗn tạp
+
+Trước khi chia dữ liệu, ta tính entropy của tập dữ liệu hiện tại (nút cha). Entropy đo mức độ “hỗn tạp” (impurity) hoặc “rối loạn” (disorder).
+
+$$H(S) = -\sum_{i=1}^c p_i \log_2(p_i)$$
+
+* **Thuần khiết ($H = 0$):** Tất cả mẫu thuộc cùng một lớp.
+* **Hỗn tạp tối đa ($H = 1$):** Chia hoàn hảo 50/50 giữa các lớp.
+
+
+
+## Công thức Information Gain
+
+Information Gain = **Entropy trước khi chia - Entropy sau khi chia**.
+
+Vì một phép chia tạo ra nhiều nút con, “Entropy sau khi chia” là **trung bình có trọng số** của entropy các nút con.
+
+$$IG(S, A) = H(S) - \sum_{v \in Values(A)} \frac{|S_v|}{|S|} H(S_v)$$
+
+* **$H(S)$:** Entropy của nút cha.
+* **Tổng có trọng số:** Nút con lớn ảnh hưởng nhiều hơn nút nhỏ.
+* **$H(S_v)$:** Entropy của nút con $v$.
+
+
+
+## Tính toán từng bước
+
+**Tập dữ liệu:** 10 mẫu: 5 Positive (+), 5 Negative (-). Kiểm tra đặc trưng “Windy” (True/False).
+
+### Bước 1: Entropy của nút cha
+
+$$H(Parent) = -0.5 \log_2(0.5) - 0.5 \log_2(0.5) = 1.0 \text{ bit}$$
+
+### Bước 2: Chia dữ liệu
+
+* **Windy=False (6 mẫu):** 4 Pos, 2 Neg
+* **Windy=True (4 mẫu):** 1 Pos, 3 Neg
+
+### Bước 3: Entropy của các nút con
+
+* **Trái (Windy=False):**
+  $$H = -\frac{4}{6}\log_2\frac{4}{6} - \frac{2}{6}\log_2\frac{2}{6} \approx 0.918$$
+
+* **Phải (Windy=True):**
+  $$H = -\frac{1}{4}\log_2\frac{1}{4} - \frac{3}{4}\log_2\frac{3}{4} \approx 0.811$$
+
+### Bước 4: Information Gain
+
+$$IG = 1.0 - \left[\frac{6}{10} \times 0.918 + \frac{4}{10} \times 0.811\right]$$
+
+$$IG = 1.0 - 0.875 = 0.125 \text{ bits}$$
+
+
+
+## Thuật toán ID3
+
+ID3 (Iterative Dichotomiser 3) xây dựng cây theo chiến lược tham lam (greedy) bằng cách sử dụng Information Gain:
+
+1. Tính $H(S)$ cho nút hiện tại.
+2. Với mỗi đặc trưng khả dĩ $A$, tính $IG(S, A)$.
+3. Chọn đặc trưng có **Information Gain lớn nhất**.
+4. Chia dữ liệu theo đặc trưng đó.
+5. Đệ quy trên từng nút con cho đến khi các nút thuần khiết hoặc đạt độ sâu tối đa.
+
+
+
+## Gini Impurity vs Entropy
+
+Thuật toán CART của Scikit-Learn mặc định dùng **Gini Impurity** thay vì Entropy.
+
+### Entropy
+
+* **Công thức:** $-\sum p \log p$
+* **Ưu điểm:** Có nền tảng lý thuyết thông tin rõ ràng.
+* **Nhược điểm:** Tính toán chậm hơn do có logarithm.
+
+### Gini Impurity
+
+* **Công thức:** $1 - \sum p^2$
+* **Ưu điểm:** Tính nhanh hơn (chỉ cần bình phương).
+* **Nhược điểm:** Không hoàn toàn dựa trên lý thuyết thông tin.
+
+Trong thực tế, hai phương pháp tạo ra các cây gần như giống hệt nhau (~95% cùng cách chia). Gini được dùng mặc định vì nhanh hơn đôi chút.
+
+
+
+## Hạn chế & Gain Ratio
+
+### Vấn đề “User ID”
+
+Information Gain có xu hướng ưu tiên các đặc trưng có **nhiều giá trị duy nhất**.
+
+Nếu chia theo “User ID” (mỗi người một ID riêng), mỗi nút con chỉ chứa 1 mẫu với $H = 0$. Điều này tạo ra Information Gain tối đa, nhưng hoàn toàn vô dụng cho khả năng tổng quát hóa và dẫn đến overfitting.
+
+### Giải pháp: Gain Ratio (C4.5)
+
+$$GainRatio(S, A) = \frac{IG(S, A)}{SplitInfo(A)}$$
+
+Đại lượng này chia Information Gain cho “thông tin nội tại” (intrinsic information) của chính phép chia, từ đó phạt các đặc trưng tạo ra quá nhiều nhánh nhỏ.

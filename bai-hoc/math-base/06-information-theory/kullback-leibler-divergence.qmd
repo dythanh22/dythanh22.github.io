@@ -1,0 +1,183 @@
+---
+title: "Kullback-Leibler Divergence (Kullback Leibler Divergence)"
+order: 3
+date: 2026-08-27
+description: "Đo lường mức độ khác biệt giữa hai phân phối xác suất. “Khoảng cách” bất đối xứng đứng sau VAEs, GANs và t-SNE."
+series: math-base
+categories: [math-base, information-theory]
+group: information-theory
+---
+# Kullback-Leibler Divergence
+
+Đo lường mức độ khác biệt giữa hai phân phối xác suất. “Khoảng cách” bất đối xứng đứng sau VAEs, GANs và t-SNE. 
+
+
+
+## Giới thiệu
+
+Trong hình học, chúng ta đo khoảng cách giữa các điểm bằng khoảng cách Euclid. Nhưng làm thế nào để đo “khoảng cách” giữa hai phân phối xác suất?
+
+Ví dụ, phân phối Gaussian $N(0, 1)$ khác với $N(2, 2)$ đến mức nào? Hoặc phân phối từ ngữ trong Shakespeare khác gì so với một bài viết trên Reddit?
+
+**KL Divergence** (Kullback-Leibler Divergence, còn gọi là Relative Entropy) định lượng sự khác biệt này. Nó đo lượng thông tin bị mất khi ta xấp xỉ một phân phối bằng một phân phối khác.
+
+> ### Không phải Metric thực sự
+>
+> Mặc dù KL Divergence thường được gọi là một “khoảng cách”, nó không thỏa mãn đầy đủ các tính chất của metric khoảng cách toán học (nó bất đối xứng và không tuân theo bất đẳng thức tam giác). Hãy xem nó như một đại lượng phân kỳ có hướng (directed divergence).
+
+
+
+## Trực giác: Các bit dư thừa
+
+Hãy tưởng tượng bạn đang thiết kế một hệ mã nén cho văn bản tiếng Anh. Mã tối ưu sẽ gán biểu diễn ngắn cho các chữ cái phổ biến ('e', 't') và biểu diễn dài cho các chữ cái hiếm ('z', 'q').
+
+* **P (Phân phối thật):** Tần suất thực tế của các chữ cái trong tiếng Anh.
+* **Q (Mô hình/Xấp xỉ):** Ước lượng của bạn về tần suất đó (ví dụ dựa trên tiếng Pháp).
+
+Nếu bạn xây dựng mã dựa trên $Q$ nhưng dữ liệu thực đến từ $P$, hệ mã sẽ kém hiệu quả. Bạn sẽ dùng mã dài cho những chữ cái thực ra rất phổ biến.
+
+> ### KL Divergence = Các bit dư thừa
+>
+> $D_{KL}(P || Q)$ đo số **bit dư thừa** bạn cần truyền đi vì đã dùng phân phối sai $Q$ thay vì phân phối thật $P$. Nó định lượng chi phí của phép xấp xỉ.
+
+
+
+## Công thức
+
+Với các phân phối xác suất rời rạc $P$ và $Q$:
+
+$$D_{KL}(P || Q) = \sum_{x} P(x) \log \left( \frac{P(x)}{Q(x)} \right)$$
+
+$$= \sum_{x} P(x) [\log P(x) - \log Q(x)]$$
+
+Chúng ta lấy trung bình theo $P$ (điều thực sự xảy ra) nhưng tính thông tin bằng $Q$ (xác suất do mô hình cung cấp).
+
+> ### Cảnh báo quan trọng
+>
+> Nếu $P(x) > 0$ nhưng $Q(x) = 0$, KL divergence sẽ tiến tới **vô cực**. Mô hình $Q$ cho rằng một sự kiện là bất khả thi trong khi nó thực sự xảy ra. Đây là lỗi mô hình hóa nghiêm trọng gọi là hành vi “zero-avoiding”.
+
+### Với phân phối liên tục
+
+$$D_{KL}(P || Q) = \int P(x) \log \left( \frac{P(x)}{Q(x)} \right) dx$$
+
+Đối với Gaussian, tồn tại nghiệm dạng đóng (closed-form), giúp việc tính KL Divergence hiệu quả về mặt tính toán.
+
+
+
+## Tính bất đối xứng: Không phải khoảng cách thực sự
+
+Trong hình học, khoảng cách có tính đối xứng:
+$Distance(A \text{ to } B) = Distance(B \text{ to } A)$.
+
+**KL Divergence KHÔNG đối xứng.**
+
+$$D_{KL}(P || Q) \neq D_{KL}(Q || P)$$
+
+Tính bất đối xứng này phản ánh sự khác biệt thực tế:
+“How much does $Q$ fail to capture $P$?” khác với
+“How much does $P$ fail to capture $Q$?”
+
+### Ví dụ minh họa
+
+Cho $P = [0.5, 0.5]$ (đồng xu công bằng) và $Q = [0.9, 0.1]$ (đồng xu lệch).
+
+* **Forward KL:** $D_{KL}(P || Q)$
+  $= 0.5 \cdot \ln(\frac{0.5}{0.9}) + 0.5 \cdot \ln(\frac{0.5}{0.1}) = 0.511 \text{ nats}$
+* **Reverse KL:** $D_{KL}(Q || P)$
+  $= 0.9 \cdot \ln(\frac{0.9}{0.5}) + 0.1 \cdot \ln(\frac{0.1}{0.5}) = 0.368 \text{ nats}$
+
+$0.511 \neq 0.368$ — Hướng tính toán có ý nghĩa!
+
+> ### “Nats” là gì?
+>
+> **Nats** (natural units — đơn vị tự nhiên) đo thông tin bằng $\ln$ (log tự nhiên cơ số $e$). **Bits** sử dụng $\log_2$. Quy đổi:
+> $1 \text{ nat} = \frac{1}{\ln(2)} \approx 1.44 \text{ bits}$.
+> Các framework deep learning thường dùng nats vì $\ln$ có đạo hàm đơn giản hơn.
+
+
+
+## Forward KL vs Reverse KL
+
+Việc lựa chọn giữa $D_{KL}(P || Q)$ (Forward) và $D_{KL}(Q || P)$ (Reverse) có ảnh hưởng lớn đến hành vi của mô hình.
+
+### Forward KL: $D_{KL}(P || Q)$
+
+* **Mean-Seeking / Moment-Matching**
+* $Q$ phải bao phủ toàn bộ khối lượng xác suất của $P$. Nếu $P$ là đa mode (multimodal), $Q$ sẽ trải rộng để bao phủ mọi mode, có thể tạo mật độ ở khoảng giữa.
+* **Được dùng trong:** VAE, Maximum Likelihood, Expectation Maximization.
+
+### Reverse KL: $D_{KL}(Q || P)$
+
+* **Mode-Seeking / Zero-Avoiding**
+* $Q$ tránh đặt khối lượng xác suất ở nơi mà $P$ bằng 0. Nếu $P$ đa mode, $Q$ sẽ co lại để chỉ bao phủ MỘT mode và bỏ qua phần còn lại.
+* **Được dùng trong:** Variational Inference, một số GAN, Policy Gradient.
+
+### Ví dụ đa mode
+
+Nếu $P$ có hai đỉnh (bimodal), Forward KL khiến $Q$ trải rộng qua cả hai đỉnh (mờ nhưng bao quát). Reverse KL khiến $Q$ co cụm vào chỉ một đỉnh (sắc nét nhưng mất khối lượng xác suất).
+
+
+
+## Quan hệ với Entropy
+
+KL Divergence liên hệ với Entropy ($H$) và Cross-Entropy:
+
+$$D_{KL}(P || Q) = H(P, Q) - H(P)$$
+
+**KL Divergence = Cross-Entropy - Entropy**
+
+Vì $H(P)$ là hằng số với dữ liệu cố định, nên **tối thiểu hóa Cross-Entropy tương đương với tối thiểu hóa KL Divergence**. Đây là lý do hàm mất mát Cross-Entropy giúp mô hình học phân phối dữ liệu.
+
+
+
+## Các tính chất quan trọng
+
+### 1. Không âm (Gibbs' Inequality)
+
+$$D_{KL}(P || Q) \geq 0$$
+
+KL Divergence luôn không âm và bằng 0 **khi và chỉ khi** $P = Q$ ở mọi điểm.
+
+### 2. Bất đối xứng (Không phải Metric)
+
+Không giống khoảng cách Euclid, KL Divergence **không đối xứng**. “Khoảng cách” từ $P$ đến $Q$ khác với từ $Q$ đến $P$.
+
+### 3. Tính lồi (Convexity)
+
+$D_{KL}(P || Q)$ là hàm **lồi** theo cặp $(P, Q)$. Với mọi $\lambda \in [0, 1]$:
+$$D_{KL}(\lambda P_1 + (1-\lambda)P_2 ,||, \lambda Q_1 + (1-\lambda)Q_2) \leq \lambda D_{KL}(P_1 || Q_1) + (1-\lambda) D_{KL}(P_2 || Q_2)$$
+
+Tính chất này đảm bảo gradient descent hội tụ về cực tiểu toàn cục (khi cố định $P$) và tránh bẫy cực tiểu cục bộ trong variational inference.
+
+### 4. Tính cộng cho biến độc lập
+
+Nếu $X$ và $Y$ **độc lập** dưới cả $P$ và $Q$:
+$$D_{KL}(P_{XY} || Q_{XY}) = D_{KL}(P_X || Q_X) + D_{KL}(P_Y || Q_Y)$$
+
+Với dữ liệu nhiều chiều có các đặc trưng độc lập, bạn có thể tính KL divergence cho từng đặc trưng rồi cộng lại.
+
+### 5. Bất biến dưới phép tái tham số hóa
+
+Với mọi phép biến đổi khả nghịch $y = f(x)$:
+$$D_{KL}(P_X || Q_X) = D_{KL}(P_Y || Q_Y)$$
+
+KL Divergence chỉ phụ thuộc vào giá trị xác suất, không phụ thuộc vào cách không gian được tham số hóa.
+
+
+
+## Ứng dụng trong Machine Learning
+
+* **Variational Autoencoders (VAEs):** Hàm mất mát của VAE chứa thành phần KL:
+  $D_{KL}(q(z|x) || p(z))$
+  buộc phân phối latent học được phải gần với prior chuẩn $N(0, I)$, giúp không gian latent mượt và liên tục.
+* **t-SNE Visualization:** Tối thiểu hóa KL Divergence giữa các phân phối khoảng cách cặp điểm trong không gian nhiều chiều và ít chiều để bảo toàn cấu trúc cục bộ.
+* **Knowledge Distillation:** Huấn luyện mô hình “student” bắt chước mô hình “teacher” bằng cách tối thiểu hóa KL Divergence giữa các đầu ra softmax của chúng.
+* **Reinforcement Learning (TRPO/PPO):** Dùng KL Divergence để giới hạn cập nhật policy nhằm đảm bảo policy mới không lệch quá xa policy cũ, được dùng trong các hệ thống điều khiển robot của OpenAI.
+* **Generative Adversarial Networks (GANs):** Một số biến thể GAN dùng KL hoặc reverse KL. Reverse KL giải thích hiện tượng “mode collapse” khi generator chỉ tập trung vào một số mode chất lượng cao.
+* **Bayesian Model Selection:** Đo mức độ posterior xấp xỉ khớp với posterior thật trong variational Bayes.
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Ôn nhanh (Theory AI)
+KL trong loss / VAE: [KL Divergence](../../theory-ai/07-activations-losses/kl-divergence.qmd).
+:::

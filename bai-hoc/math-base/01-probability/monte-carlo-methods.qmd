@@ -1,0 +1,99 @@
+---
+title: "Phương pháp Monte Carlo: Mô phỏng cho những bài toán không thể giải trực tiếp (Monte Carlo Methods)"
+order: 9
+date: 2026-08-27
+description: "Giải các bài toán xác định bằng sự ngẫu nhiên thuần túy."
+series: math-base
+categories: [math-base, probability]
+group: probability
+---
+# Phương pháp Monte Carlo: Mô phỏng cho những bài toán không thể giải trực tiếp
+
+Giải các bài toán xác định bằng sự ngẫu nhiên thuần túy.
+
+## Giới thiệu
+
+Nhiều bài toán về mặt lý thuyết có thể giải được nhưng lại không khả thi về mặt tính toán. Tính toán rủi ro danh mục đầu tư đòi hỏi tích phân trên hàng nghìn tài sản có tương quan. Tìm nước đi tối ưu trong cờ vây đòi hỏi duyệt một cây trạng thái có số lượng lớn hơn số nguyên tử trong vũ trụ.
+
+**Triết lý Monte Carlo**
+Nếu bạn không thể tính chính xác câu trả lời, hãy **mô phỏng** nó hàng triệu lần và lấy trung bình.
+
+> "Nếu bạn không thể tính diện tích của một cái hồ, hãy ném một triệu viên đá vào đó. Đếm xem bao nhiêu viên rơi xuống nước so với đất liền. Tỷ lệ đó cho bạn diện tích."
+
+## Lịch sử: Dự án Manhattan
+
+* **Bài toán**: Những năm 1940 tại Los Alamos. Stanislaw Ulam cần tính xác suất phản ứng dây chuyền neutron. Các phương trình vi phân quá phức tạp.
+* **Giải pháp**: Thay vì giải phương trình, mô phỏng từng neutron di chuyển ngẫu nhiên và quan sát kết quả. Được đặt tên theo sòng bạc ở Monaco vì dựa trên yếu tố ngẫu nhiên (Định luật số lớn).
+
+## Phương pháp bảng phi tiêu (ước lượng $\pi$)
+
+Làm sao để tính $\pi$ mà không cần hình học? Ném phi tiêu ngẫu nhiên.
+
+### Thiết lập
+
+* Hình vuông cạnh $2r$. Diện tích = $4r^2$
+* Hình tròn nội tiếp bán kính $r$. Diện tích = $\pi r^2$
+* Tỷ lệ = $\frac{\pi r^2}{4r^2} = \frac{\pi}{4}$
+
+### Mô phỏng
+
+* Ném $N$ phi tiêu ngẫu nhiên vào hình vuông
+* Đếm số phi tiêu rơi vào trong hình tròn ($N_{\text{inside}}$)
+* Tỷ lệ = $\frac{N_{\text{inside}}}{N} = \frac{\pi}{4}$
+* **$\pi = 4 \times \frac{N_{\text{inside}}}{N}$**
+
+Nhiều phi tiêu hơn = ước lượng tốt hơn. Đây chính là Định luật số lớn đang hoạt động.
+
+## Tích phân Monte Carlo
+
+Đối với các hàm phức tạp trong không gian nhiều chiều, các phương pháp tích phân số truyền thống thất bại. Monte Carlo chuyển tích phân thành kỳ vọng.
+
+$$I = \int_V f(x) dx \approx V \cdot \frac{1}{N} \sum_{i=1}^N f(x_i)$$
+
+Thay tích phân bằng trung bình mẫu, trong đó $V$ là thể tích miền và $x_i$ là các mẫu ngẫu nhiên.
+
+### Tốc độ hội tụ
+
+$$\text{Sai số} \propto \frac{1}{\sqrt{N}}$$
+
+Để giảm một nửa sai số, cần $4 \times$ số mẫu. Đây là tốc độ hội tụ chậm, nhưng quan trọng là **không phụ thuộc vào số chiều**.
+
+## Vượt qua lời nguyền chiều cao (Curse of Dimensionality)
+
+Các phương pháp dạng lưới tăng chi phí theo cấp số nhân khi số chiều tăng. Monte Carlo thì không.
+
+| Số chiều             | Điểm lưới (10/trục)    | Monte Carlo |
+| :------------------- | :--------------------- | :---------- |
+| 1D (đường thẳng)     | 10                     | ~100        |
+| 3D (khối lập phương) | 1,000                  | ~100        |
+| 10D                  | 10 tỷ                  | ~1,000      |
+| **100D**             | $10^{100}$ (không thể) | **~10,000** |
+
+Đây là lý do Monte Carlo là phương pháp khả thi duy nhất để giải các bài toán vật lý nhiều chiều và suy luận Bayes.
+
+## Markov Chain Monte Carlo (MCMC)
+
+Nếu ta không thể lấy mẫu đều thì sao? MCMC tạo ra các mẫu từ phân phối phức tạp bằng cách sử dụng một chuỗi Markov để khám phá các vùng xác suất cao.
+
+### Thuật toán Metropolis-Hastings
+
+1. Bắt đầu tại điểm ngẫu nhiên $x_0$
+2. Đề xuất điểm mới $x'$ gần đó ($x' = x_0 + \text{nhiễu}$)
+3. Tính tỷ lệ chấp nhận: $\alpha = \frac{P(x')}{P(x_0)}$
+4. Nếu $\alpha \geq 1$: luôn chuyển đến $x'$
+5. Nếu $\alpha < 1$: chuyển với xác suất $\alpha$, nếu không thì giữ nguyên
+6. Lặp lại hàng nghìn lần
+
+* **Vì sao hiệu quả**: Chuỗi sẽ dành nhiều thời gian hơn ở các vùng có xác suất cao. Sau giai đoạn “đốt cháy” (burn-in), các mẫu được lấy từ phân phối mục tiêu.
+* **Tham số quan trọng**: Kích thước bước. Quá nhỏ → khám phá chậm; quá lớn → nhiều lần bị từ chối. Tỷ lệ chấp nhận lý tưởng thường khoảng 20–50%.
+
+## Ứng dụng trong học máy
+
+* **Reinforcement Learning (MC Prediction)**: Ước lượng giá trị trạng thái $V(s)$ bằng cách chạy nhiều tập (episode) và lấy trung bình phần thưởng:
+  $$V(s) \approx \frac{1}{N} \sum_{i=1}^N G_i^{(s)}$$
+  Được sử dụng trong AlphaGo (MCTS) và các phương pháp policy gradient.
+* **Suy luận Bayes**: Lấy mẫu từ posterior $P(\theta|D)$ khi tích phân $P(D)$ không khả thi:
+  $$P(\theta|D) \propto P(D|\theta)P(\theta)$$
+  Thực hiện qua MCMC, Hamiltonian Monte Carlo hoặc Variational Inference (suy luận biến phân).
+* **Dropout như Monte Carlo**: Chạy suy luận nhiều lần với dropout và lấy trung bình tương đương với suy luận Bayes xấp xỉ. Mỗi lần lan truyền tiến (forward pass) lấy mẫu một mạng con khác nhau.
+* **Tài chính (Value at Risk)**: Mô phỏng hàng nghìn kịch bản thị trường để ước lượng tổn thất tồi tệ nhất ở một mức độ tin cậy nhất định.

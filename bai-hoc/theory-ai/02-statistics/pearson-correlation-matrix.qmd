@@ -247,6 +247,13 @@ def pearson_correlation(X):
     return corr
 ```
 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Nền đầy đủ (Math Base)
+Tương quan & hiệp phương sai: [Correlation and Covariance](../../math-base/02-statistics/correlation-and-covariance.qmd).
+:::
+
 <!-- auto-self-check -->
 
 ::: {.callout-note}

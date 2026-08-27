@@ -1,0 +1,132 @@
+---
+title: "Nhân ma trận (Matrix Multiplication)"
+order: 2
+date: 2026-08-27
+description: "Engine của Deep Learning. Biến đổi không gian, từng phép nhân-cộng một."
+series: math-base
+categories: [math-base, linear-algebra]
+group: linear-algebra
+---
+# Nhân ma trận (Matrix Multiplication)
+
+Engine của Deep Learning. Biến đổi không gian, từng phép nhân-cộng một.
+
+
+
+## Giới thiệu
+
+Mỗi lớp trong một mạng nơ-ron, từ các mạng feed-forward đơn giản đến các khối attention của GPT, về cơ bản là phép nhân ma trận theo sau bởi các hàm phi tuyến (non-linearities). Hiểu về nhân ma trận là điều thiết yếu để hiểu deep learning. Nó không chỉ là “nhân các con số”; nó là **kết hợp thông tin** và **biến đổi không gian**.
+
+
+
+## Quy tắc kích thước
+
+Bạn không thể nhân hai ma trận bất kỳ. Kích thước của chúng phải phù hợp theo một cách cụ thể.
+
+Với các ma trận $A$ và $B$:
+$$(m \times n) \times (n \times p) = (m \times p)$$
+
+* **Kích thước bên trong ($n$)** phải khớp.
+* **Kích thước bên ngoài ($m \times p$)** xác định hình dạng của kết quả.
+
+### Ví dụ hợp lệ
+
+* **Hợp lệ ✓**: $(3 \times 4) \times (4 \times 2) = (3 \times 2)$
+* **Không hợp lệ ✗**: $(3 \times 4) \times (3 \times 2)$ (Kích thước trong $4 \neq 3$)
+
+> **Mẹo thực tế:** Lỗi không khớp kích thước là một trong những lỗi phổ biến nhất trong code ML. Luôn theo dõi kích thước qua kiến trúc mạng trước khi triển khai.
+
+
+
+## Góc nhìn tích vô hướng
+
+Mỗi phần tử $C_{ij}$ trong kết quả là tích vô hướng của hàng $i$ từ $A$ và cột $j$ từ $B$.
+
+$$C_{ij} = \sum_{k=1}^{n} A_{ik} \cdot B_{kj}$$
+
+Hãy xem nó như việc hỏi: “Hàng $i$ của $A$ thẳng hàng với cột $j$ của $B$ đến mức nào?”. Độ thẳng hàng cao nghĩa là giá trị lớn trong $C_{ij}$.
+
+
+
+## Diễn giải theo hàng và cột
+
+Ngoài cách tính từng phần tử, có ba cách diễn giải chức năng của phép nhân ma trận:
+
+* **Góc nhìn theo cột:** Mỗi cột của $C$ là tổ hợp tuyến tính của các cột của $A$, với hệ số từ cột tương ứng của $B$.
+  $$C_{:,j} = \sum_{k} B_{kj} \cdot A_{:,k}$$
+* **Góc nhìn theo hàng:** Mỗi hàng của $C$ là tổ hợp tuyến tính của các hàng của $B$, với hệ số từ hàng tương ứng của $A$.
+  $$C_{i,:} = \sum_{k} A_{ik} \cdot B_{k,:}$$
+* **Góc nhìn tích ngoài (Outer Product):** $C$ là tổng của các tích ngoài giữa các cột của $A$ và các hàng của $B$.
+  $$C = \sum_{k} A_{:,k} \otimes B_{k,:}$$
+
+
+
+## Góc nhìn biến đổi
+
+Một ma trận là một **hàm (function)** biến đổi vector. Góc nhìn hình học này rất quan trọng để hiểu cách mạng nơ-ron xử lý dữ liệu.
+
+* Nếu **x** là một điểm trong không gian, **Ax** di chuyển điểm đó bằng cách co giãn, quay, biến dạng (shear), hoặc phản xạ không gian.
+* **Hợp thành (Composition):** $(AB)\mathbf{x} = A(B\mathbf{x})$. Điều này có nghĩa $AB$ là một phép biến đổi duy nhất tương đương với việc áp dụng $B$ trước, rồi $A$.
+
+### Các loại biến đổi
+
+* **Quay (Rotation):** Ma trận trực giao (orthogonal) quay vector mà không thay đổi độ dài.
+* **Tỉ lệ (Scaling):** Ma trận đường chéo (diagonal) co giãn từng trục độc lập.
+* **Chiếu (Projection):** Một số ma trận chiếu dữ liệu xuống không gian con có chiều thấp hơn.
+* **Biến dạng (Shearing):** Các phần tử ngoài đường chéo tạo ra hiệu ứng biến dạng.
+
+
+
+## Các tính chất đại số quan trọng
+
+* **Không giao hoán ($AB \neq BA$):** Thứ tự quan trọng. Quay rồi co giãn khác với co giãn rồi quay.
+* **Kết hợp (Associative):** $(AB)C = A(BC)$. Bạn có thể chọn thứ tự tính toán để tối ưu hiệu suất.
+* **Phân phối (Distributive):** $A(B + C) = AB + AC$.
+
+
+
+## Chuyển vị và tích
+
+* **Quy tắc chuyển vị:** $(AB)^T = B^T A^T$. Thứ tự bị đảo khi chuyển vị tích; điều này rất quan trọng trong suy diễn lan truyền ngược (backpropagation).
+* **Ma trận Gram (Gram Matrix) ($G = A^T A$):** Tích này luôn đối xứng và nửa xác định dương (positive semi-definite), thường được dùng trong style transfer.
+
+
+
+## Các ma trận đặc biệt trong ML
+
+* **Đường chéo (Diagonal):** Chỉ các phần tử trên đường chéo khác 0. Chúng co giãn trục với độ phức tạp $O(n)$.
+* **Trực giao (Orthogonal) ($Q^T Q = I$):** Bảo toàn độ dài và góc (quay/phản xạ).
+* **Đối xứng (Symmetric) ($A = A^T$):** Có giá trị riêng thực. Ma trận Hessian trong tối ưu là đối xứng.
+* **Thưa (Sparse):** Hầu hết phần tử bằng 0, cho phép lưu trữ và tính toán hiệu quả.
+
+
+
+## Phép toán theo lô (Batched Operations)
+
+Trong deep learning, chúng ta hiếm khi nhân các ma trận đơn lẻ. Thay vào đó, ta làm việc với các lô dữ liệu được xử lý song song.
+
+**Nhân ma trận theo lô (Batch Matrix Multiplication - BMM):**
+$$(B \times M \times N) \cdot (B \times N \times P) = (B \times M \times P)$$
+
+$B$ phép nhân ma trận độc lập diễn ra đồng thời. Điều này cho phép một lô đầu vào đi qua một lớp mạng nơ-ron cùng lúc, tối đa hóa thông lượng GPU.
+
+
+
+## Ứng dụng trong ML
+
+* **Các lớp mạng nơ-ron:** $Y = \text{activation}(XW + b)$. Đây là khối xây dựng cốt lõi của MLP, RNN và Transformer.
+* **Cơ chế Attention:** $\text{Attn} = \text{softmax}(\frac{QK^T}{\sqrt{d}})V$. Self-attention về bản chất được cấu thành từ các phép nhân ma trận.
+* **Tích chập (Convolution - im2col):** CNN thường sử dụng kỹ thuật **im2col** để chuyển tích chập thành nhân ma trận nhằm tận dụng các kernel GPU tối ưu cao.
+* **Tra cứu embedding (Embedding Lookup):** Về mặt toán học tương đương với việc nhân vector one-hot với ma trận embedding.
+
+
+
+## Chi phí tính toán
+
+Với hai ma trận $n \times n$, phép nhân thông thường cần $O(n^3)$ phép toán. Độ phức tạp bậc ba này là một ràng buộc cơ bản trong deep learning.
+
+* **Thuật toán cơ bản:** $O(n^3)$
+* **Thuật toán Strassen:** $O(n^{2.81})$
+* **Giới hạn lý thuyết:** $\approx O(n^{2.37})$
+
+**Hệ quả:** Tăng gấp đôi kích thước lớp (ví dụ: 512 lên 1024) làm tăng chi phí tính toán lên **8 lần** ($2^3$). Đây là lý do việc mở rộng mô hình rất tốn kém. 

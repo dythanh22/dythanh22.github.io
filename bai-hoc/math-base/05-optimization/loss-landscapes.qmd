@@ -1,0 +1,120 @@
+---
+title: "Loss Landscapes: Saddle Points, Minima & Generalization (Loss Landscapes)"
+order: 5
+date: 2026-08-27
+description: "Hình học của quá trình tối ưu hóa mạng nơ-ron. Hiểu hình dạng của bề mặt hàm mất mát giúp giải thích vì sao một số mô hình dễ huấn luyện hơn những mô hình khác."
+series: math-base
+categories: [math-base, optimization]
+group: optimization
+---
+# Loss Landscapes: Saddle Points, Minima & Generalization
+
+Hình học của quá trình tối ưu hóa mạng nơ-ron. Hiểu hình dạng của bề mặt hàm mất mát giúp giải thích vì sao một số mô hình dễ huấn luyện hơn những mô hình khác. 
+
+## Giới thiệu
+
+**Loss landscape (bề mặt hàm mất mát)** là bề mặt được tạo thành khi biểu diễn hàm mất mát trên không gian tham số. Với một mạng nơ-ron có hàng triệu tham số, đây là một bề mặt trong không gian hàng triệu chiều. Chúng ta thường nghiên cứu các lát cắt 2D để xây dựng trực giác về hình học của tối ưu hóa.
+
+Huấn luyện mạng nơ-ron tương đương với việc di chuyển trên bề mặt này để tìm một điểm thấp (minimum - cực tiểu). Hình dạng của bề mặt quyết định liệu gradient descent có thành công hay không, tốc độ hội tụ nhanh hay chậm, và liệu nghiệm tìm được có tổng quát hóa tốt trên dữ liệu mới hay không.
+
+### Vì Sao Điều Này Quan Trọng
+
+Hình dạng của loss landscape quyết định:
+
+1. Liệu Gradient Descent (GD) có tìm được nghiệm tốt hay không.
+2. Tốc độ hội tụ.
+3. Khả năng tổng quát hóa của nghiệm.
+
+Hiểu về loss landscape giúp định hướng lựa chọn optimizer (momentum, Adam) và thiết kế kiến trúc mạng (ResNets, skip connections).
+
+
+
+## Convex Landscapes
+
+Một **hàm mất mát lồi (convex loss function)** có duy nhất một global minimum (cực tiểu toàn cục). Mọi local minimum đều chính là global minimum. Đây là trường hợp lý tưởng: gradient descent được đảm bảo sẽ tìm được nghiệm tối ưu nếu learning rate đủ nhỏ.
+
+$$f(\theta) \text{ is convex if } f(\alpha\theta_1 + (1-\alpha)\theta_2) \leq \alpha f(\theta_1) + (1-\alpha)f(\theta_2)$$
+
+*Hàm số luôn nằm dưới đoạn thẳng nối giữa hai điểm bất kỳ.*
+
+### Phân Loại Bài Toán
+
+| Bài Toán Lồi ✓              | Bài Toán Không Lồi ✗          |
+|:----------------------------|:------------------------------|
+| Linear/Ridge regression     | Neural networks (mọi độ sâu)  |
+| Logistic regression         | Matrix factorization          |
+| Support Vector Machines     | Hầu hết mô hình deep learning |
+| Lasso (L1 regularization)   | Nhiều bài toán thực tế        |
+
+**Thách Thức của Neural Network:** Chỉ cần một hidden layer với 2 neuron cũng đủ tạo ra một loss landscape không lồi. Thành phần activation function phi tuyến đảm bảo tính không lồi. Tuy nhiên, một cách bí ẩn, SGD vẫn thường tìm được nghiệm tốt.
+
+
+
+## Saddle Points
+
+Trong không gian nhiều chiều, **saddle point (điểm yên ngựa)** phổ biến hơn rất nhiều so với local minima. Saddle point là critical point (điểm tới hạn, gradient bằng 0) nhưng là cực tiểu theo một số hướng và cực đại theo các hướng khác, tương tự trung tâm của yên ngựa.
+
+### Vì Sao Saddle Point Chiếm Ưu Thế Trong Không Gian Nhiều Chiều
+
+Tại một critical point, ma trận Hessian có $n$ eigenvalue (mỗi chiều một giá trị riêng). Để là local minimum, TẤT CẢ eigenvalue phải dương. Với saddle point, một số dương và một số âm. Trong không gian hàng triệu chiều, xác suất mà toàn bộ hàng triệu eigenvalue đều dương là cực kỳ nhỏ; vì thế, gần như mọi critical point đều là saddle point.
+
+### Điều Hướng Qua Saddle Points
+
+* **Nhiễu của SGD:** Gradient ngẫu nhiên cung cấp các nhiễu loạn giúp thoát khỏi các vùng phẳng quanh saddle point.
+* **Momentum:** Vận tốc tích lũy giúp vượt qua vùng saddle ngay cả khi gradient rất nhỏ.
+* **Second-Order Methods:** Các phương pháp như cubic regularization và trust-region methods chủ động phát hiện và thoát khỏi saddle points.
+
+
+
+## Sharp vs Flat Minima
+
+Không phải mọi cực tiểu đều như nhau. **Flat minima (cực tiểu phẳng)** thường tổng quát hóa tốt hơn **sharp minima (cực tiểu sắc nhọn)**.
+
+| Flat Minimum                                                          | Sharp Minimum                                          |
+|:----------------------------------------------------------------------|:-------------------------------------------------------|
+| **Eigenvalue Hessian nhỏ** - độ cong nhẹ                              | **Eigenvalue Hessian lớn** - độ cong dốc               |
+| **Ổn định với nhiễu** - nhiễu tham số ít ảnh hưởng                    | **Nhạy với nhiễu** - thay đổi nhỏ gây tăng loss mạnh   |
+| **Tổng quát hóa tốt hơn** - thường có test error thấp hơn             | **Có thể overfit** - ghi nhớ dữ liệu huấn luyện        |
+| **Được tìm bởi:** SGD với batch lớn, learning rate cao, optimizer SAM | **Được tìm bởi:** Full-batch GD, learning rate rất nhỏ |
+
+### SAM: Sharpness-Aware Minimization
+
+SAM chủ động tìm flat minima bằng cách tối thiểu hóa loss trong vùng "trường hợp xấu nhất" quanh tham số hiện tại:
+
+$$\min_\theta \max_{|\epsilon| \leq \rho} L(\theta + \epsilon)$$
+
+Điều này đảm bảo nghiệm ổn định với các nhiễu nhỏ, giúp cải thiện đáng kể khả năng tổng quát hóa.
+
+
+
+## Case Study: Hiểu Động Lực Huấn Luyện
+
+### Quan Sát
+
+Bạn đang huấn luyện một mạng nơ-ron. Loss gần như không đổi trong 50 epoch, sau đó đột ngột giảm 30%.
+
+### Giải Thích Theo Loss Landscape
+
+Optimizer có thể đã bị mắc kẹt gần một **saddle point**. Gradient nhỏ khiến tiến triển rất chậm. Cuối cùng:
+
+* Nhiễu của SGD tích lũy theo một hướng không ổn định.
+* Momentum tích lũy đủ vận tốc để thoát ra.
+* Optimizer tìm được hướng đi xuống và loss giảm nhanh chóng.
+
+### Chiến Lược Thoát Khỏi Saddle Regions
+
+* **Cyclical learning rates:** Tăng learning rate trong giai đoạn plateau để bổ sung “năng lượng”.
+* **Sử dụng momentum:** Tích lũy vận tốc để vượt qua vùng phẳng.
+* **Thêm gradient noise:** Giúp thoát khỏi các vùng phẳng cục bộ.
+* **Giảm batch size:** Gradient ngẫu nhiên nhiều hơn dẫn tới khả năng khám phá tốt hơn.
+
+
+
+## Ứng Dụng & Insight trong Machine Learning
+
+* **Mode Connectivity:** Các minima khác nhau do SGD tìm được thường được nối với nhau bởi các đường có loss thấp ("đường hầm").
+* **Lottery Ticket Hypothesis:** Các mạng con thưa (sparse subnetworks) ngay từ khởi tạo có thể đạt hiệu năng ngang mạng đầy đủ, cho thấy loss landscape chứa các "vé số chiến thắng" đặc biệt.
+* **Skip Connections (ResNets):** Làm loss landscape mượt hơn đáng kể bằng cách tạo ra các “đường cao tốc”, giúp tối ưu hóa dễ dàng hơn.
+* **Learning Rate Schedules:** Các chiến lược như warmup và cosine annealing được thiết kế dựa trên hình học của loss landscape để điều hướng qua các topology phức tạp.
+* **Ảnh Hưởng của Batch Size:** Batch lớn có xu hướng hội tụ đến sharp minima (tổng quát hóa kém), trong khi batch nhỏ thêm nhiễu giúp tìm flat minima (tổng quát hóa tốt hơn).
+* **Neural Architecture Search (NAS):** NAS có thể khám phá các kiến trúc vốn đã dễ tối ưu hơn nhờ loss landscape mượt hơn.

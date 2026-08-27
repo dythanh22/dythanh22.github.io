@@ -1,0 +1,112 @@
+---
+title: "Phân rã giá trị kỳ dị (Singular Value Decomposition - SVD)"
+order: 9
+date: 2026-08-27
+description: "“Dao đa năng” của đại số tuyến tính: áp dụng cho mọi ma trận, mọi kích thước. Nền tảng của nén dữ liệu hiện đại."
+series: math-base
+categories: [math-base, linear-algebra]
+group: linear-algebra
+---
+# Phân rã giá trị kỳ dị (Singular Value Decomposition - SVD)
+
+“Dao đa năng” của đại số tuyến tính: áp dụng cho mọi ma trận, mọi kích thước. Nền tảng của nén dữ liệu hiện đại.
+
+
+
+## Giới thiệu
+
+Trong khi phân rã trị riêng (eigendecomposition) rất mạnh, nó chỉ áp dụng cho **ma trận vuông**. Dữ liệu thực tế—như ma trận đánh giá người dùng-phim hoặc tài liệu-từ vựng—hiếm khi là ma trận vuông. **Phân rã giá trị kỳ dị (SVD)** tổng quát hóa việc phân tích cho **mọi** ma trận, bất kể hình dạng, khiến nó trở thành công cụ cốt lõi trong đại số tuyến tính ứng dụng và học máy.
+
+### SVD cho ta biết điều gì
+
+* **Hạng (Rank):** Số lượng giá trị kỳ dị khác 0 bằng hạng của ma trận.
+* **Không gian giá trị (Range):** Không gian cột được sinh bởi các vector kỳ dị trái ($U$).
+* **Không gian không (Null Space):** Các vector kỳ dị phải ($V$) ứng với giá trị kỳ dị bằng 0 sinh ra không gian không.
+* **Số điều kiện (Condition Number):** Tỉ số giữa giá trị kỳ dị lớn nhất và nhỏ nhất đo độ ổn định số.
+
+
+
+## Trực giác từ bài toán đánh giá phim
+
+Hãy tưởng tượng một ma trận $A$ trong đó các hàng là **Người dùng (Users)** và các cột là **Phim (Movies)**. SVD phân rã ma trận này thành ba thành phần tiết lộ cấu trúc ẩn:
+
+* **$U$ (Người dùng–Khái niệm):** Mô tả người dùng theo các “khái niệm” ẩn (ví dụ: Alice thích Sci-Fi với mức 0.9).
+* **$\Sigma$ (Độ mạnh):** Các giá trị đường chéo thể hiện “độ mạnh” của từng khái niệm trong dữ liệu.
+* **$V^T$ (Khái niệm–Phim):** Mô tả phim theo cùng các khái niệm ẩn đó.
+
+Dự đoán đánh giá của Alice cho một bộ phim được tính bằng cách nhân hồ sơ khái niệm của cô với độ mạnh khái niệm và hồ sơ khái niệm của bộ phim.
+
+
+
+## Biểu diễn toán học
+
+Với mọi ma trận thực $A$ kích thước $m \times n$, tồn tại các ma trận trực giao $U$, $V$ và một ma trận đường chéo $\Sigma$ sao cho:
+
+$$A = U \Sigma V^T$$
+
+### Các thành phần
+
+* **$U$ ($m \times m$):** Các vector kỳ dị trái. Là ma trận trực giao ($U^T U = I$) và là các vector riêng của $AA^T$.
+* **$\Sigma$ ($m \times n$):** Các giá trị kỳ dị. Là ma trận đường chéo với các phần tử $\sigma_i \geq 0$, sắp xếp giảm dần ($\sigma_1 \geq \sigma_2 \geq \dots \geq 0$).
+* **$V^T$ ($n \times n$):** Các vector kỳ dị phải. Là ma trận trực giao ($V^T V = I$) và là các vector riêng của $A^T A$.
+
+**Đẳng thức quan trọng:** Giá trị kỳ dị là căn bậc hai của giá trị riêng: $\sigma_i = \sqrt{\lambda_i}$.
+
+
+
+## Diễn giải hình học
+
+SVD cho thấy mọi phép biến đổi tuyến tính tương đương với ba phép toán liên tiếp:
+
+1. **$V^T$ (Quay đầu vào):** Xoay hệ tọa độ để thẳng hàng với các “trục chính” của phép biến đổi.
+2. **$\Sigma$ (Co giãn):** Kéo giãn hoặc nén không gian theo các trục chính đó với các giá trị kỳ dị. Một hình tròn đơn vị trở thành ellipse.
+3. **$U$ (Quay đầu ra):** Xoay lần cuối để đưa kết quả đến vị trí cuối cùng trong không gian đầu ra.
+
+
+
+## SVD rút gọn (Truncated SVD - xấp xỉ hạng thấp)
+
+SVD thường được dùng để **xấp xỉ** thay vì phân rã chính xác. Bằng cách chỉ giữ $k$ giá trị kỳ dị lớn nhất, ta thu được xấp xỉ hạng-$k$ tốt nhất của $A$:
+
+$$A_k = \sum_{i=1}^{k} \sigma_i \mathbf{u}_i \mathbf{v}_i^T$$
+
+### Định lý Eckart-Young
+
+Định lý này phát biểu rằng $A_k$ là ma trận hạng-$k$ tối ưu, tối thiểu hóa chuẩn Frobenius của sai số:
+
+$$|A - A_k|*F = \sqrt{\sigma*{k+1}^2 + \sigma_{k+2}^2 + \dots + \sigma_r^2}$$
+
+**Ví dụ: Nén ảnh**
+Một ảnh $1000 \times 1000$ (1 triệu pixel) có thể được nén bằng cách giữ $k=50$. Điều này giảm số lượng lưu trữ xuống khoảng 100,050 số (giảm ~90%) với mất mát thị giác rất nhỏ.
+
+
+
+## Các tính chất quan trọng
+
+* **Chuẩn Frobenius:** $|A|_F = \sqrt{\sum \sigma_i^2}$.
+* **Chuẩn phổ (Spectral Norm):** $|A|_2 = \sigma_1$ (giá trị kỳ dị lớn nhất).
+* **Giả nghịch đảo (Moore-Penrose):** SVD cho phép nghịch đảo ma trận không vuông: $A^+ = V \Sigma^+ U^T$, trong đó $\Sigma^+$ chứa nghịch đảo của các giá trị kỳ dị khác 0.
+
+
+
+## Ứng dụng trong học máy
+
+* **Hệ gợi ý (Recommendation Systems):** Dùng để tìm các nhân tố tiềm ẩn trong ma trận người dùng–mục (ví dụ: bài toán Netflix Prize).
+* **Phân tích ngữ nghĩa tiềm ẩn (Latent Semantic Analysis - LSA):** SVD trên ma trận tài liệu–từ vựng giúp khám phá “chủ đề” như các chiều ẩn.
+* **Khử nhiễu:** Loại bỏ các giá trị kỳ dị nhỏ giúp loại nhiễu nhưng vẫn giữ tín hiệu chính.
+* **PCA thông qua SVD:** Phân tích thành phần chính thường được tính bằng SVD để tăng độ ổn định số:
+
+  1. Chuẩn hóa (center) ma trận dữ liệu $X$.
+  2. Tính SVD: $X = U \Sigma V^T$.
+  3. Thành phần chính là các cột của $V$.
+  4. Dữ liệu sau chiếu là $U \Sigma$.
+
+
+
+## So sánh: SVD vs. PCA vs. Phân rã trị riêng
+
+| Phương pháp           | Loại ma trận          | Tìm gì                        | Ứng dụng chính                   |
+|:----------------------|:----------------------|:------------------------------|:---------------------------------|
+| **Phân rã trị riêng** | Vuông ($n \times n$)  | Giá trị riêng & vector riêng  | Hệ động lực, phân tích lý thuyết |
+| **SVD**               | Bất kỳ ($m \times n$) | Giá trị kỳ dị & vector        | Nén dữ liệu, nghịch đảo          |
+| **PCA**               | Ma trận dữ liệu       | Thành phần chính              | Giảm chiều                       |

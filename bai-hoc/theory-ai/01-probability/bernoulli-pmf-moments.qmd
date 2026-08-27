@@ -335,6 +335,13 @@ def bernoulli_pmf_and_moments(x, p):
     return pmf, mean, var
 ```
 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Nền đầy đủ (Math Base)
+Phân phối & xác suất có điều kiện: [Phân phối xác suất](../../math-base/01-probability/probability-distributions.qmd) · [Conditional Probability](../../math-base/01-probability/conditional-probability.qmd).
+:::
+
 <!-- SELFCHECK_BERN -->
 
 ::: {.callout-note}

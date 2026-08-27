@@ -1,0 +1,166 @@
+---
+title: "Giới hạn và Tính liên tục (Limits and Continuity)"
+order: 1
+date: 2026-08-27
+description: "Nền tảng toán học giúp cho đạo hàm, và do đó là việc huấn luyện mạng nơ-ron, trở nên khả thi."
+series: math-base
+categories: [math-base, calculus]
+group: calculus
+---
+# Giới hạn và Tính liên tục (Limits and Continuity)
+
+Nền tảng toán học giúp cho đạo hàm, và do đó là việc huấn luyện mạng nơ-ron, trở nên khả thi.
+
+
+
+## Giới thiệu
+
+Trước khi có thể thảo luận về **đạo hàm (derivatives)** (động cơ của tối ưu hóa) hay **tích phân (integrals)** (nền tảng của xác suất), chúng ta cần hiểu nền móng mà chúng dựa vào: **giới hạn (limits)**.
+
+Giải tích là toán học của sự thay đổi. Nhưng sự thay đổi xảy ra tại một thời điểm, và việc đo lường một đại lượng "tại một thời điểm" liên quan đến phép chia cho 0 ($\frac{\Delta y}{0}$). Để tránh sự bất khả thi này, ta sử dụng giới hạn: không hỏi "giá trị **tại** điểm này là gì", mà hỏi "giá trị mà ta **tiến tới** khi tiến gần vô hạn đến điểm đó là gì?"
+
+### Vì sao Giới hạn quan trọng trong ML
+
+* **Đạo hàm (Derivatives):** Định nghĩa của đạo hàm là một giới hạn:
+  $$f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}$$
+* **Gradient Descent (thuật toán hạ dốc):** Yêu cầu các hàm liên tục và khả vi. Giới hạn đảm bảo điều này.
+* **Hàm kích hoạt (Activation Functions):** Hiểu nơi các hàm bị gián đoạn giúp giải thích lựa chọn ReLU hay Sigmoid.
+* **Hội tụ (Convergence):** Quá trình huấn luyện hội tụ khi hàm mất mát tiến tới một giới hạn.
+
+
+
+## Giới hạn là gì?
+
+Giới hạn mô tả giá trị mà một hàm **tiến tới** khi đầu vào tiến tới một giá trị nào đó. Hàm không nhất thiết phải đạt đúng giá trị đó; chỉ cần tiến gần tùy ý.
+
+### Ví dụ kinh điển
+
+Xét $f(x) = \frac{x^2 - 1}{x - 1}$. Nếu thay $x = 1$, ta được $\frac{0}{0}$, không xác định.
+
+Nhưng ta có thể phân tích:
+$$\frac{x^2-1}{x-1} = \frac{(x+1)(x-1)}{x-1} = x + 1 \text{ với } x \neq 1$$
+
+Vì vậy khi $x$ tiến tới 1, $f(x)$ tiến tới 2. **Giới hạn tồn tại** dù $f(1)$ không xác định!
+
+### Giới hạn một phía
+
+* **Giới hạn bên trái:** $\lim_{x \to c^-} f(x)$
+  Tiến tới $c$ từ phía nhỏ hơn $c$.
+* **Giới hạn bên phải:** $\lim_{x \to c^+} f(x)$
+  Tiến tới $c$ từ phía lớn hơn $c$.
+
+> **Giới hạn tồn tại khi và chỉ khi:**
+> Giới hạn $\lim_{x \to c} f(x) = L$ tồn tại khi và chỉ khi cả hai giới hạn một phía tồn tại VÀ bằng nhau:
+> $$\lim_{x \to c^-} f(x) = \lim_{x \to c^+} f(x) = L$$
+
+
+
+## Định nghĩa Epsilon-Delta
+
+Định nghĩa hình thức của giới hạn mô tả một **đảm bảo về độ chính xác**.
+
+### Phép so sánh sản xuất
+
+Hãy tưởng tượng bạn đang sản xuất một piston chính xác cao (đầu vào $x$) để lắp vào xi lanh (đầu ra $f(x)$).
+
+1. **Mục tiêu ($L$):** Xi lanh có kích thước lý tưởng, ví dụ 10cm.
+2. **Dung sai ($\epsilon$):** Khách hàng yêu cầu sai số không vượt quá 0.01cm.
+3. **Độ chính xác đầu vào ($\delta$):** Bạn hỏi: "Khuôn piston cần chính xác đến mức nào?" Có thể nếu sai số khuôn dưới 0.005cm thì sản phẩm đạt yêu cầu.
+
+**Giới hạn tồn tại nếu:** Với bất kỳ dung sai $\epsilon$ nào, luôn tồn tại một $\delta$ đủ nhỏ để đảm bảo điều kiện.
+
+### Định nghĩa hình thức
+
+Ta nói $\lim_{x \to c} f(x) = L$ nếu:
+Với mọi $\epsilon > 0$, tồn tại $\delta > 0$ sao cho:
+$$0 < |x - c| < \delta \implies |f(x) - L| < \epsilon$$
+
+
+
+## Các quy tắc giới hạn
+
+Các quy tắc này giúp tính giới hạn của biểu thức phức tạp từ các biểu thức đơn giản. Nếu $\lim_{x \to c} f(x) = L$ và $\lim_{x \to c} g(x) = M$:
+
+* **Tổng/Hiệu:** $\lim [f(x) \pm g(x)] = L \pm M$
+* **Tích:** $\lim [f(x) \cdot g(x)] = L \cdot M$
+* **Thương:** $\lim \frac{f(x)}{g(x)} = \frac{L}{M}$ (nếu $M \neq 0$)
+* **Nhân với hằng số:** $\lim [k \cdot f(x)] = k \cdot L$
+* **Lũy thừa:** $\lim [f(x)]^n = L^n$
+* **Hợp hàm:** $\lim f(g(x)) = f(M)$ (nếu $f$ liên tục tại $M$)
+
+
+
+## Quy tắc L'Hopital
+
+Khi thay trực tiếp cho kết quả **dạng vô định** như $\frac{0}{0}$ hoặc $\frac{\infty}{\infty}$, quy tắc L'Hopital cung cấp cách giải.
+
+Nếu $\lim_{x \to c} \frac{f(x)}{g(x)}$ cho dạng vô định, thì:
+$$\lim_{x \to c} \frac{f(x)}{g(x)} = \lim_{x \to c} \frac{f'(x)}{g'(x)}$$
+với điều kiện giới hạn bên phải tồn tại.
+
+**Ví dụ:** Tính $\lim_{x \to 0} \frac{\sin x}{x}$
+
+* Thay trực tiếp: $\frac{0}{0}$ (vô định)
+* Áp dụng L'Hopital: $\lim_{x \to 0} \frac{\cos x}{1} = 1$
+
+
+
+## Tính liên tục (Continuity)
+
+Một hàm được gọi là **liên tục** nếu có thể vẽ mà không nhấc bút. Chính xác hơn, tại điểm $c$:
+
+1. **$f(c)$ xác định**
+2. **$\lim_{x \to c} f(x)$ tồn tại**
+3. **$\lim_{x \to c} f(x) = f(c)$**
+
+### Tính chất quan trọng
+
+* Đa thức liên tục mọi nơi.
+* Hàm phân thức liên tục trừ khi mẫu bằng 0.
+* Hàm mũ, logarit, lượng giác liên tục trên miền xác định.
+* Tổng, tích, hợp của các hàm liên tục cũng liên tục.
+
+
+
+## Các loại gián đoạn
+
+* **Có thể khử (Removable):** Giới hạn tồn tại nhưng $f(c)$ không xác định hoặc sai.
+* **Gián đoạn nhảy (Jump):** Hai giới hạn một phía tồn tại nhưng khác nhau.
+* **Gián đoạn vô cực:** Hàm tiến tới vô cực (tiệm cận đứng).
+
+
+
+## Liên tục vs. Khả vi
+
+Phân biệt này rất quan trọng trong deep learning.
+
+* **Khả vi ⇒ Liên tục**
+* **Liên tục ⇏ Khả vi**
+
+**Ví dụ: $|x|$**
+
+* Liên tục mọi nơi.
+* Không khả vi tại $x=0$ vì đạo hàm trái ≠ đạo hàm phải.
+
+
+
+## Ứng dụng trong ML
+
+### Sự sụp đổ của Perceptron
+
+Hàm bước có gián đoạn → đạo hàm bằng 0 → không lan truyền gradient → thất bại.
+
+### ReLU: Thỏa hiệp thực tế
+
+$f(x) = \max(0, x)$
+Liên tục nhưng không khả vi tại 0 → dùng **subgradient**.
+
+### Softmax và ổn định số
+
+$\sigma(z_i) = \frac{e^{z_i}}{\sum_j e^{z_j}}$
+Tránh overflow bằng cách trừ $\max(z)$.
+
+### Tính liên tục của hàm mất mát
+
+* MSE liên tục và khả vi mọi nơi.
+* Cross-entropy liên tục nhưng có điểm kỳ dị → cần cắt giá trị (clipping).

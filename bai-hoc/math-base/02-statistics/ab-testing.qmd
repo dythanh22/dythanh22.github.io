@@ -1,0 +1,124 @@
+---
+title: "A/B Testing (AB Testing)"
+order: 10
+date: 2026-08-27
+description: "A/B testing là việc áp dụng phương pháp khoa học vào phát triển sản phẩm và Machine Learning. Nó cung cấp một cách chặt chẽ để xác định liệu một thay đổi, như giao diện UI mới hoặc cập nhật mô hình,…"
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# A/B Testing
+
+## Giới thiệu
+A/B testing là việc áp dụng phương pháp khoa học vào phát triển sản phẩm và Machine Learning. Nó cung cấp một cách chặt chẽ để xác định liệu một thay đổi, như giao diện UI mới hoặc cập nhật mô hình, có thực sự tạo ra cải thiện hay chỉ đơn thuần trùng hợp với các yếu tố bên ngoài như ngày lễ hoặc nhiễu ngẫu nhiên.
+
+
+
+## Khung giả thuyết
+A/B testing hoạt động theo logic giống như phiên tòa, trong đó giả định ban đầu là thay đổi **không có tác động**.
+
+* **Người hoài nghi ($H_0$):** Giả thuyết không (Null Hypothesis). Giả định nhóm A (Control) và nhóm B (Treatment) giống nhau.
+  
+  $$\text{Group A} = \text{Group B}$$
+
+* **Khám phá ($H_1$):** Giả thuyết đối (Alternative Hypothesis). Điều bạn muốn chứng minh: tồn tại sự khác biệt có ý nghĩa.
+  
+  $$\text{Group A} \neq \text{Group B}$$
+
+**Quy tắc “thử nghiệm công bằng”:**  
+Phân chia ngẫu nhiên là bắt buộc. Việc chia người dùng ngẫu nhiên đảm bảo hai nhóm giống nhau trước khi test bắt đầu, khiến “treatment” trở thành biến duy nhất.
+
+
+
+## Sai lầm loại I và loại II trong kinh doanh
+
+Vì kiểm định dựa trên xác suất, có hai cách để đưa ra quyết định sai:
+
+| Loại sai lầm | Tên gọi | Hệ quả kinh doanh|
+| :-----| :-----|:----------------------------------------------------------|
+| **Sai lầm loại I ($\alpha$)** | **False Positive** | Triển khai thay đổi không hiệu quả → lãng phí tài nguyên  |
+| **Sai lầm loại II ($\beta$)** | **False Negative** | Bỏ lỡ ý tưởng tốt vì test không phát hiện được lợi ích    |
+
+
+
+## Toán học: Z-Test hai mẫu
+
+Để xác định sự khác biệt giữa tỷ lệ chuyển đổi ($\hat{p}$) có ý nghĩa hay không, ta tính **Z-score**.
+
+### Công thức Z-score cho tỷ lệ
+
+$$Z = \frac{\hat{p}_B - \hat{p}_A}{\sqrt{\hat{p}(1 - \hat{p})\left(\frac{1}{n_A} + \frac{1}{n_B}\right)}}$$
+
+* $\hat{p}_A, \hat{p}_B$: Tỷ lệ chuyển đổi của nhóm A và B  
+* $\hat{p}$: Tỷ lệ gộp (tổng chuyển đổi / tổng người dùng)  
+* $n_A, n_B$: Kích thước mẫu  
+
+**Quy tắc quyết định:**  
+Nếu $|Z| > 1.96$ → mức tin cậy 95% → khác biệt là có ý nghĩa ($p < 0.05$)
+
+
+
+## Power và kích thước mẫu
+
+Trước khi chạy test, cần tính kích thước mẫu để tránh “underpowered” (không đủ khả năng phát hiện hiệu ứng thật).
+
+### Power ($1 - \beta$)
+Xác suất phát hiện hiệu ứng khi nó tồn tại. Chuẩn công nghiệp: **80%**
+
+### Các yếu tố ảnh hưởng kích thước mẫu
+1. **Baseline Rate:** Tỷ lệ chuyển đổi hiện tại  
+2. **MDE (Minimum Detectable Effect):** Mức cải thiện nhỏ nhất bạn quan tâm  
+3. **Mức ý nghĩa ($\alpha$):** $\alpha$ nhỏ hơn → cần nhiều dữ liệu hơn  
+4. **Kích thước mẫu ($n$):** Đòn bẩy chính để tăng power  
+
+
+
+## Case study: Thiết kế lại bao bì
+
+**Bài toán:** Công ty tin rằng hộp bóng đèn “cao cấp” sẽ tăng doanh số.
+
+* **Thiết lập:** 10,000 người dùng mỗi nhóm  
+* **Kết quả:**  
+  - Control (A) = 5.2%  
+  - Treatment (B) = 5.9%  
+
+* **Phân tích:**  
+  - Lift = +0.7%  
+  - $P\text{-value} = 0.018$
+
+* **Quyết định:**  
+  Vì $0.018 < 0.05$ → kết quả có ý nghĩa thống kê  
+  → Triển khai bao bì mới
+
+
+
+## Các bẫy thường gặp
+
+* **Peeking (P-Hacking):**  
+  Dừng test khi vừa thấy $p < 0.05$ → nếu kiểm tra nhiều lần, $\alpha$ thực tăng mạnh (~26%)
+
+* **Hiệu ứng mới lạ (Novelty Effect):**  
+  Người dùng click vì “mới” → hiệu ứng biến mất theo thời gian  
+
+* **Nghịch lý Simpson:**  
+  Tổng thể cho kết quả tốt nhưng từng phân nhóm lại cho kết quả xấu  
+
+* **Hiệu ứng mạng (Spillover):**  
+  Người dùng nhóm B ảnh hưởng nhóm A → dữ liệu bị nhiễu  
+
+
+
+## Ứng dụng trong Machine Learning
+
+* **Triển khai mô hình:**  
+  Test xem Model B có tạo ra nhiều doanh thu hơn Model A không  
+
+* **Multi-Armed Bandits:**  
+  Tự động phân bổ traffic sang phương án tốt hơn trong quá trình test  
+
+* **Tuning hyperparameter:**  
+  So sánh learning rate qua cross-validation  
+
+* **Causal ML:**  
+  Dùng khi không thể (hoặc không nên) random hóa A/B  
+

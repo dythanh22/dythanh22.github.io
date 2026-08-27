@@ -1,0 +1,88 @@
+---
+title: "Tương quan và hiệp phương sai (Correlation and Covariance)"
+order: 12
+date: 2026-08-27
+description: "Tương quan đo lường độ mạnh và hướng của mối quan hệ giữa hai biến, đóng vai trò nền tảng trong mô hình dự đoán. Nếu biến tương quan với biến , thì việc biết có thể giúp dự đoán . Tuy nhiên, tương…"
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# Tương quan và hiệp phương sai (Correlation and Covariance)
+
+## Giới thiệu
+Tương quan đo lường độ mạnh và hướng của mối quan hệ giữa hai biến, đóng vai trò nền tảng trong mô hình dự đoán. Nếu biến $X$ tương quan với biến $Y$, thì việc biết $X$ có thể giúp dự đoán $Y$. Tuy nhiên, tương quan có thể gây hiểu nhầm: nó có thể cho thấy những mối quan hệ không tồn tại hoặc che giấu những mối quan hệ thực sự.
+
+
+
+## Hiệp phương sai: Nguyên liệu thô
+Hiệp phương sai đo cách hai biến thay đổi cùng nhau.
+
+### Công thức
+$$Cov(X,Y) = \frac{1}{n-1}\sum_{i=1}^{n} (X_i - \bar{X})(Y_i - \bar{Y})$$
+
+* **$Cov > 0$:** $X$ và $Y$ cùng tăng hoặc cùng giảm.
+* **$Cov < 0$:** $X$ và $Y$ thay đổi theo hướng ngược nhau.
+* **$Cov \approx 0$:** Không có mối quan hệ tuyến tính.
+
+**Hạn chế:** Hiệp phương sai không được chuẩn hóa. Giá trị của nó thay đổi theo đơn vị đo lường (ví dụ: mét so với centimet), khiến việc diễn giải khó khăn nếu thiếu ngữ cảnh.
+
+
+
+## Hệ số tương quan ($r$)
+Tương quan là hiệp phương sai đã được chuẩn hóa, tạo ra một giá trị không có đơn vị và nằm trong khoảng **-1 đến 1**.
+
+### Công thức (Pearson)
+$$r = \frac{Cov(X,Y)}{\sigma_X \sigma_Y}$$
+
+### Diễn giải $r$
+* **$r = 1.0$:** Quan hệ tuyến tính dương hoàn hảo.
+* **$r = 0.7$:** Xu hướng dương mạnh.
+* **$r = 0.3$:** Xu hướng dương yếu.
+* **$r = 0.0$:** Không có quan hệ tuyến tính.
+* **$r = -0.8$:** Xu hướng âm mạnh / quan hệ nghịch.
+
+
+
+## Pearson vs. Spearman
+Chọn thước đo phù hợp phụ thuộc vào bản chất dữ liệu.
+
+| Đặc điểm | Tương quan Pearson ($r$) | Tương quan hạng Spearman ($\rho$) |
+| :--- | :--- | :--- |
+| **Mối quan hệ** | Đo quan hệ **tuyến tính**. | Đo quan hệ **đơn điệu**. |
+| **Loại dữ liệu** | Liên tục, gần phân phối chuẩn. | Dữ liệu thứ bậc, không chuẩn hoặc dạng xếp hạng. |
+| **Outliers** | Rất nhạy với outliers. | Bền vững hơn với outliers. |
+
+
+
+## Tương quan $\neq$ Nhân quả
+Chỉ vì hai biến thay đổi cùng nhau không có nghĩa là một biến gây ra biến còn lại. Có bốn khả năng chính cho một mối tương quan:
+
+1. **Nhân quả trực tiếp:** $A$ gây ra $B$.
+2. **Nhân quả ngược:** $B$ thực ra gây ra $A$ (ví dụ: nhiều cảnh sát hơn ở thành phố có tội phạm cao).
+3. **Biến nhiễu (Confounding Variable):** Một biến thứ ba $C$ gây ra cả $A$ và $B$ (ví dụ: nhiệt độ cao làm tăng cả doanh số kem và số vụ đuối nước).
+4. **Tương quan giả (Spurious Correlation):** Trùng hợp ngẫu nhiên (ví dụ: phim của Nicolas Cage và số vụ đuối nước trong hồ bơi).
+
+
+
+## Ứng dụng trong Machine Learning
+
+### Feature Selection
+Trong ML, mục tiêu là tìm các feature tương quan **cao với target** nhưng có **tương quan thấp với nhau** để tránh dư thừa thông tin.
+
+### Multicollinearity
+Trong hồi quy tuyến tính, nếu hai feature tương quan hoàn hảo, ma trận $X^T X$ trở nên suy biến và không thể nghịch đảo. Khi đó cần loại bỏ một trong các feature dư thừa.
+
+### VIF (Variance Inflation Factor)
+VIF đo mức độ multicollinearity làm tăng phương sai của các hệ số hồi quy. **$VIF > 10$** là một dấu hiệu cảnh báo lớn.
+
+$$VIF = \frac{1}{1-R^2_i}$$
+
+### PCA (Principal Component Analysis)
+Nếu các feature có tương quan cao, PCA có thể được dùng để biến đổi chúng thành các thành phần chính không tương quan, giúp tăng ổn định số học và giảm overfitting.
+
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Ôn nhanh (Theory AI)
+Ma trận tương quan Pearson: [Pearson correlation matrix](../../theory-ai/02-statistics/pearson-correlation-matrix.qmd).
+:::

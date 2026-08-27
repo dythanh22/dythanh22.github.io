@@ -1,0 +1,154 @@
+---
+title: "Shannon Entropy (Shannon Entropy)"
+order: 1
+date: 2026-08-27
+description: "Đại lượng toán học đo lường sự bất định (uncertainty), sự bất ngờ (surprise) và thông tin (information). Đây là nền tảng của toàn bộ Lý thuyết Thông tin (Information Theory)."
+series: math-base
+categories: [math-base, information-theory]
+group: information-theory
+---
+# Shannon Entropy
+
+Đại lượng toán học đo lường sự bất định (uncertainty), sự bất ngờ (surprise) và thông tin (information). Đây là nền tảng của toàn bộ Lý thuyết Thông tin (Information Theory). 
+
+
+
+## Giới thiệu
+
+Năm 1948, Claude Shannon công bố bài báo *"A Mathematical Theory of Communication"*, khai sinh lĩnh vực Lý thuyết Thông tin (Information Theory). Ông đặt ra một câu hỏi tưởng chừng đơn giản: *"Làm thế nào để đo lường thông tin?"*
+
+Trước Shannon, “thông tin” là một khái niệm mơ hồ và mang tính triết học. Sau Shannon, thông tin trở thành một đại lượng chính xác và có thể đo lường, cơ bản như khối lượng hay năng lượng. Một phát kiến này là nền tảng cho mọi thứ, từ nén dữ liệu (tệp ZIP) đến mạng nơ-ron (hàm mất mát Cross-Entropy).
+
+> **Ý tưởng cốt lõi của Shannon:** Thông tin là **sự giải quyết bất định** (resolution of uncertainty). Nếu bạn đã biết chắc điều gì đó, việc nói lại không cung cấp thông tin nào. Nếu bạn hoàn toàn chưa biết, việc được thông báo mang lại lượng thông tin tối đa.
+
+
+
+## Trực giác: Đo lường sự bất ngờ
+
+Hãy xem thông tin như **mức độ bất ngờ** (surprise). Những sự kiện khó xảy ra thì gây bất ngờ; những sự kiện có khả năng cao thì không.
+
+### Thông tin thấp (Không bất ngờ)
+
+* **Ví dụ:** "Mặt trời mọc sáng nay."
+* **Xác suất:** $P(\text{sun rises}) = 1.0$.
+* **Lý do:** Bạn đã biết điều này sẽ xảy ra. Thông điệp không cho bạn biết điều gì mới.
+
+### Thông tin cao (Gây bất ngờ)
+
+* **Ví dụ:** "Hôm nay có tuyết rơi ở sa mạc Sahara."
+* **Xác suất:** $P(\text{Sahara snow}) = 0.0001$.
+* **Lý do:** Điều này gây sốc! Thông điệp chứa lượng thông tin rất lớn.
+
+**Nguyên lý:** Thông tin tỉ lệ nghịch với xác suất.
+
+
+
+## Bit: Đơn vị của thông tin
+
+Shannon định nghĩa đơn vị thông tin là **bit** (binary digit — chữ số nhị phân). Một bit là lượng thông tin thu được khi biết kết quả của một lần tung đồng xu công bằng.
+
+### Tính số bit cho các kết quả có xác suất bằng nhau
+
+Số bit cần thiết để biểu diễn một tập các kết quả có khả năng xảy ra như nhau là:
+$$\text{Bits needed} = \log_2(\text{Number of equally likely outcomes})$$
+
+* **1 bit:** 2 kết quả có xác suất bằng nhau (ví dụ: tung đồng xu công bằng).
+* **2 bits:** 4 kết quả ($00, 01, 10, 11$).
+* **3 bits:** 8 kết quả ($2^3$).
+
+Để xác định một người trong số 8 tỷ người, bạn cần $\log_2(8 \times 10^9) \approx 33$ bits. Điều này tương đương với 33 câu hỏi có/không.
+
+
+
+## Hàm lượng thông tin (Information Content / Surprisal)
+
+Nếu một sự kiện $x$ có xác suất $P(x)$, thì **hàm lượng thông tin** (information content), còn gọi là “surprisal” hoặc “self-information”, được định nghĩa là:
+
+$$I(x) = -\log_2 P(x) = \log_2 \frac{1}{P(x)}$$
+
+* Được đo bằng **bits** khi sử dụng $\log_2$.
+* Được đo bằng **nats** (đơn vị tự nhiên) khi sử dụng logarit tự nhiên $\ln$.
+
+### Tại sao dùng Logarithm?
+
+Thông tin có tính chất **cộng được** (additive). Hai lần tung đồng xu độc lập cung cấp $1 + 1 = 2$ bits thông tin. Trong khi xác suất được nhân với nhau ($0.5 \times 0.5 = 0.25$), logarithm biến phép nhân thành phép cộng:
+$$\log(P_1 \cdot P_2) = \log(P_1) + \log(P_2)$$
+
+### Ví dụ về hàm lượng thông tin
+
+| Xác suất $P(x)$ | Thông tin $I(x)$ | Diễn giải                 |
+| :-- | : | : |
+| **1.0**         | 0 bits           | Chắc chắn: Không bất ngờ  |
+| **0.5**         | 1 bit            | Tung đồng xu công bằng    |
+| **0.001**       | 9.97 bits        | Sự kiện hiếm: Rất bất ngờ |
+
+
+
+## Entropy: Mức độ bất ngờ kỳ vọng
+
+Trong khi $I(x)$ là lượng thông tin của một sự kiện cụ thể, thì **Entropy** $H$ là giá trị **trung bình** của hàm lượng thông tin trên toàn bộ phân phối xác suất. Nó cho biết nguồn dữ liệu “khó đoán” đến mức nào về trung bình.
+
+$$H(X) = E[I(X)] = -\sum_{x} P(x) \log_2 P(x)$$
+
+### Các mức Entropy
+
+* **Entropy thấp (Dễ dự đoán):** Đồng xu lệch với $P(H) = 0.99, P(T) = 0.01$. Khi đó, $H = 0.08$ bits. Kết quả gần như chắc chắn.
+* **Entropy cao (Bất định):** Đồng xu công bằng với $P(H) = 0.5, P(T) = 0.5$. Khi đó, $H = 1.0$ bit. Đây là mức bất định tối đa cho hai kết quả.
+
+
+
+## Các tính chất quan trọng của Entropy
+
+1. **Không âm (Non-Negativity):** $H(X) \ge 0$. Entropy không bao giờ âm. Giá trị nhỏ nhất là 0 (chắc chắn hoàn toàn).
+2. **Cực đại với phân phối đều:** Với $n$ kết quả, entropy đạt cực đại khi mọi kết quả có xác suất bằng nhau: $H_{max} = \log_2(n)$.
+3. **Tính cộng cho các biến độc lập:** Nếu $X$ và $Y$ độc lập:
+   $$H(X, Y) = H(X) + H(Y)$$
+   Độ bất định chung bằng tổng các độ bất định riêng lẻ.
+4. **Điều kiện hóa làm giảm Entropy:** $H(X|Y) \le H(X)$. Biết thông tin về $Y$ chỉ có thể làm giảm (hoặc giữ nguyên) độ bất định về $X$.
+
+
+
+## Ví dụ minh họa
+
+### Ví dụ 1: Đồng xu công bằng
+
+$P(H) = 0.5, P(T) = 0.5$
+$$H(X) = -(0.5 \log_2 0.5 + 0.5 \log_2 0.5)$$
+$$H(X) = -(0.5 \times (-1) + 0.5 \times (-1)) = 1 \text{ bit}$$
+
+### Ví dụ 2: Xúc xắc công bằng (6 mặt)
+
+Mỗi kết quả có xác suất $1/6$.
+$$H(X) = -6 \times \frac{1}{6} \log_2 \frac{1}{6} = \log_2 6 \approx 2.58 \text{ bits}$$
+
+### Ví dụ 3: Văn bản tiếng Anh
+
+Các chữ cái trong tiếng Anh không phân bố đều. Chữ 'e' xuất hiện khoảng 12%, trong khi 'z' chỉ khoảng 0.07%. Shannon ước tính văn bản tiếng Anh chứa khoảng **1-1.5 bits trên mỗi ký tự**, thấp hơn nhiều so với 4.7 bits cần thiết cho phân phối đều của 26 chữ cái. Chính sự dư thừa này cho phép nén dữ liệu.
+
+
+
+## Liên hệ với Lý thuyết Mã hóa (Coding Theory)
+
+Entropy xác định **số bit tối thiểu** cần thiết để mã hóa các thông điệp từ một nguồn.
+
+### Định lý Mã hóa Nguồn của Shannon (Shannon's Source Coding Theorem)
+
+Bạn không thể nén dữ liệu xuống thấp hơn entropy của nó. Trung bình, bạn cần ít nhất $H(X)$ bits cho mỗi ký hiệu.
+
+### Mã hóa Huffman (Huffman Coding)
+
+Thuật toán này gán mã ngắn cho các ký hiệu xuất hiện thường xuyên và mã dài cho các ký hiệu hiếm. Đây là nguyên lý phía sau các định dạng **ZIP, JPEG và MP3**. Độ dài mã trung bình được tạo ra bởi phương pháp này tiến gần đến entropy của nguồn.
+
+
+
+## Ứng dụng trong Machine Learning
+
+* **Cross-Entropy Loss:** Hàm mất mát phổ biến nhất cho bài toán phân loại. Nó đo mức độ phân phối dự đoán $Q$ của mô hình khớp với phân phối thật $P$ đến đâu.
+* **Decision Trees (Information Gain):** Các thuật toán chọn phép chia dữ liệu sao cho tối đa hóa **Information Gain** (độ lợi thông tin), tức là mức giảm entropy. Đặc trưng làm giảm bất định nhiều nhất sẽ được chọn để chia.
+* **Variational Autoencoders (KL Divergence):** VAE sử dụng KL Divergence để đo sự khác biệt giữa phân phối latent học được và phân phối prior (thường là Gaussian).
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Ôn nhanh (Theory AI)
+Entropy trên node cây quyết định + KL loss: [Entropy for a node](../../theory-ai/05-classical-ml/entropy-for-a-node.qmd) · [KL Divergence](../../theory-ai/07-activations-losses/kl-divergence.qmd).
+:::

@@ -1,0 +1,105 @@
+---
+title: "P-Value: Thước đo mức độ “bất ngờ” (P Values)"
+order: 7
+date: 2026-08-27
+description: "P-value là một trong những khái niệm quan trọng nhưng cũng dễ bị hiểu sai nhất trong khoa học dữ liệu. Nó cung cấp một khung toán học để đưa ra quyết định dựa trên dữ liệu, giúp phân biệt giữa tín…"
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# P-Value: Thước đo mức độ “bất ngờ”
+
+## Giới thiệu
+P-value là một trong những khái niệm quan trọng nhưng cũng dễ bị hiểu sai nhất trong khoa học dữ liệu. Nó cung cấp một khung toán học để đưa ra quyết định dựa trên dữ liệu, giúp phân biệt giữa tín hiệu thực sự và nhiễu ngẫu nhiên.
+
+
+
+## Trực giác: Bạn “bất ngờ” đến mức nào?
+Hãy xem P-value như một **thước đo mức độ bất ngờ (Surprise Meter)**. Nó đo mức độ không mong đợi của dữ liệu quan sát được nếu giả thuyết không ($H_0$) là đúng.
+
+### Ví dụ tung đồng xu
+Giả sử $H_0$ là đồng xu công bằng:
+
+* **5 mặt ngửa, 5 mặt sấp:** Không bất ngờ → $P \approx 1.0$  
+* **9 ngửa, 1 sấp:** Bắt đầu nghi ngờ → $P \approx 0.02$  
+* **10 ngửa, 0 sấp:** Rất bất ngờ → $P \approx 0.001$ → Bác bỏ $H_0$
+
+**Insight quan trọng:**  
+P-value càng nhỏ → dữ liệu càng “bất ngờ” nếu $H_0$ đúng → bằng chứng chống lại $H_0$ càng mạnh.
+
+
+
+## Định nghĩa chính thức
+P-value là xác suất quan sát được kết quả kiểm định **ít nhất cực đoan như dữ liệu hiện tại**, giả sử **giả thuyết không là đúng**.
+
+* **P-value là:**  
+  $P(\text{Data} \mid H_0)$ — Xác suất dữ liệu xảy ra khi $H_0$ đúng
+
+* **P-value KHÔNG phải:**  
+  $P(H_0 \mid \text{Data})$ — Không phải xác suất giả thuyết đúng
+
+
+
+## Diễn giải trực quan: Diện tích phần đuôi
+
+Về mặt hình học, P-value là **diện tích dưới đường cong phân phối** ở phần đuôi (hoặc hai đuôi) vượt quá giá trị thống kê kiểm định quan sát được.
+
+* **Diện tích nhỏ hơn → P-value nhỏ hơn → Bất ngờ hơn → Bằng chứng mạnh hơn chống lại $H_0$**
+
+
+
+## Những ngộ nhận phổ biến (ASA Statement)
+
+Năm 2016, Hiệp hội Thống kê Hoa Kỳ (ASA) đã đưa ra cảnh báo về việc hiểu sai P-value:
+
+1. **Ngộ nhận:** "$P = 0.05$ nghĩa là có 95% xác suất giả thuyết đúng"  
+   * **Đúng:** Nếu $H_0$ đúng, dữ liệu như vậy xảy ra 5%  
+   * Không nói gì về việc giả thuyết đúng hay sai  
+
+2. **Ngộ nhận:** "$P > 0.05$ nghĩa là không có hiệu ứng"  
+   * **Đúng:** Chưa đủ bằng chứng  
+   * Có thể do mẫu nhỏ (power thấp)  
+
+3. **Ngộ nhận:** "$P = 0.04$ tốt hơn đáng kể so với $P = 0.06$"  
+   * **Đúng:** Ngưỡng 0.05 là tùy ý  
+   * Hai giá trị gần nhau → bằng chứng gần như tương đương  
+
+
+## Cách diễn giải P-value
+
+| Khoảng P-value | Bằng chứng chống $H_0$ | Diễn giải |
+| :--- | :--- | :--- |
+| **$P < 0.001$** | Rất mạnh | Rất khó xảy ra nếu $H_0$ đúng |
+| **$0.001 - 0.01$** | Mạnh | Thường bác bỏ $H_0$ |
+| **$0.01 - 0.05$** | Trung bình | “Có ý nghĩa thống kê” |
+| **$0.05 - 0.10$** | Yếu | Cần xem xét thêm |
+| **$P > 0.10$** | Rất yếu | Phù hợp với $H_0$ |
+
+
+
+## Ứng dụng trong Machine Learning: Feature Selection
+
+P-value được dùng trong các phương pháp lọc (Filter Methods) như **Backward Elimination**:
+
+1. Train mô hình với **tất cả feature**
+2. Tính P-value cho từng hệ số ($H_0: \text{Coefficient} = 0$)
+3. Tìm feature có P-value **cao nhất**
+4. Nếu $P > 0.05$ → **loại bỏ**
+5. Lặp lại cho đến khi tất cả feature còn lại có $P < 0.05$
+
+
+
+## Cạm bẫy: P-hacking & hiệu chỉnh
+
+**P-hacking (Data Dredging):** Thực hiện nhiều kiểm định và chỉ báo cáo kết quả “có ý nghĩa”.
+
+### Vấn đề so sánh nhiều lần (Multiple Comparisons)
+Nếu chạy **100 kiểm định độc lập** với $\alpha = 0.05$, ta kỳ vọng có **5 false positive** chỉ do ngẫu nhiên.
+
+### Cách khắc phục: Hiệu chỉnh Bonferroni
+Nếu thực hiện $n$ kiểm định:
+
+$$\alpha_{\text{corrected}} = \frac{\alpha}{n}$$
+
+* **Ví dụ:** 20 kiểm định → $\alpha = 0.05 / 20 = 0.0025$
+

@@ -1,0 +1,119 @@
+---
+title: "Thống kê mô tả (Descriptive Statistics)"
+order: 1
+date: 2026-08-27
+description: "Thống kê mô tả là các công cụ dùng để tóm tắt và mô tả dữ liệu. Thay vì phải xem xét hàng nghìn con số, chúng ta trích xuất một vài chỉ số quan trọng giúp kể lại “câu chuyện” của dữ liệu. Ví dụ, mức…"
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# Thống kê mô tả (Descriptive Statistics)
+
+## Giới thiệu
+Thống kê mô tả là các công cụ dùng để tóm tắt và mô tả dữ liệu. Thay vì phải xem xét hàng nghìn con số, chúng ta trích xuất một vài chỉ số quan trọng giúp kể lại “câu chuyện” của dữ liệu. Ví dụ, mức đánh giá 4.2 sao của một ứng dụng tóm tắt 10.000 lượt đánh giá thành một chỉ số hữu ích.
+
+### Tại sao điều này quan trọng đối với Kỹ sư Machine Learning
+- **Hiểu dữ liệu:** Nhanh chóng tóm tắt hàng nghìn giá trị thành các insight quan trọng.
+- **Phát hiện vấn đề:** Xác định các giá trị bất thường có thể là lỗi hoặc ngoại lệ.
+- **So sánh công bằng:** Hiểu liệu hai tập dữ liệu có thực sự khác nhau hay không.
+- **Xây dựng trực giác:** Nền tảng cho suy luận Bayes, batch normalization, v.v.
+
+
+## Trung bình (Mean / Average)
+Cách phổ biến nhất để tóm tắt dữ liệu bằng cách tìm “tâm” của nó. Đây là trung bình cộng (arithmetic mean).
+
+### Công thức
+$$\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i = \frac{x_1 + x_2 + \dots + x_n}{n}$$
+
+### Ví dụ: Tuổi thọ bóng đèn
+Bạn kiểm tra 5 bóng đèn với tuổi thọ: 980, 1000, 1010, 1020, 1040 giờ.
+- **Trung bình** = (980 + 1000 + 1010 + 1020 + 1040) / 5 = **1010 giờ**
+
+
+## Trung vị (Median - Giá trị giữa)
+Là giá trị nằm ở giữa khi các điểm dữ liệu được sắp xếp theo thứ tự. Trung vị tốt hơn trung bình khi dữ liệu bị lệch (skewed) hoặc có ngoại lệ (outliers).
+
+### Công thức
+- Nếu $n$ là **lẻ**: Trung vị là giá trị ở giữa ($x_{\frac{n+1}{2}}$).
+- Nếu $n$ là **chẵn**: Trung vị là trung bình của hai giá trị ở giữa.
+
+### Ví dụ: Có ngoại lệ
+Tuổi thọ: 500, 980, 1000, 1010, 1020 giờ.
+- **Sắp xếp**: 500, 980, **1000**, 1010, 1020  
+- **Trung vị** = **1000 giờ**  
+- **Trung bình** = 902 giờ (giá trị ngoại lệ 500 kéo trung bình xuống, nhưng trung vị vẫn đại diện tốt).
+
+
+## Mode (Giá trị xuất hiện nhiều nhất)
+Là giá trị xuất hiện với tần suất cao nhất trong tập dữ liệu. Hữu ích với dữ liệu phân loại (categorical) nơi trung bình/trung vị không phù hợp.
+
+- **Unimodal:** Một mode.
+- **Bimodal/Multimodal:** Nhiều mode.
+
+
+## Độ lệch (Skewness)
+Skewness mô tả hình dạng và độ bất đối xứng của phân phối.
+
+- **Đối xứng (Skewness ≈ 0):** Mean ≈ Median ≈ Mode.
+- **Lệch phải / Dương (Skewness > 0):** Đuôi kéo dài về bên phải. **Mode < Median < Mean**.
+- **Lệch trái / Âm (Skewness < 0):** Đuôi kéo dài về bên trái. **Mean < Median < Mode**.
+
+> **Mẹo ML:** Nhiều mô hình machine learning hoạt động kém trên dữ liệu bị lệch. Các biến đổi toán học (như log transform) thường được áp dụng để làm dữ liệu đối xứng hơn.
+
+
+## Độ nhọn (Kurtosis)
+Kurtosis cho biết mức độ “dày đuôi” của phân phối — tức là khả năng xuất hiện các giá trị cực trị (outliers) so với phân phối chuẩn.
+
+### Công thức
+$$\text{Kurtosis} = \frac{1}{n} \sum_{i=1}^{n} \left( \frac{x_i - \bar{x}}{\sigma} \right)^4$$
+
+### Phân loại
+- **Mesokurtic:** Phân phối chuẩn (Kurtosis = 3).
+- **Platykurtic:** Đỉnh phẳng, đuôi mỏng (Kurtosis < 3). Ít outliers.
+- **Leptokurtic:** Đỉnh nhọn, đuôi dày (Kurtosis > 3). Nhiều outliers.
+
+
+## Các thước đo độ phân tán (Dispersion)
+
+### Phương sai và Độ lệch chuẩn
+
+Các đại lượng này đo mức độ mỗi điểm dữ liệu lệch khỏi trung bình.
+
+- **Phương sai ($\sigma^2$):** Trung bình của bình phương độ lệch.
+  $$\sigma^2 = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2$$
+
+- **Độ lệch chuẩn ($\sigma$):** Căn bậc hai của phương sai. Có cùng đơn vị với dữ liệu gốc.
+  $$\sigma = \sqrt{\sigma^2}$$
+
+#### Các bước tính toán (Ví dụ)
+1. **Trung bình:** Tính trung bình (1010).
+2. **Độ lệch:** Trừ trung bình khỏi từng giá trị (-30, -10, 0, 10, 30).
+3. **Bình phương:** Bình phương từng độ lệch (900, 100, 0, 100, 900).
+4. **Phương sai:** Trung bình của các giá trị bình phương (**400**).
+5. **Độ lệch chuẩn:** Căn bậc hai của phương sai (**20**).
+
+### Range và Khoảng tứ phân vị (IQR)
+
+- **Range (Khoảng biến thiên):** $\text{Max} - \text{Min}$. Rất nhạy với outliers.
+- **Interquartile Range (IQR):** $Q_3 - Q_1$. Khoảng của 50% dữ liệu trung tâm. Ít bị ảnh hưởng bởi outliers.
+
+> **Quy tắc phát hiện outlier:** Đánh dấu các điểm nhỏ hơn $Q_1 - 1.5 \times \text{IQR}$ hoặc lớn hơn $Q_3 + 1.5 \times \text{IQR}$.
+
+
+## Bảng tổng hợp công thức
+
+| Chỉ số | Công thức | Khi sử dụng |
+| :--- | :--- | :--- |
+| **Mean (Trung bình)** | $\bar{x} = \frac{1}{n}\sum x_i$ | Dữ liệu đối xứng, không có outliers |
+| **Median (Trung vị)** | Giá trị giữa (đã sắp xếp) | Dữ liệu lệch hoặc có outliers |
+| **Mode** | Giá trị xuất hiện nhiều nhất | Dữ liệu phân loại |
+| **Range** | $\text{Max} - \text{Min}$ | Tổng quan nhanh, không có outliers |
+| **IQR** | $Q_3 - Q_1$ | Độ phân tán bền vững, phát hiện outliers |
+| **Variance (Phương sai)** | $\sigma^2 = \frac{1}{n}\sum(x_i - \bar{x})^2$ | Thuật toán ML |
+| **Std Dev (Độ lệch chuẩn)** | $\sigma = \sqrt{\sigma^2}$ | Dễ diễn giải theo đơn vị |
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Ôn nhanh (Theory AI)
+Xu hướng trung tâm + code ngắn: [Mean / Median / Mode](../../theory-ai/02-statistics/mean-median-mode.qmd) · [Sample variance](../../theory-ai/02-statistics/sample-variance-and-standard-deviation.qmd).
+:::

@@ -1,0 +1,141 @@
+---
+title: "Giới Thiệu Về Graph Neural Networks (GNNs)"
+order: 5
+date: 2026-08-27
+description: "Các mạng nơ-ron hoạt động trên dữ liệu có cấu trúc đồ thị. Từ mạng xã hội đến phân tử, GNNs học các biểu diễn tôn trọng cấu trúc quan hệ của thế giới."
+series: math-base
+categories: [math-base, graph-theory]
+group: graph-theory
+---
+# Giới Thiệu Về Graph Neural Networks (GNNs)
+
+Các mạng nơ-ron hoạt động trên dữ liệu có cấu trúc đồ thị. Từ mạng xã hội đến phân tử, GNNs học các biểu diễn tôn trọng cấu trúc quan hệ của thế giới.
+
+
+
+## Giới Thiệu
+
+Các mạng nơ-ron truyền thống giả định dữ liệu có cấu trúc cố định: ảnh là lưới pixel, văn bản là chuỗi token và âm thanh là dạng sóng 1 chiều. Tuy nhiên, phần lớn dữ liệu trong thế giới thực mang tính quan hệ — các thực thể được kết nối bởi các mối quan hệ tạo thành những mạng lưới phức tạp như mạng xã hội, phân tử, hệ thống giao thông và mạng trích dẫn. Đây chính là **đồ thị (graphs)**: các nút được nối bởi các cạnh, không có thứ tự cố định hay cấu trúc đều đặn.
+
+> **Graph Neural Networks (GNNs)** là một họ kiến trúc mạng nơ-ron được thiết kế đặc biệt cho dữ liệu có cấu trúc đồ thị. Chúng học cách biến đổi và lan truyền thông tin trên đồ thị trong khi vẫn tôn trọng topology của đồ thị.
+
+
+
+## Tại Sao Chúng Ta Cần GNNs?
+
+Làm phẳng một đồ thị thành vector đặc trưng cho một MLP tiêu chuẩn sẽ làm mất thông tin quan trọng.
+
+| Vấn Đề Khi Làm Phẳng                                               | GNNs Cung Cấp                                                        |
+|:-------------------------------------------------------------------|:---------------------------------------------------------------------|
+| Đồ thị có kích thước thay đổi và không có chiều đầu vào cố định.   | Xử lý đồ thị với kích thước tùy ý.                                   |
+| Thứ tự các nút là tùy ý; tồn tại vô số hoán vị.                    | Bất biến/đồng biến theo hoán vị (Permutation invariant/equivariant). |
+| Ma trận kề có độ phức tạp $O(n^2)$ và phần lớn là số 0.            | Mở rộng theo số cạnh thay vì bình phương số nút.                     |
+| Mất thông tin cấu trúc cục bộ.                                     | Khai thác cấu trúc lân cận cục bộ.                                   |
+
+### Ứng Dụng Thực Tế
+
+* **Khám phá thuốc (Drug Discovery):** Biểu diễn phân tử dưới dạng đồ thị để dự đoán độc tính hoặc ái lực liên kết.
+* **Mạng xã hội:** Gợi ý bạn bè, phát hiện bot và phát hiện cộng đồng.
+* **Hệ gợi ý (Recommendation):** Đồ thị hai phía người dùng-sản phẩm được sử dụng bởi các nền tảng như Pinterest và Uber Eats.
+* **Giao thông & Điều hướng:** Mạng lưới đường đi dưới dạng đồ thị để dự đoán ETA trong Google Maps.
+
+
+
+## GNN Là Gì?
+
+Một GNN nhận đầu vào là một đồ thị và tạo ra các biểu diễn đã được biến đổi trong khi vẫn duy trì cấu trúc đồ thị.
+
+### Đầu Vào Của GNN
+
+* **Đặc trưng nút $X \in \mathbb{R}^{n \times d}$:** Mỗi trong số $n$ nút có một vector đặc trưng chiều $d$ (ví dụ: loại nguyên tử, hồ sơ người dùng).
+* **Ma trận kề $A \in {0,1}^{n \times n}$:** Mô tả các nút nào được kết nối.
+* **Đặc trưng cạnh (tùy chọn):** Các đặc trưng như loại liên kết hoặc độ mạnh quan hệ.
+
+### Đầu Ra Của GNN
+
+* **Node embeddings $H \in \mathbb{R}^{n \times d'}$:** Biểu diễn đã cập nhật cho mỗi nút.
+* **Graph embedding (tùy chọn):** Một vector duy nhất biểu diễn toàn bộ đồ thị thông qua pooling.
+* **Dự đoán cạnh (tùy chọn):** Điểm số dùng cho link prediction.
+
+
+
+## Trực Giác Cốt Lõi: Nguyên Lý Hàng Xóm
+
+Ý tưởng cơ bản là **các nút nên học từ các nút lân cận của chúng**. Trong mạng xã hội, bạn giống bạn bè của mình; trong phân tử, tính chất của một nguyên tử phụ thuộc vào các liên kết của nó.
+
+GNNs hiện thực hóa điều này thông qua quá trình “lan truyền tin đồn”:
+
+1. Mỗi nút bắt đầu với đặc trưng riêng của nó.
+2. Các nút chia sẻ thông tin với các nút lân cận trực tiếp.
+3. Mỗi nút kết hợp thông tin từ hàng xóm với đặc trưng của chính nó.
+4. Lặp lại quá trình này $k$ lần cho phép một nút biết thông tin về vùng lân cận $k$-hop của nó.
+
+
+
+## Đặc Trưng Nút & Embeddings
+
+Đặc trưng đầu vào cho ma trận $X$ có thể đến từ nhiều nguồn:
+
+* **Đặc trưng tự nhiên (Natural Features):** One-hot encoding của loại nguyên tử, hồ sơ người dùng hoặc embedding trừu tượng.
+* **Đặc trưng cấu trúc (Structural Features):** Bậc nút, centrality hoặc hệ số phân cụm.
+* **Positional Encodings:** Vector riêng Laplacian hoặc xác suất random walk để mã hóa “vị trí”.
+
+
+
+## Cấu Trúc Của Một Lớp GNN
+
+Một lớp GNN biến đổi đặc trưng nút bằng cách tích hợp thông tin từ hàng xóm thông qua mô hình **Message Passing**:
+
+$$h_v^{(l+1)} = \text{UPDATE}\left( h_v^{(l)}, \text{AGGREGATE}\left( { h_u^{(l)} : u \in \mathcal{N}(v) } \right) \right)$$
+
+* **AGGREGATE:** Kết hợp đặc trưng của các nút lân cận (sum, mean, max hoặc attention).
+* **UPDATE:** Hợp nhất thông tin tổng hợp với đặc trưng của chính nút đó (thường là một MLP).
+* **$\mathcal{N}(v)$:** Tập các nút lân cận của nút $v$.
+
+### Ví Dụ: Mean Aggregation Đơn Giản
+
+$$h_v^{(l+1)} = \sigma\left( W \cdot \frac{1}{|\mathcal{N}(v)|} \sum_{u \in \mathcal{N}(v)} h_u^{(l)} \right)$$
+
+Biểu thức này lấy trung bình đặc trưng của các nút lân cận, áp dụng ma trận trọng số học được $W$, rồi truyền qua hàm phi tuyến $\sigma$.
+
+
+
+## Chồng Nhiều Lớp & Receptive Field
+
+Việc chồng nhiều lớp mở rộng khoảng cách mà thông tin có thể lan truyền:
+
+* **1 Layer:** Hàng xóm 1-hop.
+* **2 Layers:** Hàng xóm 2-hop.
+* **K Layers:** Hàng xóm K-hop.
+
+> **Vấn Đề Over-Smoothing:** Khi có quá nhiều lớp, mọi biểu diễn nút hội tụ về cùng một giá trị, làm mất thông tin phân biệt. Hầu hết GNN thực tế chỉ sử dụng 2–4 lớp.
+
+
+
+## Các Bài Toán Của GNN
+
+* **Node Classification:** Dự đoán nhãn cho mỗi nút (ví dụ: bot hay người thật).
+* **Link Prediction:** Dự đoán liệu một cạnh có nên tồn tại hay không (ví dụ: gợi ý bạn bè).
+* **Graph Classification:** Dự đoán nhãn cho toàn bộ đồ thị (ví dụ: độc tính của phân tử).
+* **Graph Generation:** Sinh ra các đồ thị mới với tính chất cụ thể (ví dụ: thiết kế thuốc).
+
+
+
+## Các Kiến Trúc Phổ Biến
+
+| Kiến trúc     | Ý tưởng chính                            | Cơ chế tổng hợp             |
+|:--------------|:-----------------------------------------|:----------------------------|
+| **GCN**       | Xấp xỉ spectral convolution              | Tổng chuẩn hóa              |
+| **GraphSAGE** | Lấy mẫu hàng xóm, học inductive          | Mean/LSTM/Pool              |
+| **GAT**       | Attention trên hàng xóm                  | Tổng có trọng số (học được) |
+| **GIN**       | Khả năng biểu diễn tối đa (kiểm định WL) | Sum + MLP                   |
+| **MPNN**      | Framework message passing tổng quát      | Có thể cấu hình             |
+
+
+
+## Hạn Chế
+
+* **Over-Smoothing:** GNN sâu làm các biểu diễn nút trở nên giống hệt nhau, làm mất phụ thuộc tầm xa.
+* **Khả Năng Biểu Diễn Hạn Chế:** GNN tiêu chuẩn không thể phân biệt một số cấu trúc nhất định (ví dụ: đếm tam giác) do giới hạn của kiểm định Weisfeiler-Lehman.
+* **Khả Năng Mở Rộng:** Huấn luyện full-batch yêu cầu toàn bộ đồ thị nằm trong bộ nhớ; mini-batching khó khăn do hiện tượng bùng nổ hàng xóm.
+* **Đồ Thị Dị Thể (Heterogeneous Graphs):** GNN tiêu chuẩn gặp khó khăn với nhiều loại nút/cạnh khác nhau, đòi hỏi các kiến trúc chuyên biệt. 

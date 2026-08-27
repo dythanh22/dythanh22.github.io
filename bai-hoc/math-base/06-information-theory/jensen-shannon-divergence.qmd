@@ -1,0 +1,165 @@
+---
+title: "Jensen-Shannon Divergence (Jensen Shannon Divergence)"
+order: 7
+date: 2026-08-27
+description: "Một phiên bản đối xứng và được làm mượt của KL Divergence. Thước đo đứng sau GANs."
+series: math-base
+categories: [math-base, information-theory]
+group: information-theory
+---
+# Jensen-Shannon Divergence
+
+Một phiên bản đối xứng và được làm mượt của KL Divergence. Thước đo đứng sau GANs.
+
+
+
+## Giới thiệu
+
+KL Divergence là một công cụ mạnh để đo sự khác biệt giữa các phân phối xác suất. Tuy nhiên, nó có hai hạn chế cơ bản:
+
+* **Bất đối xứng:** $KL(P||Q)$ không bằng $KL(Q||P)$. “Hướng” tính toán có ý nghĩa.
+* **Không bị chặn:** Nếu tồn tại $x$ sao cho $P(x) > 0$ nhưng $Q(x) = 0$, KL divergence sẽ trở thành vô cực.
+
+**Jensen-Shannon Divergence (JSD)**, được Jianhua Lin giới thiệu năm 1991, giải quyết cả hai vấn đề này một cách thanh lịch. Nó đo mức độ mỗi phân phối lệch khỏi **phân phối hỗn hợp trung bình** của chúng, tạo ra một đại lượng đối xứng và bị chặn.
+
+
+
+## Định nghĩa & Công thức
+
+Trước tiên, định nghĩa **phân phối hỗn hợp** $M$:
+
+$$M = \frac{1}{2}(P + Q)$$
+
+JSD được định nghĩa là trung bình của KL divergence từ $P$ và $Q$ đến phân phối hỗn hợp $M$:
+
+$$JSD(P | Q) = \frac{1}{2} D_{KL}(P | M) + \frac{1}{2} D_{KL}(Q | M)$$
+
+> **Trực giác:** Thay vì so sánh trực tiếp $P$ với $Q$ (gây bất đối xứng), ta so sánh *cả* $P$ và $Q$ với “điểm gặp nhau” $M$. Điều này tự nhiên tạo ra tính đối xứng.
+
+
+
+## Các dạng biểu diễn tương đương
+
+JSD có thể được biểu diễn dưới nhiều dạng tương đương:
+
+### 1. Dạng dựa trên Entropy
+
+$$JSD(P | Q) = H(M) - \frac{1}{2}H(P) - \frac{1}{2}H(Q)$$
+
+JSD bằng entropy của phân phối hỗn hợp trừ đi entropy trung bình của $P$ và $Q$. Điều này cho thấy JSD đo “độ bất định bổ sung” được tạo ra khi trộn các phân phối.
+
+### 2. Dạng Mutual Information
+
+$$JSD(P | Q) = I(X; Z)$$
+
+Trong đó $Z$ là biến nhị phân cho biết một mẫu được lấy từ $P$ hay $Q$. JSD bằng mutual information giữa mẫu và nguồn sinh ra mẫu.
+
+### 3. Dạng tổng mở rộng
+
+$$JSD(P | Q) = \frac{1}{2} \sum_x P(x) \log \frac{2P(x)}{P(x)+Q(x)} + \frac{1}{2} \sum_x Q(x) \log \frac{2Q(x)}{P(x)+Q(x)}$$
+
+
+
+## Tính toán từng bước
+
+Cho hai phân phối rời rạc đơn giản:
+
+* **Phân phối $P$:** $P = [0.9, 0.1]$
+* **Phân phối $Q$:** $Q = [0.1, 0.9]$
+
+1. **Tính phân phối hỗn hợp $M$:**
+   $$M = 0.5 \times P + 0.5 \times Q = [0.5, 0.5]$$
+
+2. **Tính $D_{KL}(P||M)$:**
+   $$0.9 \times \log_2(0.9/0.5) + 0.1 \times \log_2(0.1/0.5) \approx 0.531 \text{ bits}$$
+
+3. **Tính $D_{KL}(Q||M)$:**
+   $$0.1 \times \log_2(0.1/0.5) + 0.9 \times \log_2(0.9/0.5) \approx 0.531 \text{ bits}$$
+
+4. **JSD cuối cùng:**
+   $$JSD = 0.5 \times 0.531 + 0.5 \times 0.531 = 0.531 \text{ bits}$$
+
+
+
+## Các tính chất quan trọng
+
+### 1. Tính đối xứng
+
+$$JSD(P | Q) = JSD(Q | P)$$
+
+JSD đối xử công bằng với cả hai phân phối. Điều này khiến nó lý tưởng cho các bài toán đo độ tương đồng khi không có phân phối nào được xem là “ground truth”.
+
+### 2. Miền giá trị bị chặn
+
+$$0 \leq JSD(P | Q) \leq \log(2)$$
+
+Khi dùng logarithm cơ số 2, miền giá trị là $[0, 1]$ bits. Khi dùng log tự nhiên, miền là:
+$$[0, \ln(2)] \approx [0, 0.693] \text{ nats}$$
+
+* **Giá trị nhỏ nhất (0):** Khi $P = Q$.
+* **Giá trị lớn nhất ($\log 2$):** Khi $P$ và $Q$ có support hoàn toàn rời nhau.
+
+### 3. Bằng 0 khi và chỉ khi bằng nhau
+
+$$JSD(P | Q) = 0 \iff P = Q \text{ ở mọi điểm}$$
+
+### 4. Tính lồi
+
+$$JSD(\lambda P_1 + (1-\lambda)P_2 | Q) \leq \lambda \cdot JSD(P_1 | Q) + (1-\lambda) \cdot JSD(P_2 | Q)$$
+
+Tính chất này đảm bảo các phương pháp tối ưu bằng gradient không bị mắc kẹt ở cực tiểu cục bộ khi tối thiểu hóa JSD.
+
+### 5. Tính mượt (Không có kỳ dị)
+
+Không giống KL Divergence, JSD không bao giờ trở thành vô cực. Vì nó so sánh với phân phối hỗn hợp $M$, mà:
+$$M(x) = \frac{P(x) + Q(x)}{2}$$
+
+Nếu $P(x) > 0$ thì luôn có $M(x) > 0$. Do đó không xảy ra chia cho 0.
+
+
+
+## Liên hệ với GAN
+
+Generative Adversarial Networks (GANs) sử dụng JSD trong hàm mục tiêu của chúng.
+
+### Hàm mục tiêu GAN gốc
+
+Khi bộ phân biệt (Discriminator — $D$) đạt tối ưu, trò chơi minimax tương đương với:
+$$2 \times JSD(p_{data} || p_G) - \log(4)$$
+
+### Vấn đề Vanishing Gradient
+
+Khi $p_{data}$ và $p_G$ không có support chồng lấp:
+
+* JSD bão hòa ở đúng:
+  $$\log(2) \approx 0.693$$
+* Gradient:
+  $$\nabla_G JSD$$
+  trở thành 0.
+* Generator không còn tín hiệu học, khiến quá trình huấn luyện bị đình trệ.
+
+Điều này dẫn đến sự ra đời của **Wasserstein GAN (WGAN)**, thay thế JSD bằng Wasserstein distance để cung cấp gradient có ý nghĩa ngay cả khi hai phân phối không chồng lấp.
+
+
+
+## Các tiên đề Metric
+
+Bản thân JSD không phải metric, nhưng **căn bậc hai** của nó thì có. **Jensen-Shannon Distance**
+$$D_{JS}(P, Q) = \sqrt{JSD(P | Q)}$$
+
+thỏa mãn:
+
+1. **Không âm:** $D(P, Q) \geq 0$
+2. **Đồng nhất:** $D(P, Q) = 0$ khi và chỉ khi $P = Q$
+3. **Đối xứng:** $D(P, Q) = D(Q, P)$
+4. **Bất đẳng thức tam giác:**
+   $$D(P, R) \leq D(P, Q) + D(Q, R)$$
+
+
+
+## Ứng dụng trong Machine Learning
+
+* **Document Similarity:** So sánh phân phối tần suất từ. Tính đối xứng của JSD rất phù hợp cho clustering.
+* **Đánh giá Clustering:** So sánh phân phối gán cụm giữa hai nghiệm phân cụm khác nhau.
+* **Phát hiện Distribution Shift:** Theo dõi JSD giữa dữ liệu huấn luyện và dữ liệu thực tế để phát hiện data drift.
+* **Bioinformatics:** So sánh profile biểu hiện gene hoặc phân phối chuỗi protein giữa các mẫu dữ liệu.

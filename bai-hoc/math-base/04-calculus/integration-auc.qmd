@@ -1,0 +1,96 @@
+---
+title: "Tích phân & AUC (Integration & AUC)"
+order: 6
+date: 2026-08-27
+description: "Đo diện tích dưới đường cong để đánh giá mô hình."
+series: math-base
+categories: [math-base, calculus]
+group: calculus
+---
+# Tích phân & AUC (Integration & AUC)
+ 
+Đo diện tích dưới đường cong để đánh giá mô hình.
+
+
+
+## Từ tổng đến diện tích
+
+Tích phân (Integration) là phép toán ngược của đạo hàm (Differentiation). Trong khi đạo hàm cho ta tốc độ thay đổi, tích phân tích lũy các đại lượng trên một khoảng. Trong machine learning, ta sử dụng tích phân để tính diện tích dưới các đường cong như đường ROC (Receiver Operating Characteristic).
+
+Tích phân xác định được định nghĩa là giới hạn của tổng Riemann khi các hình chữ nhật trở nên vô cùng nhỏ:
+
+$$\int_a^b f(x) , dx = \lim_{n \to \infty} \sum_{i=1}^{n} f(x_i) \Delta x$$
+
+
+
+## Tổng Riemann
+
+Diện tích dưới đường cong được xấp xỉ bằng cách cộng các hình chữ nhật. Chiều cao của mỗi hình chữ nhật được xác định bởi giá trị hàm, và chiều rộng là $\Delta x = (b-a)/n$.
+
+* **Tổng Riemann trái:** Dùng điểm đầu bên trái của mỗi khoảng để xác định chiều cao. Thường đánh giá thấp với hàm tăng.
+* **Tổng Riemann phải:** Dùng điểm đầu bên phải. Thường đánh giá cao với hàm tăng.
+* **Quy tắc trung điểm:** Dùng trung điểm của khoảng. Thường chính xác hơn hai cách trên.
+
+
+
+## AUC-ROC: Diện tích dưới đường cong ROC
+
+Đường ROC (Receiver Operating Characteristic) biểu diễn **True Positive Rate (TPR)** theo **False Positive Rate (FPR)** tại các ngưỡng phân loại khác nhau. **AUC (Area Under the Curve)** là một giá trị vô hướng tóm tắt hiệu suất mô hình trên mọi ngưỡng.
+
+$$AUC = \int_0^1 TPR(FPR) , d(FPR)$$
+
+### Diễn giải giá trị
+
+* **AUC = 1.0:** Bộ phân loại hoàn hảo. Đường cong chạm góc trên bên trái.
+* **AUC = 0.5:** Bộ phân loại ngẫu nhiên. Đường cong nằm trên đường chéo, không có khả năng phân biệt.
+
+### Diễn giải xác suất
+
+AUC biểu diễn xác suất mà mô hình xếp hạng một mẫu dương cao hơn một mẫu âm được chọn ngẫu nhiên. Ví dụ, AUC = 0.8 nghĩa là mô hình xếp hạng đúng 80% trường hợp.
+
+
+
+## Nghiên cứu tình huống: Phân loại bóng đèn lỗi
+
+Xét mô hình phát hiện bóng đèn lỗi với các xác suất:
+
+* **Mẫu lỗi:** $[0.9, 0.8, 0.7, 0.6]$
+* **Mẫu bình thường:** $[0.4, 0.3, 0.2, 0.1]$
+
+### Các bước tính AUC
+
+1. **Thay đổi ngưỡng:** Di chuyển ngưỡng phân loại $\tau$ từ 0 đến 1.
+2. **Tính các tỷ lệ:** Với mỗi $\tau$, tính:
+
+   * $TPR = \frac{TP}{TP + FN}$ (Độ nhạy)
+   * $FPR = \frac{FP}{FP + TN}$ (1 - Độ đặc hiệu)
+3. **Vẽ đường cong:** Biểu diễn các cặp $(FPR, TPR)$ từ $(0,0)$ đến $(1,1)$.
+4. **Tính diện tích:** Dùng **quy tắc hình thang (trapezoidal rule)**:
+   $$AUC \approx \sum_{i} (FPR_{i+1} - FPR_i) \times \frac{TPR_i + TPR_{i+1}}{2}$$
+
+
+
+## Các phương pháp tích phân số
+
+### Quy tắc hình thang
+
+Thay vì hình chữ nhật, phương pháp này dùng hình thang để khớp đường cong tốt hơn. Sai số là $O(h^2)$.
+$$\int_a^b f(x)dx \approx \frac{h}{2}[f(a) + 2\sum f(x_i) + f(b)]$$
+
+### Quy tắc Simpson
+
+Phương pháp này khớp parabol qua ba điểm để đạt độ chính xác cao hơn. Sai số là $O(h^4)$.
+$$\int_a^b f(x)dx \approx \frac{h}{3}[f(a) + 4\sum f(x_{odd}) + 2\sum f(x_{even}) + f(b)]$$
+
+### Tích phân Monte Carlo
+
+Phương pháp này lấy mẫu ngẫu nhiên và tính trung bình kết quả. Khác với phương pháp lưới, nó mở rộng tốt với tích phân nhiều chiều.
+
+
+
+## Ứng dụng trong ML
+
+* **AUC-ROC:** Đánh giá độc lập với ngưỡng cho bộ phân loại nhị phân, có trong `sklearn.metrics.roc_auc_score`.
+* **AUC-PR:** Diện tích dưới đường Precision-Recall, hữu ích với dữ liệu mất cân bằng.
+* **Expected Calibration Error (ECE):** Tích phân sai lệch giữa xác suất dự đoán và tần suất thực tế bằng cách chia bin (một dạng tích phân rời rạc).
+* **ELBO trong VAE:** Evidence Lower Bound trong Variational Autoencoders liên quan đến các tích phân phức tạp trên biến ẩn, thường được xấp xỉ bằng Monte Carlo.

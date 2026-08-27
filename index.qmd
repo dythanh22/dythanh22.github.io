@@ -9,16 +9,16 @@ image: assets/img/og-cover.png
 ::: {.home-hero-copy}
 <p class="home-brand">dythanh22</p>
 
-# Chuỗi bài học · lý thuyết, kiến trúc và tối ưu inference
+# Chuỗi bài học · toán nền, lý thuyết, kiến trúc và tối ưu inference
 
-Chọn một lộ trình, đi hết pipeline, rồi quay lại khi cần ôn. Không phải blog rời — mỗi chuỗi là một đường đọc có thứ tự.
+Chọn một lộ trình, đi hết pipeline, rồi quay lại khi cần ôn. Không phải blog rời — mỗi chuỗi là một đường đọc có thứ tự. **Bắt đầu từ Math Base.**
 
-[Bắt đầu Theory AI](bai-hoc/theory-ai/index.qmd){.btn .btn-primary .btn-lg .home-cta-primary role="button"}
-[Tất cả chuỗi](bai-hoc/index.qmd){.btn .btn-outline-secondary .btn-lg role="button"}
+[Bắt đầu Math Base](bai-hoc/math-base/index.qmd){.btn .btn-primary .btn-lg .home-cta-primary role="button"}
+[Theory AI](bai-hoc/theory-ai/index.qmd){.btn .btn-outline-secondary .btn-lg role="button"}
 :::
 
 ::: {.home-hero-visual}
-![Ba lộ trình: Theory AI, Architecture Models và AI Optimization](assets/img/home-pipeline.svg){fig-alt="Sơ đồ học: nền tảng lý thuyết; CNN → Seq → Gen → Attention → U-Net; ONNX → TensorRT → Triton → LLM → Ops."}
+![Bốn lộ trình: Math Base, Theory AI, Architecture Models và AI Optimization](assets/img/home-pipeline.svg){fig-alt="Sơ đồ học: Math (Prob→LA→Calc→…); Theory; CNN→Seq→Gen→Attention→U-Net; ONNX→TensorRT→Triton→LLM→Ops."}
 :::
 ::::
 
@@ -29,11 +29,22 @@ Chọn một lộ trình, đi hết pipeline, rồi quay lại khi cần ôn. Kh
 
 Một **chuỗi** = một lộ trình. Homepage không trộn từng chương. Vào chuỗi để có mục lục, sidebar và nút bài trước / bài sau — rồi đọc theo `order`.
 
-## Ba chuỗi
+## Bốn chuỗi
 
 :::: {.series-grid}
+::: {.series-card .series-card--math}
+<p class="eyebrow">Nền tảng toán · ưu tiên đọc trước · 7 chapter · 67 bài</p>
+### [Math Base](bai-hoc/math-base/index.qmd)
+
+Probability → statistics → linear algebra → calculus → optimization → information theory → graph theory.
+
+<p class="series-meta">Đọc kỹ · chiều sâu toán · trước Theory AI</p>
+
+[Mở Math Base →](bai-hoc/math-base/index.qmd)
+:::
+
 ::: {.series-card .series-card--theory}
-<p class="eyebrow">Nền tảng · 15 chapter · 187 bài</p>
+<p class="eyebrow">Ôn nhanh · 15 chapter · 187 bài</p>
 ### [Theory AI](bai-hoc/theory-ai/index.qmd)
 
 Probability → statistics → linear algebra → features / classical ML → activations, optimizers, DL primitives → CV, NLP, RL, time series, recommender → MLOps.

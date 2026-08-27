@@ -163,18 +163,30 @@ listing:
     max-description-length: 100
 ---
 
-Chuỗi **Theory AI**: **187 bài** lý thuyết ngắn — công thức, ví dụ số, snippet Python. Nền cho Architecture Models và AI Optimization.
+Chuỗi **Theory AI**: **187 bài** lý thuyết ngắn — công thức, ví dụ số, snippet Python. Dùng để **ôn nhanh** sau [Math Base](../math-base/index.qmd); nền cho Architecture Models và AI Optimization.
 
 Mỗi mục dưới đây chỉ liệt kê **#** và tiêu đề (bấm để mở bài). Dùng TOC hoặc sidebar để nhảy chapter.
 
 ::: {.callout-note icon=false}
 ## Cách đọc
-Dùng sidebar theo 15 chapter. Trong mỗi chapter, đọc theo cột `#` (`order`). Vào từ [Trang chủ](/) / menu **Bài học → Theory AI**, hoặc [Tất cả chuỗi](/bai-hoc/).
+Nên có [Math Base](../math-base/index.qmd) trước khi ôn nhanh tại đây. Dùng sidebar theo 15 chapter. Trong mỗi chapter, đọc theo cột `#` (`order`). Vào từ [Trang chủ](/) / menu **Bài học → Theory AI**, hoặc [Tất cả chuỗi](/bai-hoc/).
 :::
 
 {{< include /_partials/reading-modes.md >}}
 
 ## Liên kết với chuỗi khác
+
+**Math Base (nền đầy đủ):** vài bài cửa ngõ Theory đã gắn callout **Nền đầy đủ (Math Base)**. Bản đồ rút gọn:
+
+| Theory AI (ôn nhanh + code) | Math Base (đọc kỹ) |
+|-----------------------------|--------------------|
+| [Bernoulli](01-probability/bernoulli-pmf-moments.qmd) / [Expected value](01-probability/expected-value-discrete.qmd) | [Phân phối xác suất](../math-base/01-probability/probability-distributions.qmd), [Biến ngẫu nhiên & Kỳ vọng](../math-base/01-probability/random-variables-and-expectation.qmd), [Conditional Probability](../math-base/01-probability/conditional-probability.qmd) |
+| [Mean / Median / Mode](02-statistics/mean-median-mode.qmd), [One-sample t-test](02-statistics/one-sample-t-test.qmd) | [Thống kê mô tả](../math-base/02-statistics/descriptive-statistics-study-guide.qmd), [One-Sample T-Test](../math-base/02-statistics/one-sample-t-test.qmd) |
+| [Pearson correlation](02-statistics/pearson-correlation-matrix.qmd) | [Tương quan và hiệp phương sai](../math-base/02-statistics/correlation-and-covariance.qmd) |
+| [Norm 3D](03-linear-algebra/3d-vector-norm.qmd) / [Cosine](03-linear-algebra/cosine-similarity.qmd) | [Tích vô hướng & Chuẩn vector](../math-base/03-linear-algebra/dot-product-vector-norms.qmd) |
+| [Eigenvalues](03-linear-algebra/calculate-eigenvalues-of-a-matrix.qmd) / [Matrix inverse](03-linear-algebra/matrix-inverse.qmd) | [Eigenvalues & Eigenvectors](../math-base/03-linear-algebra/eigenvalues-eigenvectors.qmd), [Determinants & Inverses](../math-base/03-linear-algebra/determinants-inverses.qmd) |
+| [KL Divergence](07-activations-losses/kl-divergence.qmd) | [Shannon Entropy](../math-base/06-information-theory/shannon-entropy.qmd), [KL Divergence](../math-base/06-information-theory/kullback-leibler-divergence.qmd) |
+| [Nesterov](08-optimizers/nesterov-momentum-nag.qmd) / [Adam](08-optimizers/adam-optimizer-step.qmd) | [Momentum & NAG](../math-base/05-optimization/momentum-nesterov-accelerated-gradient.qmd), [Adaptive LR](../math-base/05-optimization/adaptive-learning-rates.qmd) |
 
 Một số bài Theory đã gắn callout **Học tiếp / Ôn nền tảng** tới Architecture Models và AI Optimization (và ngược lại). Bản đồ rút gọn:
 

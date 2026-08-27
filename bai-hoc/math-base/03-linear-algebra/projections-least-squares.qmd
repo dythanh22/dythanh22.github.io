@@ -1,0 +1,112 @@
+---
+title: "Phép chiếu & Bình phương tối thiểu (Projections & Least Squares)"
+order: 5
+date: 2026-08-27
+description: "Tìm xấp xỉ tốt nhất khi nghiệm chính xác không tồn tại."
+series: math-base
+categories: [math-base, linear-algebra]
+group: linear-algebra
+---
+# Phép chiếu & Bình phương tối thiểu (Projections & Least Squares)
+
+Tìm xấp xỉ tốt nhất khi nghiệm chính xác không tồn tại.
+
+## Hình học của việc khớp (fitting)
+
+Hầu hết các hệ thống trong thực tế là **xác định quá mức (overdetermined)**: số phương trình nhiều hơn số ẩn. Hệ $Ax = b$ không có nghiệm chính xác vì dữ liệu quá nhiễu, mô hình quá đơn giản, hoặc cả hai.
+
+**Bình phương tối thiểu (Least Squares)** đặt câu hỏi: “Nếu không thể đạt đúng $b$, ta có thể đến gần nhất là bao nhiêu?” Câu trả lời là phép chiếu của $b$ lên không gian cột của $A$.
+
+### Ý tưởng cốt lõi
+
+Hồi quy tuyến tính, khớp đa thức, và thậm chí nhiều thành phần trong deep learning đều quy về phép chiếu. Sai số được tối thiểu khi nó vuông góc với không gian con của các đầu ra khả dĩ.
+
+
+
+## Phép chiếu vector
+
+Trước khi xét ma trận, hãy xem xét việc chiếu một vector $a$ lên vector $b$.
+
+$$\text{proj}_b(a) = \frac{a \cdot b}{b \cdot b} b = \frac{a \cdot b}{||b||^2} b$$
+
+Hệ số vô hướng $\frac{a \cdot b}{b \cdot b}$ quyết định vị trí của điểm chiếu dọc theo $b$.
+
+### Các thành phần của phép chiếu
+
+* **Phần chiếu (Projection):** Thành phần của $a$ nằm theo hướng của $b$. Đây là phần được giữ lại.
+* **Sai số:** $e = a - \text{proj}_b(a)$. Đây là phần dư (residual), luôn vuông góc với $b$.
+
+
+
+## Góc nhìn không gian cột
+
+Với một ma trận $A$, không gian cột $C(A)$ là tập tất cả các đầu ra khả dĩ $Ax$. Nếu $b$ không thuộc $C(A)$, ta phải chiếu nó:
+
+1. Vector mục tiêu $b$ nằm trong $\mathbb{R}^m$ (biểu diễn $m$ điểm dữ liệu).
+2. Không gian cột $C(A)$ là một không gian con của $\mathbb{R}^m$ (được sinh bởi $n$ đặc trưng).
+3. Ta tìm điểm $\hat{b} \in C(A)$ gần $b$ nhất.
+4. Sai số $e = b - \hat{b}$ vuông góc với $C(A)$.
+
+### Sự thật hình học quan trọng
+
+Khoảng cách ngắn nhất từ một điểm đến một không gian con được đo theo phương vuông góc. Vì vậy $A^T e = 0$ (sai số trực giao với mọi cột của $A$).
+
+
+
+## Phương trình chuẩn (Normal Equations)
+
+Từ điều kiện vuông góc $A^T(b - Ax) = 0$, ta rút gọn để tìm nghiệm tốt nhất $\hat{x}$:
+
+$$A^T A \hat{x} = A^T b$$
+
+Nghiệm là:
+$$\hat{x} = (A^T A)^{-1} A^T b$$
+
+### Tồn tại và khả nghịch
+
+Nghịch đảo $(A^T A)^{-1}$ chỉ tồn tại khi $A$ có **hạng cột đầy đủ (full column rank)** (tất cả các cột độc lập tuyến tính). Nếu các đặc trưng đồng tuyến tính, $A^T A$ sẽ suy biến. Đây là lý do **Ridge Regression** thêm $\lambda I$ vào đường chéo; ma trận $A^T A + \lambda I$ luôn khả nghịch với $\lambda > 0$, bất kể hạng.
+
+### Giả nghịch đảo (Pseudoinverse)
+
+Ma trận $A^+ = (A^T A)^{-1} A^T$ được gọi là **giả nghịch đảo Moore-Penrose (Moore-Penrose Pseudoinverse)**. Nó cung cấp nghiệm bình phương tối thiểu ngay cả khi $A$ không vuông.
+
+
+
+## Nghiên cứu tình huống: Dự đoán tuổi thọ bóng đèn
+
+**Bài toán:**
+Bạn có 100 bóng đèn với các đặc trưng (Điện áp, Nhiệt độ) và dữ liệu tuổi thọ. Bạn muốn khớp mô hình tuyến tính: $\text{Lifespan} = w_1 \times \text{Voltage} + w_2 \times \text{Temperature} + w_0$.
+
+**Thiết lập:**
+
+* **Ma trận thiết kế (Design Matrix) ($A$):** $100 \times 3$ (100 mẫu, 3 đặc trưng bao gồm bias).
+* **Vector mục tiêu ($b$):** $100 \times 1$.
+* **Trọng số nghiệm ($\hat{w}$):** $3 \times 1$.
+
+$$\hat{w} = (A^T A)^{-1} A^T b$$
+
+**Góc nhìn hình học:**
+Không gian cột của $A$ là một không gian con 3 chiều trong không gian 100 chiều. Vector $b$ (tuổi thọ) được chiếu lên không gian này. Phần dư $e = b - A\hat{w}$ là sai số dự đoán, vuông góc với tất cả các đặc trưng.
+
+
+
+## Nghiệm bằng phân rã QR
+
+Tính trực tiếp $(A^T A)^{-1}$ thường không ổn định về số. Trong thực tế, ta dùng **phân rã QR (QR decomposition)**:
+
+1. Phân tích $A = QR$, trong đó $Q$ là trực giao và $R$ là tam giác trên.
+2. Thay vào phương trình chuẩn: $(QR)^T(QR)\hat{x} = (QR)^T b$.
+3. Rút gọn: $R^T Q^T Q R \hat{x} = R^T Q^T b$.
+4. Vì $Q^T Q = I$: $R^T R \hat{x} = R^T Q^T b$.
+5. **Kết quả:** $R \hat{x} = Q^T b$.
+
+Hệ này được giải hiệu quả bằng **thế ngược (back substitution)**. QR tránh việc bình phương số điều kiện của $A$, đây cũng là cách `numpy.linalg.lstsq` hoạt động bên trong.
+
+
+
+## Ứng dụng trong ML
+
+* **Hồi quy tuyến tính:** Nghiệm dạng đóng $w = (X^T X)^{-1} X^T y$ chính là phương trình chuẩn.
+* **Ridge Regression:** Sử dụng $w = (X^T X + \lambda I)^{-1} X^T y$ để xử lý đặc trưng đồng tuyến tính và thu nhỏ hệ số.
+* **PCA qua SVD:** Việc tìm không gian con tối thiểu hóa sai số tái tạo là một bài toán chiếu, được giải bằng SVD.
+* **Phương pháp kernel:** Kernel Ridge Regression chiếu dữ liệu vào không gian đặc trưng có số chiều cao để áp dụng bình phương tối thiểu.

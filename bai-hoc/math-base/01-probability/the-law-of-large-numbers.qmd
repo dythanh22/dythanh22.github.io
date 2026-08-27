@@ -1,0 +1,128 @@
+---
+title: "Định luật số lớn (Law of Large Numbers - LLN)"
+order: 7
+date: 2026-08-27
+description: "Law of Large Numbers (Định luật số lớn - LLN) là nền tảng của thống kê. Nó phát biểu rằng khi bạn thu thập ngày càng nhiều dữ liệu độc lập và phân phối giống nhau (i.i.d.), trung bình mẫu (sample…"
+series: math-base
+categories: [math-base, probability]
+group: probability
+---
+# Định luật số lớn (Law of Large Numbers - LLN)
+
+## Giới thiệu
+
+**Law of Large Numbers (Định luật số lớn - LLN)** là nền tảng của thống kê. Nó phát biểu rằng khi bạn thu thập ngày càng nhiều dữ liệu độc lập và phân phối giống nhau (i.i.d.), **trung bình mẫu (sample average)** sẽ hội tụ về **giá trị kỳ vọng thực (trung bình tổng thể)**.
+
+Không có LLN, học máy sẽ không thể tồn tại; nó cung cấp cơ sở toán học để khẳng định rằng loss trên tập huấn luyện xấp xỉ lỗi tổng quát hóa thực sự.
+
+
+
+## Trực giác sòng bạc: Vì sao nhà cái luôn thắng
+
+Các sòng bạc dựa vào LLN để biến cờ bạc thành một hoạt động kinh doanh có thể dự đoán được.
+
+* Trong Roulette, đặt cược vào màu đỏ có giá trị kỳ vọng ($E[X]$) là **$-$0.052$** mỗi lần cược.
+* Mặc dù người chơi có thể thắng trong ngắn hạn (1 hoặc 10 ván), nhưng qua **1.000.000 ván**, lợi nhuận trung bình mỗi ván của sòng bạc sẽ hội tụ chính xác về lợi thế lý thuyết của nó ($+$0.052$).
+
+
+
+## Định nghĩa toán học
+
+### Trung bình mẫu
+
+Cho $n$ biến ngẫu nhiên i.i.d. $X_1, X_2, \dots, X_n$ với trung bình $\mu$, trung bình mẫu là:
+
+$$
+\bar{X}_n
+=
+\frac{1}{n}
+\sum_{i=1}^{n} X_i
+$$
+
+### Định luật số lớn
+
+Sự trực quan đến từ việc xem xét phương sai của trung bình mẫu.
+
+Bắt đầu với phương sai của trung bình mẫu:
+$$
+\operatorname{Var}(\bar{X}_n)
+=
+\operatorname{Var}
+\left(
+\frac{1}{n}
+\sum_{i=1}^{n} X_i
+\right)
+$$
+
+Đối với các biến độc lập:
+$$
+=
+\frac{1}{n^2}
+\sum_{i=1}^{n}
+\operatorname{Var}(X_i)
+=
+\frac{1}{n^2}
+\cdot
+n\sigma^2
+$$
+
+
+Khi $n$ tiến tới vô hạn, trung bình mẫu hội tụ về trung bình thực:
+
+$$\bar{X}_n \to \mu \quad \text{khi} \quad n \to \infty$$
+
+### Tại sao điều này đúng: Giảm phương sai
+
+Khi kích thước mẫu $n$ tăng, phương sai của trung bình mẫu giảm về 0:
+
+$$Var(\bar{X}_n) = \frac{\sigma^2}{n}$$
+
+Vì một biến ngẫu nhiên có phương sai bằng 0 là một hằng số, nên trung bình mẫu dần trở thành hằng số $\mu$.
+
+
+
+## LLN yếu vs. mạnh
+
+* **Weak LLN (hội tụ theo xác suất):** Với mọi sai số $\epsilon$, xác suất để trung bình mẫu lệch xa khỏi $\mu$ sẽ tiến về 0 khi $n \to \infty$.
+$$\lim_{n \to \infty}
+P\left(
+|\bar{X}_n - \mu| > \varepsilon
+\right)
+= 0$$
+* **Strong LLN (hội tụ gần như chắc chắn):** Đảm bảo mạnh hơn rằng trung bình mẫu hội tụ về $\mu$ với xác suất bằng $1$.
+$$P\left(
+\lim_{n \to \infty} \bar{X}_n = \mu
+\right)
+= 1$$
+
+
+
+## LLN vs. Định lý giới hạn trung tâm (Central Limit Theorem - CLT)
+
+Hai khái niệm này thường bị nhầm lẫn nhưng mô tả những điều khác nhau:
+
+* **LLN** cho biết **trung bình mẫu sẽ hội tụ về đâu** (mục tiêu: $\mu$).
+* **CLT** cho biết **phân phối của trung bình mẫu xung quanh mục tiêu đó có dạng gì** (nó xấp xỉ phân phối chuẩn).
+
+
+
+## Ngụy biện của con bạc (Gambler's Fallacy)
+
+Một hiểu lầm phổ biến về LLN là tin rằng nếu một sự kiện (như “Ngửa”) xảy ra nhiều hơn bình thường, thì sự kiện ngược lại (“Sấp”) sẽ “đến lượt” xảy ra để cân bằng.
+
+**Sự thật:** LLN hoạt động theo cơ chế **làm loãng (dilution)**, không phải bù trừ. Nếu bạn có chuỗi 10 lần ngửa liên tiếp, đồng xu không “ghi nhớ” điều này. Thay vào đó, khi bạn tung thêm 1.000 lần nữa, 10 lần ngửa dư thừa đó trở nên không đáng kể về mặt thống kê khi bị “chìm” trong dữ liệu mới.
+
+
+
+## Ứng dụng trong học máy
+
+* **Monte Carlo Methods (phương pháp Monte Carlo):** Thay thế các tích phân khó tính bằng trung bình mẫu (ví dụ trong ước lượng giá trị học tăng cường hoặc suy luận Bayes).
+$$\int f(x)p(x)\,dx \approx \frac{1}{N}\sum_{i=1}^{N} f(x_i)$$
+
+* **Empirical Risk Minimization (tối thiểu hóa rủi ro thực nghiệm):** Cơ sở để giả định rằng loss trên tập dữ liệu hữu hạn xấp xỉ loss kỳ vọng thực.
+$$\frac{1}{n}\sum_{i=1}^{n} L\bigl(f(x_i), y_i\bigr)
+\approx
+\mathbb{E}[L(f(X), Y)]$$
+
+* **Stochastic Gradient Descent (SGD):** Vì gradient trên mini-batch là ước lượng không chệch của gradient đầy đủ, nhiễu sẽ được triệt tiêu qua nhiều bước nhờ LLN.
+* **AlphaGo & MCTS:** Sử dụng trung bình kết quả của hàng nghìn ván chơi mô phỏng ngẫu nhiên để ước lượng giá trị thực của một nước đi.

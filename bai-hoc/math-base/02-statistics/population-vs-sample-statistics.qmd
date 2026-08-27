@@ -1,0 +1,137 @@
+---
+title: "Tổng thể (Population) và Mẫu (Sample)"
+order: 2
+date: 2026-08-27
+description: "Phân biệt nền tảng định nghĩa suy luận thống kê (Statistical Inference)."
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# Tổng thể (Population) và Mẫu (Sample)
+
+*Phân biệt nền tảng định nghĩa suy luận thống kê (Statistical Inference).*
+
+
+## Giới thiệu
+Trong một thế giới hoàn hảo, một nhà khoa học dữ liệu sẽ có “góc nhìn của Thượng đế” — truy cập được mọi điểm dữ liệu, trong quá khứ, hiện tại và tương lai. Nhưng thực tế, chúng ta bị giới hạn bởi thời gian, chi phí và các ràng buộc vật lý. Vì vậy, chúng ta phải dựa vào một phần nhỏ của thực tế để hiểu toàn bộ. Đây chính là mâu thuẫn cốt lõi của thống kê: **Sự thật (Population)** vs. **Bằng chứng (Sample)**.
+
+**Trực giác (Nếm súp):**
+* **Population (Tổng thể):** Cả nồi súp. Để biết chính xác hương vị, bạn phải uống hết (điều này phá hủy sản phẩm).
+* **Sample (Mẫu):** Một muỗng súp.
+* **Inference (Suy luận):** Nếu muỗng súp mặn, bạn suy ra cả nồi cũng mặn.
+* **Sampling Bias (Sai lệch lấy mẫu):** Nếu không khuấy nồi, muỗng bạn lấy có thể nhạt trong khi đáy rất mặn.
+
+
+
+## Định nghĩa chính thức
+
+### Population ($N$)
+Tập hợp toàn bộ các phần tử (cá thể, đối tượng, sự kiện) mà ta quan tâm trong một nghiên cứu. Đây là “sự thật nền” (ground truth).
+* **Ví dụ:** Tất cả pixel trong một ảnh, toàn bộ giao dịch của một ngân hàng, toàn bộ con người trên Trái Đất.
+
+### Sample ($n$)
+Một tập con của tổng thể được chọn ra để đo lường và phân tích. Ta thu thập dữ liệu từ mẫu để ước lượng sự thật về tổng thể.
+* **Ví dụ:** Một crop ảnh 224x224, 1000 giao dịch gần nhất, khảo sát 500 người.
+
+
+
+## Hệ thống ký hiệu (Notation)
+Trong tài liệu và phỏng vấn, ký hiệu giúp phân biệt giữa giá trị thật chưa biết (Population) và giá trị ước lượng (Sample).
+
+| Chỉ số | Tham số tổng thể | Thống kê mẫu | Quan hệ |
+| :--- | :--- | :--- | :--- |
+| **Kích thước** | $N$ | $n$ | Thường $n \ll N$ |
+| **Trung bình** | $\mu$ (Mu) | $\bar{x}$ (x-bar) | $\bar{x}$ ước lượng $\mu$ |
+| **Phương sai** | $\sigma^2$ | $s^2$ | $s^2$ ước lượng $\sigma^2$ |
+| **Độ lệch chuẩn** | $\sigma$ | $s$ | $s$ ước lượng $\sigma$ |
+| **Tỷ lệ** | $p$ hoặc $\pi$ | $\hat{p}$ | $\hat{p}$ ước lượng $p$ |
+
+
+## Các công thức cốt lõi
+
+### Công thức tổng thể
+Sử dụng kích thước đầy đủ $N$ và trung bình thật $\mu$.
+
+* **Trung bình tổng thể:**  
+  $$\mu = \frac{\sum X_i}{N}$$
+
+* **Phương sai tổng thể:**  
+  $$\sigma^2 = \frac{\sum (X_i - \mu)^2}{N}$$
+
+* **Độ lệch chuẩn tổng thể:**  
+  $$\sigma = \sqrt{\sigma^2}$$
+
+### Công thức mẫu
+Sử dụng kích thước mẫu $n$ và trung bình mẫu $\bar{x}$.
+
+* **Trung bình mẫu:**  
+  $$\bar{x} = \frac{\sum x_i}{n}$$
+
+* **Phương sai mẫu (có hiệu chỉnh Bessel):**  
+  $$s^2 = \frac{\sum (x_i - \bar{x})^2}{n-1}$$
+
+* **Độ lệch chuẩn mẫu:**  
+  $$s = \sqrt{s^2}$$
+
+
+
+## Case study kỹ thuật: Kiểm soát chất lượng bóng đèn
+
+**Mục tiêu:** Ước lượng tuổi thọ trung bình thật ($\mu$) của 1 triệu bóng đèn ($N=1{,}000{,}000$).  
+**Ràng buộc:** Kiểm tra sẽ làm hỏng bóng đèn.
+
+1. **Cách tiếp cận tổng thể:** Kiểm tra tất cả bóng đèn  
+   * *Kết quả:* Biết chính xác $\mu$, nhưng **không còn hàng để bán** → doanh nghiệp phá sản.
+
+2. **Cách tiếp cận lấy mẫu thông minh:** Kiểm tra ngẫu nhiên 1.000 bóng  
+   * *Kết quả:* Ước lượng nhanh ($\bar{x} \approx 1045$ giờ) với chi phí chấp nhận được  
+   * *Insight quan trọng:* Lấy mẫu đánh đổi một sai số nhỏ để duy trì hoạt động kinh doanh
+
+
+
+## Các chiến lược lấy mẫu
+
+* **Simple Random Sampling:** Mỗi phần tử có xác suất được chọn như nhau.
+* **Stratified Sampling:** Chia thành các nhóm (strata) như dây chuyền A/B, lấy mẫu theo tỷ lệ.
+* **Cluster Sampling:** Chia theo cụm tự nhiên (ví dụ: thùng hàng), chọn cụm rồi lấy toàn bộ bên trong.
+* **Systematic Sampling:** Chọn mỗi phần tử thứ $k$ (ví dụ: mỗi bóng thứ 100).
+* **Convenience Sampling:** Lấy mẫu theo sự thuận tiện. **Nên tránh**, vì gây sai lệch lớn.
+
+
+
+## Sai lệch và tính đại diện
+
+Một mẫu bị bias sẽ dẫn đến suy luận sai, bất kể kích thước lớn đến đâu.
+
+### Survivorship Bias (Máy bay WWII)
+Quân đội muốn gia cố cánh máy bay nơi có nhiều vết đạn trên máy bay quay về.  
+
+- Chi tiết: https://en.wikipedia.org/wiki/Survivorship_bias
+
+Nhà thống kê Abraham Wald nhận ra họ chỉ thấy **máy bay sống sót**. Những chiếc trúng động cơ đã không quay về.
+
+* **Bài học:** Luôn hỏi: “Dữ liệu nào đang bị thiếu, và tại sao?”
+
+
+## Hiệu chỉnh Bessel ($n-1$) - Bản chất của sự "bù đắp"
+
+Khi tính phương sai từ mẫu, tại sao ta lại chia cho $n-1$ chứ không phải $n$?
+
+* **Bản chất của mẫu là "ích kỷ":** Dữ liệu mẫu có xu hướng co cụm lại xung quanh trung bình mẫu $\bar{x}$ hơn là trung bình thật $\mu$ của toàn bộ hệ thống. Vì vậy, nếu tính phương sai mẫu theo công thức chia cho $n$, bạn sẽ luôn bị **đánh giá thấp (underestimate)** độ phân tán thật của thế giới.
+* **Giải pháp "gánh team" của $n-1$:** Bằng cách giảm mẫu số từ $n$ xuống $n-1$, ta làm cho kết quả phương sai mẫu **to lên một chút**. Sự "phóng đại" này bù đắp hoàn hảo cho phần dữ liệu bị thiếu hụt, biến phương sai mẫu thành một **ước lượng không chệch (unbiased)** cho phương sai tổng thể. **Giải pháp:** Chia cho $n-1$ giúp tạo **ước lượng không chệch (unbiased)** của $\sigma^2$
+
+
+
+## Ứng dụng trong Machine Learning
+
+* **Training set là một mẫu:** Dataset chỉ là một mẫu của thế giới thực
+* **Overfitting:** Mô hình học “nhiễu” của mẫu thay vì quy luật tổng thể
+* **Train/Test split:** Test set đại diện cho population chưa thấy
+* **Data leakage:** Khi thông tin từ test set (tương lai) rò rỉ vào training
+
+
+
+## Các lỗi thường gặp
+
+1. **Ngộ nhận Big Data:** Mẫu lớn không đồng nghĩa với không bias  
+2. **Điền giá trị thiếu sai cách:** Dùng trung bình của toàn dataset (population) để điền cho training set (sample) → gây data leakage

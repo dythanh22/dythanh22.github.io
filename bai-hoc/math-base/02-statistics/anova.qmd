@@ -1,0 +1,89 @@
+---
+title: "Phân tích phương sai (ANOVA)"
+order: 11
+date: 2026-08-27
+description: "A/B testing (T-test) hiệu quả khi so sánh một nhóm Control với một Variant duy nhất. Tuy nhiên, trong các tình huống thực tế, như kiểm thử bốn kiến trúc mô hình ML hoặc năm nhà cung cấp sản phẩm…"
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# Phân tích phương sai (ANOVA)
+
+## Vượt ra ngoài hai nhóm
+A/B testing (T-test) hiệu quả khi so sánh một nhóm Control với một Variant duy nhất. Tuy nhiên, trong các tình huống thực tế, như kiểm thử bốn kiến trúc mô hình ML hoặc năm nhà cung cấp sản phẩm khác nhau, bạn cần so sánh nhiều trung bình cùng lúc.
+
+ANOVA cung cấp một kiểm định toàn cục duy nhất để xác định liệu **có bất kỳ** nhóm nào khác biệt với các nhóm còn lại hay không, mà không rơi vào bẫy "Multiple Testing".
+
+
+
+## Vấn đề kiểm định nhiều lần
+Việc chạy nhiều T-test theo từng cặp (A vs. B, B vs. C, A vs. C) làm tăng đáng kể **Family-wise Error Rate (FWER)**.
+
+* **Toán học:** Nếu chọn $\alpha = 0.05$, bạn có 5% khả năng False Positive cho *một* kiểm định.
+* **Sự khuếch đại:** Với 3 nhóm (3 cặp), xác suất có ít nhất một False Positive là:
+  
+  $$P(\text{Error}) = 1 - (0.95)^3 \approx 14.3\%$$
+
+* **Nguy hiểm:** Với 10 nhóm (45 cặp), tỷ lệ lỗi vượt quá 90%, khiến các phát hiện “có ý nghĩa” gần như chắc chắn xuất hiện chỉ do ngẫu nhiên.
+
+
+
+## Trực giác cốt lõi: Tín hiệu vs. Nhiễu
+ANOVA phân tách tổng phương sai trong dữ liệu thành hai nguồn để xác định liệu sự khác biệt giữa các nhóm có thật hay không:
+
+1. **Phương sai giữa các nhóm (SSB - Tín hiệu):** Đo mức độ các trung bình nhóm phân tán quanh trung bình chung.
+2. **Phương sai trong nhóm (SSW - Nhiễu):** Đo độ phân tán ngẫu nhiên của các điểm dữ liệu bên trong từng nhóm.
+
+**Logic:** Nếu “Tín hiệu” (khác biệt giữa các nhóm) lớn hơn đáng kể so với “Nhiễu” (dao động bên trong nhóm), ta kết luận rằng không phải tất cả các nhóm đều giống nhau.
+
+
+
+## Thống kê F
+Kết quả của ANOVA là **tỷ số F (F-ratio)**. Giá trị F lớn cho thấy trung bình các nhóm phân tán xa nhau hơn mức có thể giải thích bằng ngẫu nhiên.
+
+### Công thức thống kê F
+$$F = \frac{\text{MS}_{Between}}{\text{MS}_{Within}} = \frac{\text{SSB} / (k-1)}{\text{SSW} / (N-k)}$$
+
+* **$k$**: Số nhóm.
+* **$N$**: Tổng số mẫu trên tất cả các nhóm.
+* **SST (Tổng phương sai):** $SST = SSB + SSW$.
+
+
+
+## Case study: Sản xuất từ nhà cung cấp
+**Bối cảnh:** Một công ty nhập sợi filament từ 3 nhà cung cấp (A, B, C). Ta kiểm tra 20 bóng đèn từ mỗi nhà cung cấp ($N=60, k=3$).
+
+| Nguồn | SS | $df$ | MS | F |
+| :--- | :--- | :--- | :--- | :--- |
+| **Between** | 288,000 | 2 | 144,000 | **6.4** |
+| **Within** | 1,282,500 | 57 | 22,500 | - |
+
+**Quyết định:** Giá trị F tới hạn tại $\alpha=0.05$ là 3.16. Vì **$6.4 > 3.16$**, ta bác bỏ giả thuyết không. Ít nhất một nhà cung cấp khác biệt có ý nghĩa thống kê.
+
+
+
+## Kiểm định Post-Hoc
+ANOVA chỉ cho biết rằng *ít nhất một* nhóm khác biệt; nó không chỉ ra cụ thể nhóm nào. Các kiểm định **Post-Hoc** được dùng sau khi ANOVA có ý nghĩa để tìm ra các khác biệt cụ thể:
+
+* **Tukey's HSD:** Phổ biến nhất; kiểm tra mọi khác biệt theo cặp trong khi kiểm soát FWER.
+* **Bonferroni Correction:** Bảo thủ; chia $\alpha$ cho số lượng so sánh.
+* **Scheffé's Method:** Bảo thủ nhất; dùng cho các contrast phức tạp.
+* **Benjamini-Hochberg (FDR):** Kiểm soát False Discovery Rate; phổ biến trong dữ liệu quy mô lớn như genomics.
+
+
+
+## Checklist giả định
+Để ANOVA hợp lệ, dữ liệu cần thỏa mãn:
+
+1. **Tính độc lập:** Các quan sát phải độc lập.
+2. **Phân phối chuẩn:** Residuals nên gần phân phối chuẩn (khá bền vững nếu $n > 30$ mỗi nhóm).
+3. **Đồng nhất phương sai:** Các nhóm nên có phương sai xấp xỉ nhau (Homoscedasticity).
+
+
+
+## Ứng dụng trong Machine Learning
+
+* **Model Selection:** So sánh nhiều kiến trúc (ví dụ: ResNet vs. VGG) qua nhiều random seed để đảm bảo khác biệt không chỉ do may mắn.
+* **Feature Importance:** Xác định liệu một feature phân loại (ví dụ: "City") có ảnh hưởng đáng kể đến target liên tục (ví dụ: "Price") hay không.
+* **Hyperparameter Validation:** Kiểm tra liệu một số learning rate cụ thể có vượt trội có ý nghĩa thống kê trong cross-validation hay không.
+

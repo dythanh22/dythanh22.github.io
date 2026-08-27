@@ -1,0 +1,151 @@
+---
+title: "Phân phối lấy mẫu (Sampling Distributions)"
+order: 3
+date: 2026-08-27
+description: "Trong thống kê, một mẫu (Sample) là một tập con của tổng thể (Population). Tuy nhiên, một nhận thức quan trọng là nếu bạn lấy một mẫu và tính trung bình của nó, bạn sẽ được một con số. Nếu bạn lấy…"
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# Phân phối lấy mẫu (Sampling Distributions)
+
+## Giới thiệu
+Trong thống kê, một **mẫu (Sample)** là một tập con của **tổng thể (Population)**. Tuy nhiên, một nhận thức quan trọng là nếu bạn lấy một mẫu và tính trung bình của nó, bạn sẽ được một con số. Nếu bạn lấy một mẫu ngẫu nhiên khác cùng kích thước, bạn sẽ nhận được một con số khác.
+
+Điều này dẫn đến một câu hỏi quan trọng:  
+**Trung bình mẫu của tôi có thể dao động bao nhiêu giữa các lần lấy mẫu?**
+
+Nếu bạn lấy hàng nghìn mẫu và vẽ biểu đồ các giá trị trung bình của chúng, bạn sẽ tạo ra một **phân phối lấy mẫu (Sampling Distribution)**. Đây không phải là phân phối của dữ liệu gốc, mà là phân phối xác suất của một *thống kê* (ví dụ: trung bình).
+
+### Tại sao điều này quan trọng đối với Kỹ sư Machine Learning
+Trong Machine Learning, ta coi tập train như một mẫu duy nhất từ toàn bộ dữ liệu có thể có. Hiểu phân phối lấy mẫu giúp trả lời:
+
+* "Nếu tôi train lại model với dữ liệu khác, độ chính xác sẽ dao động bao nhiêu?"
+* "Mức cải thiện 2% của Model B có thực sự có ý nghĩa hay chỉ là nhiễu?"
+* "Tôi có thể tin tưởng mức điểm cross-validation đến mức nào?"
+
+
+
+## Khái niệm cốt lõi & trực giác
+
+### Ví dụ nhà máy bóng đèn
+Giả sử bạn vận hành một nhà máy sản xuất bóng đèn và muốn biết **tuổi thọ trung bình** của tất cả bóng đèn (trung bình tổng thể $\mu$).
+
+* **Vấn đề:** Bạn không thể kiểm tra tất cả (vì kiểm tra phá hủy sản phẩm).
+* **Giải pháp:** Dùng trung bình mẫu $\bar{x}$ để ước lượng $\mu$.
+
+**Phân phối lấy mẫu** cho ta biết khoảng giá trị mà $\bar{x}$ có thể nhận và mức độ tin cậy của nó. Nó mô tả hành vi của các thống kê được tính từ nhiều mẫu giả định, không phải dữ liệu gốc.
+
+### Quy trình "Góc nhìn Thượng đế"
+
+1. **Bước 1:** Lấy mẫu 1 $\rightarrow$ Tính $\bar{x}_1$
+2. **Bước 2:** Lấy mẫu 2 $\rightarrow$ Tính $\bar{x}_2$
+3. **Bước 3:** Lặp lại 1000 lần $\rightarrow$ $\bar{x}_3 \ldots \bar{x}_{1000}$
+4. **Bước 4:** Vẽ histogram các giá trị này → chính là **phân phối lấy mẫu của trung bình mẫu**
+
+
+
+## Phân phối lấy mẫu của trung bình
+
+Nếu ta lấy mẫu từ một tổng thể có trung bình $\mu$ và độ lệch chuẩn $\sigma$, thì phân phối của $\bar{x}$ tuân theo hai quy luật:
+
+### Quy luật 1: Ước lượng không chệch (Unbiased Estimator)
+$$\mu_{\bar{x}} = \mu$$
+Trung bình của tất cả các trung bình mẫu bằng trung bình thật của tổng thể. Không có xu hướng lệch hệ thống.
+
+### Quy luật 2: Sai số chuẩn (Standard Error)
+$$\sigma_{\bar{x}} = \frac{\sigma}{\sqrt{n}}$$
+Độ phân tán của trung bình mẫu nhỏ hơn độ phân tán của dữ liệu gốc. Khi $n$ tăng, các trung bình mẫu tập trung chặt hơn quanh $\mu$.
+
+
+
+## Độ lệch chuẩn vs. Sai số chuẩn
+
+Đây là câu hỏi phỏng vấn rất phổ biến:
+
+| Chỉ số | Ký hiệu | Công thức | Ý nghĩa |
+| :--- | :--- | :--- | :--- |
+| **Độ lệch chuẩn** | $\sigma$ hoặc $s$ | $\sigma$ | Độ biến thiên của **dữ liệu cá nhân** |
+| **Sai số chuẩn** | $SE$ hoặc $\sigma_{\bar{x}}$ | $\frac{\sigma}{\sqrt{n}}$ | Độ biến thiên của **trung bình mẫu** |
+
+### Quy luật căn bậc hai (Square Root Law)
+Để giảm một nửa sai số chuẩn ($SE$), bạn cần **tăng kích thước mẫu lên gấp 4 lần**. Đây là quy luật giảm lợi ích cận biên (diminishing returns) trong thống kê.
+
+
+
+##  Định lý giới hạn trung tâm (CLT)
+
+CLT là định lý quan trọng nhất trong thống kê.
+
+**Định nghĩa:** Nếu kích thước mẫu $n$ đủ lớn (thường $n \ge 30$), thì phân phối lấy mẫu của trung bình sẽ xấp xỉ **phân phối chuẩn**, bất kể phân phối gốc có dạng gì.
+
+
+
+## Phân phối lấy mẫu của tỷ lệ
+
+Khi làm việc với dữ liệu phân loại (Success/Failure, Click/No-Click), ta xét tỷ lệ mẫu:
+
+$$\hat{p} = \frac{x}{n}$$
+*(trong đó $x$ = số lần thành công, $n$ = kích thước mẫu)*
+
+* **Trung bình:** $\mu_{\hat{p}} = p$
+* **Sai số chuẩn:** $\sigma_{\hat{p}} = \sqrt{\frac{p(1-p)}{n}}$
+
+**Điều kiện áp dụng:** Phân phối của $\hat{p}$ xấp xỉ chuẩn nếu:
+- $np \ge 10$
+- $n(1-p) \ge 10$
+
+
+
+## Phân phối t (T-Distribution)
+
+Trong thực tế, ta hiếm khi biết $\sigma$. Thay vào đó, ta dùng $s$ (độ lệch chuẩn mẫu). Điều này làm tăng độ bất định, dẫn đến **phân phối t (Student's t-distribution)**.
+
+### Công thức thống kê t
+$$t = \frac{\bar{x} - \mu}{s / \sqrt{n}}$$
+
+### Đặc điểm chính:
+* **Đuôi dày (Fat tails):** Phân phối t có đuôi dày hơn phân phối chuẩn để phản ánh sự bất định cao hơn khi $n$ nhỏ.
+* **Bậc tự do (Degrees of Freedom - $df$):** $df = n - 1$. $df$ càng nhỏ → đuôi càng dày.
+* **Hội tụ:** Khi $n$ lớn ($df > 30$), phân phối t gần giống phân phối chuẩn.
+
+
+
+## Ví dụ minh họa
+
+### Ví dụ 1: Bảo hành bóng đèn
+**Thông tin:** $\mu = 1000$ giờ, $\sigma = 50$ giờ, $n = 100$  
+Tính xác suất $\bar{x} < 990$
+
+1. **Sai số chuẩn:**  
+   $SE = \frac{50}{\sqrt{100}} = 5$
+
+2. **Z-score:**  
+   $Z = \frac{990 - 1000}{5} = -2.0$
+
+3. **Xác suất:**  
+   $P(Z < -2.0) \approx 0.0228$ (2.28%)
+
+**Kết luận:** Chỉ có khoảng 2.3% khả năng trung bình thấp như vậy xảy ra do ngẫu nhiên.
+
+
+
+### Ví dụ 2: Tỷ lệ lỗi
+**Thông tin:** $p = 0.05$, $n = 1000$
+
+1. **Kiểm tra điều kiện:**  
+   $np = 50$, $n(1-p) = 950$ (đều ≥ 10)
+
+2. **Sai số chuẩn:**  
+   $SE = \sqrt{\frac{0.05 \times 0.95}{1000}} \approx 0.0069$
+
+**Ý nghĩa:** Tỷ lệ lỗi mẫu thường lệch khoảng 0.7% so với giá trị thật 5%.
+
+
+
+## Ứng dụng trong Machine Learning
+
+1. **Cross-Validation:** Sai số chuẩn của điểm CV cho biết độ ổn định của mô hình.
+2. **Ensemble Learning (Bagging):** Trung bình $n$ mô hình giúp giảm phương sai theo $\sqrt{n}$.
+3. **A/B Testing:** Dùng để tính khoảng tin cậy và kiểm tra ý nghĩa thống kê.
+4. **Mini-batch Gradient Descent:** Batch lớn hơn → giảm nhiễu (Standard Error) của gradient.

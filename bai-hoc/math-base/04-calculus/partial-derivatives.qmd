@@ -1,0 +1,1508 @@
+---
+title: "Đạo hàm riêng (Partial Derivatives)"
+order: 2
+date: 2026-08-27
+description: "Làm thế nào đầu ra thay đổi khi ta chỉ thay đổi một đầu vào? Nền tảng của tối ưu hóa dựa trên gradient."
+series: math-base
+categories: [math-base, calculus]
+group: calculus
+---
+# Đạo hàm riêng (Partial Derivatives)
+
+Làm thế nào đầu ra thay đổi khi ta chỉ thay đổi một đầu vào? Nền tảng của tối ưu hóa dựa trên gradient.
+
+
+
+## Giới thiệu
+
+Trong giải tích một biến, đạo hàm $\frac{dy}{dx}$ cho biết tốc độ thay đổi của $y$ theo $x$. Nhưng mạng nơ-ron có **hàng triệu** tham số. Một hàm mất mát có thể phụ thuộc vào các trọng số $w_1, w_2, \ldots, w_{1000000}$.
+
+Chúng ta không thể đơn giản hỏi "độ dốc là bao nhiêu?" vì hàm có độ dốc khác nhau theo mỗi hướng. Thay vào đó, ta hỏi: *"Đầu ra thay đổi như thế nào nếu tôi chỉ thay đổi **một** đầu vào trong khi giữ các đầu vào khác cố định?"*
+
+### Vì sao Đạo hàm riêng quan trọng
+
+* **Gradient Descent (thuật toán hạ dốc):** Gradient là một vector các đạo hàm riêng.
+* **Backpropagation (lan truyền ngược):** Tính đạo hàm riêng cho từng trọng số trong mạng.
+* **Tối ưu hóa (Optimization):** Tìm hướng làm giảm hàm mất mát nhanh nhất.
+* **Phân tích độ nhạy (Sensitivity Analysis):** Xác định đầu vào nào ảnh hưởng nhiều nhất đến đầu ra.
+
+
+
+## Định nghĩa hình thức
+
+Cho $f(x, y)$ là một hàm hai biến. **Đạo hàm riêng** theo $x$ được định nghĩa bằng giới hạn:
+
+$$\frac{\partial f}{\partial x} = \lim_{h \to 0} \frac{f(x+h, y) - f(x, y)}{h}$$
+
+Lưu ý ký hiệu $\partial$ thay vì $d$. Điều này cho thấy $y$ được giữ cố định. Tương tự, đạo hàm riêng theo $y$ là:
+
+$$\frac{\partial f}{\partial y} = \lim_{h \to 0} \frac{f(x, y+h) - f(x, y)}{h}$$
+
+> **Ý tưởng cốt lõi:** Khi tính $\frac{\partial f}{\partial x}$, hãy xem $y$ như một hằng số (giống như 5 hoặc $\pi$), rồi lấy đạo hàm theo $x$ như trong trường hợp một biến.
+
+
+
+## Ký hiệu & Tính toán
+
+Có nhiều cách ký hiệu đạo hàm riêng:
+
+* **Leibniz:** $\frac{\partial f}{\partial x}$
+* **Chỉ số dưới:** $f_x$
+* **Toán tử:** $\partial_x f$
+* **Ký hiệu D:** $D_x f$
+
+### Ví dụ minh họa
+
+Cho $f(x, y) = x^2y + 3y^3 + 5$.
+
+**Đạo hàm riêng theo $x$:**
+Xem $y$ là hằng số:
+$$\frac{\partial f}{\partial x} = 2xy + 0 + 0 = 2xy$$
+
+**Đạo hàm riêng theo $y$:**
+Xem $x$ là hằng số:
+$$\frac{\partial f}{\partial y} = x^2 + 9y^2 + 0 = x^2 + 9y^2$$
+
+
+
+## Trực giác hình học
+
+Xét bề mặt 3D $z = f(x, y)$ như một địa hình có đồi và thung lũng. Đứng tại điểm $(x, y)$, bạn có thể đi theo vô số hướng.
+
+* **Cắt bề mặt:** Khi tính $\frac{\partial f}{\partial x}$, ta "cắt" bề mặt bằng một mặt phẳng thẳng đứng với $y = \text{hằng số}$. Điều này tạo ra một đường cong 2D; đạo hàm riêng là độ dốc của đường cong đó tại điểm đang xét.
+* **Đi theo hướng Đông-Tây:** $\frac{\partial f}{\partial x}$ cho biết độ dốc khi đi theo trục $x$.
+* **Đi theo hướng Bắc-Nam:** $\frac{\partial f}{\partial y}$ cho biết độ dốc khi đi theo trục $y$.
+
+
+
+## Vector Gradient
+
+**Gradient** gom tất cả các đạo hàm riêng của một hàm $f: \mathbb{R}^n \to \mathbb{R}$ vào một vector:
+
+$$\nabla f = \begin{bmatrix} \frac{\partial f}{\partial x_1} \\ \frac{\partial f}{\partial x_2} \\ \vdots \\ \frac{\partial f}{\partial x_n} \end{bmatrix}$$
+
+Ký hiệu $\nabla$ được gọi là "nabla".
+
+### Các tính chất quan trọng
+
+* **Hướng tăng nhanh nhất:** Gradient $\nabla f$ chỉ hướng mà $f$ tăng nhanh nhất.
+* **Gradient Descent (thuật toán hạ dốc):** Để tối thiểu hóa $f$, ta di chuyển theo hướng ngược lại:
+  $\theta_{new} = \theta_{old} - \alpha \nabla f$
+* **Độ lớn:** $||\nabla f||$ cho biết độ dốc lớn hay nhỏ. Gradient lớn → cập nhật lớn.
+
+
+
+## Đạo hàm theo hướng
+
+Đạo hàm riêng cho ta độ dốc theo các trục tọa độ. Để tìm độ dốc theo một hướng bất kỳ được mô tả bởi vector đơn vị $\mathbf{u}$, ta dùng **đạo hàm theo hướng (Directional Derivative)**:
+
+$$D_{\mathbf{u}}f = \nabla f \cdot \mathbf{u} = ||\nabla f|| \cos(\theta)$$
+
+với $\theta$ là góc giữa gradient và hướng $\mathbf{u}$.
+
+* **Cực đại:** Khi $\mathbf{u}$ cùng hướng với gradient → tăng nhanh nhất.
+* **Cực tiểu:** Khi $\mathbf{u}$ ngược hướng → giảm nhanh nhất.
+* **Bằng 0:** Khi vuông góc với gradient → không thay đổi (đi trên đường đồng mức).
+
+> **Insight:** Gradient luôn vuông góc với các đường đồng mức (nơi $f$ không đổi).
+
+
+
+## Đạo hàm riêng bậc cao
+
+Ta có thể lấy đạo hàm riêng của đạo hàm riêng. Các đạo hàm bậc hai rất quan trọng trong tối ưu hóa (ví dụ: ma trận Hessian).
+
+* **Đạo hàm riêng bậc hai thuần:** $\frac{\partial^2 f}{\partial x^2}$
+* **Đạo hàm riêng hỗn hợp:** $\frac{\partial^2 f}{\partial x \partial y}$
+
+**Định lý Clairaut:** Nếu các đạo hàm riêng hỗn hợp liên tục, thứ tự đạo hàm không quan trọng:
+$$\frac{\partial^2 f}{\partial x \partial y} = \frac{\partial^2 f}{\partial y \partial x}$$
+
+
+
+## Ứng dụng trong ML
+
+### Backpropagation (lan truyền ngược)
+
+Khi huấn luyện mạng, ta cần $\frac{\partial L}{\partial w_i}$ cho mỗi trọng số. Quy tắc chuỗi giúp tính hiệu quả bằng cách lan truyền gradient từ cuối về đầu.
+
+### Automatic Differentiation (vi phân tự động)
+
+Các framework như PyTorch, TensorFlow xây dựng đồ thị tính toán và tự động tính tất cả đạo hàm riêng. Lệnh `loss.backward()` sẽ tính gradient của loss theo tất cả tham số.
+
+### Tầm quan trọng của đặc trưng (Saliency Maps)
+
+$\frac{\partial \text{output}}{\partial \text{input}_i}$ cho biết đầu ra nhạy với từng đặc trưng đầu vào như thế nào.
+
+### Regularization (chuẩn hóa)
+
+Một số kỹ thuật phạt gradient lớn để tăng ổn định, ví dụ spectral normalization trong GAN giúp giới hạn độ lớn gradient.
+
+
+# Chi tiết: Đạo hàm riêng
+
+## Đạo hàm riêng là gì?
+
+Trong đạo hàm một biến, ta có hàm:
+
+
+$$y = f(x)$$
+
+
+Khi đó đạo hàm:
+
+$$
+\frac{dy}{dx}
+$$
+
+cho biết: nếu (x) thay đổi một chút, thì (y) thay đổi bao nhiêu.
+
+Ví dụ:
+
+$$
+f(x) = x^2
+$$
+
+$$
+f'(x) = 2x
+$$
+
+Tại (x = 3):
+
+$$
+f'(3) = 6
+$$
+
+Nghĩa là gần điểm (x=3), nếu (x) tăng một chút thì (f(x)) tăng với tốc độ khoảng 6 lần.
+
+
+Nhưng trong thực tế, rất nhiều hàm không chỉ phụ thuộc vào một biến.
+
+Ví dụ:
+
+$$
+f(x, y) = x^2 + y^2
+$$
+
+Hàm này phụ thuộc vào cả (x) và (y).
+
+Vậy ta không thể chỉ hỏi:
+
+> “Đạo hàm của hàm này là bao nhiêu?”
+
+Mà phải hỏi rõ hơn:
+
+> “Nếu chỉ thay đổi (x), còn (y) giữ nguyên, thì hàm thay đổi thế nào?”
+
+hoặc:
+
+> “Nếu chỉ thay đổi (y), còn (x) giữ nguyên, thì hàm thay đổi thế nào?”
+
+Đó chính là **đạo hàm riêng**.
+
+# Ý tưởng cốt lõi
+
+Với hàm:
+
+$$
+f(x, y)
+$$
+
+Đạo hàm riêng theo (x):
+
+$$
+\frac{\partial f}{\partial x}
+$$
+
+nghĩa là:
+
+> Lấy đạo hàm theo (x), trong khi coi (y) là hằng số.
+
+Đạo hàm riêng theo (y):
+
+$$
+\frac{\partial f}{\partial y}
+$$
+
+nghĩa là:
+
+> Lấy đạo hàm theo (y), trong khi coi (x) là hằng số.
+
+Ký hiệu (\partial) đọc là “partial”, tức là “riêng phần”.
+
+
+# Ví dụ đơn giản nhất
+
+Cho:
+
+$$
+f(x, y) = x^2 + y^2
+$$
+
+## Đạo hàm riêng theo (x)
+
+Ta coi (y) là hằng số.
+
+$$
+\frac{\partial f}{\partial x} = \frac{\partial}{\partial x}(x^2 + y^2)
+$$
+
+Vì (y^2) được xem là hằng số nên đạo hàm của nó bằng 0.
+
+$$
+\frac{\partial f}{\partial x} = 2x
+$$
+
+## Đạo hàm riêng theo (y)
+
+Ta coi (x) là hằng số.
+
+$$
+\frac{\partial f}{\partial y} = \frac{\partial}{\partial y}(x^2 + y^2)
+$$
+
+Vì (x^2) là hằng số nên đạo hàm bằng 0.
+
+$$
+\frac{\partial f}{\partial y} = 2y
+$$
+
+Vậy:
+
+$$
+\frac{\partial f}{\partial x} = 2x
+$$
+
+$$
+\frac{\partial f}{\partial y} = 2y
+$$
+
+---
+
+# Cách hiểu trực quan
+
+Hãy tưởng tượng hàm:
+
+$$
+z = f(x, y)
+$$
+
+là một bề mặt 3D, giống như địa hình có đồi núi.
+
+* (x): hướng trái-phải
+* (y): hướng trước-sau
+* (z): độ cao
+
+Khi bạn tính:
+
+$$
+\frac{\partial f}{\partial x}
+$$
+
+bạn đang hỏi:
+
+> Nếu tôi chỉ đi theo hướng (x), tức là trái-phải, thì độ cao thay đổi nhanh hay chậm?
+
+Khi bạn tính:
+
+$$
+\frac{\partial f}{\partial y}
+$$
+
+bạn đang hỏi:
+
+> Nếu tôi chỉ đi theo hướng (y), tức là trước-sau, thì độ cao thay đổi nhanh hay chậm?
+
+
+
+# Ví dụ có tích giữa hai biến
+
+Cho:
+
+$$
+f(x, y) = x^2y + 3y^3 + 5
+$$
+
+## Đạo hàm riêng theo (x)
+
+Ta coi (y) là hằng số.
+
+$$
+f(x, y) = x^2y + 3y^3 + 5
+$$
+
+Xét từng phần:
+
+$$
+\frac{\partial}{\partial x}(x^2y) = 2xy
+$$
+
+vì (y) là hằng số.
+
+$$
+\frac{\partial}{\partial x}(3y^3) = 0
+$$
+
+vì không có (x).
+
+$$
+\frac{\partial}{\partial x}(5) = 0
+$$
+
+Vậy:
+
+$$
+\frac{\partial f}{\partial x} = 2xy
+$$
+
+
+
+## Đạo hàm riêng theo (y)
+
+Ta coi (x) là hằng số.
+
+$$
+\frac{\partial}{\partial y}(x^2y) = x^2
+$$
+
+vì (x^2) là hằng số, đạo hàm của (y) là 1.
+
+$$
+\frac{\partial}{\partial y}(3y^3) = 9y^2
+$$
+
+$$
+\frac{\partial}{\partial y}(5) = 0
+$$
+
+Vậy:
+
+$$
+\frac{\partial f}{\partial y} = x^2 + 9y^2
+$$
+
+
+
+# Một mẹo rất quan trọng khi giải
+
+Khi lấy đạo hàm riêng theo biến nào, hãy tự nói:
+
+> “Các biến còn lại là hằng số.”
+
+Ví dụ:
+
+$$
+f(x, y, z) = x^2y + yz^3 + 4xz
+$$
+
+Nếu lấy theo (x):
+
+$$
+\frac{\partial f}{\partial x}
+$$
+
+thì (y, z) đều là hằng số.
+
+Ta có:
+
+$$
+\frac{\partial}{\partial x}(x^2y) = 2xy
+$$
+
+$$
+\frac{\partial}{\partial x}(yz^3) = 0
+$$
+
+vì không có (x).
+
+$$
+\frac{\partial}{\partial x}(4xz) = 4z
+$$
+
+Vậy:
+
+$$
+\frac{\partial f}{\partial x} = 2xy + 4z
+$$
+
+
+Nếu lấy theo (y):
+
+$$
+\frac{\partial f}{\partial y}
+$$
+
+thì (x, z) là hằng số.
+
+$$
+\frac{\partial}{\partial y}(x^2y) = x^2
+$$
+
+$$
+\frac{\partial}{\partial y}(yz^3) = z^3
+$$
+
+$$
+\frac{\partial}{\partial y}(4xz) = 0
+$$
+
+Vậy:
+
+$$
+\frac{\partial f}{\partial y} = x^2 + z^3
+$$
+
+Nếu lấy theo (z):
+
+$$
+\frac{\partial f}{\partial z}
+$$
+
+thì (x, y) là hằng số.
+
+$$
+\frac{\partial}{\partial z}(x^2y) = 0
+$$
+
+$$
+\frac{\partial}{\partial z}(yz^3) = 3yz^2
+$$
+
+$$
+\frac{\partial}{\partial z}(4xz) = 4x
+$$
+
+Vậy:
+
+$$
+\frac{\partial f}{\partial z} = 3yz^2 + 4x
+$$
+
+# Gradient là gì?
+
+Nếu một hàm có nhiều biến, ta có thể gom tất cả đạo hàm riêng lại thành một vector.
+
+Ví dụ:
+
+$$
+f(x, y) = x^2 + y^2
+$$
+
+Ta đã có:
+
+$$
+\frac{\partial f}{\partial x} = 2x
+$$
+
+$$
+\frac{\partial f}{\partial y} = 2y
+$$
+
+Gradient là:
+
+$$
+\nabla f =
+\begin{bmatrix}
+2x \
+2y
+\end{bmatrix}
+$$
+
+Nói đơn giản:
+
+> Gradient là vector chứa tất cả các đạo hàm riêng.
+
+# Ý nghĩa của gradient
+
+Gradient cho biết hướng mà hàm tăng nhanh nhất.
+
+Ví dụ:
+
+$$
+f(x, y) = x^2 + y^2
+$$
+
+Tại điểm ((x, y) = (3, 4)):
+
+$$
+\nabla f =
+\begin{bmatrix}
+2x \
+2y
+\end{bmatrix}
+=============
+
+\begin{bmatrix}
+6 \
+8
+\end{bmatrix}
+$$
+
+Nghĩa là tại điểm ((3,4)), nếu muốn (f) tăng nhanh nhất thì đi theo hướng vector:
+
+$$
+(6, 8)
+$$
+
+Nếu muốn (f) giảm nhanh nhất thì đi theo hướng ngược lại:
+
+$$
+(-6, -8)
+$$
+
+Đây chính là ý tưởng của **gradient descent**.
+
+
+# Gradient Descent liên quan như thế nào?
+
+Trong machine learning, ta có một hàm mất mát:
+
+$$
+L(w)
+$$
+
+Mục tiêu là làm cho (L(w)) nhỏ nhất.
+
+Nếu mô hình có nhiều trọng số:
+
+$$
+w_1, w_2, w_3, ..., w_n
+$$
+
+thì loss phụ thuộc vào tất cả các trọng số đó:
+
+$$
+L(w_1, w_2, ..., w_n)
+$$
+
+Ta cần biết từng trọng số ảnh hưởng đến loss như thế nào:
+
+$$
+\frac{\partial L}{\partial w_1},
+\frac{\partial L}{\partial w_2},
+...,
+\frac{\partial L}{\partial w_n}
+$$
+
+Tất cả các đạo hàm riêng này tạo thành gradient:
+
+$$
+\nabla L =
+\begin{bmatrix}
+\frac{\partial L}{\partial w_1} \
+\frac{\partial L}{\partial w_2} \
+\vdots \
+\frac{\partial L}{\partial w_n}
+\end{bmatrix}
+$$
+
+Sau đó ta cập nhật trọng số:
+
+$$
+w_{\text{new}} = w_{\text{old}} - \alpha \nabla L
+$$
+
+Trong đó:
+
+* (w_{\text{old}}): trọng số hiện tại
+* (w_{\text{new}}): trọng số sau khi cập nhật
+* (\alpha): learning rate
+* (\nabla L): gradient của loss
+
+
+# Ví dụ gradient descent cực đơn giản
+
+Giả sử loss là:
+
+$$
+L(w) = w^2
+$$
+
+Đạo hàm:
+
+$$
+\frac{dL}{dw} = 2w
+$$
+
+Nếu (w = 5), learning rate (\alpha = 0.1), thì:
+
+$$
+w_{\text{new}} = w - \alpha \frac{dL}{dw}
+$$
+
+$$
+w_{\text{new}} = 5 - 0.1 \times 10
+$$
+
+$$
+w_{\text{new}} = 4
+$$
+
+Loss ban đầu:
+
+$$
+L(5) = 25
+$$
+
+Loss sau cập nhật:
+
+$$
+L(4) = 16
+$$
+
+Loss đã giảm.
+
+---
+
+Với hai biến:
+
+$$
+L(w_1, w_2) = w_1^2 + w_2^2
+$$
+
+Gradient:
+
+$$
+\nabla L =
+\begin{bmatrix}
+2w_1 \
+2w_2
+\end{bmatrix}
+$$
+
+Nếu:
+
+$$
+w_1 = 3,\quad w_2 = 4
+$$
+
+thì:
+
+$$
+\nabla L =
+\begin{bmatrix}
+6 \
+8
+\end{bmatrix}
+$$
+
+Với (\alpha = 0.1):
+
+$$
+w_1^{new} = 3 - 0.1 \times 6 = 2.4
+$$
+
+$$
+w_2^{new} = 4 - 0.1 \times 8 = 3.2
+$$
+
+Loss ban đầu:
+
+$$
+L(3,4) = 3^2 + 4^2 = 25
+$$
+
+Loss mới:
+
+$$
+L(2.4,3.2) = 2.4^2 + 3.2^2 = 5.76 + 10.24 = 16
+$$
+
+Loss giảm từ 25 xuống 16.
+
+
+# Backpropagation liên quan gì đến đạo hàm riêng?
+
+Trong neural network, ta có nhiều tầng:
+
+$$
+x \rightarrow h_1 \rightarrow h_2 \rightarrow \hat{y} \rightarrow L
+$$
+
+Loss (L) phụ thuộc vào rất nhiều trọng số.
+
+Ví dụ một neuron đơn giản:
+
+$$
+z = wx + b
+$$
+
+$$
+\hat{y} = z
+$$
+
+Loss:
+
+$$
+L = (\hat{y} - y)^2
+$$
+
+Thay vào:
+
+$$
+L = (wx + b - y)^2
+$$
+
+Ta cần tính:
+
+$$
+\frac{\partial L}{\partial w}
+$$
+
+và:
+
+$$
+\frac{\partial L}{\partial b}
+$$
+
+Đây chính là đạo hàm riêng.
+
+Đặt:
+
+$$
+e = wx + b - y
+$$
+
+$$
+L = e^2
+$$
+
+Ta có:
+
+$$
+\frac{\partial L}{\partial w} = 2e \cdot x
+$$
+
+$$
+\frac{\partial L}{\partial b} = 2e
+$$
+
+Tức là:
+
+$$
+\frac{\partial L}{\partial w} = 2(wx + b - y)x
+$$
+
+$$
+\frac{\partial L}{\partial b} = 2(wx + b - y)
+$$
+
+
+# Ví dụ cụ thể trong ML
+
+Giả sử:
+
+$$
+x = 2
+$$
+
+$$
+y = 10
+$$
+
+$$
+w = 3
+$$
+
+$$
+b = 1
+$$
+
+Mô hình dự đoán:
+
+$$
+\hat{y} = wx + b = 3 \times 2 + 1 = 7
+$$
+
+Loss:
+
+$$
+L = (\hat{y} - y)^2 = (7 - 10)^2 = 9
+$$
+
+Sai số:
+
+$$
+e = \hat{y} - y = -3
+$$
+
+Gradient theo (w):
+
+$$
+\frac{\partial L}{\partial w} = 2e x = 2 \times (-3) \times 2 = -12
+$$
+
+Gradient theo (b):
+
+$$
+\frac{\partial L}{\partial b} = 2e = -6
+$$
+
+Nếu learning rate:
+
+$$
+\alpha = 0.1
+$$
+
+Cập nhật:
+
+$$
+w_{\text{new}} = w - \alpha \frac{\partial L}{\partial w}
+$$
+
+$$
+w_{\text{new}} = 3 - 0.1(-12) = 4.2
+$$
+
+$$
+b_{\text{new}} = 1 - 0.1(-6) = 1.6
+$$
+
+Dự đoán mới:
+
+$$
+\hat{y}_{new} = 4.2 \times 2 + 1.6 = 10
+$$
+
+Loss mới:
+
+$$
+L = (10 - 10)^2 = 0
+$$
+
+Trong ví dụ đơn giản này, chỉ một bước đã đưa dự đoán về đúng.
+
+
+# Đạo hàm theo hướng là gì?
+
+Đạo hàm riêng chỉ cho ta biết độ dốc theo từng trục riêng lẻ.
+
+Ví dụ:
+
+$$
+\frac{\partial f}{\partial x}
+$$
+
+là độ dốc theo hướng (x).
+
+$$
+\frac{\partial f}{\partial y}
+$$
+
+là độ dốc theo hướng (y).
+
+Nhưng nếu ta muốn biết độ dốc theo một hướng bất kỳ thì sao?
+
+Khi đó dùng **đạo hàm theo hướng**:
+
+$$
+D_{\mathbf{u}}f = \nabla f \cdot \mathbf{u}
+$$
+
+Trong đó:
+
+* (\nabla f): gradient
+* (\mathbf{u}): vector đơn vị chỉ hướng muốn đi
+* (\cdot): tích vô hướng
+
+Ví dụ:
+
+$$
+f(x,y) = x^2 + y^2
+$$
+
+$$
+\nabla f =
+\begin{bmatrix}
+2x \
+2y
+\end{bmatrix}
+$$
+
+Tại ((3,4)):
+
+$$
+\nabla f =
+\begin{bmatrix}
+6 \
+8
+\end{bmatrix}
+$$
+
+Nếu đi theo hướng:
+
+$$
+\mathbf{u} =
+\begin{bmatrix}
+1 \
+0
+\end{bmatrix}
+$$
+
+thì:
+
+$$
+D_{\mathbf{u}}f =
+\begin{bmatrix}
+6 \
+8
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+1 \
+0
+\end{bmatrix}
+= 6
+$$
+
+Nghĩa là nếu đi theo hướng trục (x), độ dốc là 6.
+
+Nếu đi theo hướng:
+
+$$
+\mathbf{u} =
+\begin{bmatrix}
+0 \
+1
+\end{bmatrix}
+$$
+
+thì:
+
+$$
+D_{\mathbf{u}}f =
+\begin{bmatrix}
+6 \
+8
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+0 \
+1
+\end{bmatrix}
+= 8
+$$
+
+Nghĩa là nếu đi theo hướng trục (y), độ dốc là 8.
+
+
+# Đạo hàm riêng bậc hai
+
+Sau khi đã có đạo hàm riêng bậc một, ta có thể tiếp tục lấy đạo hàm một lần nữa.
+
+Ví dụ:
+
+$$
+f(x,y) = x^2y + 3y^3
+$$
+
+Ta có:
+
+$$
+\frac{\partial f}{\partial x} = 2xy
+$$
+
+$$
+\frac{\partial f}{\partial y} = x^2 + 9y^2
+$$
+
+## Đạo hàm bậc hai theo (x)
+
+$$
+\frac{\partial^2 f}{\partial x^2}
+=================================
+
+\frac{\partial}{\partial x}(2xy)
+$$
+
+Coi (y) là hằng số:
+
+$$
+\frac{\partial^2 f}{\partial x^2} = 2y
+$$
+
+## Đạo hàm bậc hai theo (y)
+
+$$
+\frac{\partial^2 f}{\partial y^2}
+=================================
+
+\frac{\partial}{\partial y}(x^2 + 9y^2)
+$$
+
+$$
+\frac{\partial^2 f}{\partial y^2} = 18y
+$$
+
+## Đạo hàm hỗn hợp
+
+Lấy theo (x), rồi theo (y):
+
+$$
+\frac{\partial^2 f}{\partial y \partial x}
+==========================================
+
+\frac{\partial}{\partial y}
+\left(
+\frac{\partial f}{\partial x}
+\right)
+$$
+
+$$
+\frac{\partial f}{\partial x} = 2xy
+$$
+
+$$
+\frac{\partial}{\partial y}(2xy) = 2x
+$$
+
+Vậy:
+
+$$
+\frac{\partial^2 f}{\partial y \partial x} = 2x
+$$
+
+Lấy theo (y), rồi theo (x):
+
+$$
+\frac{\partial f}{\partial y} = x^2 + 9y^2
+$$
+
+$$
+\frac{\partial}{\partial x}(x^2 + 9y^2) = 2x
+$$
+
+Vậy:
+
+$$
+\frac{\partial^2 f}{\partial x \partial y} = 2x
+$$
+
+Hai kết quả bằng nhau.
+
+
+# Hessian là gì?
+
+Nếu gradient gom các đạo hàm bậc một thành vector, thì Hessian gom các đạo hàm bậc hai thành ma trận.
+
+Với hàm hai biến:
+
+$$
+f(x,y)
+$$
+
+Hessian là:
+
+$$
+H =
+\begin{bmatrix}
+\frac{\partial^2 f}{\partial x^2} &
+\frac{\partial^2 f}{\partial x \partial y}
+\
+\frac{\partial^2 f}{\partial y \partial x} &
+\frac{\partial^2 f}{\partial y^2}
+\end{bmatrix}
+$$
+
+Hessian giúp ta biết bề mặt cong như thế nào.
+
+Trong tối ưu hóa:
+
+* Gradient cho biết hướng đi.
+* Hessian cho biết độ cong.
+* Một số thuật toán như Newton’s method dùng Hessian để tối ưu nhanh hơn gradient descent.
+
+
+# Cách giải bài tập đạo hàm riêng
+
+Bạn có thể làm theo quy trình này:
+
+## Bước 1: Xác định biến cần lấy đạo hàm
+
+Ví dụ yêu cầu:
+
+$$
+\frac{\partial f}{\partial x}
+$$
+
+thì biến chính là (x).
+
+## Bước 2: Coi các biến còn lại là hằng số
+
+Nếu hàm có (x, y, z), lấy theo (x) thì (y,z) là hằng số.
+
+## Bước 3: Áp dụng quy tắc đạo hàm một biến
+
+Các quy tắc vẫn giống đạo hàm thường:
+
+$$
+\frac{d}{dx}x^n = nx^{n-1}
+$$
+
+$$
+\frac{d}{dx}\sin x = \cos x
+$$
+
+$$
+\frac{d}{dx}e^x = e^x
+$$
+
+$$
+\frac{d}{dx}\ln x = \frac{1}{x}
+$$
+
+## Bước 4: Rút gọn kết quả
+
+
+# Một số bài tập mẫu
+
+## Bài 1
+
+Cho:
+
+$$
+f(x,y) = 4x^3y^2 + 7xy + 9
+$$
+
+Tính:
+
+$$
+\frac{\partial f}{\partial x}
+$$
+
+và:
+
+$$
+\frac{\partial f}{\partial y}
+$$
+
+### Giải
+
+Theo (x):
+
+$$
+\frac{\partial}{\partial x}(4x^3y^2) = 12x^2y^2
+$$
+
+$$
+\frac{\partial}{\partial x}(7xy) = 7y
+$$
+
+$$
+\frac{\partial}{\partial x}(9) = 0
+$$
+
+Vậy:
+
+$$
+\frac{\partial f}{\partial x} = 12x^2y^2 + 7y
+$$
+
+Theo (y):
+
+$$
+\frac{\partial}{\partial y}(4x^3y^2) = 8x^3y
+$$
+
+$$
+\frac{\partial}{\partial y}(7xy) = 7x
+$$
+
+$$
+\frac{\partial}{\partial y}(9) = 0
+$$
+
+Vậy:
+
+$$
+\frac{\partial f}{\partial y} = 8x^3y + 7x
+$$
+
+## Bài 2
+
+Cho:
+
+$$
+f(x,y) = e^{xy}
+$$
+
+Tính:
+
+$$
+\frac{\partial f}{\partial x}
+$$
+
+và:
+
+$$
+\frac{\partial f}{\partial y}
+$$
+
+### Giải
+
+Theo (x), coi (y) là hằng số.
+
+$$
+\frac{\partial}{\partial x}e^{xy}
+=================================
+
+e^{xy} \cdot y
+$$
+
+Vậy:
+
+$$
+\frac{\partial f}{\partial x} = ye^{xy}
+$$
+
+Theo (y), coi (x) là hằng số.
+
+$$
+\frac{\partial}{\partial y}e^{xy}
+=================================
+
+e^{xy} \cdot x
+$$
+
+Vậy:
+
+$$
+\frac{\partial f}{\partial y} = xe^{xy}
+$$
+
+
+## Bài 3
+
+Cho:
+
+$$
+f(x,y) = \ln(x^2 + y^2)
+$$
+
+Tính:
+
+$$
+\frac{\partial f}{\partial x}
+$$
+
+và:
+
+$$
+\frac{\partial f}{\partial y}
+$$
+
+### Giải
+
+Theo (x):
+
+$$
+\frac{\partial f}{\partial x}
+=============================
+
+\frac{1}{x^2+y^2} \cdot 2x
+$$
+
+$$
+\frac{\partial f}{\partial x}
+=============================
+
+\frac{2x}{x^2+y^2}
+$$
+
+Theo (y):
+
+$$
+\frac{\partial f}{\partial y}
+=============================
+
+\frac{1}{x^2+y^2} \cdot 2y
+$$
+
+$$
+\frac{\partial f}{\partial y}
+=============================
+
+\frac{2y}{x^2+y^2}
+$$
+
+
+# Ví dụ liên hệ trực tiếp với neural network
+
+Giả sử một mô hình tuyến tính có hai đầu vào:
+
+$$
+\hat{y} = w_1x_1 + w_2x_2 + b
+$$
+
+Loss:
+
+$$
+L = (\hat{y} - y)^2
+$$
+
+Ta cần biết mỗi trọng số ảnh hưởng đến loss thế nào.
+
+Đặt:
+
+$$
+e = \hat{y} - y
+$$
+
+$$
+L = e^2
+$$
+
+Vì:
+
+$$
+\hat{y} = w_1x_1 + w_2x_2 + b
+$$
+
+nên:
+
+$$
+\frac{\partial L}{\partial w_1}
+===============================
+
+2e \cdot x_1
+$$
+
+$$
+\frac{\partial L}{\partial w_2}
+===============================
+
+2e \cdot x_2
+$$
+
+$$
+\frac{\partial L}{\partial b}
+=============================
+
+2e
+$$
+
+Đây chính là những thứ PyTorch tự động tính khi ta gọi:
+
+```python
+loss.backward()
+```
+
+Sau đó optimizer sẽ cập nhật:
+
+```python
+optimizer.step()
+```
+
+# Code PyTorch minh họa
+
+Ví dụ nhỏ:
+
+```python
+import torch
+
+# Khởi tạo biến, requires_grad=True nghĩa là cần tính gradient
+w = torch.tensor(3.0, requires_grad=True)
+b = torch.tensor(1.0, requires_grad=True)
+
+x = torch.tensor(2.0)
+y = torch.tensor(10.0)
+
+# Forward
+y_pred = w * x + b
+
+# Loss
+loss = (y_pred - y) ** 2
+
+# Backward
+loss.backward()
+
+print("y_pred:", y_pred.item())
+print("loss:", loss.item())
+print("dL/dw:", w.grad.item())
+print("dL/db:", b.grad.item())
+```
+
+Kết quả sẽ là:
+
+```text
+y_pred: 7.0
+loss: 9.0
+dL/dw: -12.0
+dL/db: -6.0
+```
+
+Giống với phần tính tay ở trên.
+
+
+# Tóm tắt trọng tâm
+
+Bạn chỉ cần nhớ các ý sau:
+
+**Đạo hàm riêng** trả lời câu hỏi:
+
+> Hàm thay đổi thế nào khi chỉ một biến thay đổi, còn các biến khác giữ nguyên?
+
+Với:
+
+$$
+f(x,y)
+$$
+
+ta có:
+
+$$
+\frac{\partial f}{\partial x}
+$$
+
+là đạo hàm theo (x), coi (y) là hằng số.
+
+$$
+\frac{\partial f}{\partial y}
+$$
+
+là đạo hàm theo (y), coi (x) là hằng số.
+
+**Gradient** là vector gom tất cả đạo hàm riêng:
+
+$$
+\nabla f =
+\begin{bmatrix}
+\frac{\partial f}{\partial x_1} \
+\frac{\partial f}{\partial x_2} \
+\vdots \
+\frac{\partial f}{\partial x_n}
+\end{bmatrix}
+$$
+
+Trong ML:
+
+$$
+\frac{\partial L}{\partial w_i}
+$$
+
+cho biết trọng số (w_i) ảnh hưởng đến loss như thế nào.
+
+Gradient descent cập nhật tham số theo công thức:
+
+$$
+\theta_{new} = \theta_{old} - \alpha \nabla L
+$$
+
+Backpropagation thực chất là cách tính hiệu quả các đạo hàm riêng trong mạng nơ-ron.
+
+
+# Cách nhớ nhanh
+
+Bạn có thể nhớ như sau:
+
+| Khái niệm        | Ý nghĩa                                              |
+| ---------------- | ---------------------------------------------------- |
+| Đạo hàm thường   | Hàm một biến thay đổi thế nào                        |
+| Đạo hàm riêng    | Hàm nhiều biến thay đổi thế nào khi chỉ một biến đổi |
+| Gradient         | Vector chứa tất cả đạo hàm riêng                     |
+| Gradient descent | Đi ngược hướng gradient để giảm loss                 |
+| Backpropagation  | Tính đạo hàm riêng của loss theo từng trọng số       |
+
+Một câu nhớ ngắn:
+
+> Đạo hàm riêng đo ảnh hưởng của từng biến riêng lẻ; gradient gom tất cả ảnh hưởng đó lại để tìm hướng cập nhật tốt nhất.

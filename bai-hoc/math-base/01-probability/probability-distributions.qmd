@@ -1,0 +1,136 @@
+---
+title: "Phân phối xác suất (Probability Distributions)"
+order: 2
+date: 2026-08-27
+description: "Một Random Variable (biến ngẫu nhiên) là một biến có giá trị phụ thuộc vào kết quả của một sự kiện ngẫu nhiên. Một Probability Distribution (phân phối xác suất) mô tả khả năng xảy ra của từng giá…"
+series: math-base
+categories: [math-base, probability]
+group: probability
+---
+# Phân phối xác suất
+
+## Giới thiệu
+
+Một **Random Variable (biến ngẫu nhiên)** là một biến có giá trị phụ thuộc vào kết quả của một sự kiện ngẫu nhiên. Một **Probability Distribution (phân phối xác suất)** mô tả khả năng xảy ra của từng giá trị có thể.
+
+**Câu hỏi cốt lõi:** Nếu tôi lấy mẫu từ quá trình này, tôi có khả năng thấy những giá trị nào và tần suất ra sao?
+
+* **Discrete Distributions (phân phối rời rạc):** Dùng cho các kết quả đếm được như tung đồng xu hoặc xúc xắc. Sử dụng **PMF (Probability Mass Function – hàm khối xác suất)** với $\sum P(x) = 1$.
+* **Continuous Distributions (phân phối liên tục):** Dùng cho các kết quả vô hạn trong một khoảng, như chiều cao hoặc nhiệt độ. Sử dụng **PDF (Probability Density Function – hàm mật độ xác suất)** với $\int f(x) dx = 1$.
+
+
+
+## PMF, PDF và CDF
+
+Ba hàm này mô tả đầy đủ mọi phân phối xác suất.
+
+### PMF: Probability Mass Function (Hàm khối xác suất – rời rạc)
+
+Cho xác suất của *chính xác* từng giá trị: $P(X = k)$.
+
+* **Ví dụ:** Với xúc xắc công bằng, $\text{PMF}(3) = 1/6$.
+
+### PDF: Probability Density Function (Hàm mật độ xác suất – liên tục)
+
+Cho **mật độ** xác suất, không phải xác suất trực tiếp. Đáng chú ý, $P(X = x) = 0$ với mọi điểm đơn lẻ trong phân phối liên tục.
+Xác suất của một khoảng được tính bằng **diện tích dưới đường cong**:
+$$P(a < X < b) = \int_a^b f(x) dx$$
+
+### CDF: Cumulative Distribution Function (Hàm phân phối tích lũy)
+
+Cho xác suất biến nhận giá trị *nhỏ hơn hoặc bằng* một giá trị: $F(x) = P(X \leq x)$.
+CDF luôn bắt đầu từ 0, kết thúc ở 1 và không bao giờ giảm.
+
+Với biến liên tục:
+$$F(x) = P(X \leq x) = \int_{-\infty}^x f(t) dt$$
+
+
+
+## Các phân phối rời rạc
+
+### Bernoulli
+
+* **Mô tả:** Một phép thử duy nhất với hai kết quả: Thành công (1) với xác suất $p$, và Thất bại (0) với xác suất $1-p$.
+* **Kỳ vọng:** $p$
+* **Phương sai:** $p(1-p)$
+* **Ứng dụng ML:** Đầu ra của Logistic Regression; hàm mất mát Binary Cross-Entropy được suy ra từ phân phối Bernoulli.
+
+### Binomial (nhị thức)
+
+* **Mô tả:** Số lần thành công $k$ trong $n$ phép thử Bernoulli độc lập.
+* **Công thức:** $P(k) = \binom{n}{k} p^k (1-p)^{n-k}$
+* **Kỳ vọng:** $np$
+* **Phương sai:** $np(1-p)$
+* **Ứng dụng ML:** Kiểm thử A/B (ví dụ: có bao nhiêu người dùng chuyển đổi trong 1000 người?).
+
+### Poisson
+
+* **Mô tả:** Số sự kiện xảy ra trong một khoảng cố định, với tốc độ trung bình $\lambda$.
+* **Công thức:** $P(k) = \frac{\lambda^k e^{-\lambda}}{k!}$
+* **Kỳ vọng:** $\lambda$
+* **Phương sai:** $\lambda$
+* **Ứng dụng ML:** Mô hình hóa lưu lượng truy cập web hoặc số cuộc gọi; Poisson Regression.
+
+
+
+## Các phân phối liên tục
+
+### Normal (Gaussian – phân phối chuẩn)
+
+* **Mô tả:** Đường cong hình chuông đối xứng, xác định bởi trung bình $\mu$ và phương sai $\sigma^2$.
+* **Công thức:** $f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}$
+* **Ý nghĩa:** Theo Định lý Giới hạn Trung tâm (Central Limit Theorem), tổng của các biến độc lập sẽ hội tụ về phân phối này.
+* **Ứng dụng ML:** Khởi tạo trọng số (Xavier/He), điều chuẩn L2 (Gaussian prior), và Variational Autoencoders (VAE).
+
+### Exponential (mũ)
+
+* **Mô tả:** Mô hình hóa thời gian *giữa* các sự kiện Poisson. Có **tính không nhớ (memoryless property)**, nghĩa là xác suất chờ thêm không phụ thuộc vào thời gian đã chờ.
+* **Công thức:** $f(x) = \lambda e^{-\lambda x}, \quad x \geq 0$
+* **Kỳ vọng:** $1/\lambda$
+* **Phương sai:** $1/\lambda^2$
+* **Ứng dụng ML:** Phân tích sống sót (survival analysis) và dự đoán thời gian hỏng hóc.
+
+### Log-Normal
+
+* **Mô tả:** Nếu $\ln(X)$ tuân theo phân phối chuẩn thì $X$ là Log-Normal. Dùng để mô hình hóa dữ liệu dương với đuôi phải dài.
+* **Ứng dụng ML:** Giá nhà, thu nhập, giá cổ phiếu. Vì vậy, mục tiêu thường được log-transform trong hồi quy.
+
+
+
+## Phân phối tiên nghiệm trong Bayes
+
+Các phân phối này mô tả **xác suất của xác suất** và được dùng làm tiên nghiệm trong suy luận Bayes.
+
+* **Beta Distribution (phân phối Beta):** Xác định trên $[0, 1]$. Biểu diễn sự không chắc chắn về một xác suất (như độ lệch của đồng xu). Là **conjugate prior (tiên nghiệm liên hợp)** cho phân phối nhị thức.
+* **Dirichlet Distribution (phân phối Dirichlet):** Phiên bản đa biến của phân phối Beta. Là phân phối trên các vector xác suất có tổng bằng 1. Dùng trong **Latent Dirichlet Allocation (LDA)** cho mô hình chủ đề.
+
+
+
+## Cây họ phân phối
+
+Các phân phối liên hệ với nhau qua các giới hạn:
+
+* **Bernoulli $\rightarrow$ Binomial:** Tổng của $n$ biến Bernoulli tạo thành $\text{Binomial}(n, p)$.
+* **Binomial $\rightarrow$ Normal:** Khi $n \rightarrow \infty$, phân phối nhị thức hội tụ về Gaussian.
+* **Binomial $\rightarrow$ Poisson:** Khi $n \rightarrow \infty$ và $p \rightarrow 0$ (với $np = \lambda$ không đổi), nhị thức trở thành Poisson.
+* **Exponential $\rightarrow$ Gamma:** Tổng của $k$ biến mũ tạo thành $\text{Gamma}(k, \lambda)$.
+* **Normal $\rightarrow$ Chi-Square:** Tổng bình phương của các biến chuẩn hóa tạo thành phân phối Chi-Square.
+
+
+
+## Ứng dụng trong ML: Hàm mất mát
+
+Các hàm mất mát trong deep learning thực chất là **negative log-likelihood (log-hợp lý âm)** của các phân phối cụ thể. Việc chọn hàm mất mát tương đương với giả định một phân phối cho biến mục tiêu.
+
+* **MSE Loss $\leftrightarrow$ Gaussian:** Tối thiểu hóa sai số bình phương trung bình giả định biến mục tiêu tuân theo Gaussian quanh dự đoán: $\text{MSE} = -\log P(y | \hat{y}, \sigma) + \text{const}$.
+* **BCE Loss $\leftrightarrow$ Bernoulli:** Binary Cross-Entropy giả định biến mục tiêu tuân theo Bernoulli: $\text{BCE} = -[y \log(p) + (1-y)\log(1-p)]$.
+* **Categorical CE $\leftrightarrow$ Multinomial:** Categorical Cross-Entropy giả định phân phối Multinomial (Categorical).
+* **Regularization $\leftrightarrow$ Prior:** Điều chuẩn L2 tương ứng với tiên nghiệm Gaussian, còn L1 tương ứng với tiên nghiệm Laplace.
+
+**Ý chính:** Hiểu các phân phối này giúp bạn chọn đúng hàm mất mát. Ví dụ: dùng Poisson loss cho dữ liệu đếm, hoặc log-transform mục tiêu cho dữ liệu dương có đuôi dài. 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Ôn nhanh (Theory AI)
+PMF / moment từng phân phối: [Bernoulli](../../theory-ai/01-probability/bernoulli-pmf-moments.qmd) · [Binomial](../../theory-ai/01-probability/binomial-pmf.qmd) · [Poisson](../../theory-ai/01-probability/poisson-pmf-cdf.qmd) · [Geometric](../../theory-ai/01-probability/geometric-pmf-mean.qmd).
+:::

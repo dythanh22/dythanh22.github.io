@@ -1,0 +1,127 @@
+---
+title: "Khoảng tin cậy (Confidence Intervals)"
+order: 5
+date: 2026-08-27
+description: "Trong khi ước lượng điểm (Point Estimate) cung cấp một giá trị duy nhất (ví dụ: \"chiều cao trung bình là 165cm\"), nó không thể hiện được mức độ bất định và tạo cảm giác chính xác giả tạo. Khoảng tin…"
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# Khoảng tin cậy (Confidence Intervals)
+## Giới thiệu
+Trong khi **ước lượng điểm (Point Estimate)** cung cấp một giá trị duy nhất (ví dụ: "chiều cao trung bình là 165cm"), nó không thể hiện được mức độ bất định và tạo cảm giác chính xác giả tạo. **Khoảng tin cậy (Confidence Interval - CI)** giải quyết vấn đề này bằng cách cung cấp một *khoảng giá trị* phản ánh sự biến thiên tự nhiên của quá trình lấy mẫu.
+
+*   **Ước lượng điểm (Rủi ro):** "Chiều cao trung bình là 165cm."  
+*   **Khoảng tin cậy (Tốt hơn):** "Chúng tôi tin tưởng 95% rằng giá trị trung bình thực nằm trong khoảng từ 160cm đến 170cm."
+
+
+
+## Trực giác: Ví dụ lưới đánh cá
+Để hiểu CI, hãy tưởng tượng tham số tổng thể là một **con cá vô hình đứng yên** trong một hồ nước đục.
+
+*   **Ước lượng điểm = Ném lao:** Bạn ném một điểm duy nhất xuống nước. Có thể gần đúng, nhưng bạn không biết gần đến mức nào.
+*   **Khoảng tin cậy = Quăng lưới:** Bạn quăng một tấm lưới có độ rộng nhất định. Bạn không chắc cá có nằm trong lưới không, nhưng lưới đủ rộng sẽ giúp bạn "tự tin" hơn.
+*   **Mức tin cậy (ví dụ 95%):** Nếu bạn quăng lưới 100 lần, bạn kỳ vọng bắt được cá khoảng 95 lần.
+
+
+
+## Cấu trúc của khoảng tin cậy
+Khoảng tin cậy bao gồm một tâm (ước lượng điểm) và một độ rộng (sai số biên - margin of error).
+
+### Công thức tổng quát
+$$CI = \text{Point Estimate} \pm \text{Margin of Error}$$
+
+### Dạng toán học
+$$CI = \bar{x} \pm (z^* \times \frac{\sigma}{\sqrt{n}})$$
+
+1. **Ước lượng điểm ($\bar{x}$):** Trung bình mẫu, là giá trị ước lượng tốt nhất.
+2. **Giá trị tới hạn ($z^*$ hoặc $t^*$):** Phụ thuộc vào mức tin cậy (ví dụ 1.96 cho 95%).
+3. **Sai số chuẩn ($\frac{\sigma}{\sqrt{n}}$):** Độ dao động kỳ vọng của trung bình mẫu.
+4. **Sai số biên (Margin of Error - ME):** Tích của giá trị tới hạn và sai số chuẩn.
+
+### Giá trị tới hạn phổ biến (Z-score)
+
+
+| Mức tin cậy | Alpha (phần đuôi) | Giá trị tới hạn ($z^*$) |
+| :--- | :--- | :--- |
+| 90% | 0.10 | 1.645 |
+| 95% | 0.05 | 1.960 |
+| 99% | 0.01 | 2.576 |
+
+
+## Quyết định: Z-score hay T-score
+
+Việc chọn phân phối phù hợp là rất quan trọng:
+
+| Trường hợp | Phân phối | Công thức |
+| :--- | :--- | :--- |
+| **Mẫu lớn ($n \ge 30$)** hoặc biết $\sigma$ | Phân phối Z (chuẩn) | $\bar{x} \pm z^* \frac{\sigma}{\sqrt{n}}$ |
+| **Mẫu nhỏ ($n < 30$)** và không biết $\sigma$ | Phân phối t (Student) | $\bar{x} \pm t^* \frac{s}{\sqrt{n}}$ |
+
+**Tại sao dùng phân phối t?**  
+Phân phối t có “đuôi dày” hơn để phản ánh sự bất định cao hơn khi ước lượng $\sigma$ từ mẫu nhỏ.
+
+
+
+## Ví dụ tính toán từng bước
+
+### Trường hợp 1: Z-Interval (Mẫu lớn / tỷ lệ)
+
+**Bài toán:** 102 trong 121 đơn hàng được giao trong 12 giờ. Tìm CI 95% cho tỷ lệ.
+
+1. **Tỷ lệ mẫu:** $\hat{p} = 102/121 = 0.84$
+2. **Giá trị tới hạn:** $z^* = 1.96$
+3. **Sai số chuẩn:**  
+   $SE = \sqrt{\frac{0.84 \times 0.16}{121}} \approx 0.033$
+4. **Sai số biên:**  
+   $ME = 1.96 \times 0.033 = 0.065$
+5. **Khoảng tin cậy:**  
+   $0.84 \pm 0.065 = [0.775, 0.905]$
+
+**Kết luận:** Ta tin tưởng 95% rằng từ 77.5% đến 90.5% đơn hàng được giao trong 12 giờ.
+
+
+
+### Trường hợp 2: T-Interval (Mẫu nhỏ, không biết $\sigma$)
+
+**Bài toán:** $n=6$, $\bar{x}=101.82$, $s=1.2$. Tính CI 95%.
+
+1. **Bậc tự do:** $df = 5$
+2. **Giá trị tới hạn:** $t^* = 2.571$
+3. **Sai số chuẩn:**  
+   $SE = 1.2 / \sqrt{6} \approx 0.49$
+4. **Sai số biên:**  
+   $ME = 2.571 \times 0.49 \approx 1.26$
+5. **Khoảng tin cậy:**  
+   $101.82 \pm 1.26 = [100.56, 103.08]$
+
+
+
+## Cái bẫy 95% (Diễn giải đúng)
+
+Phát biểu sau là **SAI**:  
+*"Có 95% xác suất rằng giá trị trung bình thực nằm trong khoảng từ 160 đến 170."*
+
+Trong thống kê Frequentist, tham số thật là **một hằng số cố định**. Sau khi tính xong khoảng, giá trị thật hoặc nằm trong khoảng hoặc không.
+
+**Diễn giải đúng:**  
+*"Nếu lặp lại quá trình lấy mẫu nhiều lần, thì 95% các khoảng tin cậy được tạo ra sẽ chứa giá trị trung bình thật của tổng thể."*
+
+
+
+## Các yếu tố ảnh hưởng đến độ rộng khoảng
+
+Khoảng càng hẹp → độ chính xác càng cao.
+
+* **Kích thước mẫu ($n$):** Tăng $n$ → khoảng hẹp hơn. Tăng gấp 4 lần → sai số giảm một nửa.
+* **Mức tin cậy:** Giảm mức tin cậy (99% → 90%) → khoảng hẹp hơn nhưng rủi ro cao hơn.
+* **Độ lệch chuẩn ($\sigma$):** Dữ liệu ít biến động → khoảng chính xác hơn.
+
+
+
+## Ứng dụng trong Machine Learning
+
+* **A/B Testing:** Tính CI cho sự khác biệt giữa Model A và B. Nếu khoảng chứa 0 → khác biệt có thể chỉ là nhiễu.
+* **Cross-Validation:** Nên báo cáo dạng  
+  "Accuracy: 83.0% ± 1.5% (95% CI)" để thể hiện sự bất định.
+* **Hồi quy tuyến tính:** Mỗi hệ số có một CI. Nếu khoảng chứa 0 → biến đó có thể không có ý nghĩa thống kê.

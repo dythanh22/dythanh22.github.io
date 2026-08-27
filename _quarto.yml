@@ -8,8 +8,9 @@ project:
     - index.qmd
     - about.qmd
     - 404.qmd
-    # Whitelist: 3 chuỗi ổn định (Pha 5 — theory-ai đã đủ 15 chapter)
+    # Whitelist: 4 chuỗi (math-base = nền; theory / arch / optimize)
     - bai-hoc/index.qmd
+    - bai-hoc/math-base/**
     - bai-hoc/architecture-models/**
     - bai-hoc/ai-optimize/**
     - bai-hoc/theory-ai/**
@@ -21,7 +22,7 @@ project:
 
 website:
   title: "dythanh22"
-  description: "Ghi chú học tập — lý thuyết AI, kiến trúc mô hình và tối ưu inference"
+  description: "Ghi chú học tập — nền toán, lý thuyết AI, kiến trúc mô hình và tối ưu inference"
   site-url: https://dythanh22.github.io
   repo-url: https://github.com/dythanh22/dythanh22.github.io
   repo-actions: [edit, issue]
@@ -50,6 +51,8 @@ website:
         menu:
           - href: bai-hoc/index.qmd
             text: Tất cả chuỗi
+          - href: bai-hoc/math-base/index.qmd
+            text: Math Base
           - href: bai-hoc/theory-ai/index.qmd
             text: Theory AI
           - href: bai-hoc/architecture-models/index.qmd
@@ -62,6 +65,36 @@ website:
   # Sidebar: thứ tự lộ trình (CNN → sequence → generative → embeddings → attention → U-Net).
   # Trong mỗi model, `auto` + frontmatter `order` giữ thứ tự chương.
   sidebar:
+    - id: math-base
+      title: "Math Base"
+      style: docked
+      search: true
+      # 1 = chỉ hiện 7 chapter; bung từng mục để thấy bài
+      collapse-level: 1
+      contents:
+        - bai-hoc/math-base/index.qmd
+        - section: "1. Probability"
+          contents:
+            - auto: bai-hoc/math-base/01-probability/*.qmd
+        - section: "2. Statistics"
+          contents:
+            - auto: bai-hoc/math-base/02-statistics/*.qmd
+        - section: "3. Linear Algebra"
+          contents:
+            - auto: bai-hoc/math-base/03-linear-algebra/*.qmd
+        - section: "4. Calculus"
+          contents:
+            - auto: bai-hoc/math-base/04-calculus/*.qmd
+        - section: "5. Optimization"
+          contents:
+            - auto: bai-hoc/math-base/05-optimization/*.qmd
+        - section: "6. Information Theory"
+          contents:
+            - auto: bai-hoc/math-base/06-information-theory/*.qmd
+        - section: "7. Graph Theory"
+          contents:
+            - auto: bai-hoc/math-base/07-graph-theory/*.qmd
+
     - id: architecture-models
       title: "Architecture Models"
       style: docked

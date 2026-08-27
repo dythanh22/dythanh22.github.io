@@ -1,0 +1,200 @@
+---
+title: "Biểu Diễn Đồ Thị (Graph Representations)"
+order: 1
+date: 2026-08-27
+description: "Cách bạn lưu trữ một đồ thị trong bộ nhớ quyết định thao tác nào sẽ nhanh, thao tác nào sẽ chậm, và bạn cần bao nhiêu không gian lưu trữ. Việc chọn đúng biểu diễn là cực kỳ quan trọng trong học máy,…"
+series: math-base
+categories: [math-base, graph-theory]
+group: graph-theory
+---
+# Biểu Diễn Đồ Thị (Graph Representations)
+
+Cách bạn lưu trữ một đồ thị trong bộ nhớ quyết định thao tác nào sẽ nhanh, thao tác nào sẽ chậm, và bạn cần bao nhiêu không gian lưu trữ. Việc chọn đúng biểu diễn là cực kỳ quan trọng trong học máy, nơi đồ thị có thể chứa hàng triệu nút.
+
+
+
+## Giới Thiệu
+
+Đồ thị (graph) là một khái niệm trừu tượng: một tập hợp các nút được kết nối bởi các cạnh. Máy tính hiểu địa chỉ bộ nhớ, mảng và con trỏ, vì vậy chúng ta phải định nghĩa cách lưu trữ các cấu trúc này một cách hiệu quả. Các biểu diễn khác nhau làm cho các thao tác khác nhau trở nên hiệu quả. Chọn sai biểu diễn có thể biến một phép tra cứu $O(1)$ thành $O(n)$ hoặc làm mức sử dụng bộ nhớ tăng từ $O(n)$ lên $O(n^2)$.
+
+> **Đánh Đổi Cốt Lõi (The Core Trade-off)**
+> Không có biểu diễn nào là “tốt nhất” một cách phổ quát. Ma trận kề (Adjacency Matrix) vượt trội trong việc kiểm tra xem hai nút có được kết nối hay không. Danh sách kề (Adjacency List) ưu việt hơn trong việc duyệt các nút lân cận. Danh sách cạnh (Edge List) nhỏ gọn cho các đồ thị thưa.
+
+
+
+## Tại Sao Biểu Diễn Quan Trọng
+
+Hãy xem xét một mạng xã hội với 1 tỷ người dùng. Nếu phần lớn mọi người có khoảng 200 bạn bè, đây là một **đồ thị thưa (sparse graph)**.
+
+* **Ma trận kề (Adjacency Matrix):** Cần $10^9 \times 10^9 = 10^{18}$ phần tử. Điều này tương đương 1 exabyte, gần như không thể lưu trữ.
+* **Danh sách kề (Adjacency List):** Cần $10^9 \text{ nút} \times 200 \text{ bạn bè} = 2 \times 10^{11}$ phần tử. Khoảng 200 GB — lớn nhưng khả thi.
+
+### Thuật Ngữ Quan Trọng
+
+* **Đồ thị dày đặc (Dense Graph):** Hầu hết các cặp nút đều được kết nối ($E \approx V^2$). Ví dụ: Các lớp mạng nơ-ron kết nối đầy đủ.
+* **Đồ thị thưa (Sparse Graph):** Số cạnh ít so với số nút ($E \ll V^2$). Ví dụ: Mạng xã hội, mạng lưới đường đi.
+* **Đồ thị có hướng (Directed Graph):** Các cạnh có hướng ($A \rightarrow B \neq B \rightarrow A$).
+* **Đồ thị có trọng số (Weighted Graph):** Các cạnh có giá trị số đại diện cho chi phí, khoảng cách hoặc xác suất.
+
+
+
+## Ma Trận Kề (Adjacency Matrix)
+
+Ma trận kề là cách biểu diễn trực quan nhất của đồ thị.  
+Với $V$ đỉnh, ta xây dựng một ma trận $V \times V$ ký hiệu là $A$ sao cho:
+
+$$
+A[i][j] =
+\begin{cases}
+1 & \text{nếu tồn tại cạnh từ } i \text{ đến } j \\
+0 & \text{ngược lại}
+\end{cases}
+$$
+
+Đối với đồ thị có trọng số, thay giá trị $1$ bằng trọng số của cạnh tương ứng.
+
+### Tính Chất
+
+* **Đồ thị vô hướng:** Ma trận đối xứng ($A[i][j] = A[j][i]$).
+* **Khuyên tự nối (Self-loops):** Được biểu diễn bằng các phần tử trên đường chéo $A[i][i]$.
+* **Bậc (Degree):** Bậc của nút $i$ là tổng hàng $i$ (out-degree) hoặc tổng cột $i$ (in-degree).
+
+### Phân Tích Độ Phức Tạp
+
+| Thao tác                | Thời gian | Ghi chú                       |
+|:------------------------|:----------|:------------------------------|
+| Kiểm tra cạnh tồn tại   | $O(1)$    | Tra cứu mảng trực tiếp        |
+| Lấy tất cả nút lân cận  | $O(V)$    | Phải quét toàn bộ hàng        |
+| Thêm/xóa cạnh           | $O(1)$    | Cập nhật mảng trực tiếp       |
+| **Không gian**          | $O(V^2)$  | Không phụ thuộc số lượng cạnh |
+
+### Lũy Thừa Ma Trận: Một Siêu Năng Lực Ẩn
+
+Một tính chất đáng chú ý là $A^k[i][j]$ đếm số đường đi độ dài $k$ từ nút $i$ đến nút $j$. Điều này là nền tảng trong PageRank, random walks và Graph Neural Networks (GNNs).
+
+
+
+## Danh Sách Kề (Adjacency List)
+
+Thay vì lưu tất cả các cạnh có thể có, chỉ lưu những cạnh thực sự tồn tại. Với mỗi nút, duy trì một danh sách các nút lân cận của nó (ví dụ: Nút $0 \rightarrow [1, 2]$).
+
+### Các Lựa Chọn Cài Đặt
+
+* **Mảng của các mảng (Array of Arrays):** Đơn giản, thân thiện với cache và nhanh khi duyệt.
+* **Hash Map của các Set:** Cho phép kiểm tra cạnh tồn tại trong $O(1)$ và dễ thao tác với nút, nhưng tốn bộ nhớ hơn.
+* **Danh sách liên kết (Linked Lists):** Chèn cạnh ở đầu trong $O(1)$, nhưng hiệu năng cache kém.
+* **Định dạng CSR (Sparse):** Compressed Sparse Row. Tối ưu cho các đồ thị tĩnh.
+
+### Phân Tích Độ Phức Tạp
+
+| Thao tác               | Thời gian          | Ghi chú                                            |
+|:-----------------------|:-------------------|:---------------------------------------------------|
+| Kiểm tra cạnh tồn tại  | $O(\text{degree})$ | Phải quét danh sách lân cận ($O(1)$ nếu dùng set)  |
+| Lấy tất cả nút lân cận | $O(\text{degree})$ | Chỉ cần trả về danh sách                           |
+| Thêm cạnh              | $O(1)$             | Trung bình cho mảng động                           |
+| **Không gian**         | $O(V + E)$         | Tỷ lệ với số cạnh thực tế                          |
+
+Danh sách kề là lựa chọn mặc định cho hầu hết các thuật toán đồ thị như BFS, DFS và Dijkstra vì chúng được tối ưu cho việc duyệt các nút lân cận.
+
+
+
+## Danh Sách Cạnh (Edge List)
+
+Danh sách cạnh lưu tất cả các cạnh dưới dạng danh sách các cặp (hoặc bộ ba đối với đồ thị có trọng số).
+
+### Cấu Trúc
+
+`[(0, 1), (0, 2), (1, 3)]` hoặc `[(src, dst, weight)]`
+
+### Trường Hợp Sử Dụng Tốt Nhất
+
+* **Thuật toán Kruskal:** Hoàn hảo cho việc sắp xếp cạnh theo trọng số.
+* **Graph I/O:** Hầu hết các định dạng tệp (CSV, txt) tự nhiên là danh sách cạnh.
+* **Streaming Graphs:** Lý tưởng khi các cạnh đến từng cái một.
+
+| Thao tác                | Thời gian |
+|:------------------------|:----------|
+| Kiểm tra cạnh tồn tại   | $O(E)$    |
+| Lấy tất cả nút lân cận  | $O(E)$    |
+| Thêm cạnh               | $O(1)$    |
+| **Không gian**          | $O(E)$    |
+
+
+
+## Ma Trận Liên Thuộc (Incidence Matrix)
+
+Ma trận liên thuộc là một ma trận kích thước $V \times E$,  
+trong đó:
+- mỗi hàng tương ứng với một đỉnh (vertex),
+- mỗi cột tương ứng với một cạnh (edge).
+
+Ta định nghĩa:
+
+$$
+B[v][e] =
+\begin{cases}
+1 & \text{nếu đỉnh } v \text{ liên thuộc với cạnh } e \\
+0 & \text{ngược lại}
+\end{cases}
+$$
+
+Đối với đồ thị có hướng:
+- dùng $+1$ cho đỉnh nguồn (source vertex),
+- dùng $-1$ cho đỉnh đích (destination vertex).
+
+### Tại Sao Dùng Nó?
+
+* **Siêu đồ thị (Hypergraphs):** Tổng quát hóa tự nhiên khi cạnh kết nối nhiều hơn hai nút.
+* **Mạch điện:** Được dùng để biểu diễn các định luật Kirchhoff.
+* **Graph Laplacian:** $L = BB^T$ tạo ra ma trận Laplacian, nền tảng trong lý thuyết đồ thị phổ.
+
+
+
+## Tóm Tắt So Sánh
+
+| Biểu diễn              | Không gian  | Kiểm tra cạnh   | Nút lân cận     | Tốt nhất cho                      |
+|:-----------------------|:------------|:----------------|:----------------|:----------------------------------|
+| **Ma trận kề**         | $O(V^2)$    | $O(1)$          | $O(V)$          | Đồ thị dày đặc, phép toán ma trận |
+| **Danh sách kề**       | $O(V+E)$    | $O(\text{deg})$ | $O(\text{deg})$ | Đồ thị thưa, duyệt đồ thị         |
+| **Danh sách cạnh**     | $O(E)$      | $O(E)$          | $O(E)$          | Kruskal, I/O, streaming           |
+| **Ma trận liên thuộc** | $O(VE)$     | $O(V)$          | $O(E)$          | Siêu đồ thị, Laplacian            |
+
+
+
+## Ứng Dụng Trong Machine Learning (Học Máy)
+
+### Graph Neural Networks (GNNs)
+
+GNNs sử dụng ma trận kề (thường ở định dạng sparse) để lan truyền thông tin. Phép toán cốt lõi là:
+
+$$H^{(l+1)} = \sigma(\tilde{A} H^{(l)} W^{(l)})$$
+
+Trong đó $\tilde{A}$ là ma trận kề đã được chuẩn hóa.
+
+### Các Ứng Dụng ML Khác
+
+* **PageRank:** Phép nhân ma trận-vector lặp lại với ma trận chuyển tiếp.
+* **Hệ gợi ý (Recommendation Systems):** Đồ thị hai phía người dùng-sản phẩm sử dụng danh sách kề cho các truy vấn kiểu “người mua X cũng mua Y”.
+* **Knowledge Graphs:** Các bộ ba thực thể-quan hệ-thực thể (Einstein $\rightarrow$ born_in $\rightarrow$ Germany) được lưu dưới dạng danh sách cạnh.
+
+
+
+## Các Biểu Diễn Nâng Cao
+
+### Compressed Sparse Row (CSR)
+
+Tiêu chuẩn công nghiệp cho ma trận thưa. Nó sử dụng ba mảng:
+
+* `data`: Giá trị cạnh theo thứ tự hàng-major.
+* `indices`: Chỉ số cột cho mỗi giá trị.
+* `indptr`: Vị trí bắt đầu của mỗi hàng trong `data`.
+
+Độ phức tạp không gian là $O(E + V)$. Nó nhanh cho việc cắt theo hàng nhưng chậm cho việc cắt theo cột.
+
+### COO (Coordinate Format)
+
+Lưu ba mảng: chỉ số hàng, chỉ số cột và giá trị. Dễ xây dựng tăng dần nhưng chậm cho các phép toán số học. Thường được dùng làm định dạng trung gian trước khi chuyển sang CSR.
+
+### Ma Trận Thưa Theo Khối (Block Sparse Matrices)
+
+Được sử dụng khi đồ thị có cấu trúc khối hoặc cấu trúc cộng đồng tự nhiên. Điều này phổ biến trong các GNN quy mô lớn và xử lý đồ thị phân tán. 

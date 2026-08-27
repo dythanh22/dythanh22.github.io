@@ -1,0 +1,194 @@
+---
+title: "Tích vô hướng & Chuẩn vector (Dot Product & Vector Norms)"
+order: 1
+date: 2026-08-27
+description: "Các phép toán nguyên tử của Mạng nơ-ron và Tìm kiếm tương đồng (Similarity Search)."
+series: math-base
+categories: [math-base, linear-algebra]
+group: linear-algebra
+---
+# Tích vô hướng & Chuẩn vector
+
+Các phép toán nguyên tử của Mạng nơ-ron và Tìm kiếm tương đồng (Similarity Search).
+
+
+
+## Giới thiệu
+
+Ở trung tâm của học máy (machine learning) là hai phép toán cơ bản: **Tích vô hướng (Dot Product)** (độ thẳng hàng) và **Chuẩn (Norms)** (độ lớn).
+
+Mọi dự đoán của mạng nơ-ron, gợi ý của hệ thống đề xuất, và các hình phạt chuẩn hóa đều sử dụng các phép toán này. Cùng nhau, chúng tạo thành nền tảng cho cách máy móc hiểu sự tương đồng, khoảng cách và hướng trong không gian nhiều chiều.
+
+### Tại sao chúng quan trọng
+
+Hiểu về tích vô hướng và chuẩn là điều thiết yếu cho các kiến trúc học máy hiện đại. Nhân ma trận thực chất là các tích vô hướng được tính theo lô. **Attention trong Transformer (Transformer attention)** tính toán độ tương đồng thông qua tích vô hướng có chuẩn hóa. Các kỹ thuật chuẩn hóa như Ridge và Lasso sử dụng các loại chuẩn khác nhau để kiểm soát độ phức tạp của mô hình.
+
+
+
+## Tích vô hướng
+
+Tích vô hướng (còn gọi là inner product hoặc scalar product) nhận hai vector có cùng độ dài và trả về một giá trị vô hướng duy nhất. Đây là phép toán cơ bản nhất trong đại số tuyến tính.
+
+$$\mathbf{a} \cdot \mathbf{b} = \sum_{i=1}^{n} a_i b_i$$
+
+### Tính toán đại số
+
+Để tính tích vô hướng, nhân các phần tử tương ứng rồi cộng lại.
+
+**Ví dụ:**
+
+* $\mathbf{a} = [1, 3]$
+* $\mathbf{b} = [4, -2]$
+* $\mathbf{a} \cdot \mathbf{b} = (1)(4) + (3)(-2) = -2$
+
+### Ký hiệu ma trận
+
+Tích vô hướng có thể được biểu diễn dưới dạng $\mathbf{a}^T \mathbf{b}$ (vector hàng × vector cột). Điều này tổng quát hóa cho các hàng và cột cụ thể trong các ma trận lớn hơn.
+
+
+
+## Diễn giải hình học
+
+Tích vô hướng đo **mức độ thẳng hàng** giữa các vector, kết nối giữa đại số và hình học.
+
+$$\mathbf{a} \cdot \mathbf{b} = ||\mathbf{a}|| \cdot ||\mathbf{b}|| \cos(\theta)$$
+
+* **Dương:** Các vector hướng gần cùng hướng ($\theta < 90^\circ$).
+* **Bằng 0:** Các vector trực giao (vuông góc) ($\theta = 90^\circ$).
+* **Âm:** Các vector hướng ngược nhau ($\theta > 90^\circ$).
+
+### Góc nhìn chiếu
+
+Hãy tưởng tượng việc chiếu bóng vector $\mathbf{a}$ lên $\mathbf{b}$. Tích vô hướng trả lời câu hỏi: “Bao nhiêu phần của $\mathbf{a}$ nằm theo hướng của $\mathbf{b}$?”. Khái niệm chiếu này là lý do tích vô hướng được dùng để đo độ tương đồng.
+
+
+
+## Các tính chất của tích vô hướng
+
+* **Giao hoán:** $\mathbf{a} \cdot \mathbf{b} = \mathbf{b} \cdot \mathbf{a}$ (Thứ tự không quan trọng).
+* **Phân phối:** $\mathbf{a} \cdot (\mathbf{b} + \mathbf{c}) = \mathbf{a} \cdot \mathbf{b} + \mathbf{a} \cdot \mathbf{c}$ (Phân phối qua phép cộng vector).
+* **Tích với chính nó:** $\mathbf{a} \cdot \mathbf{a} = ||\mathbf{a}||^2$ (Tích của vector với chính nó cho bình phương độ lớn).
+
+
+
+## Chuẩn vector
+
+Chuẩn đo “kích thước” hoặc “độ lớn” của một vector. Các chuẩn khác nhau đo kích thước theo những cách khác nhau.
+
+### Chuẩn L2 (Euclid)
+
+$$||\mathbf{x}||_2 = \sqrt{\sum x_i^2}$$
+Đo khoảng cách đường thẳng. Được sử dụng trong Ridge Regression và KNN.
+
+### Chuẩn L1 (Manhattan)
+
+$$||\mathbf{x}||_1 = \sum |x_i|$$
+Tổng các giá trị tuyệt đối (khoảng cách taxi). Thúc đẩy tính thưa (sparsity) trong mô hình (Lasso).
+
+### Chuẩn L-vô cực (Max)
+
+$$||\mathbf{x}||_\infty = \max |x_i|$$
+Giá trị phần tử lớn nhất. Được dùng trong tính bền vững trước tấn công đối kháng (adversarial robustness).
+
+# Các tính chất của chuẩn (Norms)
+
+Để một hàm là một chuẩn (norm) hợp lệ, nó phải thỏa mãn ba tiên đề:
+
+* **Không âm (Non-negativity):** Chuẩn luôn không âm. Bằng không chỉ khi vector bằng không.
+* **Đồng nhất tuyệt đối (Absolute Homogeneity):** Khi nhân vector với một vô hướng, chuẩn sẽ được nhân với giá trị tuyệt đối của vô hướng đó.
+* **Bất đẳng thức tam giác (Triangle Inequality):** Đường đi trực tiếp luôn ngắn hơn mọi đường vòng.
+
+$$
+|x + y| \le |x| + |y|
+$$
+
+### Họ chuẩn p (The p-Norm Family)
+
+Tất cả các chuẩn phổ biến đều là các trường hợp đặc biệt của chuẩn p tổng quát (generalized p-norm) với $p \ge 1$.
+
+$$
+|x|*p = \left(\sum*{i=1}^{n} |x_i|^p\right)^{1/p}
+$$
+
+### Các trường hợp đặc biệt
+
+- Chuẩn L1 (Manhattan)
+
+$$
+|x|*1 = \sum*{i=1}^{n} |x_i|
+$$
+
+- Chuẩn L2 (Euclidean)
+
+$$
+|x|*2 = \left(\sum*{i=1}^{n} |x_i|^2\right)^{1/2}
+$$
+
+
+- Chuẩn L-vô cùng (L-infinity / Max)
+
+$$
+|x|_\infty = \max_i |x_i|
+$$
+
+
+## Họ chuẩn p (p-Norm)
+
+Tất cả các chuẩn phổ biến đều là trường hợp đặc biệt của chuẩn p tổng quát (với $p \geq 1$):
+
+$$||\mathbf{x}||*p = \left(\sum*{i=1}^{n} |x_i|^p\right)^{1/p}$$
+
+### Ví dụ
+“Quả cầu đơn vị” (tập các vector có chuẩn bằng 1) thay đổi hình dạng tùy theo $p$. Với $p=1$, nó là hình thoi; với $p=2$, là hình tròn; khi $p \to \infty$, nó trở thành hình vuông. Sự khác biệt hình học này giải thích vì sao chuẩn L1 thúc đẩy tính thưa (nó có các góc nhọn trên các trục).
+
+
+
+## Chuẩn hóa (Vector đơn vị)
+
+Chuẩn hóa chuyển một vector thành vector đơn vị (chuẩn = 1) cùng hướng, tách biệt hướng khỏi độ lớn.
+
+$$\hat{\mathbf{x}} = \frac{\mathbf{x}}{||\mathbf{x}||}$$
+
+### Ứng dụng
+
+* **Cosine Similarity (độ tương đồng cosine):** Vector đã chuẩn hóa làm cho tích vô hướng trở thành cosine similarity.
+* **Batch Norm:** Chuẩn hóa các kích hoạt của lớp để ổn định quá trình huấn luyện.
+* **Word Embeddings:** Thường được chuẩn hóa để chỉ còn hướng (ý nghĩa) quan trọng, không phải tần suất.
+
+
+
+## Ứng dụng trong học máy
+
+### Chuẩn hóa (Regularization)
+
+Phạt theo chuẩn của trọng số giúp tránh overfitting:
+
+* **L1 (Lasso):** $\lambda ||\mathbf{w}||_1$ — tạo mô hình thưa để chọn đặc trưng.
+* **L2 (Ridge):** $\lambda ||\mathbf{w}||_2^2$ — phân bố đều trọng số và tránh các giá trị lớn không ổn định.
+
+### Cơ chế Attention
+
+Attention trong Transformer là tích vô hướng có tỷ lệ (scaled dot product). Nó tính điểm liên quan giữa các token để xác định mức độ tập trung vào các phần khác nhau của chuỗi.
+
+### Độ đo khoảng cách
+
+Các thuật toán như KNN và K-Means dựa vào khoảng cách L2: $||\mathbf{x} - \mathbf{y}||_2$. Việc chọn chuẩn khác nhau sẽ thay đổi độ nhạy với ngoại lệ và hành vi tổng thể của thuật toán.
+
+
+
+## Xem xét tính toán
+
+| Phép toán                  | Độ phức tạp thời gian  |
+|:---------------------------|:-----------------------|
+| Tích vô hướng ($n$-chiều)  | $O(n)$                 |
+| Tính chuẩn                 | $O(n)$                 |
+
+### Tối ưu phần cứng
+
+GPU tối ưu các phép toán $O(n)$ này thông qua song song hóa lớn (SIMD). Trong thực tế, luôn sử dụng các thư viện vector hóa như **NumPy** hoặc **PyTorch** thay vì vòng lặp thủ công để đảm bảo hiệu năng cao. 
+
+<!-- CROSSLINK_MATH_THEORY -->
+::: {.callout-tip}
+## Ôn nhanh (Theory AI)
+Norm / khoảng cách / cosine trên vector 3D: [Norm 3D](../../theory-ai/03-linear-algebra/3d-vector-norm.qmd) · [Euclidean](../../theory-ai/03-linear-algebra/euclidean-distance.qmd) · [Cosine](../../theory-ai/03-linear-algebra/cosine-similarity.qmd).
+:::

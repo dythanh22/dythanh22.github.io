@@ -1,82 +1,106 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="340" viewBox="0 0 720 340" role="img" aria-labelledby="home-pipe-title">
-  <title id="home-pipe-title">Ba lộ trình: Theory AI, Architecture Models và AI Optimization</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420" role="img" aria-labelledby="home-pipe-title">
+  <title id="home-pipe-title">Bốn lộ trình: Math Base, Theory AI, Architecture Models và AI Optimization</title>
   <defs>
     <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#B45309" stop-opacity="0.10"/>
-      <stop offset="45%" stop-color="#0F766E" stop-opacity="0.10"/>
+      <stop offset="0%" stop-color="#475569" stop-opacity="0.10"/>
+      <stop offset="35%" stop-color="#B45309" stop-opacity="0.10"/>
+      <stop offset="70%" stop-color="#0F766E" stop-opacity="0.10"/>
       <stop offset="100%" stop-color="#1E3A5F" stop-opacity="0.08"/>
     </linearGradient>
   </defs>
-  <rect width="720" height="340" rx="16" fill="url(#g1)"/>
+  <rect width="720" height="420" rx="16" fill="url(#g1)"/>
+
+  <!-- Math track (layer 0) -->
+  <text x="48" y="32" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#475569" letter-spacing="0.06em">MATH</text>
+  <rect x="48" y="44" width="88" height="32" rx="8" fill="#F8FAFC" stroke="#475569" stroke-width="1.5"/>
+  <text x="92" y="65" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#334155">Prob</text>
+  <path d="M144 60 H164" stroke="#64748B" stroke-width="2"/>
+  <polygon points="164,55 172,60 164,65" fill="#64748B"/>
+  <rect x="180" y="44" width="88" height="32" rx="8" fill="#F8FAFC" stroke="#475569" stroke-width="1.5"/>
+  <text x="224" y="65" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#334155">Stat</text>
+  <path d="M276 60 H296" stroke="#64748B" stroke-width="2"/>
+  <polygon points="296,55 304,60 296,65" fill="#64748B"/>
+  <rect x="312" y="44" width="88" height="32" rx="8" fill="#F8FAFC" stroke="#475569" stroke-width="1.5"/>
+  <text x="356" y="65" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#334155">LA</text>
+  <path d="M408 60 H428" stroke="#64748B" stroke-width="2"/>
+  <polygon points="428,55 436,60 428,65" fill="#64748B"/>
+  <rect x="444" y="44" width="100" height="32" rx="8" fill="#F8FAFC" stroke="#475569" stroke-width="1.5"/>
+  <text x="494" y="65" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#334155">Calc</text>
+  <path d="M552 60 H572" stroke="#64748B" stroke-width="2"/>
+  <polygon points="572,55 580,60 572,65" fill="#64748B"/>
+  <rect x="588" y="44" width="84" height="32" rx="8" fill="#475569"/>
+  <text x="630" y="65" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#F8FAFC">Graph</text>
+
+  <path d="M360 84 V100" stroke="#94A3B8" stroke-width="2" stroke-dasharray="4 4"/>
 
   <!-- Theory track -->
-  <text x="48" y="36" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#B45309" letter-spacing="0.06em">THEORY</text>
-  <rect x="48" y="48" width="88" height="32" rx="8" fill="#FFFBEB" stroke="#B45309" stroke-width="1.5"/>
-  <text x="92" y="69" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#92400E">Prob</text>
-  <path d="M144 64 H164" stroke="#64748B" stroke-width="2"/>
-  <polygon points="164,59 172,64 164,69" fill="#64748B"/>
-  <rect x="180" y="48" width="88" height="32" rx="8" fill="#FFFBEB" stroke="#B45309" stroke-width="1.5"/>
-  <text x="224" y="69" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#92400E">ML</text>
-  <path d="M276 64 H296" stroke="#64748B" stroke-width="2"/>
-  <polygon points="296,59 304,64 296,69" fill="#64748B"/>
-  <rect x="312" y="48" width="88" height="32" rx="8" fill="#FFFBEB" stroke="#B45309" stroke-width="1.5"/>
-  <text x="356" y="69" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#92400E">DL</text>
-  <path d="M408 64 H428" stroke="#64748B" stroke-width="2"/>
-  <polygon points="428,59 436,64 428,69" fill="#64748B"/>
-  <rect x="444" y="48" width="100" height="32" rx="8" fill="#FFFBEB" stroke="#B45309" stroke-width="1.5"/>
-  <text x="494" y="69" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#92400E">Domain</text>
-  <path d="M552 64 H572" stroke="#64748B" stroke-width="2"/>
-  <polygon points="572,59 580,64 572,69" fill="#64748B"/>
-  <rect x="588" y="48" width="84" height="32" rx="8" fill="#B45309"/>
-  <text x="630" y="69" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#F8FAFC">MLOps</text>
+  <text x="48" y="120" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#B45309" letter-spacing="0.06em">THEORY</text>
+  <rect x="48" y="132" width="88" height="32" rx="8" fill="#FFFBEB" stroke="#B45309" stroke-width="1.5"/>
+  <text x="92" y="153" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#92400E">Prob</text>
+  <path d="M144 148 H164" stroke="#64748B" stroke-width="2"/>
+  <polygon points="164,143 172,148 164,153" fill="#64748B"/>
+  <rect x="180" y="132" width="88" height="32" rx="8" fill="#FFFBEB" stroke="#B45309" stroke-width="1.5"/>
+  <text x="224" y="153" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#92400E">ML</text>
+  <path d="M276 148 H296" stroke="#64748B" stroke-width="2"/>
+  <polygon points="296,143 304,148 296,153" fill="#64748B"/>
+  <rect x="312" y="132" width="88" height="32" rx="8" fill="#FFFBEB" stroke="#B45309" stroke-width="1.5"/>
+  <text x="356" y="153" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#92400E">DL</text>
+  <path d="M408 148 H428" stroke="#64748B" stroke-width="2"/>
+  <polygon points="428,143 436,148 428,153" fill="#64748B"/>
+  <rect x="444" y="132" width="100" height="32" rx="8" fill="#FFFBEB" stroke="#B45309" stroke-width="1.5"/>
+  <text x="494" y="153" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#92400E">Domain</text>
+  <path d="M552 148 H572" stroke="#64748B" stroke-width="2"/>
+  <polygon points="572,143 580,148 572,153" fill="#64748B"/>
+  <rect x="588" y="132" width="84" height="32" rx="8" fill="#B45309"/>
+  <text x="630" y="153" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#F8FAFC">MLOps</text>
 
-  <path d="M360 88 V108" stroke="#94A3B8" stroke-width="2" stroke-dasharray="4 4"/>
+  <path d="M360 172 V188" stroke="#94A3B8" stroke-width="2" stroke-dasharray="4 4"/>
 
   <!-- Architecture track -->
-  <text x="48" y="132" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#0F766E" letter-spacing="0.06em">ARCHITECTURE</text>
-  <rect x="48" y="144" width="88" height="32" rx="8" fill="#ECFDF8" stroke="#0F766E" stroke-width="1.5"/>
-  <text x="92" y="165" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#134E4A">CNN</text>
-  <path d="M144 160 H164" stroke="#64748B" stroke-width="2"/>
-  <polygon points="164,155 172,160 164,165" fill="#64748B"/>
-  <rect x="180" y="144" width="88" height="32" rx="8" fill="#ECFDF8" stroke="#0F766E" stroke-width="1.5"/>
-  <text x="224" y="165" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#134E4A">Seq</text>
-  <path d="M276 160 H296" stroke="#64748B" stroke-width="2"/>
-  <polygon points="296,155 304,160 296,165" fill="#64748B"/>
-  <rect x="312" y="144" width="88" height="32" rx="8" fill="#ECFDF8" stroke="#0F766E" stroke-width="1.5"/>
-  <text x="356" y="165" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#134E4A">Gen</text>
-  <path d="M408 160 H428" stroke="#64748B" stroke-width="2"/>
-  <polygon points="428,155 436,160 428,165" fill="#64748B"/>
-  <rect x="444" y="144" width="100" height="32" rx="8" fill="#ECFDF8" stroke="#0F766E" stroke-width="1.5"/>
-  <text x="494" y="165" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#134E4A">Attention</text>
-  <path d="M552 160 H572" stroke="#64748B" stroke-width="2"/>
-  <polygon points="572,155 580,160 572,165" fill="#64748B"/>
-  <rect x="588" y="144" width="84" height="32" rx="8" fill="#0F766E"/>
-  <text x="630" y="165" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#F8FAFC">U-Net</text>
+  <text x="48" y="208" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#0F766E" letter-spacing="0.06em">ARCHITECTURE</text>
+  <rect x="48" y="220" width="88" height="32" rx="8" fill="#ECFDF8" stroke="#0F766E" stroke-width="1.5"/>
+  <text x="92" y="241" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#134E4A">CNN</text>
+  <path d="M144 236 H164" stroke="#64748B" stroke-width="2"/>
+  <polygon points="164,231 172,236 164,241" fill="#64748B"/>
+  <rect x="180" y="220" width="88" height="32" rx="8" fill="#ECFDF8" stroke="#0F766E" stroke-width="1.5"/>
+  <text x="224" y="241" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#134E4A">Seq</text>
+  <path d="M276 236 H296" stroke="#64748B" stroke-width="2"/>
+  <polygon points="296,231 304,236 296,241" fill="#64748B"/>
+  <rect x="312" y="220" width="88" height="32" rx="8" fill="#ECFDF8" stroke="#0F766E" stroke-width="1.5"/>
+  <text x="356" y="241" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#134E4A">Gen</text>
+  <path d="M408 236 H428" stroke="#64748B" stroke-width="2"/>
+  <polygon points="428,231 436,236 428,241" fill="#64748B"/>
+  <rect x="444" y="220" width="100" height="32" rx="8" fill="#ECFDF8" stroke="#0F766E" stroke-width="1.5"/>
+  <text x="494" y="241" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#134E4A">Attention</text>
+  <path d="M552 236 H572" stroke="#64748B" stroke-width="2"/>
+  <polygon points="572,231 580,236 572,241" fill="#64748B"/>
+  <rect x="588" y="220" width="84" height="32" rx="8" fill="#0F766E"/>
+  <text x="630" y="241" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#F8FAFC">U-Net</text>
 
-  <path d="M360 184 V204" stroke="#94A3B8" stroke-width="2" stroke-dasharray="4 4"/>
-  <text x="372" y="198" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="11" fill="#64748B">serve →</text>
+  <path d="M360 260 V276" stroke="#94A3B8" stroke-width="2" stroke-dasharray="4 4"/>
+  <text x="372" y="272" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="11" fill="#64748B">serve →</text>
 
   <!-- Optimization track -->
-  <text x="48" y="228" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#1E3A5F" letter-spacing="0.06em">INFERENCE</text>
-  <rect x="48" y="240" width="100" height="32" rx="8" fill="#EFF6FF" stroke="#1E3A5F" stroke-width="1.5"/>
-  <text x="98" y="261" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#1E3A5F">ONNX</text>
-  <path d="M156 256 H176" stroke="#64748B" stroke-width="2"/>
-  <polygon points="176,251 184,256 176,261" fill="#64748B"/>
-  <rect x="192" y="240" width="100" height="32" rx="8" fill="#EFF6FF" stroke="#1E3A5F" stroke-width="1.5"/>
-  <text x="242" y="261" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#1E3A5F">TensorRT</text>
-  <path d="M300 256 H320" stroke="#64748B" stroke-width="2"/>
-  <polygon points="320,251 328,256 320,261" fill="#64748B"/>
-  <rect x="336" y="240" width="100" height="32" rx="8" fill="#EFF6FF" stroke="#1E3A5F" stroke-width="1.5"/>
-  <text x="386" y="261" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#1E3A5F">Triton</text>
-  <path d="M444 256 H464" stroke="#64748B" stroke-width="2"/>
-  <polygon points="464,251 472,256 464,261" fill="#64748B"/>
-  <rect x="480" y="240" width="100" height="32" rx="8" fill="#EFF6FF" stroke="#1E3A5F" stroke-width="1.5"/>
-  <text x="530" y="261" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#1E3A5F">LLM</text>
-  <path d="M588 256 H608" stroke="#64748B" stroke-width="2"/>
-  <polygon points="608,251 616,256 608,261" fill="#64748B"/>
-  <rect x="624" y="240" width="48" height="32" rx="8" fill="#1E3A5F"/>
-  <text x="648" y="261" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#F8FAFC">Ops</text>
+  <text x="48" y="296" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#1E3A5F" letter-spacing="0.06em">INFERENCE</text>
+  <rect x="48" y="308" width="100" height="32" rx="8" fill="#EFF6FF" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="98" y="329" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#1E3A5F">ONNX</text>
+  <path d="M156 324 H176" stroke="#64748B" stroke-width="2"/>
+  <polygon points="176,319 184,324 176,329" fill="#64748B"/>
+  <rect x="192" y="308" width="100" height="32" rx="8" fill="#EFF6FF" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="242" y="329" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#1E3A5F">TensorRT</text>
+  <path d="M300 324 H320" stroke="#64748B" stroke-width="2"/>
+  <polygon points="320,319 328,324 320,329" fill="#64748B"/>
+  <rect x="336" y="308" width="100" height="32" rx="8" fill="#EFF6FF" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="386" y="329" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#1E3A5F">Triton</text>
+  <path d="M444 324 H464" stroke="#64748B" stroke-width="2"/>
+  <polygon points="464,319 472,324 464,329" fill="#64748B"/>
+  <rect x="480" y="308" width="100" height="32" rx="8" fill="#EFF6FF" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="530" y="329" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#1E3A5F">LLM</text>
+  <path d="M588 324 H608" stroke="#64748B" stroke-width="2"/>
+  <polygon points="608,319 616,324 608,329" fill="#64748B"/>
+  <rect x="624" y="308" width="48" height="32" rx="8" fill="#1E3A5F"/>
+  <text x="648" y="329" text-anchor="middle" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" font-weight="600" fill="#F8FAFC">Ops</text>
 
-  <text x="48" y="312" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" fill="#64748B">Đọc theo thứ tự · ôn lại khi cần · đo rồi mới tối ưu</text>
+  <text x="48" y="388" font-family="IBM Plex Sans, Inter, system-ui, sans-serif" font-size="12" fill="#64748B">Math trước · ôn Theory khi cần · đo rồi mới tối ưu</text>
 </svg>

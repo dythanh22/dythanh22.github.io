@@ -1,0 +1,122 @@
+---
+title: "Khai triển Taylor (Taylor Series Approximation)"
+order: 5
+date: 2026-08-27
+description: "Biến các hàm phức tạp thành đa thức đơn giản. Nền tảng toán học của tối ưu hóa bậc hai."
+series: math-base
+categories: [math-base, calculus]
+group: calculus
+---
+# Khai triển Taylor (Taylor Series Approximation)
+
+Biến các hàm phức tạp thành đa thức đơn giản. Nền tảng toán học của tối ưu hóa bậc hai.
+
+
+
+## Giới thiệu
+
+Máy tính thực ra khá hạn chế. Ở mức phần cứng, chúng chỉ có thể thực hiện cộng, trừ, nhân và chia. Vậy làm thế nào máy tính tính được $\sin(1.5)$ hay $e^{2.5}$?
+
+Chúng thay thế các hàm siêu việt phức tạp này bằng các **đa thức (polynomials)** rất dài. Đa thức chỉ bao gồm phép cộng và nhân — những phép toán mà máy tính xử lý rất hiệu quả.
+
+### Vì sao điều này quan trọng trong ML
+
+* **Gradient Descent (thuật toán hạ dốc):** Xấp xỉ Taylor bậc nhất (tuyến tính) cung cấp cơ sở toán học cho quy tắc cập nhật.
+* **Phương pháp Newton (Newton's Method):** Xấp xỉ Taylor bậc hai (bậc hai) cho phép bước tối ưu thông minh hơn bằng cách xét độ cong.
+* **XGBoost:** Sử dụng khai triển Taylor của hàm mất mát để xây dựng cây hiệu quả.
+* **Hiểu tối ưu hóa:** Chuỗi Taylor giải thích cơ chế nền tảng của nhiều thuật toán tối ưu.
+
+
+
+## Ý tưởng cốt lõi
+
+Hãy tưởng tượng bạn đang giả mạo một chữ ký. Để bản giả giống bản thật tại một điểm cụ thể, bạn cần khớp nhiều đặc tính:
+
+* **Bậc 0: Vị trí** - Đi qua cùng một điểm: $f(a) = P(a)$.
+* **Bậc 1: Vận tốc (độ dốc)** - Hướng chuyển động giống nhau: $f'(a) = P'(a)$.
+* **Bậc 2: Gia tốc (độ cong)** - Độ uốn giống nhau: $f''(a) = P''(a)$.
+
+Bằng cách khớp đủ nhiều đạo hàm tại điểm $a$, đa thức của bạn sẽ gần như không phân biệt được với hàm gốc trong vùng lân cận điểm đó.
+
+
+
+## Công thức Taylor
+
+Chuỗi Taylor của $f(x)$ khai triển quanh điểm $a$ là:
+
+$$f(x) = f(a) + f'(a)(x-a) + \frac{f''(a)}{2!}(x-a)^2 + \frac{f'''(a)}{3!}(x-a)^3 + \dots$$
+
+Dạng tổng quát:
+
+$$f(x) = \sum_{n=0}^{\infty} \frac{f^{(n)}(a)}{n!}(x-a)^n$$
+
+### Chuỗi Maclaurin
+
+Khi $a = 0$, ta có **chuỗi Maclaurin**. Một số ví dụ:
+
+* $e^x = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \dots$
+* $\sin x = x - \frac{x^3}{3!} + \frac{x^5}{5!} - \dots$
+
+### Hội tụ
+
+Chuỗi hội tụ về $f(x)$ trong một "bán kính hội tụ". Nói chung, càng xa điểm $a$, cần càng nhiều số hạng để đảm bảo độ chính xác.
+
+
+
+## Các bậc xấp xỉ
+
+Trong tối ưu hóa, ta thường cắt chuỗi sau vài số hạng đầu:
+
+### Bậc nhất (Tuyến tính)
+
+$$f(x) \approx f(a) + f'(a)(x-a)$$
+Xấp xỉ $f$ bằng một **đường thẳng** (tiếp tuyến). Đây là cách nhìn của gradient descent.
+
+### Bậc hai (Bậc hai)
+
+$$f(x) \approx f(a) + f'(a)(x-a) + \frac{f''(a)}{2}(x-a)^2$$
+Xấp xỉ $f$ bằng một **parabol**. Bao gồm thông tin độ cong thông qua đạo hàm bậc hai (hoặc Hessian trong không gian nhiều chiều).
+
+
+
+## Chuỗi Taylor đa biến
+
+Vì mạng nơ-ron hoạt động trên vector, ta dùng khai triển Taylor bậc hai đa biến:
+
+$$f(\mathbf{x}) \approx f(\mathbf{a}) + \nabla f(\mathbf{a})^T(\mathbf{x}-\mathbf{a}) + \frac{1}{2}(\mathbf{x}-\mathbf{a})^T H(\mathbf{a})(\mathbf{x}-\mathbf{a})$$
+
+* **Hạng hằng:** $f(\mathbf{a})$ (giá trị hiện tại).
+* **Hạng tuyến tính:** gradient $\nabla f(\mathbf{a})$ (hướng thay đổi).
+* **Hạng bậc hai:** Hessian $H(\mathbf{a})$ (thông tin độ cong).
+
+
+
+## Liên hệ với tối ưu hóa
+
+### Vì sao Gradient Descent hoạt động
+
+Gần điểm hiện tại $\theta$, hàm mất mát trông giống một mặt phẳng:
+$L(\theta + \epsilon) \approx L(\theta) + \epsilon^T \nabla L$.
+Để giảm loss, ta cần $\epsilon^T \nabla L$ càng âm càng tốt → chọn hướng ngược gradient.
+
+### Phương pháp Newton
+
+Newton sử dụng xấp xỉ bậc hai. Nếu $f$ gần giống một parabol, ta có thể tìm cực tiểu trực tiếp:
+
+$$\theta_{new} = \theta_{old} - H^{-1} \nabla f$$
+
+Phương pháp này hội tụ nhanh hơn gradient descent, nhưng việc tính nghịch đảo Hessian $H^{-1}$ rất tốn kém ($O(n^3)$).
+
+
+
+## Ứng dụng trong ML
+
+* **Hàm mục tiêu bậc hai của XGBoost:**
+  $L \approx \sum[g_i f_t + \frac{1}{2}h_i f_t^2]$, trong đó $g$ là gradient và $h$ là Hessian.
+* **Natural Gradient:**
+  Sử dụng ma trận Fisher (liên quan đến Hessian) để cập nhật theo không gian tham số "tự nhiên".
+* **BFGS / L-BFGS:**
+  Các phương pháp quasi-Newton xấp xỉ Hessian từ lịch sử gradient.
+* **Xấp xỉ hàm kích hoạt:**
+  Các hàm trơn như GELU thường được xấp xỉ bằng Taylor để tối ưu tính toán:
+  $\text{GELU}(x) \approx 0.5x(1 + \tanh[\dots])$.

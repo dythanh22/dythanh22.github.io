@@ -1,0 +1,145 @@
+---
+title: "Phân tích thành phần chính (Principal Component Analysis - PCA)"
+order: 10
+date: 2026-08-27
+description: "Tìm góc nhìn giàu thông tin nhất của dữ liệu nhiều chiều. Công cụ chủ lực cho giảm chiều không giám sát."
+series: math-base
+categories: [math-base, linear-algebra]
+group: linear-algebra
+---
+# Phân tích thành phần chính (Principal Component Analysis - PCA)
+
+Tìm góc nhìn giàu thông tin nhất của dữ liệu nhiều chiều. Công cụ chủ lực cho giảm chiều không giám sát.
+
+
+
+## Giới thiệu
+
+Các tập dữ liệu thực tế thường có số chiều cao, chứa các đặc trưng dư thừa hoặc tương quan mạnh. **Phân tích thành phần chính (Principal Component Analysis - PCA)** là một kỹ thuật không giám sát, biến đổi các biến tương quan này thành một tập nhỏ hơn các biến không tương quan gọi là **thành phần chính (Principal Components - PCs)**. Các thành phần này được sắp xếp sao cho PC1 chứa phương sai lớn nhất, PC2 chứa phương sai lớn thứ hai (và trực giao với PC1), v.v.
+
+### Khả năng chính của PCA
+
+* **Giảm chiều:** Nén các đặc trưng nhiều chiều trong khi vẫn giữ lại phần lớn thông tin.
+* **Khử tương quan:** Biến đổi các đặc trưng tương quan thành các thành phần độc lập.
+* **Lọc nhiễu:** Loại bỏ các PC thấp thường chứa nhiễu thay vì tín hiệu.
+* **Trích xuất đặc trưng:** Khám phá các cấu trúc ẩn như cụm mà không rõ ràng trong không gian ban đầu.
+
+
+
+## Lời nguyền số chiều
+
+Giảm chiều là cần thiết do các vấn đề của không gian nhiều chiều:
+
+* **Dữ liệu thưa:** Các điểm dữ liệu phân tán mạnh khi số chiều tăng. Để duy trì mật độ dữ liệu như trong 2D, không gian 100D cần số mẫu tăng theo hàm mũ.
+* **Suy giảm độ đo khoảng cách:** Trong không gian nhiều chiều, sự khác biệt giữa điểm gần nhất và xa nhất trở nên không đáng kể, làm cho các thuật toán dựa trên khoảng cách như KNN hoặc clustering trở nên kém hiệu quả.
+  $$\lim_{d \to \infty} \frac{\text{dist}*{max} - \text{dist}*{min}}{\text{dist}_{min}} \to 0$$
+* **Quá khớp (Overfitting):** Nhiều đặc trưng dẫn đến nhiều tham số hơn. Mô hình có thể ghi nhớ nhiễu thay vì học quy luật thực.
+* **Chi phí tính toán:** Nhiều thuật toán có độ phức tạp tăng nhanh theo số chiều (ví dụ: $O(n \cdot d^2)$).
+
+
+
+## Trực giác cốt lõi
+
+PCA tìm “góc nhìn tốt nhất” của đám mây dữ liệu bằng cách xoay hệ tọa độ sao cho trùng với các hướng có độ phân tán (variance) lớn nhất:
+
+* **PC1:** Hướng có phương sai lớn nhất (chiều “dài” của đám mây dữ liệu).
+* **PC2:** Hướng có phương sai lớn thứ hai, **vuông góc** với PC1.
+* **PC3:** Vuông góc với hai hướng đầu, chứa phần phương sai còn lại.
+
+Trong PCA, **phương sai được xem là thông tin**. Giữ lại các hướng có phương sai cao giúp bảo toàn các đặc trưng quan trọng nhất của dữ liệu.
+
+
+
+## Ma trận hiệp phương sai
+
+PCA dựa trên **ma trận hiệp phương sai (covariance matrix)**, mô tả mối quan hệ cặp giữa các biến.
+
+### Định nghĩa hiệp phương sai
+
+$$\text{Cov}(X, Y) = \frac{1}{n-1} \sum_{i=1}^{n} (x_i - \bar{x})(y_i - \bar{y})$$
+
+* **$\text{Cov} > 0$:** Hai biến tăng cùng nhau.
+* **$\text{Cov} < 0$:** Một biến giảm khi biến kia tăng.
+* **$\text{Cov} = 0$:** Hai biến không tương quan.
+
+### Dạng ma trận
+
+Với dữ liệu có $d$ đặc trưng, ma trận hiệp phương sai $\Sigma$ là ma trận đối xứng $d \times d$:
+$$\Sigma = \frac{1}{n-1} X^T X$$
+Trong đó $X$ là ma trận dữ liệu đã được chuẩn hóa trung bình (centered). Các phần tử trên đường chéo là phương sai, ngoài đường chéo là hiệp phương sai.
+
+
+
+## Suy diễn toán học
+
+Tìm hướng có phương sai lớn nhất là bài toán tối ưu có ràng buộc: tìm vector đơn vị $\mathbf{w}$ sao cho phương sai của dữ liệu chiếu lên đó là lớn nhất:
+$$\max_{||\mathbf{w}||=1} \text{Var}(X\mathbf{w}) = \max_{||\mathbf{w}||=1} \mathbf{w}^T \Sigma \mathbf{w}$$
+
+Dùng nhân tử Lagrange $\lambda$ để áp đặt ràng buộc $||\mathbf{w}|| = 1$:
+$$\mathcal{L} = \mathbf{w}^T \Sigma \mathbf{w} - \lambda(\mathbf{w}^T \mathbf{w} - 1)$$
+
+Lấy đạo hàm và cho bằng 0 ta được **phương trình trị riêng**:
+$$\Sigma \mathbf{w} = \lambda \mathbf{w}$$
+
+**Kết luận:** Các hướng chiếu tối ưu chính là **vector riêng** của ma trận hiệp phương sai. Phương sai theo mỗi vector riêng bằng **giá trị riêng** tương ứng $\lambda$.
+
+
+
+## Thuật toán PCA
+
+1. **Chuẩn hóa:** Trừ trung bình mỗi đặc trưng (centering) và chia cho độ lệch chuẩn (scaling).
+
+   * *Cảnh báo:* Nếu không chuẩn hóa, các đặc trưng có đơn vị lớn hơn sẽ chi phối kết quả.
+2. **Tính ma trận hiệp phương sai:** $\Sigma = \frac{1}{n-1} Z^T Z$.
+3. **Phân rã trị riêng:** Tính giá trị riêng và vector riêng của $\Sigma$, sắp xếp theo độ lớn.
+4. **Chọn thành phần:** Lấy $k$ vector riêng lớn nhất tạo thành ma trận chiếu $W$.
+5. **Chiếu dữ liệu:** Biến đổi dữ liệu: $Y = ZW$.
+
+
+
+## Chọn số thành phần ($k$)
+
+Ta chọn $k$ dựa trên **tỉ lệ phương sai giải thích**:
+
+$$\text{Explained Variance Ratio of PC}*i = \frac{\lambda_i}{\sum*{j=1}^{d} \lambda_j}$$
+
+* **Biểu đồ Scree:** Vẽ các giá trị riêng và tìm “khuỷu tay” (elbow)—điểm mà thêm thành phần không mang lại nhiều lợi ích.
+* **Phương sai tích lũy:** Cộng dồn cho đến khi đạt ngưỡng mong muốn (ví dụ: 95%).
+
+
+
+## Tái tạo và sai số
+
+Ta có thể xấp xỉ dữ liệu ban đầu bằng $k$ thành phần:
+$$\hat{X} = Y W^T = Z W W^T$$
+
+**Sai số tái tạo** (chuẩn Frobenius) bằng tổng các giá trị riêng bị loại bỏ:
+$$\text{Error} = ||X - \hat{X}||^2_F = \sum_{i=k+1}^{d} \lambda_i$$
+
+
+
+## Ứng dụng trong ML
+
+* **Nhận diện khuôn mặt (Eigenfaces):** Biểu diễn ảnh khuôn mặt phức tạp bằng tổ hợp của một số ít “khuôn mặt riêng”.
+* **Tiền xử lý:** Giảm số đặc trưng để tăng tốc huấn luyện, tránh overfitting và loại bỏ nhiễu trước khi phân loại.
+* **Trực quan hóa:** Chiếu dữ liệu nhiều chiều (ví dụ 50D) xuống 2D hoặc 3D để quan sát cấu trúc cụm.
+* **Phát hiện bất thường:** Xác định các điểm có sai số tái tạo lớn.
+* **Tài chính:** Trích xuất các “yếu tố thị trường” từ các chuỗi lợi nhuận cổ phiếu có tương quan.
+
+
+
+## Các biến thể của PCA
+
+* **Kernel PCA:** Sử dụng kernel trick để tìm quan hệ phi tuyến trong dữ liệu nằm trên đa tạp cong.
+* **Incremental PCA:** Xử lý dữ liệu theo từng lô khi dữ liệu không vừa bộ nhớ.
+* **Sparse PCA:** Sử dụng regularization L1 để các thành phần chỉ phụ thuộc vào một số ít đặc trưng, tăng khả năng diễn giải.
+* **Robust PCA:** Tách dữ liệu thành phần tín hiệu hạng thấp và nhiễu thưa.
+
+
+
+## Hạn chế
+
+* **Tuyến tính:** PCA chỉ tìm tổ hợp tuyến tính, không thể “mở phẳng” các cấu trúc phi tuyến.
+* **Khó diễn giải:** Các thành phần chính là tổ hợp của nhiều đặc trưng, khó giải thích theo ngữ cảnh.
+* **Phương sai ≠ quan trọng:** PCA tối đa hóa phương sai, nhưng phương sai cao chưa chắc mang ý nghĩa dự đoán.
+* **Nhạy với ngoại lệ:** Outliers có thể làm méo các thành phần chính do làm tăng phương sai theo một hướng. 

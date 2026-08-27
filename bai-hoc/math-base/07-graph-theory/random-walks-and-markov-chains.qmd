@@ -1,0 +1,181 @@
+---
+title: "Random Walks & Markov Chains (Random Walks and Markov Chains)"
+order: 3
+date: 2026-08-27
+description: "Từ PageRank của Google đến các phương pháp graph embedding hiện đại: cách khám phá ngẫu nhiên tiết lộ cấu trúc của đồ thị."
+series: math-base
+categories: [math-base, graph-theory]
+group: graph-theory
+---
+# Random Walks & Markov Chains
+
+Từ PageRank của Google đến các phương pháp graph embedding hiện đại: cách khám phá ngẫu nhiên tiết lộ cấu trúc của đồ thị.
+
+
+
+## Giới Thiệu
+
+Hãy tưởng tượng đặt một hạt lên một nút trong [đồ thị](https://www.tensortonic.com/ml-math/graph-theory/graph-representations) và để nó di chuyển ngẫu nhiên từ nút này sang nút khác theo các cạnh. Sau nhiều bước, nó sẽ kết thúc ở đâu? Những nút nào sẽ được ghé thăm thường xuyên nhất?
+
+Ý tưởng đơn giản này, **random walks trên đồ thị**, hóa ra lại cực kỳ mạnh mẽ. Nó là nền tảng của thuật toán PageRank của Google, các phương pháp graph embedding hiện đại như node2vec và DeepWalk, các thuật toán lấy mẫu cho đồ thị lớn, và lý thuyết chuỗi Markov (Markov chains).
+
+> **Mối Liên Hệ Sâu Sắc (The Deep Connection):** Random walks cung cấp một góc nhìn *xác suất* về đồ thị. Thay vì hỏi “đường đi ngắn nhất là gì?”, chúng ta hỏi “xác suất để người đi bộ đến được nút này là bao nhiêu?”. Góc nhìn này tiết lộ cấu trúc toàn cục mà phân tích cục bộ không thể thấy được.
+
+
+
+## Random Walk Là Gì?
+
+Một **random walk** trên đồ thị là một chuỗi các nút trong đó mỗi bước di chuyển đến một nút lân cận được chọn ngẫu nhiên từ nút hiện tại.
+
+### Định Nghĩa Hình Thức
+
+Cho đồ thị $G = (V, E)$ và nút bắt đầu $v_0$:
+
+1. Tại bước $t$, người đi bộ đang ở nút $v_t$.
+2. Chọn ngẫu nhiên đều một nút lân cận $u$ của $v_t$.
+3. Di chuyển đến $u$: $v_{t+1} = u$.
+4. Lặp lại.
+
+### Các Loại Random Walk
+
+* **Simple Random Walk:** Xác suất đồng đều tới mọi nút lân cận: $P(u|v) = 1/\text{degree}(v)$.
+* **Lazy Random Walk:** 50% khả năng đứng yên, 50% khả năng di chuyển. Đảm bảo tính không chu kỳ (aperiodicity) để hội tụ.
+* **Weighted Random Walk:** Xác suất chuyển tiếp tỷ lệ với trọng số cạnh.
+* **Biased Random Walk:** Chọn nút lân cận không đồng đều (ví dụ: thiên hướng BFS hoặc DFS trong node2vec).
+
+
+
+## Ma Trận Chuyển Tiếp (Transition Matrix)
+
+Random walks được biểu diễn rất thanh lịch bằng **ma trận chuyển tiếp** $P$, trong đó $P[i][j]$ là xác suất di chuyển từ nút $i$ sang nút $j$ trong một bước.
+
+$$P = D^{-1} A$$
+
+* **$D^{-1}$:** Ma trận bậc nghịch đảo (dùng để chuẩn hóa theo hàng).
+* **$A$:** Ma trận kề.
+
+Mỗi hàng của $P$ có tổng bằng 1, biểu diễn phân phối xác suất trên các nút có thể đến tiếp theo.
+
+### Chuyển Tiếp Nhiều Bước
+
+Xác suất ở nút $j$ sau $k$ bước bắt đầu từ nút $i$ được cho bởi phần tử $(i, j)$ của $P^k$:
+
+$$P(X_k = j | X_0 = i) = [P^k]_{ij}$$
+
+Lũy thừa ma trận mã hóa xác suất tiếp cận nhiều bước.
+
+
+
+## Liên Hệ Với Chuỗi Markov
+
+Một random walk trên đồ thị là một trường hợp cụ thể của **chuỗi Markov (Markov chain)**: một quá trình ngẫu nhiên trong đó tương lai chỉ phụ thuộc vào hiện tại, không phụ thuộc vào quá khứ.
+
+### Tính Chất Markov
+
+$$P(X_{t+1} = j | X_t = i, X_{t-1}, ..., X_0) = P(X_{t+1} = j | X_t = i)$$
+
+### Các Tính Chất Quan Trọng Của Chuỗi Markov
+
+Các tính chất sau quyết định liệu random walk có hội tụ về một phân phối dừng duy nhất hay không:
+
+#### 1. Tính Bất Khả Quy (Irreducibility)
+
+Một chuỗi Markov là **bất khả quy** nếu cuối cùng có thể đi từ bất kỳ trạng thái nào đến bất kỳ trạng thái nào khác. Trong ngôn ngữ đồ thị: đồ thị phải **liên thông**.
+
+$$\forall i, j: \exists n \text{ sao cho } P^n(i \to j) > 0$$
+
+#### 2. Tính Không Chu Kỳ (Aperiodicity)
+
+Một chuỗi là **không chu kỳ** nếu ước số chung lớn nhất (GCD) của tất cả thời gian quay lại một trạng thái bằng 1. Đồ thị hai phía (bipartite) là vấn đề vì chúng dao động; **Lazy random walks** ($P_{lazy} = \frac{1}{2}I + \frac{1}{2}P$) khắc phục điều này bằng cách thêm self-loops.
+
+#### 3. Tính Thuận Nghịch (Reversibility / Detailed Balance)
+
+Một chuỗi là **thuận nghịch** nếu luồng xác suất giữa hai trạng thái được cân bằng tại trạng thái cân bằng:
+
+$$\pi(i) \cdot P(i \to j) = \pi(j) \cdot P(j \to i)$$
+
+Random walks trên đồ thị vô hướng luôn thuận nghịch.
+
+#### 4. Tính Ergodic
+
+$$\text{Ergodic} = \text{Irreducible} + \text{Aperiodic}$$
+
+Một chuỗi Markov ergodic đảm bảo tồn tại một phân phối dừng duy nhất $\pi$ bất kể vị trí bắt đầu.
+
+
+
+## Phân Phối Dừng (Stationary Distribution)
+
+Sau nhiều bước, random walk sẽ “quên” nơi bắt đầu và hội tụ về một **phân phối dừng** $\pi$. Phân phối này thỏa mãn:
+
+$$\pi P = \pi$$
+
+Trong ngữ cảnh này, $\pi$ là một vector riêng trái của $P$ với trị riêng bằng 1.
+
+### Đối Với Đồ Thị Vô Hướng
+
+Phân phối dừng có dạng đóng tỷ lệ với bậc của nút:
+
+$$\pi(v) = \frac{\text{degree}(v)}{2|E|}$$
+
+Các nút có bậc cao được ghé thăm thường xuyên hơn vì chúng có nhiều “cánh cửa” (cạnh) dẫn đến chúng.
+
+
+
+## Hội Tụ & Mixing Time
+
+**Mixing time** đo tốc độ random walk hội tụ về phân phối dừng.
+
+$$t_{mix}(\epsilon) = \min{t : |P^t(x, \cdot) - \pi|_{TV} \leq \epsilon, \forall x}$$
+
+### Khoảng Cách Phổ (Spectral Gap)
+
+Mixing time được kiểm soát bởi **spectral gap** $\gamma$, hiệu giữa hai trị riêng lớn nhất của $P$:
+
+$$\gamma = 1 - \lambda_2$$
+
+* **Khoảng cách lớn:** Hội tụ nhanh (random walk nhanh chóng “quên” điểm bắt đầu).
+* **Khoảng cách nhỏ:** Hội tụ chậm (random walk bị “kẹt” trong các cụm hoặc nút thắt cổ chai).
+
+
+
+## PageRank
+
+PageRank của Google mô hình hóa một “người lướt web ngẫu nhiên”. Ở mỗi bước, với xác suất $\alpha$ (thường là 0.85), người dùng theo một liên kết ngẫu nhiên. Với xác suất $1-\alpha$, họ “dịch chuyển tức thời” đến một trang hoàn toàn ngẫu nhiên.
+
+$$PR = \alpha \cdot P^T \cdot PR + \frac{1-\alpha}{n} \cdot \mathbf{1}$$
+
+### Tại Sao Cần Teleportation?
+
+* **Xử lý Dead Ends:** Cho phép thoát khỏi các “dangling nodes” không có liên kết ra.
+* **Đảm Bảo Tính Bất Khả Quy:** Kết nối tất cả các nút, ngay cả trong đồ thị không liên thông.
+* **Hội Tụ Nhanh:** Tăng spectral gap, giúp tăng tốc quá trình power iteration.
+
+
+
+## node2vec & Graph Embeddings
+
+[node2vec](https://arxiv.org/abs/1607.00653) (Grover & Leskovec, 2016) sử dụng **biased random walks** để nắm bắt các khái niệm khác nhau về độ tương đồng giữa các nút bằng cách kiểm soát hành vi khám phá.
+
+### Random Walk Trong node2vec
+
+Xác suất di chuyển đến một nút phụ thuộc vào mối quan hệ của nó với nút trước đó:
+
+* **$1/p$ (Return parameter):** Khả năng quay lại nút trước đó. Giá trị $p$ thấp giúp nắm bắt vai trò cấu trúc.
+* **$1$ (BFS-like):** Di chuyển đến nút ở cùng khoảng cách với điểm bắt đầu.
+* **$1/q$ (In-Out parameter):** Xu hướng di chuyển xa hơn. Giá trị $q$ thấp giúp nắm bắt tính cộng đồng (homophily).
+
+### Thuật Toán
+
+1. Thực hiện nhiều biased random walks với độ dài cố định cho mỗi nút.
+2. Xem các random walk như “câu” và các nút như “từ”.
+3. Huấn luyện mô hình Skip-gram (word2vec) trên tập random walks để tạo embedding dày đặc cho các nút.
+
+
+
+## Ứng Dụng Trong Machine Learning (Học Máy)
+
+* **Lấy Mẫu Đồ Thị (Graph Sampling):** Random walks cung cấp các mẫu không chệch cho các đồ thị quá lớn để chứa trong bộ nhớ.
+* **Học Bán Giám Sát (Semi-Supervised Learning):** Label propagation lan truyền nhãn từ một vài nút sang toàn bộ đồ thị thông qua random walks.
+* **GNN Message Passing:** [GNNs](https://www.tensortonic.com/ml-math/graph-theory/message-passing) có thể được xem như các random walks khả vi, trong đó ma trận chuyển tiếp tương ứng với ma trận kề đã chuẩn hóa.
+* **Hệ Gợi Ý (Recommendation Systems):** Các dịch vụ như Pinterest (Pixie) sử dụng random walks with restarts trên đồ thị người dùng-sản phẩm để đưa ra gợi ý thời gian thực. 

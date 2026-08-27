@@ -1,0 +1,146 @@
+---
+title: "Bayesian vs. Frequentist (Bayesian vs Frequentist)"
+order: 15
+date: 2026-08-27
+description: "Các nhà thống kê thường bị chia rẽ bởi một câu hỏi cơ bản: Xác suất là một sự thật cố định của thế giới vật lý, hay là thước đo cho sự không chắc chắn của chúng ta? Tranh luận này ảnh hưởng đến cách…"
+series: math-base
+categories: [math-base, statistics]
+group: statistics
+---
+# Bayesian vs. Frequentist
+
+## Sự phân chia lớn
+Các nhà thống kê thường bị chia rẽ bởi một câu hỏi cơ bản: Xác suất là một sự thật cố định của thế giới vật lý, hay là thước đo cho sự không chắc chắn của chúng ta? Tranh luận này ảnh hưởng đến cách chúng ta thiết kế thí nghiệm, huấn luyện mô hình machine learning và diễn giải mọi kết quả trong khoa học dữ liệu.
+
+
+
+## Triết lý cốt lõi
+
+### Triết lý Frequentist
+**"Dữ liệu là ngẫu nhiên. Tham số là cố định."**
+
+* **Giả định:**  
+  Tồn tại một giá trị THẬT duy nhất cho mỗi tham số (ví dụ: trung bình tổng thể). Giá trị này là hằng số, dù ta không biết.
+
+* **Định nghĩa xác suất:**  
+  Tần suất dài hạn của một sự kiện nếu lặp lại thí nghiệm vô hạn lần.
+
+* **Công cụ chính:**  
+  P-value, Confidence Interval, Maximum Likelihood Estimation (MLE)
+
+
+
+### Triết lý Bayesian
+**"Dữ liệu là cố định. Tham số là ngẫu nhiên."**
+
+* **Giả định:**  
+  Vì không biết tham số thật, ta biểu diễn nó bằng một phân phối xác suất phản ánh sự bất định.
+
+* **Định nghĩa xác suất:**  
+  “Mức độ tin tưởng” (degree of belief), được cập nhật khi có dữ liệu mới.
+
+* **Công cụ chính:**  
+  Định lý Bayes, Prior, Posterior, Credible Interval, MAP
+
+
+
+## Trực giác: Ví dụ tìm điện thoại
+
+Giả sử bạn nghe tiếng điện thoại reo đâu đó trong nhà:
+
+* **Frequentist:**  
+  Chỉ dựa vào dữ liệu hiện tại  
+  → “Âm thanh đến từ bếp → xác suất 90% điện thoại ở bếp”
+
+* **Bayesian:**  
+  Kết hợp dữ liệu + kiến thức trước (prior)  
+  → “Âm thanh từ bếp, nhưng tôi thường để điện thoại trong phòng ngủ → nên kiểm tra phòng ngủ trước”
+
+$\Rightarrow$ **Tóm lại:**  
+Frequentist khách quan nhưng bỏ qua ngữ cảnh  
+Bayesian tận dụng ngữ cảnh nhưng cần giả định trước  
+
+
+
+## Khác biệt toán học
+
+### Frequentist: MLE
+Tìm tham số làm cho dữ liệu quan sát có xác suất cao nhất:
+
+$$\hat{\theta} = \arg\max_{\theta} P(D | \theta)$$
+
+
+
+### Bayesian: MAP
+Tìm tham số có xác suất hậu nghiệm cao nhất:
+
+$$\hat{\theta} = \arg\max_{\theta} P(\theta | D)$$
+
+Theo định lý Bayes:
+
+$$P(\theta|D) \propto P(D|\theta) \cdot P(\theta)$$
+
+
+
+## Confidence Interval vs. Credible Interval
+
+Dù trông giống nhau, chúng trả lời hai câu hỏi khác nhau:
+
+* **95% Confidence Interval (Frequentist):**  
+  “Nếu lặp lại thí nghiệm 100 lần, 95 khoảng sẽ chứa giá trị thật”  
+  → Khoảng là ngẫu nhiên, tham số là cố định  
+
+* **95% Credible Interval (Bayesian):**  
+  “Với dữ liệu này, có 95% xác suất tham số nằm trong khoảng”  
+  → Tham số là ngẫu nhiên, dữ liệu là cố định  
+
+
+
+## A/B Testing: So sánh thực tế
+
+| Đặc điểm | Frequentist A/B Testing | Bayesian A/B Testing |
+| :--- | :--- | :--- |
+| **Thiết lập** | Phải định trước kích thước mẫu | Bắt đầu với prior |
+| **Kết quả** | Nhị phân: Có ý nghĩa / Không | Liên tục: “92% khả năng B tốt hơn” |
+| **Peeking** | Không được phép | Cho phép (cập nhật liên tục) |
+
+
+
+## Ứng dụng trong Machine Learning
+
+Tư duy Bayesian đã được tích hợp trong ML:
+
+1. **Regularization = Prior**
+   * L2 (Ridge) → Gaussian prior  
+   * L1 (Lasso) → Laplace prior  
+
+2. **Dropout**  
+   → Xấp xỉ Bayesian Neural Network  
+
+3. **Gaussian Processes**  
+   → Mô hình Bayesian đầy đủ với ước lượng uncertainty  
+
+4. **Thompson Sampling**  
+   → Giải bài toán Explore vs Exploit  
+
+
+
+## Khi nào dùng cái nào?
+
+| Tình huống | Nên dùng | Lý do |
+| :--- | :--- | :--- |
+| Dataset lớn, cần khách quan | **Frequentist** | Prior không còn quan trọng |
+| Dataset nhỏ + domain knowledge | **Bayesian** | Prior giúp ổn định |
+| Quyết định realtime | **Bayesian** | Cập nhật liên tục |
+| Hạn chế tài nguyên tính toán | **Frequentist** | Công thức đóng, nhanh |
+
+
+
+## Kết luận
+
+Trong thực tế hiện đại, hầu hết practitioner sử dụng cả hai:
+
+* Frequentist → kiểm định tiêu chuẩn  
+* Bayesian → khi cần uncertainty hoặc có prior mạnh  
+
+$\Rightarrow$ Không phải chọn một — mà là biết khi nào dùng cái nào.
